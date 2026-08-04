@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./table/table.css";
 
 @theme {
   --font-sans: Inter, Pretendard, ui-sans-serif, system-ui, sans-serif;
@@ -8,3 +9,7 @@
 body { margin: 0; min-width: 320px; min-height: 100vh; }
 button:not(:disabled), input[type="checkbox"] { cursor: pointer; }
 button:disabled { cursor: not-allowed; opacity: .35; }
+.status { display:inline-flex; border-radius:999px; padding:3px 9px; font-size:12px; font-weight:700; }
+.status--활성 { background:#ecfdf5; color:#047857; }
+.status--휴가 { background:#fffbeb; color:#b45309; }
+.status--대기 { background:#f1f5f9; color:#475569; }
