@@ -74,6 +74,13 @@ describe('Table', () => {
     expect(screen.getByText('Bravo')).toBeInTheDocument()
   })
 
+  it('keeps a custom current page size visible in the automatic size changer', () => {
+    const rows = Array.from({ length: 60 }, (_, index) => ({ key: String(index), name: `Row ${index + 1}`, team: 'Design', score: index }))
+    render(<Table<Row> dataSource={rows} columns={columns} pagination={{ pageSize: 6 }} />)
+    expect(screen.getByLabelText('페이지 크기')).toHaveValue('6')
+    expect(within(screen.getByLabelText('페이지 크기')).getByRole('option', { name: '6 / 페이지' })).toBeInTheDocument()
+  })
+
   it('supports antd-style custom body row components', () => {
     render(<Table<Row> dataSource={data} columns={columns} pagination={false} components={{ body: { row: CustomRow } }} />)
     expect(screen.getByText('Bravo').closest('tr')).toHaveAttribute('data-record-name', 'Bravo')
@@ -117,5 +124,52 @@ describe('Table', () => {
     expect(screen.getByText('Bravo').closest('tr')).toHaveClass('semantic-row')
     fireEvent.click(screen.getAllByRole('button', { name: 'custom-expand' })[0])
     expect(screen.getAllByText('Bravo')).toHaveLength(2)
+  })
+
+  it('keeps tree indentation deterministic across expanded states', () => {
+    render(<Table<Row> dataSource={data} columns={columns} pagination={false} expandable={{ defaultExpandAllRows: true }} />)
+    const rootRow = screen.getByText('Bravo').closest('tr')!
+    const childRow = screen.getByText('Child').closest('tr')!
+    expect(rootRow).toHaveAttribute('data-row-depth', '0')
+    expect(childRow).toHaveAttribute('data-row-depth', '1')
+    expect(rootRow.querySelector('.orbit-table__expand-indent')).toHaveStyle({ paddingInlineStart: '15px' })
+    expect(childRow.querySelector('.orbit-table__expand-indent')).toHaveStyle({ paddingInlineStart: '30px' })
+    fireEvent.click(within(rootRow).getByRole('button', { name: '행 접기' }))
+    expect(screen.queryByText('Child')).not.toBeInTheDocument()
+    expect(screen.getByText('Bravo').closest('tr')!.querySelector('.orbit-table__expand-indent')).toHaveStyle({ paddingInlineStart: '15px' })
+  })
+
+  it('marks the visual last column instead of the DOM last child for merged rows', () => {
+    const mergedColumns: ColumnsType<Row> = [
+      columns[0],
+      columns[1],
+      { ...columns[2], onCell: (_record, index) => index === 0 ? { rowSpan: 2 } : index === 1 ? { rowSpan: 0 } : {} },
+    ]
+    render(<Table<Row> dataSource={data} columns={mergedColumns} pagination={false} bordered />)
+    const secondRowCells = screen.getByText('Alpha').closest('tr')!.querySelectorAll('td')
+    expect(secondRowCells).toHaveLength(2)
+    expect(secondRowCells[1]).not.toHaveClass('orbit-table__cell--last')
+    expect(screen.getByText('Platform').closest('td')).not.toHaveClass('orbit-table__cell--last')
+    expect(screen.getByText('3').closest('td')).toHaveClass('orbit-table__cell--last')
+  })
+
+  it('supports antd-style Table.Column and Table.ColumnGroup JSX syntax', () => {
+    render(<Table<Row> dataSource={data} pagination={false}>
+      <Table.ColumnGroup<Row> title="Member">
+        <Table.Column<Row> title="Name" dataIndex="name" key="name" />
+        <Table.Column<Row> title="Team" dataIndex="team" key="team" />
+      </Table.ColumnGroup>
+      <Table.Column<Row> title="Score" dataIndex="score" key="score" />
+    </Table>)
+    expect(screen.getByRole('columnheader', { name: 'Member' })).toHaveAttribute('colspan', '2')
+    expect(screen.getByText('Bravo')).toBeInTheDocument()
+    expect(screen.getByText('2')).toBeInTheDocument()
+  })
+
+  it('supports the Table.Summary compound API without an extra wrapper row', () => {
+    render(<Table<Row> dataSource={data} columns={columns} pagination={false} summary={(rows) => <Table.Summary><Table.Summary.Row><Table.Summary.Cell index={0} colSpan={3}>Total {rows.reduce((sum, row) => sum + row.score, 0)}</Table.Summary.Cell></Table.Summary.Row></Table.Summary>} />)
+    const summaryCell = screen.getByText('Total 6').closest('td')!
+    expect(summaryCell).toHaveAttribute('data-column-index', '0')
+    expect(summaryCell.closest('tfoot')?.querySelectorAll('tr')).toHaveLength(1)
   })
 })

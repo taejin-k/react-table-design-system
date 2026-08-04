@@ -32,7 +32,7 @@ npm run storybook
 
 Open <http://localhost:6006> and select **Design System / Table**.
 
-The Storybook contains 13 production-oriented stories, including full pagination, selection operations, sticky/fixed layouts, virtual rows, editable cells, and animated row/column drag sorting.
+The Storybook contains 59 focused stories grouped by expandable rows, pagination, selection, sorting/filtering, layout, API compatibility, and composition examples. Sticky/fixed layouts, virtual rows, editable cells, and animated row/column drag sorting are covered independently.
 
 ## Library structure
 
@@ -60,6 +60,7 @@ src/
 ## Supported feature set
 
 - antd-style generic API: `dataSource`, `columns`, `rowKey`
+- antd-style JSX sugar: `Table.Column`, `Table.ColumnGroup`
 - local and controlled sorting, multi-column sorter priorities
 - filter menus, single/multiple filter, filter search, controlled filters
 - checkbox/radio row selection, controlled selection, disabled rows, custom selection cells
@@ -70,7 +71,7 @@ src/
 - 1,000+ row virtual windowing and imperative `scrollTo`
 - responsive and hidden columns
 - ellipsis, alignment, custom render, `onCell`, `onHeaderCell`
-- title, footer, summary, empty and loading states
+- title, footer, `Table.Summary.Row/Cell`, empty and loading states
 - large/medium/small density, bordered and hover modes
 - `onChange`, `onRow`, `onHeaderRow`, `onScroll`
 - semantic `classNames` and `styles` customization

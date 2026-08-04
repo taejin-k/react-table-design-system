@@ -35,7 +35,7 @@ export const FilterAndMultipleSorter: Story = { args: { bordered: true, paginati
 export const ProductionPagination: Story = { args: { dataSource: largeData.slice(0, 185), pagination: { pageSize: 6, pageSizeOptions: [6, 12, 24], showSizeChanger: true, showQuickJumper: true, showTotal: (total, range) => `${range[0]}-${range[1]} / 총 ${total}명` }, bordered: true } }
 
 export const ExpandableAndTree: Story = {
-  args: { dataSource: [{ ...members[0], children: [{ ...members[5], key: 'M-1001-1', name: '한지우 (하위)' }] }, ...members.slice(1, 6)], expandable: { defaultExpandAllRows: true, expandedRowRender: (record) => <div className="detail-panel"><strong>{record.name}</strong><span>{record.role} · {record.joinedAt}</span></div> }, rowSelection: {}, pagination: false },
+  args: { dataSource: [{ ...members[0], children: [{ ...members[5], key: 'M-1001-1', name: '한지우 (하위)' }] }, ...members.slice(1, 6)], expandable: { defaultExpandAllRows: true }, rowSelection: {}, pagination: false },
 }
 
 export const GroupedHeaderAndMergedCells: Story = {

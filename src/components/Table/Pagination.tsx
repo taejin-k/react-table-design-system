@@ -42,6 +42,7 @@ export function Pagination({ config, page, pageSize, total, pageCount, placement
   const start = total ? (page - 1) * pageSize + 1 : 0
   const end = Math.min(total, page * pageSize)
   const sizeChanger = config.showSizeChanger ?? total > (config.totalBoundaryShowSizeChanger ?? 50)
+  const pageSizeOptions = [...new Set([pageSize, ...(config.pageSizeOptions ?? [10, 20, 50, 100]).map(Number)])].sort((left, right) => left - right)
   const disabled = config.disabled ?? false
   const size = config.size ?? 'medium'
   const semanticClassNames = typeof config.classNames === 'function' ? config.classNames({ current: page, pageSize, total }) : config.classNames
@@ -63,7 +64,7 @@ export function Pagination({ config, page, pageSize, total, pageCount, placement
   const next = <button type="button" className={itemClassName} style={itemStyle} title={config.showTitle === false ? undefined : locale.next_page ?? '다음 페이지'} aria-label={locale.next_page ?? '다음 페이지'} disabled={disabled || page >= pageCount} onClick={() => jump(page + 1)}><Chevron direction="right" /></button>
 
   return <nav
-    className={`orbit-table__pagination orbit-table__pagination--${size} orbit-table__pagination--${align} ${config.responsive ? 'is-responsive' : ''} ${className} ${semanticClassNames?.root ?? ''}`}
+    className={`orbit-table__pagination orbit-table__pagination--${size} orbit-table__pagination--${align} orbit-table__pagination--${placement.startsWith('top') ? 'top' : 'bottom'} ${config.responsive ? 'is-responsive' : ''} ${className} ${semanticClassNames?.root ?? ''}`}
     style={{ ...style, ...semanticStyles?.root }}
     aria-label="페이지네이션"
   >
@@ -83,7 +84,7 @@ export function Pagination({ config, page, pageSize, total, pageCount, placement
       })}
       {renderItem(config, page + 1, 'next', next)}
     </div>
-    {sizeChanger && <select aria-label="페이지 크기" disabled={disabled || (typeof config.showSizeChanger === 'object' && config.showSizeChanger.disabled)} value={pageSize} onChange={(event) => { const nextSize = Number(event.target.value); config.onShowSizeChange?.(page, nextSize); onChange(1, nextSize) }}>{(config.pageSizeOptions ?? [10, 20, 50, 100]).map((option) => { const value = Number(option); return <option key={value} value={value}>{value} {locale.items_per_page ?? '/ 페이지'}</option> })}</select>}
+    {sizeChanger && <select aria-label="페이지 크기" disabled={disabled || (typeof config.showSizeChanger === 'object' && config.showSizeChanger.disabled)} value={pageSize} onChange={(event) => { const nextSize = Number(event.target.value); config.onShowSizeChange?.(page, nextSize); onChange(1, nextSize) }}>{pageSizeOptions.map((value) => <option key={value} value={value}>{value} {locale.items_per_page ?? '/ 페이지'}</option>)}</select>}
     {config.showQuickJumper && <form className="orbit-table__pagination-jumper" onSubmit={submitJump}><label>{locale.jump_to ?? '이동'}<input aria-label="이동할 페이지" inputMode="numeric" value={jumpValue} onChange={(event) => setJumpValue(event.target.value)} /></label>{typeof config.showQuickJumper === 'object' && config.showQuickJumper.goButton ? <button type="submit" disabled={disabled}>{config.showQuickJumper.goButton}</button> : <span>{locale.page ?? '페이지'}</span>}</form>}
   </nav>
 }

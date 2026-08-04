@@ -95,6 +95,22 @@ export type ColumnType<T> = {
 
 export type ColumnsType<T> = readonly ColumnType<T>[]
 
+export type TableColumnProps<T> = Omit<ColumnType<T>, 'children'>
+
+export type TableColumnGroupProps<T> = Omit<ColumnType<T>, 'children' | 'dataIndex' | 'render'> & {
+  children?: ReactNode
+}
+
+export type TableSummaryProps = {
+  children?: ReactNode
+}
+
+export type TableSummaryRowProps = HTMLAttributes<HTMLTableRowElement>
+
+export type TableSummaryCellProps = TdHTMLAttributes<HTMLTableCellElement> & {
+  index?: number
+}
+
 export type PaginationItemType = 'page' | 'prev' | 'next' | 'jump-prev' | 'jump-next'
 export type PaginationPlacement = 'topStart' | 'topCenter' | 'topEnd' | 'bottomStart' | 'bottomCenter' | 'bottomEnd' | 'none'
 
@@ -279,6 +295,7 @@ export type TableLoadingConfig = {
 }
 
 export type TableProps<T extends object> = {
+  children?: ReactNode
   dataSource?: T[]
   column?: Partial<ColumnType<T>>
   columns?: ColumnsType<T>

@@ -1,4 +1,6 @@
+/* oxlint-disable react/only-export-components -- The generic compound Table API is exported as one library component. */
 import {
+  Children,
   forwardRef,
   Fragment,
   isValidElement,
@@ -9,6 +11,7 @@ import {
   useRef,
   useState,
   type CSSProperties,
+  type ReactElement,
   type ReactNode,
 } from 'react'
 import { createPortal } from 'react-dom'
@@ -31,6 +34,11 @@ import type {
   SorterResult,
   TableProps,
   TableRef,
+  TableColumnGroupProps,
+  TableColumnProps,
+  TableSummaryCellProps,
+  TableSummaryProps,
+  TableSummaryRowProps,
   TableSemanticClassNames,
   TableSemanticStyles,
 } from './Table.types'
@@ -43,6 +51,38 @@ type CellComponent = React.ElementType
 
 const EMPTY_CLASS_NAMES: TableSemanticClassNames = {}
 const EMPTY_STYLES: TableSemanticStyles = {}
+
+function Column<T extends object>(_props: TableColumnProps<T>) {
+  return null
+}
+
+function ColumnGroup<T extends object>(_props: TableColumnGroupProps<T>) {
+  return null
+}
+
+function columnsFromChildren<T extends object>(children: ReactNode): ColumnsType<T> {
+  return Children.toArray(children).flatMap((child) => {
+    if (!isValidElement(child) || (child.type !== Column && child.type !== ColumnGroup)) return []
+    const element = child as ReactElement<TableColumnProps<T> & { children?: ReactNode }>
+    const { children: nested, ...columnProps } = element.props
+    const nestedColumns = columnsFromChildren<T>(nested)
+    return [{ ...columnProps, ...(nestedColumns.length ? { children: nestedColumns } : {}) } as ColumnType<T>]
+  })
+}
+
+function SummaryBase({ children }: TableSummaryProps) {
+  return <>{children}</>
+}
+
+function SummaryRow(props: TableSummaryRowProps) {
+  return <tr {...props} />
+}
+
+function SummaryCell({ index, ...props }: TableSummaryCellProps) {
+  return <td data-column-index={index} {...props} />
+}
+
+const Summary = Object.assign(SummaryBase, { Row: SummaryRow, Cell: SummaryCell })
 
 function asClassGroup(value: TableSemanticClassNames['header']) {
   return typeof value === 'object' ? value : undefined
@@ -79,7 +119,7 @@ function normalizePlacement(config: PaginationConfig): PaginationPlacement[] {
 
 function InnerTable<T extends object>(props: TableProps<T>, ref: React.ForwardedRef<TableRef>) {
   const {
-    dataSource = [], column: sharedColumn, columns: sourceColumns = [], rowKey = 'key' as keyof T, pagination = {}, rowSelection, expandable,
+    children, dataSource = [], column: sharedColumn, columns: sourceColumns, rowKey = 'key' as keyof T, pagination = {}, rowSelection, expandable,
     bordered = false, loading = false, size = 'large', title, footer, summary, locale = {}, showHeader = true, showSorterTooltip = true,
     tableLayout = 'auto', rowClassName, rowHoverable = true, sticky = false, virtual = false, scroll, sortDirections = ['ascend', 'descend'],
     rootClassName = '', className = '', components, getPopupContainer, onChange, onRow, onHeaderRow, onScroll,
@@ -100,8 +140,8 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
 
   const columns = useMemo(() => {
     const merge = (items: ColumnsType<T>): ColumnsType<T> => items.map((item) => ({ ...sharedColumn, ...item, children: item.children ? merge(item.children) : undefined }))
-    return merge(sourceColumns)
-  }, [sharedColumn, sourceColumns])
+    return merge(sourceColumns ?? columnsFromChildren<T>(children))
+  }, [children, sharedColumn, sourceColumns])
   const [internalPage, setInternalPage] = useState(typeof pagination === 'object' ? pagination.defaultCurrent ?? 1 : 1)
   const [internalPageSize, setInternalPageSize] = useState(typeof pagination === 'object' ? pagination.defaultPageSize ?? pagination.pageSize ?? 10 : 10)
   const [sortStates, setSortStates] = useState<SortState<T>[]>(() => flattenColumns(columns).flatMap((item, index) => item.defaultSortOrder ? [{ column: item, key: columnKey(item, index), order: item.defaultSortOrder, priority: typeof item.sorter === 'object' ? item.sorter.multiple ?? 0 : 0 }] : []))
@@ -359,6 +399,8 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
           const tooltipTitle = typeof tooltip === 'object' && tooltip.title ? String(tooltip.title) : nextSortLabel(item, order)
           const headerProps = item.onHeaderCell?.(item, leafIndex) ?? {}
           const customProps = components?.header?.cell ? { column: item, index: leafIndex } : {}
+          const itemLeaves = item.children?.length ? flattenColumns(item.children) : [item]
+          const visualLastIndex = leafColumns.indexOf(itemLeaves[itemLeaves.length - 1])
           cells.push(<HeaderCell
             key={`${key}-${level}`}
             colSpan={item.children?.length ? leafCount(item) : item.colSpan}
@@ -367,7 +409,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
             {...headerProps}
             title={tooltip && item.sorter && (typeof tooltip !== 'object' || tooltip.target !== 'sorter-icon') ? tooltipTitle : headerProps.title}
             style={{ width: item.width, minWidth: tableLayout === 'auto' ? item.minWidth : undefined, textAlign: item.align, ...(!item.children ? fixedStyle(item, leafIndex) : {}), ...headerStyles?.cell, ...styles.cell, ...headerProps.style }}
-            className={`${headerClasses?.cell ?? ''} ${classNames.cell ?? ''} ${item.className ?? ''} ${order ? 'is-sorted' : ''} ${headerProps.className ?? ''}`}
+            className={`${headerClasses?.cell ?? ''} ${classNames.cell ?? ''} ${item.className ?? ''} ${visualLastIndex === leafColumns.length - 1 ? 'orbit-table__cell--last' : ''} ${order ? 'is-sorted' : ''} ${headerProps.className ?? ''}`}
           >
             <span className={`orbit-table__header-content ${item.sorter ? 'is-sortable' : ''}`} onClick={item.sorter ? () => toggleSort(item, leafIndex) : undefined}>
               <span>{renderTitle(item)}</span>
@@ -431,6 +473,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
 
     return <Fragment key={key}><RowComponent
       data-row-key={key}
+      data-row-depth={depth}
       {...customRowProps}
       {...rowProps}
       className={rowClass}
@@ -438,9 +481,9 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
       onClick={(event) => { rowProps.onClick?.(event); if (expandable?.expandRowByClick && canExpand) toggleExpand(record) }}
     >
       {rowSelection && <Cell {...(components?.body?.cell ? { record, index: actualIndex, column: 'selection' } : {})} {...selectionCellProps} {...selectionRenderedCell?.props} className={`orbit-table__selection-cell ${selectionCellProps.className ?? ''} ${selectionRenderedCell?.props?.className ?? ''}`} style={{ width: rowSelection.columnWidth ?? 48, textAlign: rowSelection.align, ...selectionFixedStyle, ...selectionCellProps.style, ...selectionRenderedCell?.props?.style }}>{selectionRenderedCell?.children ?? renderedSelection ?? originSelectionNode}</Cell>}
-      {expandable && expandable.showExpandColumn !== false && <Cell {...(components?.body?.cell ? { record, index: actualIndex, column: 'expand' } : {})} className="orbit-table__expand-cell" style={{ width: expandable.columnWidth ?? 48, ...expandFixedStyle }}><span style={{ marginInlineStart: depth * (expandable.indentSize ?? 15) }}>{expandable.expandIcon?.({ expanded, record, expandable: canExpand, onExpand: (item, event) => { event.stopPropagation(); toggleExpand(item) } }) ?? <button type="button" disabled={!canExpand} className="orbit-table__expand" aria-label={expanded ? locale.collapse ?? '행 접기' : locale.expand ?? '행 펼치기'} onClick={(event) => { event.stopPropagation(); toggleExpand(record) }}>{canExpand ? expanded ? '−' : '+' : ''}</button>}</span></Cell>}
-      {leafColumns.map((item, columnIndex) => <BodyCell key={columnKey(item, columnIndex)} component={Cell} custom={Boolean(components?.body?.cell)} item={item} record={record} rowIndex={actualIndex} fixedStyle={fixedStyle(item, columnIndex)} className={`${bodyClasses?.cell ?? ''} ${classNames.cell ?? ''}`} style={{ ...bodyStyles?.cell, ...styles.cell }} />)}
-    </RowComponent>{expandable?.expandedRowRender && expanded && <tr className={`orbit-table__expanded ${typeof expandable.expandedRowClassName === 'function' ? expandable.expandedRowClassName(record, actualIndex, depth) : expandable.expandedRowClassName ?? ''}`}><td colSpan={fullColSpan}>{expandable.expandedRowRender(record, actualIndex, depth, expanded)}</td></tr>}</Fragment>
+      {expandable && expandable.showExpandColumn !== false && <Cell {...(components?.body?.cell ? { record, index: actualIndex, column: 'expand' } : {})} className="orbit-table__expand-cell orbit-table__expand-cell--body" style={{ width: expandable.columnWidth ?? 48, ...expandFixedStyle }}><span className="orbit-table__expand-indent" style={{ paddingInlineStart: 15 + depth * (expandable.indentSize ?? 15) }}>{expandable.expandIcon?.({ expanded, record, expandable: canExpand, onExpand: (item, event) => { event.stopPropagation(); toggleExpand(item) } }) ?? (canExpand ? <button type="button" className="orbit-table__expand" aria-label={expanded ? locale.collapse ?? '행 접기' : locale.expand ?? '행 펼치기'} onClick={(event) => { event.stopPropagation(); toggleExpand(record) }}>{expanded ? '−' : '+'}</button> : <span className="orbit-table__expand-placeholder" aria-hidden />)}</span></Cell>}
+      {leafColumns.map((item, columnIndex) => <BodyCell key={columnKey(item, columnIndex)} component={Cell} custom={Boolean(components?.body?.cell)} item={item} record={record} rowIndex={actualIndex} fixedStyle={fixedStyle(item, columnIndex)} className={`${bodyClasses?.cell ?? ''} ${classNames.cell ?? ''} ${columnIndex === leafColumns.length - 1 ? 'orbit-table__cell--last' : ''}`} style={{ ...bodyStyles?.cell, ...styles.cell }} />)}
+    </RowComponent>{expandable?.expandedRowRender && expanded && <tr className={`orbit-table__expanded ${typeof expandable.expandedRowClassName === 'function' ? expandable.expandedRowClassName(record, actualIndex, depth) : expandable.expandedRowClassName ?? ''}`}><td className="orbit-table__cell--last" colSpan={fullColSpan}>{expandable.expandedRowRender(record, actualIndex, depth, expanded)}</td></tr>}</Fragment>
   }
 
   const placements = pageConfig ? normalizePlacement(pageConfig).filter((item) => item !== 'none') : []
@@ -453,20 +496,24 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
   const effectiveLayout = tableLayout === 'fixed' || scroll?.x || leafColumns.some((item) => item.ellipsis || item.fixed) ? 'fixed' : 'auto'
   const emptyText = typeof locale.emptyText === 'function' ? locale.emptyText() : locale.emptyText ?? <DefaultEmpty />
   const loadingConfig = typeof loading === 'object' ? loading : undefined
+  const summaryContent = summary?.(pageData)
+  const compoundSummary = isValidElement(summaryContent) && summaryContent.type === SummaryBase
 
   return <div ref={rootRef} className={`orbit-table ${bordered ? 'orbit-table--bordered' : ''} orbit-table--${size} ${rowHoverable ? 'orbit-table--hoverable' : ''} ${rootClassName} ${className} ${classNames.root ?? ''}`} style={styles.root} aria-busy={loadingVisible}>
     {topPagination}
+    <div className={`orbit-table__section ${classNames.section ?? ''}`} style={styles.section}>
     {title && <div className={`orbit-table__title ${classNames.title ?? ''}`} style={styles.title}>{title(pageData)}</div>}
-    <div ref={scrollRef} className={`orbit-table__wrapper ${classNames.section ?? ''} ${classNames.wrapper ?? ''} ${classNames.content ?? ''}`} style={{ overflowX: scroll?.x ? 'auto' : undefined, overflowY: scroll?.y ? 'auto' : undefined, maxHeight: scroll?.y, ...styles.section, ...styles.content, ...styles.wrapper }} onScroll={(event) => { setScrollTop(event.currentTarget.scrollTop); onScroll?.(event) }}>
+    <div ref={scrollRef} className={`orbit-table__wrapper ${classNames.wrapper ?? ''} ${classNames.content ?? ''}`} style={{ overflowX: scroll?.x ? 'auto' : undefined, overflowY: scroll?.y ? 'auto' : undefined, maxHeight: scroll?.y, ...styles.content, ...styles.wrapper }} onScroll={(event) => { setScrollTop(event.currentTarget.scrollTop); onScroll?.(event) }}>
       <TableElement className={classNames.table} style={{ tableLayout: effectiveLayout, minWidth: typeof scroll?.x === 'number' ? scroll.x : scroll?.x === 'max-content' ? 'max-content' : undefined, ...styles.table }}>
         <colgroup>{rowSelection && <col style={{ width: rowSelection.columnWidth ?? 48 }} />}{expandable && expandable.showExpandColumn !== false && <col style={{ width: expandable.columnWidth ?? 48 }} />}{leafColumns.map((item, index) => <col key={columnKey(item, index)} style={{ width: item.width, minWidth: item.minWidth }} />)}</colgroup>
         {showHeader && <HeaderWrapper className={`${sticky ? 'is-sticky' : ''} ${typeof classNames.header === 'string' ? classNames.header : headerClasses?.wrapper ?? ''}`} style={{ top: typeof sticky === 'object' ? sticky.offsetHeader ?? 0 : 0, ...headerStyles?.wrapper }}>{renderHeaderRows()}</HeaderWrapper>}
-        <BodyWrapper className={`${typeof classNames.body === 'string' ? classNames.body : bodyClasses?.wrapper ?? ''}`} style={bodyStyles?.wrapper}>{topPad > 0 && <tr aria-hidden><td colSpan={fullColSpan} style={{ height: topPad, padding: 0 }} /></tr>}{renderedRows.map(renderRow)}{bottomPad > 0 && <tr aria-hidden><td colSpan={fullColSpan} style={{ height: bottomPad, padding: 0 }} /></tr>}{!loadingVisible && allFlatRows.length === 0 && <tr><td className="orbit-table__empty" colSpan={fullColSpan}>{emptyText}</td></tr>}</BodyWrapper>
-        {summary && <tfoot className={sticky && typeof sticky === 'object' && sticky.offsetSummary !== undefined ? 'is-sticky-summary' : undefined} style={{ bottom: typeof sticky === 'object' ? sticky.offsetSummary : undefined }}><tr><td colSpan={fullColSpan}>{summary(pageData)}</td></tr></tfoot>}
+        <BodyWrapper className={`${typeof classNames.body === 'string' ? classNames.body : bodyClasses?.wrapper ?? ''}`} style={bodyStyles?.wrapper}>{topPad > 0 && <tr aria-hidden><td className="orbit-table__cell--last" colSpan={fullColSpan} style={{ height: topPad, padding: 0 }} /></tr>}{renderedRows.map(renderRow)}{bottomPad > 0 && <tr aria-hidden><td className="orbit-table__cell--last" colSpan={fullColSpan} style={{ height: bottomPad, padding: 0 }} /></tr>}{!loadingVisible && allFlatRows.length === 0 && <tr><td className="orbit-table__empty orbit-table__cell--last" colSpan={fullColSpan}>{emptyText}</td></tr>}</BodyWrapper>
+        {summary && <tfoot className={sticky && typeof sticky === 'object' && sticky.offsetSummary !== undefined ? 'is-sticky-summary' : undefined} style={{ bottom: typeof sticky === 'object' ? sticky.offsetSummary : undefined }}>{compoundSummary ? summaryContent : <tr><td className="orbit-table__cell--last" colSpan={fullColSpan}>{summaryContent}</td></tr>}</tfoot>}
       </TableElement>
       {loadingVisible && <div className={`orbit-table__loading ${loadingConfig?.className ?? ''}`} style={loadingConfig?.style}><div className="orbit-table__loading-content">{loadingConfig?.indicator ?? <span className="orbit-table__spinner" aria-hidden />}{loadingConfig?.tip && <span>{loadingConfig.tip}</span>}<span className="orbit-sr-only">로딩 중</span></div></div>}
     </div>
     {footer && <div className={`orbit-table__footer ${classNames.footer ?? ''}`} style={styles.footer}>{footer(pageData)}</div>}
+    </div>
     {bottomPagination}
   </div>
 }
@@ -563,4 +610,15 @@ function DefaultEmpty() {
   return <div className="orbit-table__empty-state"><svg viewBox="0 0 64 41" aria-hidden><path d="M8 10h48l-6 24H14L8 10Z" /><path d="M20 10 25 3h14l5 7" /><path d="M14 34c4-5 8-7 13-7h10c5 0 9 2 13 7" /></svg><span>데이터가 없습니다.</span></div>
 }
 
-export const Table = forwardRef(InnerTable) as <T extends object>(props: TableProps<T> & { ref?: React.Ref<TableRef> }) => React.ReactElement
+type TableComponent = {
+  <T extends object>(props: TableProps<T> & { ref?: React.Ref<TableRef> }): ReactElement
+  Column: typeof Column
+  ColumnGroup: typeof ColumnGroup
+  Summary: typeof Summary
+}
+
+export const Table = Object.assign(forwardRef(InnerTable), {
+  Column,
+  ColumnGroup,
+  Summary,
+}) as TableComponent

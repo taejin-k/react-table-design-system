@@ -12,7 +12,7 @@
 | --- | --- | --- | --- |
 | `dataSource`, `columns`, `column`, `rowKey` | ✅ | ✅ | `column` 공통 속성 및 열별 override 지원 |
 | `bordered`, `size`, `showHeader`, `rowHoverable`, `tableLayout` | ✅ | ✅ | large/medium/small 토큰 일치 |
-| `title`, `footer`, `summary` | ✅ | ✅ | 현재 페이지 데이터 전달 |
+| `title`, `footer`, `summary` | ✅ | ✅ | 현재 페이지 데이터 및 `Table.Summary.Row/Cell` compound API 지원 |
 | `pagination` | ✅ | ✅ | 아래 Pagination 표 참고 |
 | `rowSelection` | ✅ | ✅ | 아래 RowSelection 표 참고 |
 | `expandable` | ✅ | ✅ | 아래 Expandable 표 참고 |
@@ -28,6 +28,7 @@
 | `classNames`, `styles` | 객체/함수 | ✅ | v6 semantic 객체/함수와 기존 flat alias 지원 |
 | `onChange` | ✅ | ✅ | pagination/filter/sorter/extra 반환 |
 | ref `nativeElement`, `scrollTo` | ✅ | ✅ | index/key/top/offset/align 지원 |
+| JSX `Table.Column`, `Table.ColumnGroup` | ✅ | ✅ | `columns` prop과 동일한 열 모델로 변환 |
 
 ## Column / ColumnGroup
 
@@ -87,6 +88,7 @@
 - 커스텀 필터 드롭다운과 tree filter
 - semantic class/style, 커스텀 body/header component
 - 가상 스크롤과 imperative `scrollTo`
+- `Table.Column`/`Table.ColumnGroup` JSX 문법과 `Table.Summary.Row/Cell`
 
 ## 구현 보류 항목 — 사용자 판단 필요
 
@@ -94,30 +96,22 @@
 
    내부 특수 열을 일반 `columns` 배열 안에서 자유롭게 재배치하는 API다. 현재는 selection → expand → data 순서로 고정되어 있다. 열 모델 재설계가 필요하지만 구현 가능하다.
 
-2. **JSX 문법 `Table.Column` / `Table.ColumnGroup`**
-
-   공식 문서도 `columns` prop의 syntax sugar로 설명한다. 런타임 기능 차이는 없지만 기존 antd JSX 코드를 그대로 옮기려면 필요하다.
-
-3. **`Table.Summary`, `Table.Summary.Row`, `Table.Summary.Cell` compound API**
-
-   현재 `summary(currentData)`는 지원한다. fixed summary cell과 index 기반 정렬까지 같은 문법으로 사용하려면 compound API가 필요하다.
-
-4. **sticky 가상 스크롤바의 `offsetScroll`, `getContainer` 동작**
+2. **sticky 가상 스크롤바의 `offsetScroll`, `getContainer` 동작**
 
    sticky header는 구현되어 있다. 페이지 하단에 복제 스크롤바를 띄우고 외부 스크롤 컨테이너와 동기화하는 부분은 별도 스크롤 인프라가 필요하다.
 
-5. **동적 행 높이 virtual list**
+3. **동적 행 높이 virtual list**
 
    현재는 크기별 고정 행 높이로 안정적인 1,000+ 행 windowing을 제공한다. 자동 높이 행, `rowSpan`, expanded row를 동시에 가상화하려면 측정 캐시와 ResizeObserver 기반 엔진이 필요하다.
 
-6. **하위 컴포넌트의 모든 props**
+4. **하위 컴포넌트의 모든 props**
 
    `loading`의 모든 Spin Props, `showSorterTooltip`의 모든 Tooltip Props, `filterDropdownProps`의 모든 Dropdown Props, `showSizeChanger`의 모든 Select Props를 그대로 전달하는 기능이다. Table 단독 패키지에 Spin/Tooltip/Dropdown/Select 시스템이 없으므로 현재는 실제 Table 사용에 필요한 하위 집합만 지원한다.
 
-7. **stack fixed columns**
+5. **stack fixed columns**
 
    일반 fixed left/right는 지원한다. 스크롤 거리에 따라 열이 하나씩 쌓이는 antd의 별도 데모 동작은 보류했다.
 
-8. **서버 기능 자체**
+6. **서버 기능 자체**
 
    Ajax 호출, 서버 정렬·필터·페이지 요청은 `onChange` 계약으로 연결하지만 Table이 네트워크 요청을 직접 수행하지 않는다. 이는 antd도 동일하다.
