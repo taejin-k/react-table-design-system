@@ -32,6 +32,8 @@ npm run storybook
 
 Open <http://localhost:6006> and select **Design System / Table**.
 
+The Storybook contains 13 production-oriented stories, including full pagination, selection operations, sticky/fixed layouts, virtual rows, editable cells, and animated row/column drag sorting.
+
 ## Library structure
 
 ```text
@@ -61,7 +63,7 @@ src/
 - local and controlled sorting, multi-column sorter priorities
 - filter menus, single/multiple filter, filter search, controlled filters
 - checkbox/radio row selection, controlled selection, disabled rows, custom selection cells
-- pagination, controlled pagination, page-size selector, placement and total renderer
+- numbered pagination, controlled/remote pagination, page-size selector, quick jumper, simple mode, placement and total renderer
 - expandable rows, tree data, controlled expansion, expand-on-row-click
 - grouped headers, `colSpan`, `rowSpan`, nested `dataIndex`
 - fixed columns, sticky header, horizontal/vertical scroll
@@ -74,6 +76,10 @@ src/
 - semantic `classNames` and `styles` customization
 - explicit light/dark theme tokens and accessible labels/focus behavior
 - dnd-kit sortable composition through antd-compatible `components.body.row`
+
+## API compatibility
+
+The implementation is audited against Ant Design 6.5.3. See the [property-by-property compatibility matrix](docs/table-api-compatibility.md) before migrating an existing antd table. It clearly separates full support, practical subsets of dependent component props, and features awaiting a product decision.
 
 Like Ant Design, editable cells/rows and drag sorting are composition patterns rather than mandatory table state. The Storybook drag example uses dnd-kit transforms so neighboring rows animate into place while dragging.
 

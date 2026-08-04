@@ -35,10 +35,9 @@ describe('Table', () => {
     const onChange = vi.fn()
     render(<Table<Row> dataSource={data} columns={columns} pagination={false} onChange={onChange} />)
     fireEvent.click(screen.getByRole('button', { name: 'Team 필터' }))
-    const menu = screen.getByLabelText('Design').closest('label')?.parentElement
-    expect(menu).not.toBeNull()
-    fireEvent.click(within(menu!).getByLabelText('Design'))
-    fireEvent.click(within(menu!).getByRole('button', { name: '확인' }))
+    const menu = screen.getByRole('dialog', { name: '필터 메뉴' })
+    fireEvent.click(within(menu).getByLabelText('Design'))
+    fireEvent.click(within(menu).getByRole('button', { name: '확인' }))
     expect(screen.getByText('Bravo')).toBeInTheDocument()
     expect(screen.queryByText('Alpha')).not.toBeInTheDocument()
     expect(onChange).toHaveBeenLastCalledWith(expect.anything(), expect.anything(), expect.anything(), expect.objectContaining({ action: 'filter' }))
@@ -78,5 +77,45 @@ describe('Table', () => {
   it('supports antd-style custom body row components', () => {
     render(<Table<Row> dataSource={data} columns={columns} pagination={false} components={{ body: { row: CustomRow } }} />)
     expect(screen.getByText('Bravo').closest('tr')).toHaveAttribute('data-record-name', 'Bravo')
+  })
+
+  it('treats sorter true as server-side sorting and only emits the sorter state', () => {
+    const onChange = vi.fn()
+    render(<Table<Row> dataSource={data} columns={[{ title: 'Name', dataIndex: 'name', key: 'name', sorter: true }]} pagination={false} onChange={onChange} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Name 정렬' }))
+    expect(screen.getAllByRole('row')[1]).toHaveTextContent('Bravo')
+    expect(onChange).toHaveBeenLastCalledWith(expect.anything(), expect.anything(), expect.objectContaining({ columnKey: 'name', order: 'ascend' }), expect.objectContaining({ action: 'sort' }))
+  })
+
+  it('does not slice an already server-paginated dataSource again', () => {
+    render(<Table<Row> dataSource={data} columns={columns} pagination={{ current: 2, pageSize: 10, total: 30 }} />)
+    expect(screen.getByText('Bravo')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '2 페이지' })).toHaveAttribute('aria-current', 'page')
+  })
+
+  it('renders numbered pagination and supports quick page jumping', () => {
+    const rows = Array.from({ length: 25 }, (_, index) => ({ key: String(index), name: `Row ${index + 1}`, team: 'Design', score: index }))
+    render(<Table<Row> dataSource={rows} columns={columns} pagination={{ pageSize: 5, showQuickJumper: true }} />)
+    fireEvent.click(screen.getByRole('button', { name: '3 페이지' }))
+    expect(screen.getByText('Row 11')).toBeInTheDocument()
+    fireEvent.change(screen.getByLabelText('이동할 페이지'), { target: { value: '5' } })
+    fireEvent.submit(screen.getByLabelText('이동할 페이지').closest('form')!)
+    expect(screen.getByText('Row 21')).toBeInTheDocument()
+  })
+
+  it('supports shared column props and default selection actions', () => {
+    const onSelectionChange = vi.fn()
+    render(<Table<Row> dataSource={data} columns={columns} column={{ align: 'right' }} pagination={false} rowSelection={{ selections: true, onChange: onSelectionChange }} />)
+    expect(screen.getByText('Bravo')).toHaveStyle({ textAlign: 'right' })
+    fireEvent.click(screen.getByLabelText('선택 작업'))
+    fireEvent.click(screen.getByRole('button', { name: '전체 데이터 선택' }))
+    expect(onSelectionChange).toHaveBeenLastCalledWith(['1', '2', '3'], data, { type: 'all' })
+  })
+
+  it('supports functional semantic classNames and custom expand icons', () => {
+    render(<Table<Row> dataSource={data} columns={columns} pagination={false} classNames={() => ({ body: { row: 'semantic-row' } })} expandable={{ expandedRowRender: (row) => row.name, expandIcon: ({ expanded, onExpand, record }) => <button aria-label="custom-expand" onClick={(event) => onExpand(record, event)}>{expanded ? 'close' : 'open'}</button> }} />)
+    expect(screen.getByText('Bravo').closest('tr')).toHaveClass('semantic-row')
+    fireEvent.click(screen.getAllByRole('button', { name: 'custom-expand' })[0])
+    expect(screen.getAllByText('Bravo')).toHaveLength(2)
   })
 })

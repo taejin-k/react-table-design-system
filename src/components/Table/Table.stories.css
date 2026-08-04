@@ -16,6 +16,9 @@
 .story-sortable-row:active { cursor: grabbing; }
 .story-sortable-row.is-dragging { opacity: .92; filter: drop-shadow(0 8px 18px rgba(0,0,0,.16)); }
 .story-sortable-row.is-dragging td { background: #e6f4ff !important; border-color: #91caff; }
+.story-sortable-header { cursor: grab; touch-action: none; will-change: transform; }
+.story-sortable-header:active { cursor: grabbing; }
+.story-sortable-header.is-dragging { background:#e6f4ff !important; box-shadow:0 8px 18px rgba(0,0,0,.14); }
 .token-page { display:grid; gap:40px; max-width:1080px; color:rgba(0,0,0,.88); font-family:var(--orbit-font-family); }
 .token-page h1 { margin:4px 0 8px; font-size:32px; }
 .token-page h2 { margin:0 0 16px; font-size:20px; }

@@ -1,9 +1,9 @@
-import type { Breakpoint, ColumnType, ColumnsType, DataIndex, FilterItem, Key } from './Table.types'
+import type { Breakpoint, ColumnType, ColumnsType, DataIndex, FilterItem } from './Table.types'
 
 export const getValue = <T extends object>(record: T, dataIndex?: DataIndex): unknown => {
   if (dataIndex === undefined) return undefined
   const path = Array.isArray(dataIndex) ? dataIndex : [dataIndex]
-  return path.reduce<unknown>((value, key) => value != null && typeof value === 'object' ? (value as Record<Key, unknown>)[key] : undefined, record)
+  return path.reduce<unknown>((value, key) => value != null && typeof value === 'object' ? (value as Record<string | number, unknown>)[key] : undefined, record)
 }
 
 export const columnKey = <T extends object>(column: ColumnType<T>, index = 0): string => String(column.key ?? (Array.isArray(column.dataIndex) ? column.dataIndex.join('.') : column.dataIndex) ?? index)
