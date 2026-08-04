@@ -2,7 +2,11 @@ import { createElement } from 'react'
 import type { Preview } from '@storybook/react-vite'
 import '../src/index.css'
 import '../src/components/Table/Table.stories.css'
+import '../src/components/Breadcrumb/Breadcrumb.stories.css'
 import { tableStoryDescriptions } from '../src/components/Table/Table.story-descriptions'
+import { breadcrumbStoryDescriptions } from '../src/components/Breadcrumb/Breadcrumb.story-descriptions'
+
+const storyDescriptions = { ...tableStoryDescriptions, ...breadcrumbStoryDescriptions }
 
 const preview: Preview = {
   parameters: {
@@ -13,11 +17,11 @@ const preview: Preview = {
   },
   decorators: [
     (Story, context) => {
-      const description = context.parameters.docs?.description?.story ?? tableStoryDescriptions[context.id]
+      const description = context.parameters.docs?.description?.story ?? storyDescriptions[context.id]
       if (!description) return createElement(Story)
       return createElement('div', { className: 'story-documented-frame' },
         createElement('aside', { className: 'story-description', role: 'note', 'aria-label': 'Story 기능 설명' },
-          createElement('span', null, context.title.replace('Design System/Table/', '').replace('Design System/Table', 'Table')),
+          createElement('span', null, context.title.replace('Design System/', '').replace('/', ' / ')),
           createElement('strong', null, context.name),
           createElement('p', null, String(description)),
         ),

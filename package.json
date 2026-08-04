@@ -2,7 +2,7 @@
   "name": "@taejin-k/orbit-design-system",
   "private": true,
   "version": "0.2.0",
-  "description": "Independent React and Tailwind table design system with an Ant Design-inspired API",
+  "description": "Independent React and Tailwind design system with Ant Design-compatible Table and Breadcrumb APIs",
   "type": "module",
   "scripts": {
     "dev": "vite",

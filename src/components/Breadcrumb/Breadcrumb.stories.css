@@ -1,0 +1,12 @@
+.story-breadcrumb-icon { display: inline-block; width: 14px; height: 14px; margin-inline-end: 4px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.2; vertical-align: -2px; }
+.story-breadcrumb-more { display: inline-block; margin-top: -5px; color: var(--orbit-color-text-tertiary); font-size: 13px; letter-spacing: 1px; }
+.story-breadcrumb-stack { display: grid; gap: 8px; }
+.story-breadcrumb-stack .story-toolbar { align-items: center; }
+.story-breadcrumb-stack .story-toolbar span { color: var(--orbit-color-text-secondary); font-size: 13px; }
+.story-breadcrumb-portal { display: flex; min-height: 190px; align-items: flex-end; border: 1px dashed var(--orbit-color-border); border-radius: var(--orbit-border-radius-lg); background: var(--orbit-color-fill-alter); padding: 20px; }
+.story-breadcrumb-root { border: 1px solid #bae0ff; border-radius: var(--orbit-border-radius-lg); background: #f7fbff; }
+.story-breadcrumb-item { color: #0958d9; }
+.story-breadcrumb-separator { color: #69b1ff; }
+.story-breadcrumb-native { overflow: hidden; border-bottom: 1px solid var(--orbit-color-border-secondary); padding-bottom: 12px; }
+.story-breadcrumb-portal-menu { min-width: 190px; }
+.story-breadcrumb-accent { color: var(--orbit-color-primary); }
