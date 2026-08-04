@@ -20,6 +20,7 @@ export const DisabledRows: Story = { args: { rowSelection: { getCheckboxProps: (
 export const FixedSelectionColumn: Story = { args: { rowSelection: { fixed: true }, scroll: { x: 1000 } } }
 export const CustomSelectionCell: Story = { args: { rowSelection: { renderCell: (checked, record, _index, node) => <span title={`${record.name}: ${checked ? '선택됨' : '선택 안 됨'}`}>{node}</span> } } }
 export const SelectionMenu: Story = { args: { rowSelection: { selections: true } } }
+export const SelectionConstants: Story = { args: { rowSelection: { selections: [Table.SELECTION_ALL, Table.SELECTION_INVERT, Table.SELECTION_NONE] } } }
 export const ShiftRangeSelection: Story = { args: { rowSelection: {} }, parameters: { docs: { description: { story: '첫 체크박스를 선택한 뒤 Shift를 누른 채 다른 행을 선택하면 범위가 선택됩니다.' } } } }
 export const ControlledSelection: Story = { render: (args) => <ControlledSelectionStory {...args} /> }
 

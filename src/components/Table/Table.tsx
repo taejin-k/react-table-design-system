@@ -5,7 +5,9 @@ import {
   Fragment,
   isValidElement,
   memo,
+  useCallback,
   useEffect,
+  useId,
   useImperativeHandle,
   useMemo,
   useRef,
@@ -30,6 +32,7 @@ import type {
   PaginationPlacement,
   RenderedCell,
   RowSelectMethod,
+  SelectionItem,
   SortOrder,
   SorterResult,
   TableProps,
@@ -51,6 +54,9 @@ type CellComponent = React.ElementType
 
 const EMPTY_CLASS_NAMES: TableSemanticClassNames = {}
 const EMPTY_STYLES: TableSemanticStyles = {}
+const SELECTION_ALL: SelectionItem = { key: 'all', text: 'Select all data' }
+const SELECTION_INVERT: SelectionItem = { key: 'invert', text: 'Invert current page' }
+const SELECTION_NONE: SelectionItem = { key: 'none', text: 'Select none' }
 
 function Column<T extends object>(_props: TableColumnProps<T>) {
   return null
@@ -111,8 +117,8 @@ function isRenderedCell<T>(value: ReactNode | RenderedCell<T>): value is Rendere
 }
 
 function normalizePlacement(config: PaginationConfig): PaginationPlacement[] {
-  if (config.placement) return config.placement
-  if (!config.position) return ['bottomEnd']
+  if (config.placement?.length) return config.placement
+  if (!config.position?.length) return ['bottomEnd']
   const map = { topLeft: 'topStart', topCenter: 'topCenter', topRight: 'topEnd', bottomLeft: 'bottomStart', bottomCenter: 'bottomCenter', bottomRight: 'bottomEnd', none: 'none' } as const
   return config.position.map((item) => map[item])
 }
@@ -122,10 +128,11 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
     children, dataSource = [], column: sharedColumn, columns: sourceColumns, rowKey = 'key' as keyof T, pagination = {}, rowSelection, expandable,
     bordered = false, loading = false, size = 'large', title, footer, summary, locale = {}, showHeader = true, showSorterTooltip = true,
     tableLayout = 'auto', rowClassName, rowHoverable = true, sticky = false, virtual = false, scroll, sortDirections = ['ascend', 'descend'],
-    rootClassName = '', className = '', components, getPopupContainer, onChange, onRow, onHeaderRow, onScroll,
+    rootClassName = '', className = '', classNames: classNamesProp, styles: stylesProp, style: rootStyle, components, getPopupContainer, onChange, onRow, onHeaderRow, onScroll,
+    ...rootProps
   } = props
-  const classNames = (typeof props.classNames === 'function' ? props.classNames({ props }) : props.classNames) ?? EMPTY_CLASS_NAMES
-  const styles = (typeof props.styles === 'function' ? props.styles({ props }) : props.styles) ?? EMPTY_STYLES
+  const classNames = (typeof classNamesProp === 'function' ? classNamesProp({ props }) : classNamesProp) ?? EMPTY_CLASS_NAMES
+  const styles = (typeof stylesProp === 'function' ? stylesProp({ props }) : stylesProp) ?? EMPTY_STYLES
   const headerClasses = asClassGroup(classNames.header)
   const bodyClasses = asClassGroup(classNames.body)
   const paginationClasses = asPaginationClassGroup(classNames.pagination)
@@ -137,6 +144,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
   const filterTriggers = useRef(new Map<string, HTMLButtonElement>())
   const selectionCache = useRef(new Map<Key, T>())
   const lastSelectedIndex = useRef<number | null>(null)
+  const selectionName = `orbit-table-selection-${useId().replace(/:/g, '')}`
 
   const columns = useMemo(() => {
     const merge = (items: ColumnsType<T>): ColumnsType<T> => items.map((item) => ({ ...sharedColumn, ...item, children: item.children ? merge(item.children) : undefined }))
@@ -169,7 +177,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
     return () => window.clearTimeout(timer)
   }, [loading])
 
-  const keyOf = (record: T, index?: number): Key => typeof rowKey === 'function' ? rowKey(record, index) : (record[rowKey] as Key)
+  const keyOf = useCallback((record: T, index?: number): Key => typeof rowKey === 'function' ? rowKey(record, index) : (record[rowKey] as Key), [rowKey])
   const childrenName = expandable?.childrenColumnName ?? 'children'
   const controlledExpanded = expandable?.expandedRowKeys ? new Set(expandable.expandedRowKeys) : expandedKeys
   const controlledSelected = rowSelection?.selectedRowKeys ? new Set(rowSelection.selectedRowKeys) : selectedKeys
@@ -193,7 +201,11 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
   useEffect(() => {
     if (!expandable?.defaultExpandAllRows) return
     const keys: Key[] = []
-    const walk = (items: T[]) => items.forEach((item) => { const children = (item as Record<string, unknown>)[childrenName] as T[] | undefined; if (children?.length) { keys.push(keyOf(item)); walk(children) } })
+    const walk = (items: T[]) => items.forEach((item) => {
+      const children = (item as Record<string, unknown>)[childrenName] as T[] | undefined
+      if ((children?.length || expandable.expandedRowRender) && (expandable.rowExpandable?.(item) ?? true)) keys.push(keyOf(item))
+      if (children?.length) walk(children)
+    })
     walk(dataSource)
     setExpandedKeys(new Set(keys))
   // This is an initial default, matching defaultExpandAllRows semantics.
@@ -206,16 +218,21 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
     return visit(columns)
   }, [columns, viewportWidth])
   const leafColumns = useMemo(() => flattenColumns(responsiveColumns), [responsiveColumns])
-  const activeFilters = useMemo(() => Object.fromEntries(leafColumns.map((item, index) => [columnKey(item, index), item.filteredValue ?? filters[columnKey(item, index)] ?? []])), [filters, leafColumns])
+  const activeFilters = useMemo(() => Object.fromEntries(leafColumns.map((item, index) => {
+    const key = columnKey(item, index)
+    return [key, item.filteredValue !== undefined ? item.filteredValue ?? [] : filters[key] ?? []]
+  })), [filters, leafColumns])
   const activeSorts = useMemo(() => leafColumns.flatMap((item, index) => item.sortOrder !== undefined ? [{ column: item, key: columnKey(item, index), order: item.sortOrder, priority: typeof item.sorter === 'object' ? item.sorter.multiple ?? 0 : 0 }] : sortStates.filter((state) => state.key === columnKey(item, index))), [leafColumns, sortStates])
 
-  const processed = useMemo(() => {
-    const filtered = dataSource.filter((record) => leafColumns.every((item, index) => {
-      const values = activeFilters[columnKey(item, index)]
-      if (!values?.length) return true
-      return values.some((value) => item.onFilter ? item.onFilter(value, record) : String(getValue(record, item.dataIndex)) === String(value))
-    }))
-    const ordered = [...activeSorts].filter((state) => state.order && (typeof state.column.sorter === 'function' || (typeof state.column.sorter === 'object' && state.column.sorter.compare))).sort((a, b) => b.priority - a.priority)
+  const processData = useCallback((items: T[], filterState: Record<string, FilterKey[]>, sortState: SortState<T>[]): T[] => {
+    const ordered = [...sortState].filter((state) => state.order && (typeof state.column.sorter === 'function' || (typeof state.column.sorter === 'object' && state.column.sorter.compare))).sort((a, b) => b.priority - a.priority)
+    const filtered = items.filter((record) => leafColumns.every((item, index) => {
+      const values = filterState[columnKey(item, index)]
+      return !values?.length || !item.onFilter || values.some((value) => item.onFilter?.(value, record))
+    })).map((record) => {
+      const children = (record as Record<string, unknown>)[childrenName] as T[] | undefined
+      return children?.length ? { ...record, [childrenName]: processData(children, filterState, sortState) } : record
+    })
     return ordered.length ? [...filtered].sort((left, right) => {
       for (const state of ordered) {
         const sorter = state.column.sorter
@@ -225,7 +242,8 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
       }
       return 0
     }) : filtered
-  }, [activeFilters, activeSorts, dataSource, leafColumns])
+  }, [childrenName, leafColumns])
+  const processed = useMemo(() => processData(dataSource, activeFilters, activeSorts), [activeFilters, activeSorts, dataSource, processData])
 
   const pageConfig = pagination === false ? null : pagination
   const page = pageConfig?.current ?? internalPage
@@ -236,13 +254,37 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
   const serverPaginated = Boolean(pageConfig?.total !== undefined && pageConfig.total > processed.length)
   const pageData = pageConfig ? serverPaginated ? processed : processed.slice((safePage - 1) * pageSize, safePage * pageSize) : processed
 
+  const selectionEntities = useMemo(() => {
+    const entities = new Map<Key, { record: T; parent?: Key; children: Key[] }>()
+    const walk = (items: T[], parent?: Key) => items.forEach((record, index) => {
+      const key = keyOf(record, index)
+      const children = (record as Record<string, unknown>)[childrenName] as T[] | undefined
+      const childKeys = children?.map((child, childIndex) => keyOf(child, childIndex)) ?? []
+      entities.set(key, { record, parent, children: childKeys })
+      if (children?.length) walk(children, key)
+    })
+    walk(dataSource)
+    return entities
+  }, [childrenName, dataSource, keyOf])
+
+  const pageSelectionRows = useMemo(() => {
+    const rows: T[] = []
+    const walk = (items: T[]) => items.forEach((record) => {
+      rows.push(record)
+      const children = (record as Record<string, unknown>)[childrenName] as T[] | undefined
+      if (children?.length) walk(children)
+    })
+    walk(pageData)
+    return rows
+  }, [childrenName, pageData])
+
   const flattenRows = (items: T[], depth = 0, parent?: Key): FlatRow<T>[] => items.flatMap((record) => {
     const key = keyOf(record)
     const children = (record as Record<string, unknown>)[childrenName] as T[] | undefined
     return [{ record, depth, parent }, ...(children?.length && controlledExpanded.has(key) ? flattenRows(children, depth + 1, key) : [])]
   })
   const allFlatRows = flattenRows(pageData)
-  const rowHeight = size === 'small' ? 36 : size === 'medium' ? 46 : 54
+  const rowHeight = size === 'small' ? 39 : size === 'medium' ? 47 : 55
   const viewportHeight = typeof scroll?.y === 'number' ? scroll.y : 400
   const virtualStart = virtual ? Math.max(0, Math.floor(scrollTop / rowHeight) - 3) : 0
   const virtualCount = virtual ? Math.ceil(viewportHeight / rowHeight) + 6 : allFlatRows.length
@@ -252,7 +294,11 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
 
   const emitChange = (action: 'paginate' | 'sort' | 'filter', nextPage = safePage, nextPageSize = pageSize, nextFilters = activeFilters, nextSorts = activeSorts) => {
     const sorterInfo: SorterResult<T>[] = nextSorts.filter((item) => item.order).map((item) => ({ column: item.column, columnKey: item.key, field: item.column.dataIndex as Key | readonly Key[] | undefined, order: item.order }))
-    onChange?.({ ...pageConfig, current: nextPage, pageSize: nextPageSize, total }, nextFilters as Record<string, FilterValue>, sorterInfo.length > 1 ? sorterInfo : sorterInfo[0] ?? {}, { currentDataSource: processed, action })
+    const reportedFilters = Object.fromEntries(leafColumns.flatMap((item, index) => {
+      const key = columnKey(item, index)
+      return item.filters?.length || item.filterDropdown || item.filteredValue !== undefined || item.defaultFilteredValue !== undefined ? [[key, nextFilters[key]?.length ? nextFilters[key] : null]] : []
+    })) as Record<string, FilterValue>
+    onChange?.({ ...pageConfig, current: nextPage, pageSize: nextPageSize, total }, reportedFilters, sorterInfo.length > 1 ? sorterInfo : sorterInfo[0] ?? {}, { currentDataSource: processData(dataSource, nextFilters, nextSorts), action })
   }
 
   const changePage = (next: number, nextSize = pageSize) => {
@@ -274,8 +320,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
     const priority = typeof item.sorter === 'object' ? item.sorter.multiple ?? 0 : 0
     const next = priority ? [...sortStates.filter((state) => state.key !== key), { column: item, key, order: nextOrder, priority }] : [{ column: item, key, order: nextOrder, priority }]
     setSortStates(next.filter((state) => state.order))
-    setInternalPage(1)
-    emitChange('sort', 1, pageSize, activeFilters, next)
+    emitChange('sort', safePage, pageSize, activeFilters, next)
     if (scroll?.scrollToFirstRowOnChange !== false && typeof scrollRef.current?.scrollTo === 'function') scrollRef.current.scrollTo({ top: 0 })
   }
 
@@ -288,6 +333,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
       item.filterDropdownProps?.onOpenChange?.(false)
     }
     setInternalPage(1)
+    pageConfig?.onChange?.(1, pageSize)
     emitChange('filter', 1, pageSize, next)
     if (scroll?.scrollToFirstRowOnChange !== false && typeof scrollRef.current?.scrollTo === 'function') scrollRef.current.scrollTo({ top: 0 })
   }
@@ -307,7 +353,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
     return selectedRows
   }
 
-  const changeableRows = allFlatRows.map((item) => item.record).filter((record) => !rowSelection?.getCheckboxProps?.(record).disabled)
+  const changeableRows = pageSelectionRows.filter((record) => !rowSelection?.getCheckboxProps?.(record).disabled)
   const changeableKeys = changeableRows.map((record) => keyOf(record))
   const allChecked = changeableKeys.length > 0 && changeableKeys.every((key) => controlledSelected.has(key))
   const partlyChecked = !allChecked && changeableKeys.some((key) => controlledSelected.has(key))
@@ -326,6 +372,40 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
     rowSelection?.onSelectInvert?.([...next])
   }
 
+  const conductTreeSelection = (next: Set<Key>, record: T, selected: boolean) => {
+    const key = keyOf(record)
+    const visit = (currentKey: Key) => {
+      const entity = selectionEntities.get(currentKey)
+      if (!entity) return
+      if (!rowSelection?.getCheckboxProps?.(entity.record).disabled) {
+        if (selected) next.add(currentKey)
+        else next.delete(currentKey)
+      }
+      entity.children.forEach(visit)
+    }
+    visit(key)
+    let parentKey = selectionEntities.get(key)?.parent
+    while (parentKey !== undefined) {
+      const parent = selectionEntities.get(parentKey)
+      if (!parent) break
+      if (!rowSelection?.getCheckboxProps?.(parent.record).disabled) {
+        const selectableChildren = parent.children.filter((childKey) => {
+          const child = selectionEntities.get(childKey)
+          return child && !rowSelection?.getCheckboxProps?.(child.record).disabled
+        })
+        if (selectableChildren.length && selectableChildren.every((childKey) => next.has(childKey))) next.add(parentKey)
+        else next.delete(parentKey)
+      }
+      parentKey = parent.parent
+    }
+  }
+
+  const treeSelectionIndeterminate = (key: Key): boolean => {
+    if (rowSelection?.checkStrictly !== false || controlledSelected.has(key)) return false
+    const entity = selectionEntities.get(key)
+    return Boolean(entity?.children.some((childKey) => controlledSelected.has(childKey) || treeSelectionIndeterminate(childKey)))
+  }
+
   const toggleExpand = (record: T) => {
     const key = keyOf(record)
     const next = new Set(controlledExpanded)
@@ -336,7 +416,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
     expandable?.onExpandedRowsChange?.([...next])
   }
 
-  const selectionWidth = rowSelection ? Number(rowSelection.columnWidth ?? 48) : 0
+  const selectionWidth = rowSelection ? Number(rowSelection.columnWidth ?? 32) : 0
   const expandWidth = expandable && expandable.showExpandColumn !== false ? Number(expandable.columnWidth ?? 48) : 0
   const leftOffsets = useMemo(() => {
     let offset = selectionWidth + expandWidth
@@ -361,14 +441,23 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
     nativeElement: rootRef.current,
     scrollTo: ({ index, key, top, offset = 0, align = 'nearest' }) => {
       if (top !== undefined) scrollRef.current?.scrollTo({ top })
-      else if (virtual && index !== undefined) scrollRef.current?.scrollTo({ top: index * rowHeight + offset })
+      else if (virtual && (index !== undefined || key !== undefined)) {
+        const targetIndex = key !== undefined ? allFlatRows.findIndex((item, itemIndex) => keyOf(item.record, itemIndex) === key) : index ?? -1
+        if (targetIndex < 0) return
+        const targetStart = targetIndex * rowHeight
+        const targetEnd = targetStart + rowHeight
+        const currentTop = scrollRef.current?.scrollTop ?? 0
+        const currentEnd = currentTop + viewportHeight
+        const aligned = align === 'start' ? targetStart : align === 'center' ? targetStart - (viewportHeight - rowHeight) / 2 : align === 'end' ? targetEnd - viewportHeight : targetStart < currentTop ? targetStart : targetEnd > currentEnd ? targetEnd - viewportHeight : currentTop
+        scrollRef.current?.scrollTo({ top: Math.max(0, aligned + offset) })
+      }
       else {
         const target = key !== undefined ? rootRef.current?.querySelector(`[data-row-key="${CSS.escape(String(key))}"]`) : index !== undefined ? rootRef.current?.querySelectorAll('[data-row-key]')[index] : null
         target?.scrollIntoView({ block: align })
         if (offset && typeof scrollRef.current?.scrollBy === 'function') scrollRef.current.scrollBy({ top: offset })
       }
     },
-  }), [rowHeight, virtual])
+  }), [allFlatRows, keyOf, rowHeight, viewportHeight, virtual])
 
   const columnTitleProps: ColumnTitleProps<T> = {
     sortColumns: activeSorts.filter((state) => state.order).map((state) => ({ column: state.column, order: state.order })),
@@ -401,10 +490,12 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
           const customProps = components?.header?.cell ? { column: item, index: leafIndex } : {}
           const itemLeaves = item.children?.length ? flattenColumns(item.children) : [item]
           const visualLastIndex = leafColumns.indexOf(itemLeaves[itemLeaves.length - 1])
+          const resolvedColSpan = item.children?.length ? leafCount(item) : item.colSpan
+          if (resolvedColSpan === 0 || item.rowSpan === 0) return
           cells.push(<HeaderCell
             key={`${key}-${level}`}
-            colSpan={item.children?.length ? leafCount(item) : item.colSpan}
-            rowSpan={item.children?.length ? 1 : depth - level}
+            colSpan={resolvedColSpan}
+            rowSpan={item.children?.length ? 1 : item.rowSpan ?? depth - level}
             {...customProps}
             {...headerProps}
             title={tooltip && item.sorter && (typeof tooltip !== 'object' || tooltip.target !== 'sorter-icon') ? tooltipTitle : headerProps.title}
@@ -425,8 +516,8 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
       const selectionTitle = rowSelection ? typeof rowSelection.columnTitle === 'function' ? rowSelection.columnTitle(titleCheckbox) : rowSelection.columnTitle ?? titleCheckbox : null
       const headerRowProps = onHeaderRow?.(responsiveColumns, level) ?? {}
       return <HeaderRow key={level} {...(components?.header?.row ? { columns: responsiveColumns, index: level } : {})} {...headerRowProps} className={`${headerClasses?.row ?? ''} ${headerRowProps.className ?? ''}`} style={{ ...headerStyles?.row, ...headerRowProps.style }}>
-        {level === 0 && rowSelection && <HeaderCell rowSpan={depth} className="orbit-table__selection-cell" style={{ width: rowSelection.columnWidth ?? 48, textAlign: rowSelection.align, ...selectionFixedStyle }}><span className="orbit-table__selection-head">{selectionTitle}{rowSelection.selections && !rowSelection.hideSelectAll && <SelectionMenu rowSelection={rowSelection} changeableKeys={changeableKeys} onAll={() => selectAll(true)} onInvert={invertSelection} onNone={() => selectAll(false)} locale={locale} />}</span></HeaderCell>}
-        {level === 0 && expandable && expandable.showExpandColumn !== false && <HeaderCell rowSpan={depth} className="orbit-table__expand-cell" style={{ width: expandable.columnWidth ?? 48, ...expandFixedStyle }}>{expandable.columnTitle}</HeaderCell>}
+        {level === 0 && rowSelection && <HeaderCell rowSpan={depth} className="orbit-table__selection-cell" style={{ width: rowSelection.columnWidth ?? 32, textAlign: rowSelection.align, ...selectionFixedStyle }}><span className="orbit-table__selection-head">{selectionTitle}{rowSelection.selections && !rowSelection.hideSelectAll && <SelectionMenu rowSelection={rowSelection} changeableKeys={changeableKeys} onAll={() => selectAll(true)} onInvert={invertSelection} onNone={() => selectAll(false)} locale={locale} />}</span></HeaderCell>}
+        {level === 0 && expandable && expandable.showExpandColumn !== false && <HeaderCell rowSpan={depth} className="orbit-table__expand-cell" style={{ width: expandable.columnWidth ?? 48, ...expandFixedStyle }}>{expandable.columnTitle ?? <span className="orbit-sr-only">{locale.expand ?? '행 펼치기'}</span>}</HeaderCell>}
         {cells}
       </HeaderRow>
     })
@@ -447,27 +538,26 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
     const checkboxProps = rowSelection?.getCheckboxProps?.(record) ?? {}
     const selectionCellProps = rowSelection?.onCell?.(record, actualIndex) ?? {}
     const checked = controlledSelected.has(key)
-    const originSelectionNode = rowSelection ? <input {...checkboxProps} type={rowSelection.type === 'radio' ? 'radio' : 'checkbox'} name={rowSelection.type === 'radio' ? 'orbit-table-selection' : checkboxProps.name} checked={checked} aria-label={checkboxProps['aria-label'] ?? `${String(key)} 행 선택`} onChange={(event) => {
-      const next = rowSelection.type === 'radio' ? new Set<Key>() : new Set(controlledSelected)
-      const related: Key[] = [key]
-      if (rowSelection.checkStrictly === false) {
-        const collect = (item: T) => ((item as Record<string, unknown>)[childrenName] as T[] | undefined)?.forEach((child) => { related.push(keyOf(child)); collect(child) })
-        collect(record)
-      }
+    const selection = rowSelection
+    const selectionInputProps = selection ? { ...checkboxProps, name: selection.type === 'radio' ? selectionName : checkboxProps.name, checked, 'aria-label': checkboxProps['aria-label'] ?? `${String(key)} 행 선택`, onChange: (event: React.ChangeEvent<HTMLInputElement>) => {
+      const next = selection.type === 'radio' ? new Set<Key>() : new Set(controlledSelected)
       const native = event.nativeEvent as MouseEvent
-      if (native.shiftKey && lastSelectedIndex.current !== null && rowSelection.type !== 'radio') {
+      if (native.shiftKey && lastSelectedIndex.current !== null && selection.type !== 'radio') {
         const start = Math.min(lastSelectedIndex.current, actualIndex)
         const end = Math.max(lastSelectedIndex.current, actualIndex)
-        const changed = allFlatRows.slice(start, end + 1).map((item) => item.record).filter((item) => !rowSelection.getCheckboxProps?.(item).disabled)
+        const changed = allFlatRows.slice(start, end + 1).map((item) => item.record).filter((item) => !selection.getCheckboxProps?.(item).disabled)
         changed.forEach((item) => event.target.checked ? next.add(keyOf(item)) : next.delete(keyOf(item)))
         const selectedRows = updateSelection(next, 'multiple')
-        rowSelection.onSelectMultiple?.(event.target.checked, selectedRows, changed)
+        selection.onSelectMultiple?.(event.target.checked, selectedRows, changed)
       } else {
-        related.forEach((relatedKey) => event.target.checked ? next.add(relatedKey) : next.delete(relatedKey))
-        updateSelection(next, rowSelection.type === 'radio' ? 'single' : 'multiple', record, event.target.checked, event.nativeEvent)
+        if (selection.checkStrictly === false && selection.type !== 'radio') conductTreeSelection(next, record, event.target.checked)
+        else if (event.target.checked) next.add(key)
+        else next.delete(key)
+        updateSelection(next, selection.type === 'radio' ? 'single' : 'multiple', record, event.target.checked, event.nativeEvent)
       }
       lastSelectedIndex.current = actualIndex
-    }} /> : null
+    } } : null
+    const originSelectionNode = selection && selectionInputProps ? selection.type === 'radio' ? <input {...selectionInputProps} type="radio" /> : <SelectionCheckbox {...selectionInputProps} indeterminate={treeSelectionIndeterminate(key)} /> : null
     const renderedSelection = rowSelection?.renderCell?.(checked, record, actualIndex, originSelectionNode)
     const selectionRenderedCell = renderedSelection && isRenderedCell(renderedSelection) ? renderedSelection : null
 
@@ -480,14 +570,14 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
       style={{ height: virtual ? rowHeight : undefined, ...bodyStyles?.row, ...styles.row, ...rowProps.style }}
       onClick={(event) => { rowProps.onClick?.(event); if (expandable?.expandRowByClick && canExpand) toggleExpand(record) }}
     >
-      {rowSelection && <Cell {...(components?.body?.cell ? { record, index: actualIndex, column: 'selection' } : {})} {...selectionCellProps} {...selectionRenderedCell?.props} className={`orbit-table__selection-cell ${selectionCellProps.className ?? ''} ${selectionRenderedCell?.props?.className ?? ''}`} style={{ width: rowSelection.columnWidth ?? 48, textAlign: rowSelection.align, ...selectionFixedStyle, ...selectionCellProps.style, ...selectionRenderedCell?.props?.style }}>{selectionRenderedCell?.children ?? renderedSelection ?? originSelectionNode}</Cell>}
+      {rowSelection && <Cell {...(components?.body?.cell ? { record, index: actualIndex, column: 'selection' } : {})} {...selectionCellProps} {...selectionRenderedCell?.props} className={`orbit-table__selection-cell ${selectionCellProps.className ?? ''} ${selectionRenderedCell?.props?.className ?? ''}`} style={{ width: rowSelection.columnWidth ?? 32, textAlign: rowSelection.align, ...selectionFixedStyle, ...selectionCellProps.style, ...selectionRenderedCell?.props?.style }}>{selectionRenderedCell ? selectionRenderedCell.children : renderedSelection ?? originSelectionNode}</Cell>}
       {expandable && expandable.showExpandColumn !== false && <Cell {...(components?.body?.cell ? { record, index: actualIndex, column: 'expand' } : {})} className="orbit-table__expand-cell orbit-table__expand-cell--body" style={{ width: expandable.columnWidth ?? 48, ...expandFixedStyle }}><span className="orbit-table__expand-indent" style={{ paddingInlineStart: 15 + depth * (expandable.indentSize ?? 15) }}>{expandable.expandIcon?.({ expanded, record, expandable: canExpand, onExpand: (item, event) => { event.stopPropagation(); toggleExpand(item) } }) ?? (canExpand ? <button type="button" className="orbit-table__expand" aria-label={expanded ? locale.collapse ?? '행 접기' : locale.expand ?? '행 펼치기'} onClick={(event) => { event.stopPropagation(); toggleExpand(record) }}>{expanded ? '−' : '+'}</button> : <span className="orbit-table__expand-placeholder" aria-hidden />)}</span></Cell>}
       {leafColumns.map((item, columnIndex) => <BodyCell key={columnKey(item, columnIndex)} component={Cell} custom={Boolean(components?.body?.cell)} item={item} record={record} rowIndex={actualIndex} fixedStyle={fixedStyle(item, columnIndex)} className={`${bodyClasses?.cell ?? ''} ${classNames.cell ?? ''} ${columnIndex === leafColumns.length - 1 ? 'orbit-table__cell--last' : ''}`} style={{ ...bodyStyles?.cell, ...styles.cell }} />)}
     </RowComponent>{expandable?.expandedRowRender && expanded && <tr className={`orbit-table__expanded ${typeof expandable.expandedRowClassName === 'function' ? expandable.expandedRowClassName(record, actualIndex, depth) : expandable.expandedRowClassName ?? ''}`}><td className="orbit-table__cell--last" colSpan={fullColSpan}>{expandable.expandedRowRender(record, actualIndex, depth, expanded)}</td></tr>}</Fragment>
   }
 
   const placements = pageConfig ? normalizePlacement(pageConfig).filter((item) => item !== 'none') : []
-  const renderPagination = (placement: PaginationPlacement) => pageConfig && !(pageConfig.hideOnSinglePage && pageCount <= 1) ? <Pagination key={placement} config={pageConfig} page={safePage} pageSize={pageSize} total={total} pageCount={pageCount} placement={placement} onChange={changePage} className={`${typeof classNames.pagination === 'string' ? classNames.pagination : paginationClasses?.root ?? ''}`} style={(typeof styles.pagination === 'object' && !paginationStyles ? styles.pagination : paginationStyles?.root) as CSSProperties | undefined} /> : null
+  const renderPagination = (placement: PaginationPlacement) => pageConfig && total > 0 && !(pageConfig.hideOnSinglePage && pageCount <= 1) ? <Pagination key={placement} config={pageConfig} page={safePage} pageSize={pageSize} total={total} pageCount={pageCount} placement={placement} onChange={changePage} className={`${typeof classNames.pagination === 'string' ? classNames.pagination : paginationClasses?.root ?? ''}`} style={(typeof styles.pagination === 'object' && !paginationStyles ? styles.pagination : paginationStyles?.root) as CSSProperties | undefined} /> : null
   const topPagination = placements.filter((item) => item.startsWith('top')).map(renderPagination)
   const bottomPagination = placements.filter((item) => item.startsWith('bottom')).map(renderPagination)
   const TableElement = components?.table ?? 'table'
@@ -498,17 +588,22 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
   const loadingConfig = typeof loading === 'object' ? loading : undefined
   const summaryContent = summary?.(pageData)
   const compoundSummary = isValidElement(summaryContent) && summaryContent.type === SummaryBase
+  const summaryFixed = compoundSummary ? (summaryContent as ReactElement<TableSummaryProps>).props.fixed : false
+  const summaryPosition = summaryFixed === 'top' ? 'top' : summaryFixed ? 'bottom' : null
+  const SummaryWrapper = summaryPosition === 'top' ? 'tbody' : 'tfoot'
+  const summaryElement = summary ? <SummaryWrapper className={summaryPosition ? `is-sticky-summary is-sticky-summary--${summaryPosition}` : sticky && typeof sticky === 'object' && sticky.offsetSummary !== undefined ? 'is-sticky-summary is-sticky-summary--bottom' : undefined} style={summaryPosition === 'top' ? { top: (typeof sticky === 'object' ? sticky.offsetHeader ?? 0 : 0) + (showHeader ? maxDepth(responsiveColumns) * rowHeight : 0) } : summaryPosition === 'bottom' || sticky && typeof sticky === 'object' && sticky.offsetSummary !== undefined ? { bottom: typeof sticky === 'object' ? sticky.offsetSummary : 0 } : undefined}>{compoundSummary ? summaryContent : <tr><td className="orbit-table__cell--last" colSpan={fullColSpan}>{summaryContent}</td></tr>}</SummaryWrapper> : null
 
-  return <div ref={rootRef} className={`orbit-table ${bordered ? 'orbit-table--bordered' : ''} orbit-table--${size} ${rowHoverable ? 'orbit-table--hoverable' : ''} ${rootClassName} ${className} ${classNames.root ?? ''}`} style={styles.root} aria-busy={loadingVisible}>
+  return <div {...rootProps} ref={rootRef} className={`orbit-table ${bordered ? 'orbit-table--bordered' : ''} orbit-table--${size} ${rowHoverable ? 'orbit-table--hoverable' : ''} ${rootClassName} ${className} ${classNames.root ?? ''}`} style={{ ...rootStyle, ...styles.root }} aria-busy={loadingVisible}>
     {topPagination}
     <div className={`orbit-table__section ${classNames.section ?? ''}`} style={styles.section}>
     {title && <div className={`orbit-table__title ${classNames.title ?? ''}`} style={styles.title}>{title(pageData)}</div>}
-    <div ref={scrollRef} className={`orbit-table__wrapper ${classNames.wrapper ?? ''} ${classNames.content ?? ''}`} style={{ overflowX: scroll?.x ? 'auto' : undefined, overflowY: scroll?.y ? 'auto' : undefined, maxHeight: scroll?.y, ...styles.content, ...styles.wrapper }} onScroll={(event) => { setScrollTop(event.currentTarget.scrollTop); onScroll?.(event) }}>
+    <div ref={scrollRef} className={`orbit-table__wrapper ${classNames.wrapper ?? ''} ${classNames.content ?? ''}`} style={{ overflowX: scroll?.x ? 'auto' : undefined, overflowY: scroll?.y ? 'auto' : undefined, maxHeight: scroll?.y, ...styles.content, ...styles.wrapper }} onScroll={(event) => { if (virtual) setScrollTop(event.currentTarget.scrollTop); onScroll?.(event) }}>
       <TableElement className={classNames.table} style={{ tableLayout: effectiveLayout, minWidth: typeof scroll?.x === 'number' ? scroll.x : scroll?.x === 'max-content' ? 'max-content' : undefined, ...styles.table }}>
-        <colgroup>{rowSelection && <col style={{ width: rowSelection.columnWidth ?? 48 }} />}{expandable && expandable.showExpandColumn !== false && <col style={{ width: expandable.columnWidth ?? 48 }} />}{leafColumns.map((item, index) => <col key={columnKey(item, index)} style={{ width: item.width, minWidth: item.minWidth }} />)}</colgroup>
+        <colgroup>{rowSelection && <col style={{ width: rowSelection.columnWidth ?? 32 }} />}{expandable && expandable.showExpandColumn !== false && <col style={{ width: expandable.columnWidth ?? 48 }} />}{leafColumns.map((item, index) => <col key={columnKey(item, index)} style={{ width: item.width, minWidth: item.minWidth }} />)}</colgroup>
         {showHeader && <HeaderWrapper className={`${sticky ? 'is-sticky' : ''} ${typeof classNames.header === 'string' ? classNames.header : headerClasses?.wrapper ?? ''}`} style={{ top: typeof sticky === 'object' ? sticky.offsetHeader ?? 0 : 0, ...headerStyles?.wrapper }}>{renderHeaderRows()}</HeaderWrapper>}
+        {summaryPosition === 'top' && summaryElement}
         <BodyWrapper className={`${typeof classNames.body === 'string' ? classNames.body : bodyClasses?.wrapper ?? ''}`} style={bodyStyles?.wrapper}>{topPad > 0 && <tr aria-hidden><td className="orbit-table__cell--last" colSpan={fullColSpan} style={{ height: topPad, padding: 0 }} /></tr>}{renderedRows.map(renderRow)}{bottomPad > 0 && <tr aria-hidden><td className="orbit-table__cell--last" colSpan={fullColSpan} style={{ height: bottomPad, padding: 0 }} /></tr>}{!loadingVisible && allFlatRows.length === 0 && <tr><td className="orbit-table__empty orbit-table__cell--last" colSpan={fullColSpan}>{emptyText}</td></tr>}</BodyWrapper>
-        {summary && <tfoot className={sticky && typeof sticky === 'object' && sticky.offsetSummary !== undefined ? 'is-sticky-summary' : undefined} style={{ bottom: typeof sticky === 'object' ? sticky.offsetSummary : undefined }}>{compoundSummary ? summaryContent : <tr><td className="orbit-table__cell--last" colSpan={fullColSpan}>{summaryContent}</td></tr>}</tfoot>}
+        {summaryPosition !== 'top' && summaryElement}
       </TableElement>
       {loadingVisible && <div className={`orbit-table__loading ${loadingConfig?.className ?? ''}`} style={loadingConfig?.style}><div className="orbit-table__loading-content">{loadingConfig?.indicator ?? <span className="orbit-table__spinner" aria-hidden />}{loadingConfig?.tip && <span>{loadingConfig.tip}</span>}<span className="orbit-sr-only">로딩 중</span></div></div>}
     </div>
@@ -543,7 +638,7 @@ function BodyCellInner<T extends object>({ component: Cell, custom, item, record
     title={item.ellipsis && (typeof item.ellipsis === 'boolean' || item.ellipsis.showTitle !== false) ? String(value ?? '') : mergedProps.title}
     className={`${className} ${item.className ?? ''} ${item.ellipsis ? 'orbit-table__ellipsis' : ''} ${mergedProps.className ?? ''}`}
     style={{ width: item.width, minWidth: item.minWidth, textAlign: item.align, ...fixedStyle, ...style, ...mergedProps.style }}
-  >{renderedCell?.children ?? rendered}</Cell>
+  >{renderedCell ? renderedCell.children : rendered}</Cell>
 }
 
 const BodyCell = memo(BodyCellInner, (previous, next) => {
@@ -562,7 +657,13 @@ function SelectionMenu<T extends object>({ rowSelection, changeableKeys, onAll, 
     { key: 'all', text: locale.selectionAll ?? '전체 데이터 선택', action: onAll },
     { key: 'invert', text: locale.selectInvert ?? '현재 페이지 선택 반전', action: onInvert },
     { key: 'none', text: locale.selectNone ?? '선택 해제', action: onNone },
-  ] : (rowSelection.selections || []).map((item) => ({ key: item.key, text: item.text, action: () => item.onSelect?.(changeableKeys) }))
+  ] : (rowSelection.selections || []).map((item) => item === SELECTION_ALL
+    ? { key: item.key, text: locale.selectionAll ?? item.text, action: onAll }
+    : item === SELECTION_INVERT
+      ? { key: item.key, text: locale.selectInvert ?? item.text, action: onInvert }
+      : item === SELECTION_NONE
+        ? { key: item.key, text: locale.selectNone ?? item.text, action: onNone }
+        : { key: item.key, text: item.text, action: () => item.onSelect?.(changeableKeys) })
   return <details className="orbit-table__selection-menu"><summary aria-label="선택 작업"><svg viewBox="0 0 10 10" aria-hidden><path d="m2 3.5 3 3 3-3" /></svg></summary><div>{items.map((item) => <button type="button" key={item.key} onClick={(event) => { item.action(); event.currentTarget.closest('details')?.removeAttribute('open') }}>{item.text}</button>)}</div></details>
 }
 
@@ -615,10 +716,16 @@ type TableComponent = {
   Column: typeof Column
   ColumnGroup: typeof ColumnGroup
   Summary: typeof Summary
+  SELECTION_ALL: SelectionItem
+  SELECTION_INVERT: SelectionItem
+  SELECTION_NONE: SelectionItem
 }
 
 export const Table = Object.assign(forwardRef(InnerTable), {
   Column,
   ColumnGroup,
   Summary,
+  SELECTION_ALL,
+  SELECTION_INVERT,
+  SELECTION_NONE,
 }) as TableComponent

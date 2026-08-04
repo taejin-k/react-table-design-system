@@ -12,7 +12,7 @@
 | --- | --- | --- | --- |
 | `dataSource`, `columns`, `column`, `rowKey` | ✅ | ✅ | `column` 공통 속성 및 열별 override 지원 |
 | `bordered`, `size`, `showHeader`, `rowHoverable`, `tableLayout` | ✅ | ✅ | large/medium/small 토큰 일치 |
-| `title`, `footer`, `summary` | ✅ | ✅ | 현재 페이지 데이터 및 `Table.Summary.Row/Cell` compound API 지원 |
+| `title`, `footer`, `summary` | ✅ | ✅ | 현재 페이지 데이터, `Table.Summary.Row/Cell`, summary `fixed` 지원 |
 | `pagination` | ✅ | ✅ | 아래 Pagination 표 참고 |
 | `rowSelection` | ✅ | ✅ | 아래 RowSelection 표 참고 |
 | `expandable` | ✅ | ✅ | 아래 Expandable 표 참고 |
@@ -26,8 +26,9 @@
 | `components` | ✅ | ✅ | table/header/body wrapper·row·cell 교체 지원 |
 | `rowClassName`, `onRow`, `onHeaderRow`, `onScroll` | ✅ | ✅ | record/index/indent 및 DOM 이벤트 지원 |
 | `classNames`, `styles` | 객체/함수 | ✅ | v6 semantic 객체/함수와 기존 flat alias 지원 |
+| native root props | ✅ | ✅ | `style`, `aria-*`, `data-*`, DOM 이벤트를 root div에 전달 |
 | `onChange` | ✅ | ✅ | pagination/filter/sorter/extra 반환 |
-| ref `nativeElement`, `scrollTo` | ✅ | ✅ | index/key/top/offset/align 지원 |
+| ref `nativeElement`, `scrollTo` | ✅ | ✅ | index/key/top/offset/align 지원. virtual off-screen key도 계산 이동 |
 | JSX `Table.Column`, `Table.ColumnGroup` | ✅ | ✅ | `columns` prop과 동일한 열 모델로 변환 |
 
 ## Column / ColumnGroup
@@ -44,6 +45,8 @@
 | 커스텀 필터 | `filterDropdown`, `FilterDropdownProps` | ✅ |
 | 드롭다운 옵션 | `filterDropdownProps` 전체 Dropdown Props | ◐ `open`, `onOpenChange`, `className` 지원 |
 | 로컬/서버 정렬 | 함수는 로컬, `true` 또는 compare 없는 객체는 서버 정렬 | ✅ | 기존의 `sorter: true` 로컬 정렬 오류 수정 |
+| 로컬/서버 필터 | `onFilter`가 있을 때만 로컬 필터 | ✅ | `filters`만 있으면 상태와 `onChange`만 갱신 |
+| tree data 처리 | 자식 레벨도 정렬·필터 | ✅ | 원본 레코드를 변경하지 않고 재귀 처리 |
 
 ## Pagination
 
@@ -60,6 +63,8 @@
 | semantic | `classNames`, `styles` 객체/함수 | ✅ |
 | 콜백 | `onChange`, `onShowSizeChange` | ✅ |
 
+추가 동작 계약도 현재 `rc-pagination`과 대조했다. simple 입력은 여러 자릿수를 입력한 뒤 Enter/blur에서 확정하고, page-size 변경은 현재 페이지를 유지하되 범위를 벗어날 때만 보정한다. 한 페이지뿐이면 quick jumper를 숨기며, `total=0`인 Table은 pagination 자체를 렌더링하지 않는다.
+
 ## RowSelection / selection
 
 | 영역 | antd API | Orbit |
@@ -71,7 +76,7 @@
 | 선택 메뉴 | `selections: true` 및 `{ key, text, onSelect }[]` | ✅ |
 | 콜백 | `onChange`, `onSelect` | ✅ |
 | deprecated 콜백 | `onSelectAll`, `onSelectInvert`, `onSelectNone`, `onSelectMultiple` | ✅ 호환 목적으로 유지 |
-| 기본 selection | 전체 선택, 반전, 선택 해제 | ✅ |
+| 기본 selection | 전체 선택, 반전, 선택 해제 및 `Table.SELECTION_ALL/INVERT/NONE` | ✅ |
 | Shift 범위 선택 | ✅ | ✅ |
 
 ## Expandable

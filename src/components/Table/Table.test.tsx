@@ -1,9 +1,9 @@
 import '@testing-library/jest-dom/vitest'
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
-import type { HTMLAttributes } from 'react'
+import { createRef, type HTMLAttributes } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { Table } from './Table'
-import type { ColumnsType } from './Table.types'
+import type { ColumnsType, TableRef } from './Table.types'
 
 type Row = { key: string; name: string; team: string; score: number; children?: Row[] }
 const data: Row[] = [
@@ -57,6 +57,21 @@ describe('Table', () => {
     expect(onSelectionChange).toHaveBeenCalledWith(['1', '1-1'], [data[0], data[0].children![0]], { type: 'multiple' })
   })
 
+  it('updates parent checked and indeterminate state when tree selection is associated', () => {
+    const tree: Row[] = [{ key: 'parent', name: 'Parent', team: 'Design', score: 0, children: [
+      { key: 'child-1', name: 'Child 1', team: 'Design', score: 1 },
+      { key: 'child-2', name: 'Child 2', team: 'Design', score: 2 },
+    ] }]
+    render(<Table<Row> dataSource={tree} columns={columns} pagination={false} expandable={{ defaultExpandAllRows: true }} rowSelection={{ checkStrictly: false }} />)
+    const parent = screen.getByLabelText('parent 행 선택') as HTMLInputElement
+    fireEvent.click(screen.getByLabelText('child-1 행 선택'))
+    expect(parent).not.toBeChecked()
+    expect(parent.indeterminate).toBe(true)
+    fireEvent.click(screen.getByLabelText('child-2 행 선택'))
+    expect(parent).toBeChecked()
+    expect(parent.indeterminate).toBe(false)
+  })
+
   it('expands tree rows and custom detail rows', () => {
     render(<Table<Row> dataSource={data} columns={columns} pagination={false} expandable={{ expandedRowRender: (row) => <span>Detail {row.name}</span> }} />)
     const expandButtons = screen.getAllByRole('button', { name: '행 펼치기' })
@@ -65,13 +80,13 @@ describe('Table', () => {
     expect(screen.getByText('Detail Bravo')).toBeInTheDocument()
   })
 
-  it('paginates and changes page size', () => {
-    render(<Table<Row> dataSource={data} columns={columns} pagination={{ pageSize: 1, showSizeChanger: true, pageSizeOptions: [1, 2] }} />)
+  it('paginates and preserves the current page when page size changes', () => {
+    render(<Table<Row> dataSource={data} columns={columns} pagination={{ defaultPageSize: 1, showSizeChanger: true, pageSizeOptions: [1, 2] }} />)
     expect(screen.getByText('Bravo')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: '다음 페이지' }))
     expect(screen.getByText('Alpha')).toBeInTheDocument()
     fireEvent.change(screen.getByLabelText('페이지 크기'), { target: { value: '2' } })
-    expect(screen.getByText('Bravo')).toBeInTheDocument()
+    expect(screen.getByText('Charlie')).toBeInTheDocument()
   })
 
   it('keeps a custom current page size visible in the automatic size changer', () => {
@@ -116,7 +131,15 @@ describe('Table', () => {
     expect(screen.getByText('Bravo')).toHaveStyle({ textAlign: 'right' })
     fireEvent.click(screen.getByLabelText('선택 작업'))
     fireEvent.click(screen.getByRole('button', { name: '전체 데이터 선택' }))
-    expect(onSelectionChange).toHaveBeenLastCalledWith(['1', '2', '3'], data, { type: 'all' })
+    expect(onSelectionChange).toHaveBeenLastCalledWith(['1', '1-1', '2', '3'], [data[0], data[0].children![0], data[1], data[2]], { type: 'all' })
+  })
+
+  it('supports the antd selection constants on the Table namespace', () => {
+    const onSelectionChange = vi.fn()
+    render(<Table<Row> dataSource={data} columns={columns} pagination={false} rowSelection={{ selections: [Table.SELECTION_ALL, Table.SELECTION_INVERT, Table.SELECTION_NONE], onChange: onSelectionChange }} />)
+    fireEvent.click(screen.getByLabelText('선택 작업'))
+    fireEvent.click(screen.getByRole('button', { name: 'Select all data' }))
+    expect(onSelectionChange).toHaveBeenLastCalledWith(expect.arrayContaining(['1', '2', '3']), expect.anything(), { type: 'all' })
   })
 
   it('supports functional semantic classNames and custom expand icons', () => {
@@ -171,5 +194,122 @@ describe('Table', () => {
     const summaryCell = screen.getByText('Total 6').closest('td')!
     expect(summaryCell).toHaveAttribute('data-column-index', '0')
     expect(summaryCell.closest('tfoot')?.querySelectorAll('tr')).toHaveLength(1)
+  })
+
+  it('supports fixed Table.Summary placement', () => {
+    render(<Table<Row> dataSource={data} columns={columns} pagination={false} summary={() => <Table.Summary fixed="top"><Table.Summary.Row><Table.Summary.Cell index={0}>Pinned</Table.Summary.Cell></Table.Summary.Row></Table.Summary>} />)
+    expect(screen.getByText('Pinned').closest('tbody')).toHaveClass('is-sticky-summary--top')
+  })
+
+  it('commits multi-digit simple pagination only on Enter or blur', () => {
+    const rows = Array.from({ length: 20 }, (_, index) => ({ key: String(index), name: `Row ${index + 1}`, team: 'Design', score: index }))
+    render(<Table<Row> dataSource={rows} columns={columns} pagination={{ defaultPageSize: 1, simple: true }} />)
+    const input = screen.getByLabelText('현재 페이지')
+    fireEvent.change(input, { target: { value: '12' } })
+    expect(screen.getByText('Row 1')).toBeInTheDocument()
+    fireEvent.keyDown(input, { key: 'Enter' })
+    expect(screen.getByText('Row 12')).toBeInTheDocument()
+  })
+
+  it('keeps page size callbacks aligned with rc-pagination semantics', () => {
+    const rows = Array.from({ length: 40 }, (_, index) => ({ key: String(index), name: `Row ${index + 1}`, team: 'Design', score: index }))
+    const onChange = vi.fn()
+    const onShowSizeChange = vi.fn()
+    render(<Table<Row> dataSource={rows} columns={columns} pagination={{ defaultCurrent: 3, defaultPageSize: 5, showSizeChanger: true, pageSizeOptions: [5, 10], onChange, onShowSizeChange }} />)
+    fireEvent.change(screen.getByLabelText('페이지 크기'), { target: { value: '10' } })
+    expect(screen.getByText('Row 21')).toBeInTheDocument()
+    expect(onShowSizeChange).toHaveBeenLastCalledWith(3, 10)
+    expect(onChange).toHaveBeenLastCalledWith(3, 10)
+  })
+
+  it('hides quick jump on one page and hides pagination for zero records', () => {
+    const { rerender } = render(<Table<Row> dataSource={data} columns={columns} pagination={{ pageSize: 10, showQuickJumper: true }} />)
+    expect(screen.queryByLabelText('이동할 페이지')).not.toBeInTheDocument()
+    rerender(<Table<Row> dataSource={[]} columns={columns} pagination={{ pageSize: 10 }} />)
+    expect(screen.queryByRole('navigation', { name: '페이지네이션' })).not.toBeInTheDocument()
+  })
+
+  it('treats filteredValue null as a controlled cleared filter', () => {
+    const controlledColumns: ColumnsType<Row> = [{ ...columns[1], defaultFilteredValue: ['Design'], filteredValue: null }]
+    render(<Table<Row> dataSource={data} columns={controlledColumns} pagination={false} />)
+    expect(screen.getByText('Platform')).toBeInTheDocument()
+  })
+
+  it('emits server-side filters without filtering locally when onFilter is absent', () => {
+    const onChange = vi.fn()
+    const serverColumns: ColumnsType<Row> = [{ title: 'Team', dataIndex: 'team', key: 'team', filters: [{ text: 'Design', value: 'Design' }] }]
+    render(<Table<Row> dataSource={data} columns={serverColumns} pagination={false} onChange={onChange} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Team 필터' }))
+    fireEvent.click(screen.getByLabelText('Design'))
+    fireEvent.click(screen.getByRole('button', { name: '확인' }))
+    expect(screen.getByText('Platform')).toBeInTheDocument()
+    expect(onChange).toHaveBeenLastCalledWith(expect.anything(), { team: ['Design'] }, expect.anything(), expect.objectContaining({ action: 'filter' }))
+  })
+
+  it('sorts nested tree levels recursively', () => {
+    const tree: Row[] = [{ key: 'root', name: 'Root', team: 'Design', score: 0, children: [
+      { key: 'child-z', name: 'Zulu', team: 'Design', score: 2 },
+      { key: 'child-a', name: 'Alpha child', team: 'Design', score: 1 },
+    ] }]
+    render(<Table<Row> dataSource={tree} columns={columns} pagination={false} expandable={{ defaultExpandAllRows: true }} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Name 정렬' }))
+    const bodyRows = screen.getAllByRole('row').slice(1)
+    expect(bodyRows[1]).toHaveTextContent('Alpha child')
+    expect(bodyRows[2]).toHaveTextContent('Zulu')
+  })
+
+  it('supports RenderedCell props without attempting to render the wrapper object', () => {
+    const renderedColumns: ColumnsType<Row> = [{ title: 'Name', render: () => ({ props: { className: 'props-only-cell' } }) }]
+    render(<Table<Row> dataSource={[data[0]]} columns={renderedColumns} pagination={false} rowSelection={{ renderCell: () => ({ props: { className: 'props-only-selection' } }) }} />)
+    expect(document.querySelector('.props-only-cell')).toBeEmptyDOMElement()
+    expect(document.querySelector('.props-only-selection')).toBeEmptyDOMElement()
+  })
+
+  it('forwards native root attributes and merges root styles', () => {
+    render(<Table<Row> data-testid="table-root" aria-label="Members" style={{ marginTop: 7 }} dataSource={data} columns={columns} pagination={false} />)
+    expect(screen.getByTestId('table-root')).toHaveAttribute('aria-label', 'Members')
+    expect(screen.getByTestId('table-root')).toHaveStyle({ marginTop: '7px' })
+  })
+
+  it('expands every eligible detail row for defaultExpandAllRows', () => {
+    render(<Table<Row> dataSource={data.slice(1)} columns={columns} pagination={false} expandable={{ defaultExpandAllRows: true, expandedRowRender: (row) => `Detail ${row.name}` }} />)
+    expect(screen.getByText('Detail Alpha')).toBeInTheDocument()
+    expect(screen.getByText('Detail Charlie')).toBeInTheDocument()
+  })
+
+  it('isolates radio groups across multiple tables', () => {
+    render(<><Table<Row> dataSource={data} columns={columns} pagination={false} rowSelection={{ type: 'radio' }} /><Table<Row> dataSource={data} columns={columns} pagination={false} rowSelection={{ type: 'radio' }} /></>)
+    const radios = screen.getAllByRole('radio')
+    expect(radios[0]).not.toHaveAttribute('name', radios[3].getAttribute('name'))
+  })
+
+  it('does not render a header cell whose colSpan is zero', () => {
+    render(<Table<Row> dataSource={data} columns={[{ title: 'Hidden header', dataIndex: 'name', colSpan: 0 }, columns[1]]} pagination={false} />)
+    expect(screen.queryByRole('columnheader', { name: 'Hidden header' })).not.toBeInTheDocument()
+  })
+
+  it('resets pagination on filter but keeps it on sort', () => {
+    const rows = Array.from({ length: 12 }, (_, index) => ({ key: String(index), name: `Row ${String(index + 1).padStart(2, '0')}`, team: index % 2 ? 'Design' : 'Platform', score: index }))
+    const paginationChange = vi.fn()
+    const onChange = vi.fn()
+    render(<Table<Row> dataSource={rows} columns={columns} pagination={{ defaultCurrent: 2, pageSize: 5, onChange: paginationChange }} onChange={onChange} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Name 정렬' }))
+    expect(onChange).toHaveBeenLastCalledWith(expect.objectContaining({ current: 2 }), expect.anything(), expect.anything(), expect.objectContaining({ action: 'sort' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Team 필터' }))
+    fireEvent.click(screen.getByLabelText('Design'))
+    fireEvent.click(screen.getByRole('button', { name: '확인' }))
+    expect(paginationChange).toHaveBeenLastCalledWith(1, 5)
+    expect(onChange).toHaveBeenLastCalledWith(expect.objectContaining({ current: 1 }), expect.anything(), expect.anything(), expect.objectContaining({ action: 'filter' }))
+  })
+
+  it('scrolls virtual off-screen keys with alignment and offset', () => {
+    const rows = Array.from({ length: 100 }, (_, index) => ({ key: String(index), name: `Row ${index + 1}`, team: 'Design', score: index }))
+    const ref = createRef<TableRef>()
+    render(<Table<Row> ref={ref} dataSource={rows} columns={columns} pagination={false} virtual scroll={{ y: 220 }} />)
+    const wrapper = document.querySelector('.orbit-table__wrapper') as HTMLDivElement
+    const scrollTo = vi.fn()
+    wrapper.scrollTo = scrollTo
+    ref.current?.scrollTo({ key: '50', align: 'center', offset: 10 })
+    expect(scrollTo).toHaveBeenCalledWith({ top: 2677.5 })
   })
 })

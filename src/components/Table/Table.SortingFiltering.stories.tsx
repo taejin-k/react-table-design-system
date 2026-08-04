@@ -17,6 +17,7 @@ type Story = StoryObj<TableProps<Member>>
 export const LocalSorter: Story = { args: { columns: columns.map((column) => ({ ...column, filters: undefined })) } }
 export const MultipleSorter: Story = { args: { columns: columns.map((column) => ({ ...column, filters: undefined })) } }
 export const ServerSorter: Story = { args: { columns: columns.map((column) => column.key === 'name' ? { ...column, sorter: true } : { ...column, sorter: undefined, filters: undefined }) } }
+export const ServerFilter: Story = { args: { columns: columns.map((column) => column.key === 'status' ? { ...column, onFilter: undefined, sorter: undefined } : { ...column, sorter: undefined, filters: undefined }) }, parameters: { docs: { description: { story: '`filters`만 두고 `onFilter`를 생략하면 UI 상태와 `onChange`만 변경되고 dataSource는 로컬에서 줄어들지 않습니다.' } } } }
 export const MenuFilter: Story = { args: { columns: columns.map((column) => ({ ...column, sorter: undefined })) } }
 
 const treeFilterColumns: ColumnsType<Member> = columns.map((column) => column.key === 'team' ? { ...column, filterMode: 'tree', filterSearch: true, filters: [{ text: '제품 조직', value: 'product-group', children: [{ text: 'Design', value: 'Design' }, { text: 'Product', value: 'Product' }] }, { text: '기술 조직', value: 'engineering-group', children: [{ text: 'Platform', value: 'Platform' }, { text: 'Mobile', value: 'Mobile' }] }] } : column)

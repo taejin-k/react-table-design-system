@@ -103,18 +103,23 @@ export type TableColumnGroupProps<T> = Omit<ColumnType<T>, 'children' | 'dataInd
 
 export type TableSummaryProps = {
   children?: ReactNode
+  fixed?: boolean | 'top' | 'bottom'
 }
 
 export type TableSummaryRowProps = HTMLAttributes<HTMLTableRowElement>
 
 export type TableSummaryCellProps = TdHTMLAttributes<HTMLTableCellElement> & {
-  index?: number
+  index: number
 }
 
 export type PaginationItemType = 'page' | 'prev' | 'next' | 'jump-prev' | 'jump-next'
 export type PaginationPlacement = 'topStart' | 'topCenter' | 'topEnd' | 'bottomStart' | 'bottomCenter' | 'bottomEnd' | 'none'
 
 export type PaginationConfig = {
+  'aria-label'?: string
+  className?: string
+  rootClassName?: string
+  style?: CSSProperties
   current?: number
   defaultCurrent?: number
   pageSize?: number
@@ -146,6 +151,9 @@ export type PaginationConfig = {
     next_page?: string
     prev_5?: string
     next_5?: string
+    prev_3?: string
+    next_3?: string
+    page_size?: string
   }
   classNames?: { root?: string; item?: string } | ((info: { current: number; pageSize: number; total: number }) => { root?: string; item?: string })
   styles?: { root?: CSSProperties; item?: CSSProperties } | ((info: { current: number; pageSize: number; total: number }) => { root?: CSSProperties; item?: CSSProperties })
@@ -294,7 +302,7 @@ export type TableLoadingConfig = {
   style?: CSSProperties
 }
 
-export type TableProps<T extends object> = {
+export type TableProps<T extends object> = Omit<HTMLAttributes<HTMLDivElement>, 'children' | 'title' | 'onChange' | 'onScroll'> & {
   children?: ReactNode
   dataSource?: T[]
   column?: Partial<ColumnType<T>>

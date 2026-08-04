@@ -26,9 +26,15 @@ export const CenterAligned: Story = { args: { pagination: { pageSize: 6, align: 
 
 export const Simple: Story = { args: { pagination: { pageSize: 6, simple: true } } }
 
+export const PageSizePreservesCurrent: Story = { args: { pagination: { defaultCurrent: 3, defaultPageSize: 6, showSizeChanger: true, pageSizeOptions: [6, 12, 24], showTotal: (total, range) => `${range[0]}-${range[1]} / ${total}` } } }
+
 export const Small: Story = { args: { pagination: { pageSize: 6, size: 'small', showLessItems: true } } }
 
+export const Disabled: Story = { args: { pagination: { pageSize: 6, showSizeChanger: true, showQuickJumper: true, disabled: true } } }
+
 export const HideOnSinglePage: Story = { args: { dataSource: members.slice(0, 4), pagination: { pageSize: 10, hideOnSinglePage: true } } }
+
+export const EmptyHidesPagination: Story = { args: { dataSource: [], pagination: { pageSize: 10 } } }
 
 export const Controlled: Story = { render: (args) => <ControlledPagination {...args} /> }
 

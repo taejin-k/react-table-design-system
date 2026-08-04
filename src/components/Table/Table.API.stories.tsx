@@ -26,6 +26,7 @@ export const ColumnJSX: Story = { render: (args) => <Table<Member> {...args}>
 </Table> }
 
 export const SemanticClassNamesAndStyles: Story = { args: { columns, classNames: { header: { cell: 'story-semantic-header' }, body: { row: 'story-semantic-row' } }, styles: { cell: { fontVariantNumeric: 'tabular-nums' } } } }
+export const NativeRootProps: Story = { args: { columns, 'aria-label': '구성원 테이블', role: 'region', style: { marginBlock: 12 } } }
 export const LoadingBoolean: Story = { args: { columns, loading: true } }
 export const LoadingConfig: Story = { args: { columns, loading: { spinning: true, tip: '구성원을 불러오는 중', delay: 0 } } }
 export const Empty: Story = { args: { columns, dataSource: [], locale: { emptyText: <div>아직 구성원이 없습니다.</div> } } }
