@@ -1,10 +1,10 @@
 @import "tailwindcss";
-
-@theme {
-  --font-sans: Inter, Pretendard, ui-sans-serif, system-ui, sans-serif;
-}
+@import "./styles/index.css";
 
 * { box-sizing: border-box; }
-body { margin: 0; min-width: 320px; min-height: 100vh; }
-button:not(:disabled), input[type="checkbox"] { cursor: pointer; }
-button:disabled { cursor: not-allowed; opacity: .35; }
+body { margin: 0; min-width: 320px; min-height: 100vh; color: var(--orbit-color-text); background: var(--orbit-color-bg-layout); font-family: var(--orbit-font-family); }
+button:not(:disabled), input[type="checkbox"], input[type="radio"] { cursor: pointer; }
+.status { display:inline-flex; border-radius:999px; padding:2px 8px; font-size:12px; line-height:20px; }
+.status--활성 { background:#f6ffed; color:#237804; }
+.status--휴가 { background:#fffbe6; color:#ad4e00; }
+.status--대기 { background:#fafafa; color:rgba(0,0,0,.65); }
