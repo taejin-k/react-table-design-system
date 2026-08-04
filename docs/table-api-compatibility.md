@@ -65,6 +65,8 @@
 
 추가 동작 계약도 현재 `rc-pagination`과 대조했다. simple 입력은 여러 자릿수를 입력한 뒤 Enter/blur에서 확정하고, page-size 변경은 현재 페이지를 유지하되 범위를 벗어날 때만 보정한다. 한 페이지뿐이면 quick jumper를 숨기며, `total=0`인 Table은 pagination 자체를 렌더링하지 않는다.
 
+`defaultPageSize`는 비제어 초기값이고 `pageSize`는 제어 값이다. `pageSize`를 사용한 경우에는 `onChange(current, pageSize)`에서 받은 값을 부모 상태에 반영해야 Select 변경이 유지된다.
+
 ## RowSelection / selection
 
 | 영역 | antd API | Orbit |

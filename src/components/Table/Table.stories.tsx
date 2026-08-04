@@ -13,7 +13,7 @@ const meta: Meta<TableProps<Member>> = {
   parameters: { docs: { description: { component: 'Ant Design Table과 동일한 핵심 사용 패턴을 제공하는 독립 React 테이블입니다. `dataSource`, `columns`, `rowKey`, `pagination`, `rowSelection`, `expandable`, `scroll`, `onChange`를 사용합니다.' } } },
   tags: ['autodocs'],
   argTypes: { size: { control: 'inline-radio', options: ['large', 'medium', 'small'] }, bordered: { control: 'boolean' }, loading: { control: 'boolean' }, sticky: { control: 'boolean' }, virtual: { control: 'boolean' } },
-  args: { dataSource: members, columns, rowKey: 'key', size: 'large', bordered: false, loading: false, pagination: { pageSize: 6 } },
+  args: { dataSource: members, columns, rowKey: 'key', size: 'large', bordered: false, loading: false, pagination: { defaultPageSize: 6 } },
 }
 
 export default meta
@@ -30,9 +30,9 @@ function SelectionStory(args: TableProps<Member>) {
   return <div><div className="story-toolbar"><button disabled={!selectedRowKeys.length} onClick={() => setSelectedRowKeys([])}>선택 해제 ({selectedRowKeys.length})</button></div><Table<Member> {...args} rowSelection={{ selectedRowKeys, selections: true, onChange: setSelectedRowKeys }} /></div>
 }
 
-export const FilterAndMultipleSorter: Story = { args: { bordered: true, pagination: { pageSize: 8, showSizeChanger: true, pageSizeOptions: [4, 8, 12] } } }
+export const FilterAndMultipleSorter: Story = { args: { bordered: true, pagination: { defaultPageSize: 8, showSizeChanger: true, pageSizeOptions: [4, 8, 12] } } }
 
-export const ProductionPagination: Story = { args: { dataSource: largeData.slice(0, 185), pagination: { pageSize: 6, pageSizeOptions: [6, 12, 24], showSizeChanger: true, showQuickJumper: true, showTotal: (total, range) => `${range[0]}-${range[1]} / 총 ${total}명` }, bordered: true } }
+export const ProductionPagination: Story = { args: { dataSource: largeData.slice(0, 185), pagination: { defaultPageSize: 6, pageSizeOptions: [6, 12, 24], showSizeChanger: true, showQuickJumper: true, showTotal: (total, range) => `${range[0]}-${range[1]} / 총 ${total}명` }, bordered: true } }
 
 export const ExpandableAndTree: Story = {
   args: { dataSource: [{ ...members[0], children: [{ ...members[5], key: 'M-1001-1', name: '한지우 (하위)' }] }, ...members.slice(1, 6)], expandable: { defaultExpandAllRows: true }, rowSelection: {}, pagination: false },
@@ -44,7 +44,7 @@ export const GroupedHeaderAndMergedCells: Story = {
 
 export const FixedAndResponsive: Story = { args: { columns: columns.map((column) => column.key === 'joinedAt' ? { ...column, fixed: 'right', responsive: undefined } : { ...column, responsive: undefined }), scroll: { x: 1600, y: 342 }, sticky: true, pagination: false, bordered: true } }
 export const VirtualThousandRows: Story = { args: { dataSource: largeData, virtual: true, scroll: { x: 900, y: 420 }, pagination: false, sticky: true, size: 'small' } }
-export const TitleFooterSummaryAndEmpty: Story = { args: { title: () => '구성원 현황', footer: (data) => `현재 ${data.length}개 행 표시`, summary: (data) => <div className="summary"><strong>프로젝트 합계</strong><span>{data.reduce((sum, row) => sum + row.projects, 0)}</span></div>, pagination: { pageSize: 6 }, bordered: true } }
+export const TitleFooterSummaryAndEmpty: Story = { args: { title: () => '구성원 현황', footer: (data) => `현재 ${data.length}개 행 표시`, summary: (data) => <div className="summary"><strong>프로젝트 합계</strong><span>{data.reduce((sum, row) => sum + row.projects, 0)}</span></div>, pagination: { defaultPageSize: 6 }, bordered: true } }
 export const LoadingAndEmpty: Story = { render: () => <div className="story-stack"><Table<Member> dataSource={members.slice(0, 3)} columns={columns} loading pagination={false} /><Table<Member> dataSource={[]} columns={columns} locale={{ emptyText: <div>📭<br />아직 구성원이 없습니다.</div> }} pagination={false} /></div> }
 
 export const EditableCells: Story = { render: () => <EditableStory /> }

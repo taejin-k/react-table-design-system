@@ -19,9 +19,11 @@ const columns: TableColumnsType<User> = [
   dataSource={[{ key: '1', name: 'Mike', age: 32 }]}
   columns={columns}
   rowSelection={{}}
-  pagination={{ pageSize: 10 }}
+  pagination={{ defaultPageSize: 10 }}
 />
 ```
+
+`defaultPageSize`는 사용자가 페이지 크기를 바꿀 수 있는 비제어 초기값입니다. `pageSize`를 전달하면 Ant Design과 마찬가지로 제어 모드가 되므로 `onChange`에서 갱신한 값을 다시 전달해야 합니다.
 
 ## Storybook
 

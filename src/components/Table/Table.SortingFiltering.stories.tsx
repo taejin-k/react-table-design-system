@@ -8,7 +8,7 @@ const meta: Meta<TableProps<Member>> = {
   title: 'Design System/Table/Sorting & Filtering',
   component: Table as ComponentType<TableProps<Member>>,
   tags: ['autodocs'],
-  args: { dataSource: members, columns, rowKey: 'key', pagination: { pageSize: 8 }, bordered: true },
+  args: { dataSource: members, columns, rowKey: 'key', pagination: { defaultPageSize: 8 }, bordered: true },
 }
 
 export default meta
