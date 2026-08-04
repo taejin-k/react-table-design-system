@@ -1,4 +1,4 @@
-import { useEffect, useState, type CSSProperties, type FocusEvent, type FormEvent, type KeyboardEvent, type ReactNode } from 'react'
+import { useEffect, useState, type CSSProperties, type FocusEvent, type KeyboardEvent, type ReactNode } from 'react'
 import type { PaginationConfig, PaginationItemType, PaginationPlacement } from './Table.types'
 
 type PaginationProps = {
@@ -62,8 +62,7 @@ export function Pagination({ config, page, pageSize, total, pageCount, placement
   const itemStyle = semanticStyles?.item
 
   const jump = (next: number) => onChange(Math.max(1, Math.min(pageCount, next)))
-  const submitJump = (event: FormEvent) => {
-    event.preventDefault()
+  const commitJump = () => {
     if (!jumpValue.trim()) return
     const next = Number(jumpValue)
     if (Number.isFinite(next)) jump(next)
@@ -106,6 +105,6 @@ export function Pagination({ config, page, pageSize, total, pageCount, placement
       {renderItem(config, page + 1, 'next', next)}
     </div>
     {sizeChanger && <select aria-label={locale.page_size ?? '페이지 크기'} disabled={disabled || (typeof config.showSizeChanger === 'object' && config.showSizeChanger.disabled)} value={pageSize} onChange={(event) => { const nextSize = Number(event.target.value); const nextPage = Math.min(page, Math.max(1, Math.ceil(total / nextSize))); config.onShowSizeChange?.(page, nextSize); onChange(nextPage, nextSize) }}>{pageSizeOptions.map((value) => <option key={value} value={value}>{value} {locale.items_per_page ?? '/ 페이지'}</option>)}</select>}
-    {total > pageSize && config.showQuickJumper && <form className="orbit-table__pagination-jumper" onSubmit={submitJump}><label>{locale.jump_to ?? '이동'}<input aria-label="이동할 페이지" inputMode="numeric" disabled={disabled} value={jumpValue} onChange={(event) => { if (/^\d*$/.test(event.target.value)) setJumpValue(event.target.value) }} /></label>{typeof config.showQuickJumper === 'object' && config.showQuickJumper.goButton ? <button type="submit" disabled={disabled}>{config.showQuickJumper.goButton}</button> : <span>{locale.page ?? '페이지'}</span>}</form>}
+    {total > pageSize && config.showQuickJumper && <form className="orbit-table__pagination-jumper" onSubmit={(event) => { event.preventDefault(); commitJump() }}><label>{locale.jump_to ?? '이동'}<input aria-label="이동할 페이지" inputMode="numeric" disabled={disabled} value={jumpValue} onChange={(event) => { if (/^\d*$/.test(event.target.value)) setJumpValue(event.target.value) }} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); commitJump() } }} /></label>{typeof config.showQuickJumper === 'object' && config.showQuickJumper.goButton ? <button type="submit" disabled={disabled}>{config.showQuickJumper.goButton}</button> : <span>{locale.page ?? '페이지'}</span>}</form>}
   </nav>
 }

@@ -222,6 +222,16 @@ describe('Table', () => {
     expect(screen.getByText('Row 12')).toBeInTheDocument()
   })
 
+  it('commits quick jumper input on Enter without relying on implicit form submission', () => {
+    const rows = Array.from({ length: 20 }, (_, index) => ({ key: String(index), name: `Row ${index + 1}`, team: 'Design', score: index }))
+    render(<Table<Row> dataSource={rows} columns={columns} pagination={{ defaultPageSize: 1, showQuickJumper: true }} />)
+    const input = screen.getByLabelText('이동할 페이지')
+    fireEvent.change(input, { target: { value: '12' } })
+    fireEvent.keyDown(input, { key: 'Enter' })
+    expect(screen.getByText('Row 12')).toBeInTheDocument()
+    expect(input).toHaveValue('')
+  })
+
   it('keeps page size callbacks aligned with rc-pagination semantics', () => {
     const rows = Array.from({ length: 40 }, (_, index) => ({ key: String(index), name: `Row ${index + 1}`, team: 'Design', score: index }))
     const onChange = vi.fn()
