@@ -43,11 +43,44 @@ describe('Table', () => {
     expect(onChange).toHaveBeenLastCalledWith(expect.anything(), expect.anything(), expect.anything(), expect.objectContaining({ action: 'filter' }))
   })
 
+  it('closes filter popups on outside pointer and Escape while exposing open state', () => {
+    render(<Table<Row> dataSource={data} columns={columns} pagination={false} />)
+    const trigger = screen.getByRole('button', { name: 'Team 필터' })
+    expect(trigger).toHaveAttribute('aria-expanded', 'false')
+    fireEvent.click(trigger)
+    expect(trigger).toHaveAttribute('aria-expanded', 'true')
+    expect(screen.getByRole('dialog', { name: '필터 메뉴' })).toBeInTheDocument()
+    fireEvent.pointerDown(document.body)
+    expect(screen.queryByRole('dialog', { name: '필터 메뉴' })).not.toBeInTheDocument()
+    fireEvent.click(trigger)
+    fireEvent.keyDown(document, { key: 'Escape' })
+    expect(screen.queryByRole('dialog', { name: '필터 메뉴' })).not.toBeInTheDocument()
+    expect(trigger).toHaveFocus()
+  })
+
   it('supports controlled row selection callbacks', () => {
     const onSelectionChange = vi.fn()
     render(<Table<Row> dataSource={data} columns={columns} pagination={false} rowSelection={{ onChange: onSelectionChange }} />)
     fireEvent.click(screen.getByLabelText('1 행 선택'))
     expect(onSelectionChange).toHaveBeenCalledWith(['1'], [data[0]], { type: 'multiple' })
+  })
+
+  it('closes selection operations on outside pointer, Escape, and action', () => {
+    render(<Table<Row> dataSource={data} columns={columns} pagination={false} rowSelection={{ selections: true }} />)
+    const trigger = screen.getByRole('button', { name: '선택 작업' })
+    fireEvent.click(trigger)
+    expect(trigger).toHaveAttribute('aria-expanded', 'true')
+    expect(screen.getByRole('group', { name: '선택 작업 메뉴' })).toBeInTheDocument()
+    fireEvent.pointerDown(document.body)
+    expect(screen.queryByRole('group', { name: '선택 작업 메뉴' })).not.toBeInTheDocument()
+    fireEvent.click(trigger)
+    fireEvent.keyDown(document, { key: 'Escape' })
+    expect(screen.queryByRole('group', { name: '선택 작업 메뉴' })).not.toBeInTheDocument()
+    expect(trigger).toHaveFocus()
+    fireEvent.click(trigger)
+    fireEvent.click(screen.getByRole('button', { name: '전체 데이터 선택' }))
+    expect(screen.queryByRole('group', { name: '선택 작업 메뉴' })).not.toBeInTheDocument()
+    expect(trigger).toHaveFocus()
   })
 
   it('uses a comfortable default selection column width', () => {
@@ -81,9 +114,27 @@ describe('Table', () => {
   it('expands tree rows and custom detail rows', () => {
     render(<Table<Row> dataSource={data} columns={columns} pagination={false} expandable={{ expandedRowRender: (row) => <span>Detail {row.name}</span> }} />)
     const expandButtons = screen.getAllByRole('button', { name: '행 펼치기' })
+    expect(expandButtons[0]).toHaveAttribute('aria-expanded', 'false')
     fireEvent.click(expandButtons[0])
+    expect(screen.getAllByRole('button', { name: '행 접기' })[0]).toHaveAttribute('aria-expanded', 'true')
     expect(screen.getByText('Child')).toBeInTheDocument()
     expect(screen.getByText('Detail Bravo')).toBeInTheDocument()
+  })
+
+  it('does not expand a row-by-click table when an interactive control is clicked', () => {
+    render(<Table<Row> dataSource={data} columns={columns} pagination={false} rowSelection={{}} expandable={{ expandRowByClick: true, expandedRowRender: (row) => <span>Detail {row.name}</span> }} />)
+    fireEvent.click(screen.getByLabelText('1 행 선택'))
+    expect(screen.queryByText('Detail Bravo')).not.toBeInTheDocument()
+    fireEvent.click(screen.getByText('Bravo'))
+    expect(screen.getByText('Detail Bravo')).toBeInTheDocument()
+  })
+
+  it('isolates single-select filter radio groups across tables', () => {
+    const singleFilterColumns: ColumnsType<Row> = [{ ...columns[1], filterMultiple: false, filterDropdownProps: { open: true } }]
+    render(<><Table<Row> dataSource={data} columns={singleFilterColumns} pagination={false} /><Table<Row> dataSource={data} columns={singleFilterColumns} pagination={false} /></>)
+    const radios = screen.getAllByRole('radio')
+    expect(radios).toHaveLength(4)
+    expect(radios[0]).not.toHaveAttribute('name', radios[2].getAttribute('name'))
   })
 
   it('paginates and preserves the current page when page size changes', () => {

@@ -19,6 +19,8 @@ const meta: Meta<TableProps<Member>> = {
 export default meta
 type Story = StoryObj<TableProps<Member>>
 
+export const FeatureGuide: Story = { render: () => <section className="story-feature-guide"><div><h2>데이터와 열</h2><p>columns/JSX Column, 공통 column 설정, 렌더링, 병합, 숨김, 반응형, 정렬과 필터</p></div><div><h2>사용자 조작</h2><p>페이지네이션, 체크박스·라디오 선택, 선택 작업, 확장 행, 행·열 드래그</p></div><div><h2>레이아웃</h2><p>fixed/sticky, 가상 스크롤, summary, title/footer, 크기와 테두리</p></div><div><h2>확장 API</h2><p>semantic class/style, components 교체, DOM 훅, locale, ref scrollTo</p></div></section> }
+
 export const Basic: Story = {}
 
 export const SelectionAndOperations: Story = {

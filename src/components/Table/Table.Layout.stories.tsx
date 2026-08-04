@@ -1,4 +1,4 @@
-import type { ComponentType } from 'react'
+import { useState, type ComponentType } from 'react'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { columns, largeData, members, type Member } from '../../playground/data'
 import { Table } from './Table'
@@ -32,3 +32,11 @@ export const MergedRows: Story = { args: { columns: groupedColumns.map((column) 
 export const Summary: Story = { args: { bordered: true, summary: (data) => <Table.Summary><Table.Summary.Row><Table.Summary.Cell index={0} colSpan={5}><strong>프로젝트 합계</strong></Table.Summary.Cell><Table.Summary.Cell index={5} className="story-summary-value">{data.reduce((sum, row) => sum + row.projects, 0)}</Table.Summary.Cell></Table.Summary.Row></Table.Summary> } }
 export const FixedTopSummary: Story = { args: { columns: columns.map((column) => ({ ...column, responsive: undefined })), dataSource: largeData.slice(0, 30), scroll: { x: 1000, y: 342 }, sticky: true, bordered: true, pagination: false, summary: (data) => <Table.Summary fixed="top"><Table.Summary.Row><Table.Summary.Cell index={0} colSpan={5}><strong>현재 데이터 합계</strong></Table.Summary.Cell><Table.Summary.Cell index={5} className="story-summary-value">{data.reduce((sum, row) => sum + row.projects, 0)}</Table.Summary.Cell></Table.Summary.Row></Table.Summary> } }
 export const TitleAndFooter: Story = { args: { title: () => '구성원 현황', footer: (data) => `현재 ${data.length}개 행 표시`, bordered: true } }
+export const Headerless: Story = { args: { showHeader: false, bordered: true, title: () => '헤더 없이 데이터만 표시' } }
+export const FixedBottomSummary: Story = { args: { columns: columns.map((column) => ({ ...column, responsive: undefined })), dataSource: largeData.slice(0, 30), scroll: { x: 1000, y: 300 }, sticky: true, bordered: true, summary: (data) => <Table.Summary fixed="bottom"><Table.Summary.Row><Table.Summary.Cell index={0} colSpan={5}><strong>현재 데이터 합계</strong></Table.Summary.Cell><Table.Summary.Cell index={5} className="story-summary-value">{data.reduce((sum, row) => sum + row.projects, 0)}</Table.Summary.Cell></Table.Summary.Row></Table.Summary> } }
+export const ScrollEventsAndStickyOffsets: Story = { render: (args) => <ScrollEventsStory {...args} /> }
+
+function ScrollEventsStory(args: TableProps<Member>) {
+  const [position, setPosition] = useState({ left: 0, top: 0 })
+  return <><p className="story-hint">현재 스크롤: left {position.left}px / top {position.top}px</p><Table<Member> {...args} dataSource={largeData.slice(0, 60)} columns={columns.map((column) => ({ ...column, responsive: undefined }))} pagination={false} sticky={{ offsetHeader: 8 }} scroll={{ x: 1200, y: 280 }} onScroll={(event) => setPosition({ left: Math.round(event.currentTarget.scrollLeft), top: Math.round(event.currentTarget.scrollTop) })} /></>
+}

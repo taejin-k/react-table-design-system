@@ -525,6 +525,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
           const itemLeaves = item.children?.length ? flattenColumns(item.children) : [item]
           const visualLastIndex = leafColumns.indexOf(itemLeaves[itemLeaves.length - 1])
           const resolvedColSpan = item.children?.length ? leafCount(item) : item.colSpan
+          const filterIsOpen = item.filterDropdownProps?.open ?? filterOpen === key
           if (resolvedColSpan === 0 || item.rowSpan === 0) return
           cells.push(<HeaderCell
             key={`${key}-${level}`}
@@ -539,7 +540,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
             <span className={`orbit-table__header-content ${item.sorter ? 'is-sortable' : ''}`} onClick={item.sorter ? () => toggleSort(item, leafIndex) : undefined}>
               <span>{renderTitle(item)}</span>
               {item.sorter && !item.children && <button type="button" className="orbit-table__icon-button" onClick={(event) => { event.stopPropagation(); toggleSort(item, leafIndex) }} aria-label={`${String(renderTitle(item))} 정렬`} title={tooltip && typeof tooltip === 'object' && tooltip.target === 'sorter-icon' ? tooltipTitle : undefined}>{item.sortIcon?.({ sortOrder: order }) ?? <SortGlyph order={order} />}</button>}
-              {(item.filters?.length || item.filterDropdown) && !item.children ? <span className="orbit-table__filter-wrap"><button ref={(node) => { if (node) filterTriggers.current.set(key, node); else filterTriggers.current.delete(key) }} type="button" className={`orbit-table__icon-button ${item.filtered || activeFilters[key]?.length ? 'is-active' : ''}`} onClick={(event) => { event.stopPropagation(); const open = !(item.filterDropdownProps?.open ?? filterOpen === key); setFilterDraft((draft) => ({ ...draft, [key]: activeFilters[key] ?? [] })); setFilterOpen(open ? key : null); item.filterDropdownProps?.onOpenChange?.(open) }} aria-label={`${String(renderTitle(item))} 필터`}>{typeof item.filterIcon === 'function' ? item.filterIcon(Boolean(item.filtered || activeFilters[key]?.length)) : item.filterIcon ?? <FilterGlyph />}</button>{(item.filterDropdownProps?.open ?? filterOpen === key) && <FilterMenu item={item} values={filterDraft[key] ?? []} locale={locale} trigger={filterTriggers.current.get(key)} popupContainer={filterTriggers.current.get(key) && getPopupContainer?.(filterTriggers.current.get(key)!)} className={item.filterDropdownProps?.className} onValues={(values) => setFilterDraft((draft) => ({ ...draft, [key]: values }))} onApply={(values) => applyFilter(item, leafIndex, values)} onClose={() => closeFilter(item, leafIndex)} />}</span> : null}
+              {(item.filters?.length || item.filterDropdown) && !item.children ? <span className="orbit-table__filter-wrap"><button ref={(node) => { if (node) filterTriggers.current.set(key, node); else filterTriggers.current.delete(key) }} type="button" className={`orbit-table__icon-button ${item.filtered || activeFilters[key]?.length ? 'is-active' : ''}`} onClick={(event) => { event.stopPropagation(); const open = !filterIsOpen; setFilterDraft((draft) => ({ ...draft, [key]: activeFilters[key] ?? [] })); setFilterOpen(open ? key : null); item.filterDropdownProps?.onOpenChange?.(open) }} aria-label={`${String(renderTitle(item))} 필터`} aria-haspopup="dialog" aria-expanded={filterIsOpen}>{typeof item.filterIcon === 'function' ? item.filterIcon(Boolean(item.filtered || activeFilters[key]?.length)) : item.filterIcon ?? <FilterGlyph />}</button>{filterIsOpen && <FilterMenu item={item} values={filterDraft[key] ?? []} locale={locale} trigger={filterTriggers.current.get(key)} popupContainer={filterTriggers.current.get(key) && getPopupContainer?.(filterTriggers.current.get(key)!)} className={item.filterDropdownProps?.className} onValues={(values) => setFilterDraft((draft) => ({ ...draft, [key]: values }))} onApply={(values) => applyFilter(item, leafIndex, values)} onClose={() => closeFilter(item, leafIndex)} />}</span> : null}
             </span>
           </HeaderCell>)
         } else if (item.children?.length) visit(item.children, current + 1)
@@ -602,10 +603,10 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
       {...rowProps}
       className={rowClass}
       style={{ height: virtual ? rowHeight : undefined, ...bodyStyles?.row, ...styles.row, ...rowProps.style }}
-      onClick={(event) => { rowProps.onClick?.(event); if (expandable?.expandRowByClick && canExpand) toggleExpand(record) }}
+      onClick={(event) => { rowProps.onClick?.(event); const target = event.target as HTMLElement; if (expandable?.expandRowByClick && canExpand && !event.defaultPrevented && !target.closest?.('button, input, select, textarea, a, [role="button"], [role="link"]')) toggleExpand(record) }}
     >
       {rowSelection && <Cell {...(components?.body?.cell ? { record, index: actualIndex, column: 'selection' } : {})} {...selectionCellProps} {...selectionRenderedCell?.props} className={`orbit-table__selection-cell ${selectionBoundaryClass} ${selectionCellProps.className ?? ''} ${selectionRenderedCell?.props?.className ?? ''}`} style={{ width: rowSelection.columnWidth ?? 48, textAlign: rowSelection.align, ...selectionFixedStyle, ...selectionCellProps.style, ...selectionRenderedCell?.props?.style }}>{selectionRenderedCell ? selectionRenderedCell.children : renderedSelection ?? originSelectionNode}</Cell>}
-      {expandable && expandable.showExpandColumn !== false && <Cell {...(components?.body?.cell ? { record, index: actualIndex, column: 'expand' } : {})} className={`orbit-table__expand-cell orbit-table__expand-cell--body ${expandBoundaryClass}`} style={{ width: expandable.columnWidth ?? 48, ...expandFixedStyle }}><span className="orbit-table__expand-indent" style={{ paddingInlineStart: 15 + depth * (expandable.indentSize ?? 15) }}>{expandable.expandIcon?.({ expanded, record, expandable: canExpand, onExpand: (item, event) => { event.stopPropagation(); toggleExpand(item) } }) ?? (canExpand ? <button type="button" className="orbit-table__expand" aria-label={expanded ? locale.collapse ?? '행 접기' : locale.expand ?? '행 펼치기'} onClick={(event) => { event.stopPropagation(); toggleExpand(record) }}>{expanded ? '−' : '+'}</button> : <span className="orbit-table__expand-placeholder" aria-hidden />)}</span></Cell>}
+      {expandable && expandable.showExpandColumn !== false && <Cell {...(components?.body?.cell ? { record, index: actualIndex, column: 'expand' } : {})} className={`orbit-table__expand-cell orbit-table__expand-cell--body ${expandBoundaryClass}`} style={{ width: expandable.columnWidth ?? 48, ...expandFixedStyle }}><span className="orbit-table__expand-indent" style={{ paddingInlineStart: 15 + depth * (expandable.indentSize ?? 15) }}>{expandable.expandIcon?.({ expanded, record, expandable: canExpand, onExpand: (item, event) => { event.stopPropagation(); toggleExpand(item) } }) ?? (canExpand ? <button type="button" className="orbit-table__expand" aria-expanded={expanded} aria-label={expanded ? locale.collapse ?? '행 접기' : locale.expand ?? '행 펼치기'} onClick={(event) => { event.stopPropagation(); toggleExpand(record) }}>{expanded ? '−' : '+'}</button> : <span className="orbit-table__expand-placeholder" aria-hidden />)}</span></Cell>}
       {leafColumns.map((item, columnIndex) => <BodyCell key={columnKey(item, columnIndex)} component={Cell} custom={Boolean(components?.body?.cell)} item={item} record={record} rowIndex={actualIndex} fixedStyle={fixedStyle(item, columnIndex)} className={`${bodyClasses?.cell ?? ''} ${classNames.cell ?? ''} ${fixedClass(item, columnIndex)} ${columnIndex === leafColumns.length - 1 ? 'orbit-table__cell--last' : ''}`} style={{ ...bodyStyles?.cell, ...styles.cell }} />)}
     </RowComponent>{expandable?.expandedRowRender && expanded && <tr className={`orbit-table__expanded ${typeof expandable.expandedRowClassName === 'function' ? expandable.expandedRowClassName(record, actualIndex, depth) : expandable.expandedRowClassName ?? ''}`}><td className="orbit-table__cell--last" colSpan={fullColSpan}>{expandable.expandedRowRender(record, actualIndex, depth, expanded)}</td></tr>}</Fragment>
   }
@@ -701,6 +702,10 @@ function SelectionCheckbox({ indeterminate, ...props }: React.InputHTMLAttribute
 }
 
 function SelectionMenu<T extends object>({ rowSelection, changeableKeys, onAll, onInvert, onNone, locale }: { rowSelection: NonNullable<TableProps<T>['rowSelection']>; changeableKeys: Key[]; onAll: () => void; onInvert: () => void; onNone: () => void; locale: NonNullable<TableProps<T>['locale']> }) {
+  const [open, setOpen] = useState(false)
+  const rootRef = useRef<HTMLDivElement>(null)
+  const triggerRef = useRef<HTMLButtonElement>(null)
+  const popupId = `orbit-table-selection-menu-${useId().replace(/:/g, '')}`
   const items = rowSelection.selections === true ? [
     { key: 'all', text: locale.selectionAll ?? '전체 데이터 선택', action: onAll },
     { key: 'invert', text: locale.selectInvert ?? '현재 페이지 선택 반전', action: onInvert },
@@ -710,9 +715,27 @@ function SelectionMenu<T extends object>({ rowSelection, changeableKeys, onAll, 
     : item === SELECTION_INVERT
       ? { key: item.key, text: locale.selectInvert ?? item.text, action: onInvert }
       : item === SELECTION_NONE
-        ? { key: item.key, text: locale.selectNone ?? item.text, action: onNone }
-        : { key: item.key, text: item.text, action: () => item.onSelect?.(changeableKeys) })
-  return <details className="orbit-table__selection-menu"><summary aria-label="선택 작업"><svg viewBox="0 0 10 10" aria-hidden><path d="m2 3.5 3 3 3-3" /></svg></summary><div>{items.map((item) => <button type="button" key={item.key} onClick={(event) => { item.action(); event.currentTarget.closest('details')?.removeAttribute('open') }}>{item.text}</button>)}</div></details>
+      ? { key: item.key, text: locale.selectNone ?? item.text, action: onNone }
+      : { key: item.key, text: item.text, action: () => item.onSelect?.(changeableKeys) })
+  useEffect(() => {
+    if (!open) return
+    const pointer = (event: PointerEvent) => { if (!rootRef.current?.contains(event.target as Node)) setOpen(false) }
+    const keyboard = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return
+      event.preventDefault()
+      setOpen(false)
+      triggerRef.current?.focus()
+    }
+    document.addEventListener('pointerdown', pointer)
+    document.addEventListener('keydown', keyboard)
+    return () => { document.removeEventListener('pointerdown', pointer); document.removeEventListener('keydown', keyboard) }
+  }, [open])
+  const choose = (action: () => void) => {
+    action()
+    setOpen(false)
+    triggerRef.current?.focus()
+  }
+  return <div ref={rootRef} className="orbit-table__selection-menu"><button ref={triggerRef} type="button" className="orbit-table__selection-menu-trigger" aria-label="선택 작업" aria-expanded={open} aria-controls={popupId} onClick={() => setOpen((current) => !current)}><svg viewBox="0 0 10 10" aria-hidden><path d="m2 3.5 3 3 3-3" /></svg></button>{open && <div id={popupId} role="group" aria-label="선택 작업 메뉴">{items.map((item) => <button type="button" key={item.key} onClick={() => choose(item.action)}>{item.text}</button>)}</div>}</div>
 }
 
 function SortGlyph({ order }: { order: SortOrder }) {
@@ -726,9 +749,10 @@ function FilterGlyph() {
 function FilterMenu<T extends object>({ item, values, locale, trigger, popupContainer, className = '', onValues, onApply, onClose }: { item: ColumnType<T>; values: FilterKey[]; locale: NonNullable<TableProps<T>['locale']>; trigger?: HTMLElement; popupContainer?: HTMLElement; className?: string; onValues: (values: FilterKey[]) => void; onApply: (values: FilterKey[], closeDropdown?: boolean) => void; onClose: () => void }) {
   const [search, setSearch] = useState('')
   const menuRef = useRef<HTMLDivElement>(null)
+  const radioName = `orbit-table-filter-${useId().replace(/:/g, '')}`
   useEffect(() => {
     const pointer = (event: PointerEvent) => { if (!menuRef.current?.contains(event.target as Node) && !trigger?.contains(event.target as Node)) onClose() }
-    const keyboard = (event: KeyboardEvent) => { if (event.key === 'Escape') onClose() }
+    const keyboard = (event: KeyboardEvent) => { if (event.key === 'Escape') { event.preventDefault(); trigger?.focus(); onClose() } }
     document.addEventListener('pointerdown', pointer)
     document.addEventListener('keydown', keyboard)
     return () => { document.removeEventListener('pointerdown', pointer); document.removeEventListener('keydown', keyboard) }
@@ -744,15 +768,15 @@ function FilterMenu<T extends object>({ item, values, locale, trigger, popupCont
   }
   const customProps: FilterDropdownProps = { setSelectedKeys: onValues, selectedKeys: values, confirm, clearFilters, close, filters: item.filters, visible: true }
   const content = typeof item.filterDropdown === 'function' ? item.filterDropdown(customProps) : item.filterDropdown
-  const defaultContent = <>{item.filterSearch && <input autoFocus className="orbit-table__filter-search" placeholder={locale.filterSearchPlaceholder ?? '필터 검색'} value={search} onChange={(event) => setSearch(event.target.value)} />}<div className={`orbit-table__filter-options ${item.filterMode === 'tree' ? 'is-tree' : ''}`}>{item.filters?.length ? <FilterOptions items={item.filters} values={values} search={search} multiple={item.filterMultiple !== false} filterSearch={item.filterSearch} onValues={onValues} /> : <div className="orbit-table__filter-empty">{locale.filterEmptyText ?? '필터 없음'}</div>}</div><div className="orbit-table__filter-actions"><button type="button" onClick={() => clearFilters({ confirm: false })}>{locale.filterReset ?? '초기화'}</button><button type="button" className="is-primary" onClick={() => confirm()}>{locale.filterConfirm ?? '확인'}</button></div></>
+  const defaultContent = <>{item.filterSearch && <input autoFocus className="orbit-table__filter-search" placeholder={locale.filterSearchPlaceholder ?? '필터 검색'} value={search} onChange={(event) => setSearch(event.target.value)} />}<div className={`orbit-table__filter-options ${item.filterMode === 'tree' ? 'is-tree' : ''}`}>{item.filters?.length ? <FilterOptions items={item.filters} values={values} search={search} multiple={item.filterMultiple !== false} radioName={radioName} filterSearch={item.filterSearch} onValues={onValues} /> : <div className="orbit-table__filter-empty">{locale.filterEmptyText ?? '필터 없음'}</div>}</div><div className="orbit-table__filter-actions"><button type="button" onClick={() => clearFilters({ confirm: false })}>{locale.filterReset ?? '초기화'}</button><button type="button" className="is-primary" onClick={() => confirm()}>{locale.filterConfirm ?? '확인'}</button></div></>
   const portalStyle = popupContainer && trigger ? (() => { const triggerRect = trigger.getBoundingClientRect(); const containerRect = popupContainer === document.body ? { top: 0, left: 0 } : popupContainer.getBoundingClientRect(); return { position: popupContainer === document.body ? 'fixed' as const : 'absolute' as const, top: triggerRect.bottom - containerRect.top + 4, left: triggerRect.left - containerRect.left - 12 } })() : undefined
   const menu = <div ref={menuRef} className={`orbit-table__filter-menu ${className}`} style={portalStyle} role="dialog" aria-label={locale.filterTitle ?? '필터 메뉴'} onClick={(event) => event.stopPropagation()}>{content ?? defaultContent}</div>
   return popupContainer ? createPortal(menu, popupContainer) : menu
 }
 
-function FilterOptions({ items, values, search, multiple, filterSearch, onValues, depth = 0 }: { items: FilterItem[]; values: FilterKey[]; search: string; multiple: boolean; filterSearch?: ColumnType<object>['filterSearch']; onValues: (values: FilterKey[]) => void; depth?: number }) {
+function FilterOptions({ items, values, search, multiple, radioName, filterSearch, onValues, depth = 0 }: { items: FilterItem[]; values: FilterKey[]; search: string; multiple: boolean; radioName: string; filterSearch?: ColumnType<object>['filterSearch']; onValues: (values: FilterKey[]) => void; depth?: number }) {
   const visible = items.filter((item) => !search || (typeof filterSearch === 'function' ? filterSearch(search, item) : String(item.text).toLowerCase().includes(search.toLowerCase()) || item.children?.some((child) => String(child.text).toLowerCase().includes(search.toLowerCase()))))
-  return <>{visible.map((item) => <div key={String(item.value)}>{item.children?.length ? <><div className="orbit-table__filter-group" style={{ paddingInlineStart: depth * 12 }}>{item.text}</div><FilterOptions items={item.children} values={values} search={search} multiple={multiple} filterSearch={filterSearch} onValues={onValues} depth={depth + 1} /></> : <label style={{ paddingInlineStart: 8 + depth * 12 }}><input type={multiple ? 'checkbox' : 'radio'} name={multiple ? undefined : 'table-filter'} checked={values.includes(item.value)} onChange={(event) => onValues(multiple ? event.target.checked ? [...values, item.value] : values.filter((value) => value !== item.value) : event.target.checked ? [item.value] : [])} />{item.text}</label>}</div>)}</>
+  return <>{visible.map((item) => <div key={String(item.value)}>{item.children?.length ? <><div className="orbit-table__filter-group" style={{ paddingInlineStart: depth * 12 }}>{item.text}</div><FilterOptions items={item.children} values={values} search={search} multiple={multiple} radioName={radioName} filterSearch={filterSearch} onValues={onValues} depth={depth + 1} /></> : <label style={{ paddingInlineStart: 8 + depth * 12 }}><input type={multiple ? 'checkbox' : 'radio'} name={multiple ? undefined : radioName} checked={values.includes(item.value)} onChange={(event) => onValues(multiple ? event.target.checked ? [...values, item.value] : values.filter((value) => value !== item.value) : event.target.checked ? [item.value] : [])} />{item.text}</label>}</div>)}</>
 }
 
 function DefaultEmpty() {

@@ -34,7 +34,7 @@ npm run storybook
 
 Open <http://localhost:6006> and select **Design System / Table**.
 
-The Storybook contains 66 focused stories grouped by expandable rows, pagination, selection, sorting/filtering, layout, API compatibility, and composition examples. Sticky/fixed layouts, fixed summaries, virtual rows, editable cells, animated row/column drag sorting, server filters, disabled/empty pagination, and native root props are covered independently.
+The Storybook contains 97 focused stories grouped by expandable rows, pagination, selection, sorting/filtering, layout, API compatibility, and composition examples. Every Table story shows a short feature explanation directly in Canvas. Sticky/fixed layouts, fixed summaries, virtual rows, editable cells, animated row/column drag sorting, server filters, controlled/uncontrolled state, DOM hooks, localization, imperative scrolling, disabled/empty pagination, and native root props are covered independently.
 
 ## Library structure
 

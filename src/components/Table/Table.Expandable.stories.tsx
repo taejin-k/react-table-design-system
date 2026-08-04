@@ -45,3 +45,21 @@ export const CustomExpandIcon: Story = {
 export const HideExpandColumn: Story = {
   args: { expandable: { showExpandColumn: false, expandRowByClick: true, expandedRowRender: (record) => <div className="detail-panel">{record.name} 상세 정보</div> } },
 }
+
+export const EligibleRowsAndFixedColumn: Story = { args: { columns: columns.map((column) => ({ ...column, responsive: undefined })), scroll: { x: 1500 }, expandable: { fixed: 'left', columnTitle: '상세', columnWidth: 64, rowExpandable: (record) => record.status === '활성', expandedRowRender: (record) => <div className="detail-panel">{record.name} 활성 구성원 상세</div> } } }
+
+export const ExpandedRowClassName: Story = { args: { expandable: { defaultExpandedRowKeys: ['M-1001'], expandedRowClassName: 'story-expanded-row', expandedRowRender: (record) => <div className="detail-panel"><strong>{record.name}</strong><span>강조된 확장 행</span></div> } } }
+
+type NestedMember = Member & { nodes?: NestedMember[] }
+
+const customChildrenData: NestedMember[] = [
+  { ...members[0], nodes: [{ ...members[5], key: 'M-1001-node', name: '한지우 (nodes 하위)' }] },
+  ...members.slice(1, 5),
+]
+
+export const CustomChildrenAndCallbacks: Story = { render: (args) => <CustomChildrenAndCallbacksStory {...args} /> }
+
+function CustomChildrenAndCallbacksStory(args: TableProps<Member>) {
+  const [message, setMessage] = useState('nodes 자식 행을 펼쳐 콜백을 확인하세요.')
+  return <><p className="story-hint">{message}</p><Table<Member> {...args} dataSource={customChildrenData} expandable={{ childrenColumnName: 'nodes', onExpand: (expanded, record) => setMessage(`onExpand: ${record.name} ${expanded ? '펼침' : '접힘'}`), onExpandedRowsChange: (keys) => setMessage(`onExpandedRowsChange: ${keys.length}개 펼침`) }} /></>
+}

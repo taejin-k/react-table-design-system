@@ -11,5 +11,5 @@
     "allowImportingTsExtensions": false
   },
   "include": ["src/index.ts", "src/components/**/*.ts", "src/components/**/*.tsx"],
-  "exclude": ["src/**/*.stories.tsx", "src/**/*.test.tsx"]
+  "exclude": ["src/**/*.stories.tsx", "src/**/*.test.tsx", "src/**/*.story-descriptions.ts"]
 }

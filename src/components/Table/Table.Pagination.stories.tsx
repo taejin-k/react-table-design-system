@@ -42,3 +42,20 @@ function ControlledPagination(args: TableProps<Member>) {
   const [pagination, setPagination] = useState({ current: 2, pageSize: 6 })
   return <Table<Member> {...args} pagination={{ ...pagination, onChange: (current, pageSize) => setPagination({ current, pageSize }) }} />
 }
+
+export const CustomItemRender: Story = { args: { pagination: { defaultCurrent: 8, defaultPageSize: 6, itemRender: (page, type, element) => type === 'page' ? <span className="story-pagination-item" title={`${page}번 페이지`}>{element}</span> : element } } }
+
+export const GoButtonAndLocale: Story = { args: { pagination: { defaultPageSize: 6, showQuickJumper: { goButton: '이동' }, showSizeChanger: true, pageSizeOptions: [6, 12, 24], locale: { jump_to: '페이지 이동', page: '쪽', page_size: '페이지당 행 수', items_per_page: '개씩', prev_page: '이전 쪽', next_page: '다음 쪽' } } } }
+
+export const SemanticAndResponsive: Story = { args: { pagination: { defaultPageSize: 6, responsive: true, showTitle: false, classNames: { root: 'story-pagination-root', item: 'story-pagination-control' }, styles: { root: { borderTop: '1px dashed #91caff' }, item: { fontVariantNumeric: 'tabular-nums' } } } } }
+
+export const HiddenJumpControls: Story = { args: { pagination: { defaultCurrent: 12, defaultPageSize: 6, showLessItems: true, showPrevNextJumpers: false } } }
+
+export const ReadOnlySimple: Story = { args: { pagination: { defaultCurrent: 4, defaultPageSize: 6, simple: { readOnly: true } } } }
+
+export const CallbackContract: Story = { render: (args) => <PaginationCallbackStory {...args} /> }
+
+function PaginationCallbackStory(args: TableProps<Member>) {
+  const [events, setEvents] = useState({ change: '아직 없음', size: '아직 없음' })
+  return <><p className="story-hint">onChange: {events.change} · onShowSizeChange: {events.size}</p><Table<Member> {...args} pagination={{ defaultPageSize: 6, showSizeChanger: true, pageSizeOptions: [6, 12, 24], onChange: (page, pageSize) => setEvents((current) => ({ ...current, change: `${page}페이지 / ${pageSize}개` })), onShowSizeChange: (page, pageSize) => setEvents((current) => ({ ...current, size: `${page}페이지 / ${pageSize}개` })) }} /></>
+}

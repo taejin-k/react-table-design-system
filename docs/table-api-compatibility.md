@@ -2,6 +2,8 @@
 
 기준: Ant Design **6.5.3**의 공식 Table/Pagination 문서와 공개 TypeScript 선언. Orbit Table은 antd 코드를 포함하거나 래핑하지 않으며, 익숙한 API 계약과 동작을 독립 구현한다.
 
+Storybook에는 구현 기능을 확인하는 97개 Story가 있으며, 각 Canvas 상단에 기능 목적과 확인 포인트를 표시한다.
+
 - ✅ 동일 이름으로 구현 및 검증
 - ◐ 일반 사용은 지원하지만 antd 하위 컴포넌트 전체 옵션까지는 지원하지 않음
 - ⏸ 구현 보류 — 아래 이유와 판단 항목 참고
