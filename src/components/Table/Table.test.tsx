@@ -1,8 +1,9 @@
 import '@testing-library/jest-dom/vitest'
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
+import type { HTMLAttributes } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { Table } from './Table'
-import type { ColumnsType } from './types'
+import type { ColumnsType } from './Table.types'
 
 type Row = { key: string; name: string; team: string; score: number; children?: Row[] }
 const data: Row[] = [
@@ -15,6 +16,10 @@ const columns: ColumnsType<Row> = [
   { title: 'Team', dataIndex: 'team', key: 'team', filters: [{ text: 'Design', value: 'Design' }, { text: 'Platform', value: 'Platform' }], onFilter: (value, row) => row.team === value },
   { title: 'Score', dataIndex: 'score', key: 'score' },
 ]
+
+function CustomRow({ record, ...props }: HTMLAttributes<HTMLTableRowElement> & { record?: Row }) {
+  return <tr {...props} data-record-name={record?.name} />
+}
 
 afterEach(cleanup)
 
@@ -68,5 +73,10 @@ describe('Table', () => {
     expect(screen.getByText('Alpha')).toBeInTheDocument()
     fireEvent.change(screen.getByLabelText('페이지 크기'), { target: { value: '2' } })
     expect(screen.getByText('Bravo')).toBeInTheDocument()
+  })
+
+  it('supports antd-style custom body row components', () => {
+    render(<Table<Row> dataSource={data} columns={columns} pagination={false} components={{ body: { row: CustomRow } }} />)
+    expect(screen.getByText('Bravo').closest('tr')).toHaveAttribute('data-record-name', 'Bravo')
   })
 })

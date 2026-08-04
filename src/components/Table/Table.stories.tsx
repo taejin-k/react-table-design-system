@@ -1,8 +1,11 @@
-import { useRef, useState, type ComponentType } from 'react'
+import { useState, type ComponentType, type HTMLAttributes } from 'react'
+import { closestCenter, DndContext, KeyboardSensor, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core'
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { columns, largeData, members, type Member } from '../demoData'
+import { columns, largeData, members, type Member } from '../../playground/data'
 import { Table } from './Table'
-import type { ColumnsType, Key, TableProps } from './types'
+import type { ColumnsType, Key, TableProps } from './Table.types'
 
 const meta: Meta<TableProps<Member>> = {
   title: 'Design System/Table',
@@ -54,6 +57,19 @@ export const DragRowSorting: Story = { render: () => <DragStory /> }
 
 function DragStory() {
   const [rows, setRows] = useState(members.slice(0, 6))
-  const draggingKey = useRef<Key | null>(null)
-  return <><p className="story-hint">행을 잡아 원하는 위치로 드래그하세요.</p><Table<Member> dataSource={rows} columns={columns} pagination={false} onRow={(record) => ({ draggable: true, onDragStart: () => { draggingKey.current = record.key }, onDragOver: (event) => event.preventDefault(), onDrop: () => { const source = rows.findIndex((row) => row.key === draggingKey.current); const target = rows.findIndex((row) => row.key === record.key); if (source < 0 || source === target) return; setRows((current) => { const next = [...current]; const [moved] = next.splice(source, 1); next.splice(target, 0, moved); return next }) } })} /></>
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }), useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }))
+  const handleDragEnd = ({ active, over }: DragEndEvent) => {
+    if (!over || active.id === over.id) return
+    setRows((current) => arrayMove(current, current.findIndex((row) => row.key === active.id), current.findIndex((row) => row.key === over.id)))
+  }
+  const dragColumns: ColumnsType<Member> = [{ key: 'drag', title: <span className="story-sr-only">행 이동</span>, width: 48, render: () => <span className="story-drag-handle" aria-hidden>⠿</span> }, ...columns]
+  return <><p className="story-hint">행을 잡아 원하는 위치로 드래그하세요. 주변 행이 이동 경로에 맞춰 부드럽게 재배치됩니다.</p><DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}><SortableContext items={rows.map((row) => row.key)} strategy={verticalListSortingStrategy}><Table<Member> dataSource={rows} columns={dragColumns} pagination={false} components={{ body: { row: SortableRow } }} /></SortableContext></DndContext></>
+}
+
+type SortableRowProps = HTMLAttributes<HTMLTableRowElement> & { 'data-row-key'?: Key; record?: Member; index?: number }
+
+function SortableRow({ record: _record, index: _index, style, className = '', ...props }: SortableRowProps) {
+  const id = String(props['data-row-key'])
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id })
+  return <tr ref={setNodeRef} {...props} {...attributes} {...listeners} role="row" className={`${className} story-sortable-row ${isDragging ? 'is-dragging' : ''}`} style={{ ...style, transform: CSS.Transform.toString(transform), transition: transition ?? 'transform 220ms cubic-bezier(.2,.8,.2,1)', zIndex: isDragging ? 10 : undefined, position: 'relative' }} />
 }

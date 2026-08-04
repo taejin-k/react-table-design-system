@@ -1,4 +1,4 @@
-import type { CSSProperties, HTMLAttributes, ReactNode, TdHTMLAttributes, ThHTMLAttributes } from 'react'
+import type { ComponentType, CSSProperties, HTMLAttributes, ReactNode, TdHTMLAttributes, ThHTMLAttributes } from 'react'
 
 export type Key = string | number
 export type SortOrder = 'ascend' | 'descend' | null
@@ -97,6 +97,12 @@ export type TableChangeExtra<T> = {
   action: 'paginate' | 'sort' | 'filter'
 }
 
+export type TableComponents<T> = {
+  body?: {
+    row?: ComponentType<HTMLAttributes<HTMLTableRowElement> & { 'data-row-key'?: Key; record?: T; index?: number }>
+  }
+}
+
 export type TableProps<T extends object> = {
   dataSource?: T[]
   columns?: ColumnsType<T>
@@ -121,6 +127,7 @@ export type TableProps<T extends object> = {
   className?: string
   classNames?: Partial<Record<'root' | 'wrapper' | 'table' | 'header' | 'body' | 'row' | 'cell' | 'pagination', string>>
   styles?: Partial<Record<'root' | 'wrapper' | 'table' | 'header' | 'body' | 'row' | 'cell' | 'pagination', CSSProperties>>
+  components?: TableComponents<T>
   onChange?: (pagination: PaginationConfig, filters: Record<string, FilterValue>, sorter: { columnKey?: Key; order?: SortOrder } | Array<{ columnKey?: Key; order?: SortOrder }>, extra: TableChangeExtra<T>) => void
   onRow?: (record: T, index: number) => HTMLAttributes<HTMLTableRowElement>
   onHeaderRow?: (columns: ColumnsType<T>, index: number) => HTMLAttributes<HTMLTableRowElement>

@@ -1,4 +1,4 @@
-import type { TableColumnsType } from './table'
+import type { TableColumnsType } from '../components/Table'
 
 export type Member = { key: string; name: string; role: string; team: string; status: '활성' | '휴가' | '대기'; projects: number; joinedAt: string; children?: Member[] }
 

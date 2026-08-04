@@ -1,7 +1,8 @@
 import { forwardRef, Fragment, useEffect, useImperativeHandle, useMemo, useRef, useState, type ReactNode } from 'react'
-import { breakpointWidths, columnKey, flatFilterItems, flattenColumns, getValue, leafCount, maxDepth } from './utils'
-import type { ColumnType, ColumnsType, FilterValue, Key, PaginationConfig, SortOrder, TableProps, TableRef } from './types'
-import './table.css'
+import { breakpointWidths, columnKey, flatFilterItems, flattenColumns, getValue, leafCount, maxDepth } from './Table.utils'
+import type { ColumnType, ColumnsType, FilterValue, Key, PaginationConfig, SortOrder, TableProps, TableRef } from './Table.types'
+import '../../styles/tokens.css'
+import './Table.css'
 
 type SortState<T> = { column: ColumnType<T>; key: string; order: SortOrder; priority: number }
 type FlatRow<T> = { record: T; depth: number; parent?: Key }
@@ -11,7 +12,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
     dataSource = [], columns = [], rowKey = 'key' as keyof T, pagination = {}, rowSelection, expandable,
     bordered = false, loading = false, size = 'large', title, footer, summary, locale, showHeader = true,
     tableLayout = 'auto', rowHoverable = true, sticky = false, virtual = false, scroll, sortDirections = ['ascend', 'descend'],
-    className = '', classNames = {}, styles = {}, onChange, onRow, onHeaderRow, onScroll,
+    className = '', classNames = {}, styles = {}, components, onChange, onRow, onHeaderRow, onScroll,
   } = props
   const rootRef = useRef<HTMLDivElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -164,8 +165,8 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
       const visit = (items: ColumnsType<T>, current: number) => items.forEach((column, index) => {
         if (current === level) cells.push(<th key={`${columnKey(column, index)}-${level}`} colSpan={column.children?.length ? leafCount(column) : column.colSpan} rowSpan={column.children?.length ? 1 : depth - level} style={{ width: column.width, minWidth: column.minWidth, textAlign: column.align, ...(!column.children ? fixedStyle(column, leafColumns.indexOf(column)) : {}) }} className={`${classNames.cell ?? ''} ${column.className ?? ''}`} {...column.onHeaderCell?.(column)}>
           <span className="orbit-table__header-content">{column.title}
-            {column.sorter && !column.children && <button className="orbit-table__icon-button" onClick={() => toggleSort(column, leafColumns.indexOf(column))} aria-label={`${String(column.title)} 정렬`}>{activeSorts.find((state) => state.key === columnKey(column, leafColumns.indexOf(column)))?.order === 'ascend' ? '↑' : activeSorts.find((state) => state.key === columnKey(column, leafColumns.indexOf(column)))?.order === 'descend' ? '↓' : '↕'}</button>}
-            {column.filters?.length && !column.children ? <span className="orbit-table__filter-wrap"><button className={`orbit-table__icon-button ${activeFilters[columnKey(column, leafColumns.indexOf(column))]?.length ? 'is-active' : ''}`} onClick={() => { const key = columnKey(column, leafColumns.indexOf(column)); setFilterDraft((draft) => ({ ...draft, [key]: activeFilters[key] ?? [] })); setFilterOpen(filterOpen === key ? null : key) }} aria-label={`${String(column.title)} 필터`}>⌄</button>{filterOpen === columnKey(column, leafColumns.indexOf(column)) && <FilterMenu column={column} values={filterDraft[columnKey(column, leafColumns.indexOf(column))] ?? []} onValues={(values) => setFilterDraft((draft) => ({ ...draft, [columnKey(column, leafColumns.indexOf(column))]: values }))} onApply={() => applyFilter(column, leafColumns.indexOf(column))} />}</span> : null}
+            {column.sorter && !column.children && <button className="orbit-table__icon-button" onClick={() => toggleSort(column, leafColumns.indexOf(column))} aria-label={`${String(column.title)} 정렬`}><SortGlyph order={activeSorts.find((state) => state.key === columnKey(column, leafColumns.indexOf(column)))?.order ?? null} /></button>}
+            {column.filters?.length && !column.children ? <span className="orbit-table__filter-wrap"><button className={`orbit-table__icon-button ${activeFilters[columnKey(column, leafColumns.indexOf(column))]?.length ? 'is-active' : ''}`} onClick={() => { const key = columnKey(column, leafColumns.indexOf(column)); setFilterDraft((draft) => ({ ...draft, [key]: activeFilters[key] ?? [] })); setFilterOpen(filterOpen === key ? null : key) }} aria-label={`${String(column.title)} 필터`}><FilterGlyph /></button>{filterOpen === columnKey(column, leafColumns.indexOf(column)) && <FilterMenu column={column} values={filterDraft[columnKey(column, leafColumns.indexOf(column))] ?? []} onValues={(values) => setFilterDraft((draft) => ({ ...draft, [columnKey(column, leafColumns.indexOf(column))]: values }))} onApply={() => applyFilter(column, leafColumns.indexOf(column))} />}</span> : null}
           </span>
         </th>)
         else if (column.children?.length) visit(column.children, current + 1)
@@ -182,11 +183,13 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
     const canExpand = Boolean(children?.length || expandable?.expandedRowRender) && (expandable?.rowExpandable?.(record) ?? true)
     const expanded = controlledExpanded.has(key)
     const rowProps = onRow?.(record, actualIndex) ?? {}
-    return <Fragment key={key}><tr data-row-key={key} className={`${classNames.row ?? ''} ${controlledSelected.has(key) ? 'is-selected' : ''}`} style={{ height: virtual ? rowHeight : undefined, ...styles.row, ...rowProps.style }} {...rowProps} onClick={(event) => { rowProps.onClick?.(event); if (expandable?.expandRowByClick && canExpand) toggleExpand(record) }}>
+    const RowComponent = components?.body?.row ?? 'tr'
+    const customRowProps = components?.body?.row ? { record, index: actualIndex } : {}
+    return <Fragment key={key}><RowComponent data-row-key={key} {...customRowProps} className={`${classNames.row ?? ''} ${controlledSelected.has(key) ? 'is-selected' : ''}`} style={{ height: virtual ? rowHeight : undefined, ...styles.row, ...rowProps.style }} {...rowProps} onClick={(event) => { rowProps.onClick?.(event); if (expandable?.expandRowByClick && canExpand) toggleExpand(record) }}>
       {expandable && expandable.showExpandColumn !== false && <td><button disabled={!canExpand} className="orbit-table__expand" aria-label={expanded ? '행 접기' : '행 펼치기'} onClick={(event) => { event.stopPropagation(); toggleExpand(record) }} style={{ marginLeft: depth * (expandable.indentSize ?? 15) }}>{canExpand ? expanded ? '−' : '+' : ''}</button></td>}
       {rowSelection && <td>{(() => { const disabled = rowSelection.getCheckboxProps?.(record).disabled; const input = <input type={rowSelection.type === 'radio' ? 'radio' : 'checkbox'} name={rowSelection.type === 'radio' ? 'orbit-table-selection' : undefined} disabled={disabled} checked={controlledSelected.has(key)} aria-label={`${key} 행 선택`} onChange={(event) => { const next = rowSelection.type === 'radio' ? new Set<Key>() : new Set(controlledSelected); const related: Key[] = [key]; if (rowSelection.checkStrictly === false) { const collect = (item: T) => ((item as Record<string, unknown>)[childrenName] as T[] | undefined)?.forEach((child) => { related.push(keyOf(child)); collect(child) }); collect(record) } related.forEach((relatedKey) => event.target.checked ? next.add(relatedKey) : next.delete(relatedKey)); updateSelection(next, rowSelection.type === 'radio' ? 'single' : 'multiple', record, event.target.checked, event.nativeEvent) }} />; return rowSelection.renderCell?.(controlledSelected.has(key), record, actualIndex, input) ?? input })()}</td>}
       {leafColumns.map((column, columnIndex) => { const value = getValue(record, column.dataIndex); const cellProps = column.onCell?.(record, actualIndex) ?? {}; if (cellProps.colSpan === 0 || cellProps.rowSpan === 0) return null; const content = column.render ? column.render(value, record, actualIndex) : String(value ?? ''); return <td key={columnKey(column, columnIndex)} scope={column.rowScope} title={column.ellipsis && (typeof column.ellipsis === 'boolean' || column.ellipsis.showTitle !== false) ? String(value ?? '') : undefined} className={`${classNames.cell ?? ''} ${column.className ?? ''} ${column.ellipsis ? 'orbit-table__ellipsis' : ''}`} style={{ width: column.width, minWidth: column.minWidth, textAlign: column.align, ...fixedStyle(column, columnIndex), ...styles.cell, ...cellProps.style }} {...cellProps}>{content}</td> })}
-    </tr>{expandable?.expandedRowRender && expanded && <tr className="orbit-table__expanded"><td colSpan={leafColumns.length + (rowSelection ? 1 : 0) + 1}>{expandable.expandedRowRender(record, actualIndex, depth, expanded)}</td></tr>}</Fragment>
+    </RowComponent>{expandable?.expandedRowRender && expanded && <tr className="orbit-table__expanded"><td colSpan={leafColumns.length + (rowSelection ? 1 : 0) + 1}>{expandable.expandedRowRender(record, actualIndex, depth, expanded)}</td></tr>}</Fragment>
   }
 
   const paginationNode = pageConfig && !(pageConfig.hideOnSinglePage && pageCount <= 1) ? <Pagination config={pageConfig} page={safePage} pageSize={pageSize} total={total} pageCount={pageCount} onChange={changePage} className={classNames.pagination} style={styles.pagination} /> : null
@@ -207,6 +210,14 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
     {footer && <div className="orbit-table__footer">{footer(pageData)}</div>}
     {bottomPagination}
   </div>
+}
+
+function SortGlyph({ order }: { order: SortOrder }) {
+  return <svg className="orbit-table__sort-icon" viewBox="0 0 12 14" aria-hidden><path className={order === 'ascend' ? 'is-active' : ''} d="M6 2 2.5 6h7L6 2Z" /><path className={order === 'descend' ? 'is-active' : ''} d="m6 12 3.5-4h-7L6 12Z" /></svg>
+}
+
+function FilterGlyph() {
+  return <svg className="orbit-table__filter-icon" viewBox="0 0 16 16" aria-hidden><path d="M2.7 3.25a.75.75 0 0 1 .63-.35h9.34a.75.75 0 0 1 .57 1.24L9.5 8.5v3.35a.75.75 0 0 1-.37.65l-1.5.87A.75.75 0 0 1 6.5 12.7V8.5L2.76 4.14a.75.75 0 0 1-.06-.89Z" /></svg>
 }
 
 function FilterMenu<T extends object>({ column, values, onValues, onApply }: { column: ColumnType<T>; values: Key[]; onValues: (values: Key[]) => void; onApply: () => void }) {

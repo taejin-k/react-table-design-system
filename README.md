@@ -5,8 +5,8 @@ Ant Design에 의존하지 않고 React, TypeScript, Tailwind CSS로 구현한 �
 ## Quick start
 
 ```tsx
-import { Table, type TableColumnsType } from 'react-table-design-system'
-import 'react-table-design-system/styles.css'
+import { Table, type TableColumnsType } from '@taejin-k/orbit-design-system'
+import '@taejin-k/orbit-design-system/style'
 
 type User = { key: string; name: string; age: number }
 
@@ -32,6 +32,29 @@ npm run storybook
 
 Open <http://localhost:6006> and select **Design System / Table**.
 
+## Library structure
+
+```text
+src/
+├── components/
+│   └── Table/
+│       ├── Table.tsx
+│       ├── Table.types.ts
+│       ├── Table.utils.ts
+│       ├── Table.css
+│       ├── Table.test.tsx
+│       ├── Table.stories.tsx
+│       └── index.ts
+├── styles/
+│   ├── tokens.css
+│   └── index.css
+├── playground/
+│   └── data.tsx
+└── index.ts
+```
+
+`npm run build` creates publishable ESM, CommonJS, declaration, and CSS entries under `dist/`.
+
 ## Supported feature set
 
 - antd-style generic API: `dataSource`, `columns`, `rowKey`
@@ -49,9 +72,10 @@ Open <http://localhost:6006> and select **Design System / Table**.
 - large/medium/small density, bordered and hover modes
 - `onChange`, `onRow`, `onHeaderRow`, `onScroll`
 - semantic `classNames` and `styles` customization
-- dark color-scheme tokens and accessible labels/focus behavior
+- explicit light/dark theme tokens and accessible labels/focus behavior
+- dnd-kit sortable composition through antd-compatible `components.body.row`
 
-Like Ant Design, editable cells/rows and drag sorting are composition patterns rather than mandatory table state. Build them with `render`, `onCell`, `onRow`, and controlled `dataSource`.
+Like Ant Design, editable cells/rows and drag sorting are composition patterns rather than mandatory table state. The Storybook drag example uses dnd-kit transforms so neighboring rows animate into place while dragging.
 
 ## Validation
 
@@ -68,9 +92,9 @@ Override the CSS variables at an application or theme boundary:
 
 ```css
 .my-brand {
-  --orbit-primary: #0f766e;
-  --orbit-border: #d1d5db;
-  --orbit-header: #f9fafb;
-  --orbit-selected: #ccfbf1;
+  --orbit-color-primary: #0f766e;
+  --orbit-color-border: #d1d5db;
+  --orbit-color-fill-alter: #f9fafb;
+  --orbit-color-row-selected: #ccfbf1;
 }
 ```

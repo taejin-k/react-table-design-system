@@ -1,4 +1,4 @@
-import type { Breakpoint, ColumnType, ColumnsType, DataIndex, FilterItem, Key } from './types'
+import type { Breakpoint, ColumnType, ColumnsType, DataIndex, FilterItem, Key } from './Table.types'
 
 export const getValue = <T extends object>(record: T, dataIndex?: DataIndex): unknown => {
   if (dataIndex === undefined) return undefined
