@@ -39,7 +39,7 @@ export const ExpandByRowClick: Story = {
 }
 
 export const CustomExpandIcon: Story = {
-  args: { expandable: { expandedRowRender: (record) => <div className="detail-panel">{record.name} 상세 정보</div>, expandIcon: ({ expanded, expandable, record, onExpand }) => <button type="button" className="story-expand-icon" disabled={!expandable} aria-label={expanded ? '상세 닫기' : '상세 열기'} onClick={(event) => onExpand(record, event)}>{expanded ? '⌄' : '›'}</button> } },
+  args: { expandable: { expandedRowRender: (record) => <div className="detail-panel">{record.name} 상세 정보</div>, expandIcon: ({ expanded, expandable, record, onExpand }) => <button type="button" className={`story-expand-icon ${expanded ? 'is-expanded' : ''}`} disabled={!expandable} aria-expanded={expanded} aria-label={expanded ? '상세 닫기' : '상세 열기'} onClick={(event) => onExpand(record, event)}><svg viewBox="0 0 12 12" aria-hidden><path d="m4.25 2.25 3.5 3.75-3.5 3.75" /></svg></button> } },
 }
 
 export const HideExpandColumn: Story = {

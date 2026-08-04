@@ -50,6 +50,12 @@ describe('Table', () => {
     expect(onSelectionChange).toHaveBeenCalledWith(['1'], [data[0]], { type: 'multiple' })
   })
 
+  it('uses a comfortable default selection column width', () => {
+    render(<Table<Row> dataSource={data} columns={columns} pagination={false} rowSelection={{}} />)
+    expect(document.querySelector('colgroup col')).toHaveStyle({ width: '48px' })
+    expect(screen.getByRole('columnheader', { name: '모든 행 선택' })).toHaveStyle({ width: '48px' })
+  })
+
   it('cascades tree selection when checkStrictly is false', () => {
     const onSelectionChange = vi.fn()
     render(<Table<Row> dataSource={data} columns={columns} pagination={false} expandable={{ defaultExpandAllRows: true }} rowSelection={{ checkStrictly: false, onChange: onSelectionChange }} />)
@@ -201,6 +207,11 @@ describe('Table', () => {
     expect(screen.getByText('Pinned').closest('tbody')).toHaveClass('is-sticky-summary--top')
   })
 
+  it('treats scroll.y as body height in addition to sticky header and summary', () => {
+    render(<Table<Row> dataSource={data} columns={columns} pagination={false} scroll={{ y: 330 }} sticky summary={() => <Table.Summary fixed="top"><Table.Summary.Row><Table.Summary.Cell index={0}>Pinned</Table.Summary.Cell></Table.Summary.Row></Table.Summary>} />)
+    expect(document.querySelector('.orbit-table__wrapper')).toHaveStyle({ maxHeight: '440px' })
+  })
+
   it('commits multi-digit simple pagination only on Enter or blur', () => {
     const rows = Array.from({ length: 20 }, (_, index) => ({ key: String(index), name: `Row ${index + 1}`, team: 'Design', score: index }))
     render(<Table<Row> dataSource={rows} columns={columns} pagination={{ defaultPageSize: 1, simple: true }} />)
@@ -307,9 +318,39 @@ describe('Table', () => {
     const ref = createRef<TableRef>()
     render(<Table<Row> ref={ref} dataSource={rows} columns={columns} pagination={false} virtual scroll={{ y: 220 }} />)
     const wrapper = document.querySelector('.orbit-table__wrapper') as HTMLDivElement
+    expect(wrapper).toHaveAttribute('role', 'region')
+    expect(wrapper).toHaveAttribute('tabindex', '0')
+    expect(wrapper).toHaveAttribute('aria-label', '테이블 스크롤 영역')
     const scrollTo = vi.fn()
     wrapper.scrollTo = scrollTo
     ref.current?.scrollTo({ key: '50', align: 'center', offset: 10 })
     expect(scrollTo).toHaveBeenCalledWith({ top: 2677.5 })
+  })
+
+  it('tracks horizontal scroll boundaries and marks fixed-column shadow edges', () => {
+    const fixedColumns: ColumnsType<Row> = [
+      { title: 'Name', dataIndex: 'name', key: 'name', width: 160, fixed: 'left' },
+      { title: 'Team', dataIndex: 'team', key: 'team', width: 300 },
+      { title: 'Score', dataIndex: 'score', key: 'score', width: 120, fixed: 'right' },
+    ]
+    render(<Table<Row> dataSource={data} columns={fixedColumns} pagination={false} scroll={{ x: 1000 }} />)
+    const wrapper = document.querySelector('.orbit-table__wrapper') as HTMLDivElement
+    Object.defineProperties(wrapper, { clientWidth: { value: 500 }, scrollWidth: { value: 1000 }, scrollLeft: { value: 0, writable: true } })
+    const scrollBy = vi.fn()
+    wrapper.scrollBy = scrollBy
+    fireEvent.keyDown(wrapper, { key: 'ArrowRight' })
+    expect(scrollBy).toHaveBeenCalledWith({ left: 75, behavior: 'smooth' })
+    fireEvent.scroll(wrapper)
+    expect(wrapper).toHaveClass('has-scroll-right')
+    expect(wrapper).not.toHaveClass('has-scroll-left')
+    expect(screen.getByText('Bravo').closest('td')).toHaveClass('orbit-table__fixed-left-last')
+    expect(screen.getByText('2').closest('td')).toHaveClass('orbit-table__fixed-right-first')
+    wrapper.scrollLeft = 250
+    fireEvent.scroll(wrapper)
+    expect(wrapper).toHaveClass('has-scroll-left', 'has-scroll-right')
+    wrapper.scrollLeft = 500
+    fireEvent.scroll(wrapper)
+    expect(wrapper).toHaveClass('has-scroll-left')
+    expect(wrapper).not.toHaveClass('has-scroll-right')
   })
 })

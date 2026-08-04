@@ -12,7 +12,9 @@
 .story-hint { margin: 0 0 16px; color: rgba(0,0,0,.65); }
 .story-sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; }
 .story-drag-handle { display: inline-flex; color: rgba(0,0,0,.45); font-size: 20px; line-height: 1; }
-.story-expand-icon { display: grid; width: 17px; height: 17px; place-items: center; border: 1px solid #d9d9d9; border-radius: 2px; background: #fff; color: rgba(0,0,0,.65); cursor: pointer; }
+.story-expand-icon { display: grid; width: 17px; height: 17px; padding: 0; place-items: center; border: 1px solid #d9d9d9; border-radius: 2px; background: #fff; color: rgba(0,0,0,.65); cursor: pointer; }
+.story-expand-icon svg { width: 10px; height: 10px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.5; transition: transform .2s ease; }
+.story-expand-icon.is-expanded svg { transform: rotate(90deg); }
 .story-filter-panel { display: flex; gap: 8px; padding: 8px; }
 .story-filter-panel input { min-width: 180px; height: 32px; border: 1px solid #d9d9d9; border-radius: 6px; padding: 0 11px; }
 .story-filter-panel button { height: 32px; border: 0; border-radius: 6px; background: #1677ff; padding: 0 12px; color: #fff; }

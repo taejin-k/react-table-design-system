@@ -16,7 +16,7 @@
 | `pagination` | ✅ | ✅ | 아래 Pagination 표 참고 |
 | `rowSelection` | ✅ | ✅ | 아래 RowSelection 표 참고 |
 | `expandable` | ✅ | ✅ | 아래 Expandable 표 참고 |
-| `scroll.x`, `scroll.y`, `scrollToFirstRowOnChange` | ✅ | ✅ | 원격 페이지 데이터 이중 slice 버그 수정 |
+| `scroll.x`, `scroll.y`, `scrollToFirstRowOnChange` | ✅ | ✅ | `scroll.y`는 body 높이로 계산하며 header/summary 공간을 별도 확보 |
 | `sticky` | ✅ | ◐ | 헤더와 summary offset 지원. sticky 가상 스크롤바의 `offsetScroll/getContainer`는 보류 |
 | `virtual` | ✅ | ◐ | 고정 행 높이 windowing과 `scrollTo` 지원. 동적 행 높이 측정은 보류 |
 | `loading` | Spin Props | ◐ | `spinning`, `delay`, `indicator`, `tip`, `className`, `style` 지원 |
@@ -86,6 +86,7 @@
 ## 일반 기능으로 판단해 포함한 항목
 
 - sticky header/summary와 fixed column
+- 좌·우 fixed 열의 스크롤 경계 shadow와 남은 스크롤 방향 상태
 - 행·열 드래그 정렬 및 주변 항목 transform 애니메이션
 - 서버 정렬/필터/페이지네이션 제어 모드
 - 숫자 페이지, 점프, page-size 변경, 다양한 pagination placement

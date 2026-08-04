@@ -9,10 +9,12 @@ import {
   useEffect,
   useId,
   useImperativeHandle,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
   type CSSProperties,
+  type KeyboardEvent as ReactKeyboardEvent,
   type ReactElement,
   type ReactNode,
 } from 'react'
@@ -161,6 +163,27 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
   const [scrollTop, setScrollTop] = useState(0)
   const [viewportWidth, setViewportWidth] = useState(() => typeof window === 'undefined' ? 1440 : window.innerWidth)
   const [loadingVisible, setLoadingVisible] = useState(typeof loading === 'boolean' ? loading : loading.spinning ?? true)
+  const [scrollBoundary, setScrollBoundary] = useState({ left: false, right: false })
+  const measureScrollBoundary = useCallback((node: HTMLDivElement | null) => {
+    if (!node) return
+    const maxScrollLeft = Math.max(0, node.scrollWidth - node.clientWidth)
+    const next = { left: node.scrollLeft > 1, right: node.scrollLeft < maxScrollLeft - 1 }
+    setScrollBoundary((current) => current.left === next.left && current.right === next.right ? current : next)
+  }, [])
+  const handleScrollKeyDown = useCallback((event: ReactKeyboardEvent<HTMLDivElement>) => {
+    if (event.target !== event.currentTarget) return
+    const node = event.currentTarget
+    const horizontalStep = Math.max(48, Math.round(node.clientWidth * 0.15))
+    const verticalStep = Math.max(48, Math.round(node.clientHeight * 0.8))
+    const movement = event.key === 'ArrowLeft' && scroll?.x ? { left: -horizontalStep }
+      : event.key === 'ArrowRight' && scroll?.x ? { left: horizontalStep }
+        : event.key === 'PageUp' && scroll?.y ? { top: -verticalStep }
+          : event.key === 'PageDown' && scroll?.y ? { top: verticalStep }
+            : null
+    if (!movement) return
+    event.preventDefault()
+    node.scrollBy({ ...movement, behavior: 'smooth' })
+  }, [scroll?.x, scroll?.y])
 
   useEffect(() => {
     const listener = () => setViewportWidth(window.innerWidth)
@@ -416,7 +439,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
     expandable?.onExpandedRowsChange?.([...next])
   }
 
-  const selectionWidth = rowSelection ? Number(rowSelection.columnWidth ?? 32) : 0
+  const selectionWidth = rowSelection ? Number(rowSelection.columnWidth ?? 48) : 0
   const expandWidth = expandable && expandable.showExpandColumn !== false ? Number(expandable.columnWidth ?? 48) : 0
   const leftOffsets = useMemo(() => {
     let offset = selectionWidth + expandWidth
@@ -436,6 +459,17 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
   const expandFixedStyle: CSSProperties = expandSide === 'left' ? { position: 'sticky', left: selectionWidth, zIndex: 3 } : expandSide === 'right' ? { position: 'sticky', right: 0, zIndex: 3 } : {}
   const extraColumnCount = (rowSelection ? 1 : 0) + (expandable && expandable.showExpandColumn !== false ? 1 : 0)
   const fullColSpan = leafColumns.length + extraColumnCount
+  const lastLeftFixedIndex = leafColumns.reduce((last, item, index) => fixedSide(item.fixed as ColumnType<object>['fixed']) === 'left' ? index : last, -1)
+  const firstRightFixedIndex = leafColumns.findIndex((item) => fixedSide(item.fixed as ColumnType<object>['fixed']) === 'right')
+  const fixedClass = (item: ColumnType<T>, index: number) => {
+    const side = fixedSide(item.fixed as ColumnType<object>['fixed'])
+    if (side === 'left') return `orbit-table__fixed-left ${index === lastLeftFixedIndex ? 'orbit-table__fixed-left-last' : ''}`
+    if (side === 'right') return `orbit-table__fixed-right ${index === firstRightFixedIndex ? 'orbit-table__fixed-right-first' : ''}`
+    return ''
+  }
+  const selectionSide = fixedSide(rowSelection?.fixed as ColumnType<object>['fixed'])
+  const selectionBoundaryClass = selectionSide === 'left' && expandSide !== 'left' && lastLeftFixedIndex < 0 ? 'orbit-table__fixed-left orbit-table__fixed-left-last' : selectionSide === 'right' && expandSide !== 'right' && firstRightFixedIndex < 0 ? 'orbit-table__fixed-right orbit-table__fixed-right-first' : selectionSide ? `orbit-table__fixed-${selectionSide}` : ''
+  const expandBoundaryClass = expandSide === 'left' && lastLeftFixedIndex < 0 ? 'orbit-table__fixed-left orbit-table__fixed-left-last' : expandSide === 'right' && firstRightFixedIndex < 0 ? 'orbit-table__fixed-right orbit-table__fixed-right-first' : expandSide ? `orbit-table__fixed-${expandSide}` : ''
 
   useImperativeHandle(ref, () => ({
     nativeElement: rootRef.current,
@@ -500,7 +534,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
             {...headerProps}
             title={tooltip && item.sorter && (typeof tooltip !== 'object' || tooltip.target !== 'sorter-icon') ? tooltipTitle : headerProps.title}
             style={{ width: item.width, minWidth: tableLayout === 'auto' ? item.minWidth : undefined, textAlign: item.align, ...(!item.children ? fixedStyle(item, leafIndex) : {}), ...headerStyles?.cell, ...styles.cell, ...headerProps.style }}
-            className={`${headerClasses?.cell ?? ''} ${classNames.cell ?? ''} ${item.className ?? ''} ${visualLastIndex === leafColumns.length - 1 ? 'orbit-table__cell--last' : ''} ${order ? 'is-sorted' : ''} ${headerProps.className ?? ''}`}
+            className={`${headerClasses?.cell ?? ''} ${classNames.cell ?? ''} ${item.className ?? ''} ${!item.children ? fixedClass(item, leafIndex) : ''} ${visualLastIndex === leafColumns.length - 1 ? 'orbit-table__cell--last' : ''} ${order ? 'is-sorted' : ''} ${headerProps.className ?? ''}`}
           >
             <span className={`orbit-table__header-content ${item.sorter ? 'is-sortable' : ''}`} onClick={item.sorter ? () => toggleSort(item, leafIndex) : undefined}>
               <span>{renderTitle(item)}</span>
@@ -516,8 +550,8 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
       const selectionTitle = rowSelection ? typeof rowSelection.columnTitle === 'function' ? rowSelection.columnTitle(titleCheckbox) : rowSelection.columnTitle ?? titleCheckbox : null
       const headerRowProps = onHeaderRow?.(responsiveColumns, level) ?? {}
       return <HeaderRow key={level} {...(components?.header?.row ? { columns: responsiveColumns, index: level } : {})} {...headerRowProps} className={`${headerClasses?.row ?? ''} ${headerRowProps.className ?? ''}`} style={{ ...headerStyles?.row, ...headerRowProps.style }}>
-        {level === 0 && rowSelection && <HeaderCell rowSpan={depth} className="orbit-table__selection-cell" style={{ width: rowSelection.columnWidth ?? 32, textAlign: rowSelection.align, ...selectionFixedStyle }}><span className="orbit-table__selection-head">{selectionTitle}{rowSelection.selections && !rowSelection.hideSelectAll && <SelectionMenu rowSelection={rowSelection} changeableKeys={changeableKeys} onAll={() => selectAll(true)} onInvert={invertSelection} onNone={() => selectAll(false)} locale={locale} />}</span></HeaderCell>}
-        {level === 0 && expandable && expandable.showExpandColumn !== false && <HeaderCell rowSpan={depth} className="orbit-table__expand-cell" style={{ width: expandable.columnWidth ?? 48, ...expandFixedStyle }}>{expandable.columnTitle ?? <span className="orbit-sr-only">{locale.expand ?? '행 펼치기'}</span>}</HeaderCell>}
+        {level === 0 && rowSelection && <HeaderCell rowSpan={depth} className={`orbit-table__selection-cell ${selectionBoundaryClass}`} style={{ width: rowSelection.columnWidth ?? 48, textAlign: rowSelection.align, ...selectionFixedStyle }}><span className="orbit-table__selection-head">{selectionTitle}{rowSelection.selections && !rowSelection.hideSelectAll && <SelectionMenu rowSelection={rowSelection} changeableKeys={changeableKeys} onAll={() => selectAll(true)} onInvert={invertSelection} onNone={() => selectAll(false)} locale={locale} />}</span></HeaderCell>}
+        {level === 0 && expandable && expandable.showExpandColumn !== false && <HeaderCell rowSpan={depth} className={`orbit-table__expand-cell ${expandBoundaryClass}`} style={{ width: expandable.columnWidth ?? 48, ...expandFixedStyle }}>{expandable.columnTitle ?? <span className="orbit-sr-only">{locale.expand ?? '행 펼치기'}</span>}</HeaderCell>}
         {cells}
       </HeaderRow>
     })
@@ -570,9 +604,9 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
       style={{ height: virtual ? rowHeight : undefined, ...bodyStyles?.row, ...styles.row, ...rowProps.style }}
       onClick={(event) => { rowProps.onClick?.(event); if (expandable?.expandRowByClick && canExpand) toggleExpand(record) }}
     >
-      {rowSelection && <Cell {...(components?.body?.cell ? { record, index: actualIndex, column: 'selection' } : {})} {...selectionCellProps} {...selectionRenderedCell?.props} className={`orbit-table__selection-cell ${selectionCellProps.className ?? ''} ${selectionRenderedCell?.props?.className ?? ''}`} style={{ width: rowSelection.columnWidth ?? 32, textAlign: rowSelection.align, ...selectionFixedStyle, ...selectionCellProps.style, ...selectionRenderedCell?.props?.style }}>{selectionRenderedCell ? selectionRenderedCell.children : renderedSelection ?? originSelectionNode}</Cell>}
-      {expandable && expandable.showExpandColumn !== false && <Cell {...(components?.body?.cell ? { record, index: actualIndex, column: 'expand' } : {})} className="orbit-table__expand-cell orbit-table__expand-cell--body" style={{ width: expandable.columnWidth ?? 48, ...expandFixedStyle }}><span className="orbit-table__expand-indent" style={{ paddingInlineStart: 15 + depth * (expandable.indentSize ?? 15) }}>{expandable.expandIcon?.({ expanded, record, expandable: canExpand, onExpand: (item, event) => { event.stopPropagation(); toggleExpand(item) } }) ?? (canExpand ? <button type="button" className="orbit-table__expand" aria-label={expanded ? locale.collapse ?? '행 접기' : locale.expand ?? '행 펼치기'} onClick={(event) => { event.stopPropagation(); toggleExpand(record) }}>{expanded ? '−' : '+'}</button> : <span className="orbit-table__expand-placeholder" aria-hidden />)}</span></Cell>}
-      {leafColumns.map((item, columnIndex) => <BodyCell key={columnKey(item, columnIndex)} component={Cell} custom={Boolean(components?.body?.cell)} item={item} record={record} rowIndex={actualIndex} fixedStyle={fixedStyle(item, columnIndex)} className={`${bodyClasses?.cell ?? ''} ${classNames.cell ?? ''} ${columnIndex === leafColumns.length - 1 ? 'orbit-table__cell--last' : ''}`} style={{ ...bodyStyles?.cell, ...styles.cell }} />)}
+      {rowSelection && <Cell {...(components?.body?.cell ? { record, index: actualIndex, column: 'selection' } : {})} {...selectionCellProps} {...selectionRenderedCell?.props} className={`orbit-table__selection-cell ${selectionBoundaryClass} ${selectionCellProps.className ?? ''} ${selectionRenderedCell?.props?.className ?? ''}`} style={{ width: rowSelection.columnWidth ?? 48, textAlign: rowSelection.align, ...selectionFixedStyle, ...selectionCellProps.style, ...selectionRenderedCell?.props?.style }}>{selectionRenderedCell ? selectionRenderedCell.children : renderedSelection ?? originSelectionNode}</Cell>}
+      {expandable && expandable.showExpandColumn !== false && <Cell {...(components?.body?.cell ? { record, index: actualIndex, column: 'expand' } : {})} className={`orbit-table__expand-cell orbit-table__expand-cell--body ${expandBoundaryClass}`} style={{ width: expandable.columnWidth ?? 48, ...expandFixedStyle }}><span className="orbit-table__expand-indent" style={{ paddingInlineStart: 15 + depth * (expandable.indentSize ?? 15) }}>{expandable.expandIcon?.({ expanded, record, expandable: canExpand, onExpand: (item, event) => { event.stopPropagation(); toggleExpand(item) } }) ?? (canExpand ? <button type="button" className="orbit-table__expand" aria-label={expanded ? locale.collapse ?? '행 접기' : locale.expand ?? '행 펼치기'} onClick={(event) => { event.stopPropagation(); toggleExpand(record) }}>{expanded ? '−' : '+'}</button> : <span className="orbit-table__expand-placeholder" aria-hidden />)}</span></Cell>}
+      {leafColumns.map((item, columnIndex) => <BodyCell key={columnKey(item, columnIndex)} component={Cell} custom={Boolean(components?.body?.cell)} item={item} record={record} rowIndex={actualIndex} fixedStyle={fixedStyle(item, columnIndex)} className={`${bodyClasses?.cell ?? ''} ${classNames.cell ?? ''} ${fixedClass(item, columnIndex)} ${columnIndex === leafColumns.length - 1 ? 'orbit-table__cell--last' : ''}`} style={{ ...bodyStyles?.cell, ...styles.cell }} />)}
     </RowComponent>{expandable?.expandedRowRender && expanded && <tr className={`orbit-table__expanded ${typeof expandable.expandedRowClassName === 'function' ? expandable.expandedRowClassName(record, actualIndex, depth) : expandable.expandedRowClassName ?? ''}`}><td className="orbit-table__cell--last" colSpan={fullColSpan}>{expandable.expandedRowRender(record, actualIndex, depth, expanded)}</td></tr>}</Fragment>
   }
 
@@ -592,14 +626,28 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
   const summaryPosition = summaryFixed === 'top' ? 'top' : summaryFixed ? 'bottom' : null
   const SummaryWrapper = summaryPosition === 'top' ? 'tbody' : 'tfoot'
   const summaryElement = summary ? <SummaryWrapper className={summaryPosition ? `is-sticky-summary is-sticky-summary--${summaryPosition}` : sticky && typeof sticky === 'object' && sticky.offsetSummary !== undefined ? 'is-sticky-summary is-sticky-summary--bottom' : undefined} style={summaryPosition === 'top' ? { top: (typeof sticky === 'object' ? sticky.offsetHeader ?? 0 : 0) + (showHeader ? maxDepth(responsiveColumns) * rowHeight : 0) } : summaryPosition === 'bottom' || sticky && typeof sticky === 'object' && sticky.offsetSummary !== undefined ? { bottom: typeof sticky === 'object' ? sticky.offsetSummary : 0 } : undefined}>{compoundSummary ? summaryContent : <tr><td className="orbit-table__cell--last" colSpan={fullColSpan}>{summaryContent}</td></tr>}</SummaryWrapper> : null
+  const summaryRowCount = summary ? compoundSummary ? Children.count((summaryContent as ReactElement<TableSummaryProps>).props.children) : 1 : 0
+  const wrapperMaxHeight = typeof scroll?.y === 'number' ? scroll.y + (showHeader ? maxDepth(responsiveColumns) * rowHeight : 0) + summaryRowCount * rowHeight : scroll?.y
+
+  useLayoutEffect(() => {
+    const node = scrollRef.current
+    if (!scroll?.x || !node) { setScrollBoundary({ left: false, right: false }); return }
+    measureScrollBoundary(node)
+    if (typeof ResizeObserver === 'undefined') return
+    const observer = new ResizeObserver(() => measureScrollBoundary(node))
+    observer.observe(node)
+    const table = node.querySelector('table')
+    if (table) observer.observe(table)
+    return () => observer.disconnect()
+  }, [leafColumns, measureScrollBoundary, pageData.length, scroll?.x])
 
   return <div {...rootProps} ref={rootRef} className={`orbit-table ${bordered ? 'orbit-table--bordered' : ''} orbit-table--${size} ${rowHoverable ? 'orbit-table--hoverable' : ''} ${rootClassName} ${className} ${classNames.root ?? ''}`} style={{ ...rootStyle, ...styles.root }} aria-busy={loadingVisible}>
     {topPagination}
     <div className={`orbit-table__section ${classNames.section ?? ''}`} style={styles.section}>
     {title && <div className={`orbit-table__title ${classNames.title ?? ''}`} style={styles.title}>{title(pageData)}</div>}
-    <div ref={scrollRef} className={`orbit-table__wrapper ${classNames.wrapper ?? ''} ${classNames.content ?? ''}`} style={{ overflowX: scroll?.x ? 'auto' : undefined, overflowY: scroll?.y ? 'auto' : undefined, maxHeight: scroll?.y, ...styles.content, ...styles.wrapper }} onScroll={(event) => { if (virtual) setScrollTop(event.currentTarget.scrollTop); onScroll?.(event) }}>
+    <div ref={scrollRef} className={`orbit-table__wrapper ${scroll?.x ? 'is-scrollable-x' : ''} ${scrollBoundary.left ? 'has-scroll-left' : ''} ${scrollBoundary.right ? 'has-scroll-right' : ''} ${classNames.wrapper ?? ''} ${classNames.content ?? ''}`} role={scroll?.x || scroll?.y ? 'region' : undefined} aria-label={scroll?.x || scroll?.y ? '테이블 스크롤 영역' : undefined} tabIndex={scroll?.x || scroll?.y ? 0 : undefined} style={{ overflowX: scroll?.x ? 'auto' : undefined, overflowY: scroll?.y ? 'auto' : undefined, maxHeight: wrapperMaxHeight, ...styles.content, ...styles.wrapper }} onKeyDown={handleScrollKeyDown} onScroll={(event) => { if (virtual) setScrollTop(event.currentTarget.scrollTop); if (scroll?.x) measureScrollBoundary(event.currentTarget); onScroll?.(event) }}>
       <TableElement className={classNames.table} style={{ tableLayout: effectiveLayout, minWidth: typeof scroll?.x === 'number' ? scroll.x : scroll?.x === 'max-content' ? 'max-content' : undefined, ...styles.table }}>
-        <colgroup>{rowSelection && <col style={{ width: rowSelection.columnWidth ?? 32 }} />}{expandable && expandable.showExpandColumn !== false && <col style={{ width: expandable.columnWidth ?? 48 }} />}{leafColumns.map((item, index) => <col key={columnKey(item, index)} style={{ width: item.width, minWidth: item.minWidth }} />)}</colgroup>
+        <colgroup>{rowSelection && <col style={{ width: rowSelection.columnWidth ?? 48 }} />}{expandable && expandable.showExpandColumn !== false && <col style={{ width: expandable.columnWidth ?? 48 }} />}{leafColumns.map((item, index) => <col key={columnKey(item, index)} style={{ width: item.width, minWidth: item.minWidth }} />)}</colgroup>
         {showHeader && <HeaderWrapper className={`${sticky ? 'is-sticky' : ''} ${typeof classNames.header === 'string' ? classNames.header : headerClasses?.wrapper ?? ''}`} style={{ top: typeof sticky === 'object' ? sticky.offsetHeader ?? 0 : 0, ...headerStyles?.wrapper }}>{renderHeaderRows()}</HeaderWrapper>}
         {summaryPosition === 'top' && summaryElement}
         <BodyWrapper className={`${typeof classNames.body === 'string' ? classNames.body : bodyClasses?.wrapper ?? ''}`} style={bodyStyles?.wrapper}>{topPad > 0 && <tr aria-hidden><td className="orbit-table__cell--last" colSpan={fullColSpan} style={{ height: topPad, padding: 0 }} /></tr>}{renderedRows.map(renderRow)}{bottomPad > 0 && <tr aria-hidden><td className="orbit-table__cell--last" colSpan={fullColSpan} style={{ height: bottomPad, padding: 0 }} /></tr>}{!loadingVisible && allFlatRows.length === 0 && <tr><td className="orbit-table__empty orbit-table__cell--last" colSpan={fullColSpan}>{emptyText}</td></tr>}</BodyWrapper>
