@@ -1,0 +1,10 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: Inter, Pretendard, ui-sans-serif, system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; min-width: 320px; min-height: 100vh; }
+button:not(:disabled), input[type="checkbox"] { cursor: pointer; }
+button:disabled { cursor: not-allowed; opacity: .35; }
