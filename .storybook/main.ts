@@ -1,14 +1,12 @@
-import type { StorybookConfig } from '@storybook/react-vite'
+import type { StorybookConfig } from '@storybook/react-vite';
 
 const config: StorybookConfig = {
-  stories: ['../src/**/*.mdx', '../src/**/*.stories.@(js|jsx|mjs|ts|tsx)'],
-  addons: ['@storybook/addon-docs', '@storybook/addon-a11y'],
-  framework: { name: '@storybook/react-vite', options: {} },
-  docs: { defaultName: 'Documentation' },
-  viteFinal: async (viteConfig) => ({
-    ...viteConfig,
-    server: { ...viteConfig.server, allowedHosts: ['127.0.0.1', 'localhost'] },
-  }),
-}
+  stories: ['../src/**/*.stories.@(ts|tsx)'],
+  addons: [],
+  framework: {
+    name: '@storybook/react-vite',
+    options: {},
+  },
+};
 
-export default config
+export default config;
