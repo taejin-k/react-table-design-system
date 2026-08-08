@@ -9,6 +9,7 @@ const meta: Meta<typeof Input> = {
   title: 'Components/Input',
   component: Input,
   tags: ['autodocs'],
+  parameters: { docs: { description: { component: '레이블, 오류 안내, 아이콘, 글자 수와 값 지우기를 조합할 수 있는 제어형 텍스트 입력입니다.' } } },
   argTypes: {
     size: {
       control: 'select',
@@ -30,6 +31,7 @@ const meta: Meta<typeof Input> = {
     suffixIcon: { control: false },
   },
   args: {
+    'aria-label': '입력값',
     size: 'md',
     variant: 'default',
     placeholder: '입력하세요',

@@ -8,6 +8,7 @@ const meta: Meta<TableProps<Member>> = {
   title: 'Components/Table/API Compatibility',
   component: Table as ComponentType<TableProps<Member>>,
   tags: ['autodocs'],
+  parameters: { docs: { description: { component: 'Table의 Ant Design 호환 선언 방식, ref, semantic 스타일, locale와 네이티브 속성을 검증합니다.' } } },
   args: { dataSource: members.slice(0, 6), rowKey: 'key', pagination: false },
 };
 

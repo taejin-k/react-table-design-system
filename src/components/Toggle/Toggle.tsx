@@ -1,26 +1,30 @@
-import { forwardRef, type ButtonHTMLAttributes } from "react";
+import { forwardRef, type ButtonHTMLAttributes, type MouseEvent } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { twMerge } from "tailwind-merge";
 
 export interface ToggleProps
-  extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, "onChange" | "checked" | "size">,
+  extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, "onChange" | "checked" | "size" | "type" | "role" | "aria-checked">,
     VariantProps<typeof trackVariants> {
   checked: boolean;
   onChange?: (checked: boolean) => void;
 }
 
 export const Toggle = forwardRef<HTMLButtonElement, ToggleProps>(
-  ({ size = "md", checked, onChange, disabled, className, ...rest }, ref) => {
+  ({ size = "md", checked, onChange, onClick, disabled, className, ...rest }, ref) => {
     return (
       <button
         ref={ref}
+        {...rest}
         type="button"
         role="switch"
         aria-checked={checked}
         disabled={disabled}
-        onClick={() => onChange?.(!checked)}
+        onClick={(event: MouseEvent<HTMLButtonElement>) => {
+          onClick?.(event);
+          if (!event.defaultPrevented) onChange?.(!checked);
+        }}
         className={twMerge(trackVariants({ size, checked }), className)}
-        {...rest}>
+      >
         <span className={knobVariants({ size, checked })} />
       </button>
     );
@@ -29,7 +33,7 @@ export const Toggle = forwardRef<HTMLButtonElement, ToggleProps>(
 
 Toggle.displayName = "Toggle";
 
-const trackVariants = cva("relative inline-flex shrink-0 items-center rounded-full transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-50", {
+const trackVariants = cva("relative inline-flex shrink-0 cursor-pointer items-center rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0062df] motion-reduce:transition-none disabled:cursor-not-allowed disabled:opacity-50", {
   variants: {
     size: {
       lg: "h-[30px] w-[50px]",
@@ -47,7 +51,7 @@ const trackVariants = cva("relative inline-flex shrink-0 items-center rounded-fu
   },
 });
 
-const knobVariants = cva("absolute top-[3px] rounded-full bg-white transition-[left] duration-200 ease-out", {
+const knobVariants = cva("absolute top-[3px] rounded-full bg-white transition-[left] duration-200 ease-out motion-reduce:transition-none", {
   variants: {
     size: {
       lg: "size-[24px]",

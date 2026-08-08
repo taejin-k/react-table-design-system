@@ -75,9 +75,9 @@ pnpm add @dunamu-futurewiz/wizard-design
 import '@dunamu-futurewiz/wizard-design/style.css';
 ```
 
-`style.css`에 Pretendard 웹폰트(jsDelivr CDN)가 함께 번들되어 있어서, 별도로
-폰트를 설정하지 않아도 `font-pretendard` 유틸리티가 자동으로 Pretendard를
-사용합니다.
+`style.css`는 Pretendard 웹폰트를 jsDelivr CDN에서 불러옵니다. 외부 CDN을
+허용하지 않는 환경에서는 앱에서 Pretendard를 직접 호스팅하고 같은
+`font-family`를 제공해야 합니다.
 
 ```tsx
 import { Button, Icon } from '@dunamu-futurewiz/wizard-design';
@@ -106,6 +106,7 @@ import { Button, Icon } from '@dunamu-futurewiz/wizard-design';
 | `suffixIcon` | `ReactNode` | false | - | 뒤쪽 아이콘. 배열로 0~여러 개 전달 가능 |
 
 `disabled`, `onClick` 등 나머지 네이티브 `<button>` props는 그대로 지원합니다.
+`iconOnly`를 사용할 때는 동작을 설명하는 `aria-label`을 반드시 함께 전달합니다.
 
 ### Icon
 
@@ -121,6 +122,8 @@ Figma Icon 라이브러리 아이콘입니다.
 | `icon` | `add` \| `close` \| `delete` \| `edit` \| ... | true | - | 아이콘 종류 |
 | `size` | `number` | false | `16` | 크기(px) |
 | `color` | `string` | false | `currentColor` | 색상(기본: 부모 텍스트 색) |
+
+장식용 아이콘은 기본적으로 접근성 트리에서 제외됩니다. `onClick`으로 직접 상호작용하게 만들 때는 `aria-label`을 함께 전달해야 하며 Enter와 Space 키로도 실행됩니다. 일반적인 작업은 Icon 단독보다 `Button iconOnly` 조합을 권장합니다.
 
 ### Chip
 
@@ -143,7 +146,7 @@ Button과 달리 아이콘의 `onClick`을 무시하지 않습니다(닫기 버�
 ```tsx
 const [checked, setChecked] = useState(false);
 
-<Toggle size="md" checked={checked} onChange={setChecked} />
+<Toggle aria-label="알림 사용" size="md" checked={checked} onChange={setChecked} />
 ```
 
 | prop | 타입 | 필수 | 기본값 | 설명 |
@@ -179,7 +182,7 @@ const [checked, setChecked] = useState(false);
 | --- | --- | --- | --- | --- |
 | `children` | `ReactNode` | false | - | 에러 메시지. 없으면(`undefined`/`false`) 접혀서 안 보임 |
 
-`children`이 생기면 위→아래로 슬라이드하며 나타나고, 없어지면 반대로 슬라이드업하며 사라집니다(애니메이션은 이 컴포넌트가 직접 처리). Label과 마찬가지로 Input 전용이 아닌 독립 컴포넌트입니다.
+`children`이 생기면 위→아래로 슬라이드하며 나타나고, 없어지면 반대로 슬라이드업하며 사라집니다. 긴 문장은 줄바꿈되며 `role="alert"`/`aria-live="polite"`로 보조기기에 전달됩니다. Label과 마찬가지로 Input 전용이 아닌 독립 컴포넌트입니다.
 
 ### Input
 
@@ -204,16 +207,19 @@ const [value, setValue] = useState('');
 | `value` | `string` | false | - | 컨트롤드 값 |
 | `onChange` | `(value: string) => void` | false | - | 입력값과 함께 호출 |
 | `label` | `ReactNode` | false | - | 있으면 위에 [Label](#label) 렌더링 |
-| `required` | `boolean` | false | `false` | Label 뒤에 `*` 표시(label 없으면 무의미) |
+| `required` | `boolean` | false | `false` | 실제 input에 required 적용 + Label이 있으면 `*` 표시 |
 | `errorText` | `ReactNode` | false | - | 있으면 아래에 [ErrorText](#errortext) 렌더링 + 테두리 warning 색 |
 | `disabled` | `boolean` | false | `false` | 비활성화 |
-| `allowClear` | `boolean` | false | `false` | 값 있을 때 지우기(X) 버튼. 누르면 `onChange('')` |
+| `allowClear` | `boolean` | false | `false` | 값 있을 때 지우기 버튼. 지운 뒤 input으로 포커스 복귀 |
 | `showCount` | `boolean` | false | `false` | 글자수(`value.length`) 표시. `maxLength` 있으면 무시되고 `n / maxLength` 형식 |
 | `maxLength` | `number` | false | - | 최대 글자수. 한글 IME 조합 중에도 자체 검증해서 강제함 |
 | `prefixIcon` | `ReactNode` | false | - | 앞쪽 아이콘 |
 | `suffixIcon` | `ReactNode` | false | - | 뒤쪽 아이콘 |
+| `rootClassName` | `string` | false | - | 입력 영역 wrapper 클래스 (`className`도 기존 호환을 위해 wrapper에 적용) |
+| `inputClassName` | `string` | false | - | 실제 input 엘리먼트 클래스 |
+| `onClear` | `() => void` | false | - | 지우기 버튼을 누른 직후 호출 |
 
-`placeholder`, `disabled` 등 나머지 네이티브 `<input>` props도 그대로 지원합니다.
+`placeholder`, `disabled` 등 나머지 네이티브 `<input>` props도 지원합니다. `errorText`가 있으면 `aria-invalid`와 `aria-describedby`가 자동으로 연결됩니다.
 
 ### Checkbox
 
@@ -242,21 +248,23 @@ const [value, setValue] = useState('');
 
 ### Breadcrumb
 
-Ant Design Breadcrumb과 API 호환되는 독립 컴포넌트입니다. `items` 배열(href/path/params/menu 드롭다운) 또는 레거시 `Breadcrumb.Item` JSX 문법을 지원합니다. 전체 prop은 Storybook 참조.
+페이지 내 현재 위치와 이동 경로를 한눈에 보여줘요. 구분자는 `/`로 고정되어 있으며 드롭다운은 제공하지 않아요. 각 항목에는 링크, 아이콘과 색상을 선택적으로 지정할 수 있어요.
 
 ```tsx
 <Breadcrumb
   items={[
-    { title: 'Home', href: '/' },
-    { title: 'Components', menu: { items: [{ label: 'Button', path: 'button' }] } },
-    { title: 'Breadcrumb' },
+    { title: '홈', href: '/', icon: <Icon icon="home" /> },
+    { title: '컴포넌트', href: '/components', color: '#0062df' },
+    { title: 'Breadcrumb', color: '#111' },
   ]}
 />
 ```
 
+`href`가 있는 항목에만 마우스 호버와 키보드 포커스 디자인이 적용돼요. `title`, `href`, `icon`, `color` 외에도 `target`, `rel`, `onClick`, `className`, `style` 같은 링크 속성을 전달할 수 있어요.
+
 ### Table
 
-Ant Design Table과 API 호환되는 독립 컴포넌트입니다. `dataSource`/`columns`/`rowKey` 기본 사용부터 정렬·필터·행 선택(체크박스/라디오/트리)·확장 행·고정 컬럼·sticky 헤더·가상 스크롤(1,000+ 행)·`Table.Summary`·`components` 슬롯 교체·`ref.scrollTo`까지 원본과 동일한 기능을 제공합니다.
+Ant Design과 익숙한 핵심 API 사용 패턴을 제공하는 독립 Table입니다. `dataSource`/`columns`/`rowKey` 기본 사용부터 정렬·필터·행 선택(체크박스/라디오/트리)·확장 행·고정 컬럼·sticky 헤더·가상 스크롤(1,000+ 행)·`Table.Summary`·`components` 슬롯 교체·`ref.scrollTo`를 제공합니다. Ant Design 전체 구현과 완전히 동일하다는 의미는 아니며, 실제 지원 범위와 예제는 Storybook을 기준으로 합니다.
 
 ```tsx
 <Table<Member>
@@ -277,6 +285,9 @@ Ant Design Table과 API 호환되는 독립 컴포넌트입니다. `dataSource`/
 ```bash
 pnpm storybook        # 개발 서버 (localhost:6006)
 pnpm build-storybook  # 정적 빌드 (storybook-static/)
+pnpm test             # 핵심 상호작용 회귀 테스트
+pnpm lint             # 소스/Storybook 정적 검사
+pnpm check-types      # 공개 타입 검사
 ```
 
 <br />

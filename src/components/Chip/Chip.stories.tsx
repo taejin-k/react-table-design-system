@@ -9,6 +9,7 @@ const meta: Meta<typeof Chip> = {
   title: 'Components/Chip',
   component: Chip,
   tags: ['autodocs'],
+  parameters: { docs: { description: { component: '상태와 범주를 짧게 표현하는 레이블 컴포넌트로, 색상·표현 방식·앞뒤 아이콘을 지원합니다.' } } },
   argTypes: {
     color: {
       control: 'select',

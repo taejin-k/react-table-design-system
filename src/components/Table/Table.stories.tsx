@@ -151,9 +151,9 @@ export const TitleFooterSummaryAndEmpty: Story = {
 
 export const LoadingAndEmpty: Story = {
   render: () => (
-    <div className="grid gap-8">
-      <Table<Member> dataSource={members.slice(0, 3)} columns={columns} rowKey="key" loading pagination={false} />
-      <Table<Member> dataSource={[]} columns={columns} rowKey="key" locale={{ emptyText: <div>📭 아직 구성원이 없습니다.</div> }} pagination={false} />
+    <div className="grid min-w-0 gap-8 [&>*]:min-w-0">
+      <Table<Member> dataSource={members.slice(0, 3)} columns={columns} rowKey="key" loading scroll={{ x: 900 }} pagination={false} />
+      <Table<Member> dataSource={[]} columns={columns} rowKey="key" scroll={{ x: 900 }} locale={{ emptyText: <div>📭 아직 구성원이 없습니다.</div> }} pagination={false} />
     </div>
   ),
 };

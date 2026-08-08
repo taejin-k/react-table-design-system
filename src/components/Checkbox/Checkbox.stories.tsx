@@ -6,6 +6,7 @@ const meta: Meta<typeof Checkbox> = {
   title: 'Components/Checkbox',
   component: Checkbox,
   tags: ['autodocs'],
+  parameters: { docs: { description: { component: '네이티브 checkbox 동작을 유지하면서 레이블, 오류, 비활성 표현을 제공하는 선택 컴포넌트입니다.' } } },
   argTypes: {
     checked: { control: 'boolean' },
     disabled: { control: 'boolean' },
@@ -45,7 +46,7 @@ export const AllStates: Story = {
     error: { table: { disable: true } },
   },
   render: (args) => (
-    <div className="flex items-center gap-6">
+    <div className="flex flex-wrap items-center gap-6">
       <StatefulCheckbox {...args} defaultChecked={false} />
       <StatefulCheckbox {...args} defaultChecked={true} />
       <StatefulCheckbox {...args} error defaultChecked={false} />
@@ -61,10 +62,10 @@ export const AllStates: Story = {
 export const NoLabel: Story = {
   render: (args) => (
     <div className="flex items-center gap-6">
-      <StatefulCheckbox {...args} label={undefined} defaultChecked={false} />
-      <StatefulCheckbox {...args} label={undefined} defaultChecked={true} />
-      <Checkbox {...args} label={undefined} checked={false} disabled />
-      <Checkbox {...args} label={undefined} checked={true} disabled />
+      <StatefulCheckbox {...args} aria-label="선택 안 됨" label={undefined} defaultChecked={false} />
+      <StatefulCheckbox {...args} aria-label="선택됨" label={undefined} defaultChecked={true} />
+      <Checkbox {...args} aria-label="비활성 선택 안 됨" label={undefined} checked={false} disabled />
+      <Checkbox {...args} aria-label="비활성 선택됨" label={undefined} checked={true} disabled />
     </div>
   ),
 };

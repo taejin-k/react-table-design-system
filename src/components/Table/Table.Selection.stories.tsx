@@ -8,6 +8,7 @@ const meta: Meta<TableProps<Member>> = {
   title: 'Components/Table/Selection',
   component: Table as ComponentType<TableProps<Member>>,
   tags: ['autodocs'],
+  parameters: { docs: { description: { component: 'checkbox·radio 선택, 선택 메뉴, 트리 연동과 제어 상태를 포함한 Table rowSelection API 예제입니다.' } } },
   args: { dataSource: members.slice(0, 8), columns, rowKey: 'key', pagination: false },
 };
 

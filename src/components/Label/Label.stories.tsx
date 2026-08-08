@@ -7,6 +7,7 @@ const meta: Meta<typeof Label> = {
   title: 'Components/Label',
   component: Label,
   tags: ['autodocs'],
+  parameters: { docs: { description: { component: 'htmlFor로 폼 컨트롤과 연결되고 크기 및 필수 표시를 제공하는 Label입니다.' } } },
   argTypes: {
     size: {
       control: 'select',

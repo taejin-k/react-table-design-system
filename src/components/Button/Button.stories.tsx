@@ -6,6 +6,7 @@ const meta: Meta<typeof Button> = {
   title: 'Components/Button',
   component: Button,
   tags: ['autodocs'],
+  parameters: { docs: { description: { component: '우선순위, 크기, 아이콘, 비활성 상태를 지원하는 기본 작업 버튼입니다. 네이티브 button 속성과 ref를 전달할 수 있습니다.' } } },
   argTypes: {
     type: {
       control: 'select',
@@ -96,6 +97,7 @@ export const Disabled: Story = {
 
 export const IconOnly: Story = {
   args: {
+    'aria-label': '추가',
     iconOnly: true,
     prefixIcon: <Icon icon="add" />,
   },
@@ -127,7 +129,7 @@ export const WithIcon: Story = {
   render: (args) => (
     <div className="flex flex-col gap-4">
       {(['lg', 'md', 'sm'] as const).map((size) => (
-        <div key={size} className="flex items-center gap-2">
+        <div key={size} className="flex flex-wrap items-center gap-2">
           <span className="w-6 text-xs text-[#777777]">{size}</span>
           <Button {...args} size={size}>
             Button

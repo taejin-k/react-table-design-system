@@ -8,6 +8,7 @@ const meta: Meta<TableProps<Member>> = {
   title: 'Components/Table/Pagination',
   component: Table as ComponentType<TableProps<Member>>,
   tags: ['autodocs'],
+  parameters: { docs: { description: { component: '페이지 크기, 빠른 이동, 위치, 제어 상태와 콜백을 포함한 Table pagination API 예제입니다.' } } },
   args: { dataSource: largeData.slice(0, 185), columns, rowKey: 'key', bordered: true },
 };
 

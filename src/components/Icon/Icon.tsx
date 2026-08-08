@@ -1,4 +1,4 @@
-import type { MouseEvent, SVGProps } from 'react';
+import type { SVGProps } from 'react';
 
 /** Figma Icon 라이브러리(901:2, 기본 16x16)의 path 데이터. */
 const paths = {
@@ -52,7 +52,7 @@ export function Icon({ icon, size = 16, color = 'currentColor', className, onCli
         onKeyDown?.(event);
         if (isInteractive && (event.key === 'Enter' || event.key === ' ')) {
           event.preventDefault();
-          onClick?.(event as unknown as MouseEvent<SVGSVGElement>);
+          event.currentTarget.dispatchEvent(new globalThis.MouseEvent('click', { bubbles: true }));
         }
       }}
       {...rest}

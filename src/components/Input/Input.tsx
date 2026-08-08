@@ -1,4 +1,4 @@
-import { cloneElement, forwardRef, isValidElement, useId, type InputHTMLAttributes, type ReactNode } from "react";
+import { cloneElement, forwardRef, isValidElement, useId, useImperativeHandle, useRef, type InputHTMLAttributes, type ReactNode } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { twMerge } from "tailwind-merge";
 import { Label } from "../Label";
@@ -22,6 +22,12 @@ export interface InputProps
   showCount?: boolean;
   prefixIcon?: ReactNode;
   suffixIcon?: ReactNode;
+  /** 입력 영역 wrapper에 적용한다. 기존 className도 호환을 위해 wrapper에 적용된다. */
+  rootClassName?: string;
+  /** 실제 input 엘리먼트에 적용한다. */
+  inputClassName?: string;
+  /** 지우기 버튼을 누른 직후 호출한다. */
+  onClear?: () => void;
 }
 
 /** prefixIcon/suffixIcon에 onClick이 붙어있어도 무시하도록 제거한다(장식 목적). */
@@ -48,6 +54,11 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       disabled,
       id,
       className,
+      rootClassName,
+      inputClassName,
+      onClear,
+      "aria-describedby": ariaDescribedBy,
+      "aria-invalid": ariaInvalid,
       ...rest
     },
     ref,
@@ -56,6 +67,10 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     const inputId = id ?? generatedId;
     const hasError = Boolean(errorText);
     const hasValue = Boolean(value);
+    const errorId = `${inputId}-error`;
+    const describedBy = [ariaDescribedBy, hasError ? errorId : undefined].filter(Boolean).join(" ") || undefined;
+    const inputRef = useRef<HTMLInputElement>(null);
+    useImperativeHandle(ref, () => inputRef.current as HTMLInputElement);
 
     return (
       <div className="flex w-full flex-col gap-[4px]">
@@ -64,15 +79,18 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             {label}
           </Label>
         )}
-        <div className={twMerge(inputRowVariants({ size, variant, error: hasError, disabled }), className)}>
+        <div className={twMerge(inputRowVariants({ size, variant, error: hasError, disabled }), className, rootClassName)}>
           {prefixIcon && <span className="flex size-4 shrink-0 items-center justify-center">{stripOnClick(prefixIcon)}</span>}
           <input
-            ref={ref}
+            ref={inputRef}
             id={inputId}
             value={value}
             maxLength={maxLength}
             disabled={disabled}
-            className={twMerge(inputVariants({ size, disabled }), "min-w-0 flex-1 bg-transparent outline-none placeholder:text-[#999]")}
+            required={required}
+            aria-invalid={ariaInvalid ?? (hasError || undefined)}
+            aria-describedby={describedBy}
+            className={twMerge(inputVariants({ size, disabled }), "min-w-0 flex-1 bg-transparent outline-none placeholder:text-[#999]", inputClassName)}
             onChange={(event) => {
               const nextValue = event.target.value;
               // 한글 등 IME 조합 중에는 네이티브 maxLength가 강제되지 않아 직접 막는다.
@@ -87,11 +105,23 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             </span>
           )}
           {allowClear && hasValue && !disabled && (
-            <Icon icon="close" size={16} className="shrink-0 cursor-pointer text-[#999]" onClick={() => onChange?.("")} />
+            <button
+              type="button"
+              aria-label="입력 내용 지우기"
+              className="flex size-4 shrink-0 items-center justify-center rounded border-0 bg-transparent p-0 text-[#999] hover:text-[#111] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#0062df]"
+              onMouseDown={(event) => event.preventDefault()}
+              onClick={() => {
+                onChange?.("");
+                onClear?.();
+                inputRef.current?.focus();
+              }}
+            >
+              <Icon icon="close" size={16} aria-hidden />
+            </button>
           )}
           {suffixIcon && <span className="flex size-4 shrink-0 items-center justify-center">{stripOnClick(suffixIcon)}</span>}
         </div>
-        <ErrorText className="-mt-0.5">{errorText}</ErrorText>
+        <ErrorText id={errorId} className="-mt-0.5">{errorText}</ErrorText>
       </div>
     );
   },

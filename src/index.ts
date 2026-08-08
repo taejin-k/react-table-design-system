@@ -17,24 +17,7 @@ export type { CheckboxProps } from './components/Checkbox';
 export { Radio } from './components/Radio';
 export type { RadioProps } from './components/Radio';
 export { Breadcrumb } from './components/Breadcrumb';
-export type {
-  BreadcrumbComponent,
-  BreadcrumbDropdownPlacement,
-  BreadcrumbDropdownProps,
-  BreadcrumbItemProps,
-  BreadcrumbItemType,
-  BreadcrumbKey,
-  BreadcrumbMenuClickInfo,
-  BreadcrumbMenuItem,
-  BreadcrumbMenuProps,
-  BreadcrumbParams,
-  BreadcrumbProps,
-  BreadcrumbRouteItem,
-  BreadcrumbSemanticClassNames,
-  BreadcrumbSemanticStyles,
-  BreadcrumbSeparatorItem,
-  BreadcrumbSeparatorProps,
-} from './components/Breadcrumb';
+export type { BreadcrumbKey, BreadcrumbProps, Item } from './components/Breadcrumb';
 export { Table } from './components/Table';
 export type {
   AlignType,

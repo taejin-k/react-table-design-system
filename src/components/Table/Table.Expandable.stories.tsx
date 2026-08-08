@@ -13,6 +13,7 @@ const meta: Meta<TableProps<Member>> = {
   title: 'Components/Table/Expandable',
   component: Table as ComponentType<TableProps<Member>>,
   tags: ['autodocs'],
+  parameters: { docs: { description: { component: '상세 행과 트리 데이터를 제어형·비제어형으로 펼치는 Table expandable API 예제입니다.' } } },
   args: { dataSource: members.slice(0, 6), columns, rowKey: 'key', pagination: false },
 };
 

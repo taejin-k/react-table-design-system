@@ -6,6 +6,7 @@ const meta: Meta<typeof Radio> = {
   title: 'Components/Radio',
   component: Radio,
   tags: ['autodocs'],
+  parameters: { docs: { description: { component: '한 그룹에서 하나의 값만 선택하는 네이티브 radio 기반 컴포넌트입니다.' } } },
   argTypes: {
     checked: { control: 'boolean' },
     disabled: { control: 'boolean' },
@@ -45,7 +46,7 @@ export const AllStates: Story = {
     error: { table: { disable: true } },
   },
   render: (args) => (
-    <div className="flex items-center gap-6">
+    <div className="flex flex-wrap items-center gap-6">
       <StatefulRadio {...args} defaultChecked={false} />
       <StatefulRadio {...args} defaultChecked={true} />
       <StatefulRadio {...args} error defaultChecked={false} />
@@ -61,10 +62,10 @@ export const AllStates: Story = {
 export const NoLabel: Story = {
   render: (args) => (
     <div className="flex items-center gap-6">
-      <StatefulRadio {...args} label={undefined} defaultChecked={false} />
-      <StatefulRadio {...args} label={undefined} defaultChecked={true} />
-      <Radio {...args} label={undefined} checked={false} disabled />
-      <Radio {...args} label={undefined} checked={true} disabled />
+      <StatefulRadio {...args} aria-label="선택 안 됨" label={undefined} defaultChecked={false} />
+      <StatefulRadio {...args} aria-label="선택됨" label={undefined} defaultChecked={true} />
+      <Radio {...args} aria-label="비활성 선택 안 됨" label={undefined} checked={false} disabled />
+      <Radio {...args} aria-label="비활성 선택됨" label={undefined} checked={true} disabled />
     </div>
   ),
 };

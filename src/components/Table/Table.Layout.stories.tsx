@@ -8,6 +8,7 @@ const meta: Meta<TableProps<Member>> = {
   title: 'Components/Table/Layout',
   component: Table as ComponentType<TableProps<Member>>,
   tags: ['autodocs'],
+  parameters: { docs: { description: { component: '고정 열·헤더·요약, 스크롤, 가상화, 그룹 헤더와 병합 셀 등 Table 레이아웃 기능입니다.' } } },
   args: { dataSource: members.slice(0, 8), columns, rowKey: 'key', pagination: false },
 };
 

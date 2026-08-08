@@ -71,7 +71,6 @@ const cellBaseClass = "relative z-0 border-b border-[#f0f0f0] bg-white align-mid
 const headerCellBaseClass = "bg-[#f5f5f5] text-left text-[14px] font-semibold text-[#111]";
 const nestedHeaderBorderClass = "border-r border-[#e5e5e5]";
 const headerCellSortedClass = "bg-[#eee]";
-const lastCellClass = "table-cell";
 const cellLastNoRightBorder = "border-r-0";
 
 const checkboxClass =
@@ -823,8 +822,9 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
     const depth = maxDepth(responsiveColumns);
     return Array.from({ length: depth }, (_, level) => {
       const cells: ReactNode[] = [];
-      const visit = (items: ColumnsType<T>, current: number) =>
-        items.forEach((item) => {
+      const visit = (items: ColumnsType<T>, current: number, parentPath = "root") =>
+        items.forEach((item, itemIndex) => {
+          const headerPath = `${parentPath}-${itemIndex}`;
           if (current === level) {
             const leafIndex = leafColumns.indexOf(item);
             const key = columnKey(item, leafIndex);
@@ -840,7 +840,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
             if (resolvedColSpan === 0 || item.rowSpan === 0) return;
             cells.push(
               <HeaderCell
-                key={`${key}-${level}`}
+                key={`${headerPath}-${key}-${level}`}
                 colSpan={resolvedColSpan}
                 rowSpan={item.children?.length ? 1 : (item.rowSpan ?? depth - level)}
                 {...customProps}
@@ -928,7 +928,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
                 </span>
               </HeaderCell>,
             );
-          } else if (item.children?.length) visit(item.children, current + 1);
+          } else if (item.children?.length) visit(item.children, current + 1, headerPath);
         });
       visit(responsiveColumns, 0);
 
@@ -1453,6 +1453,7 @@ function SelectionMenu<T extends object>({
   const rootRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const popupRef = useRef<HTMLDivElement>(null);
+  const focusOnOpenRef = useRef<"first" | "last" | null>(null);
   const popupId = `wizard-table-selection-menu-${useId().replace(/:/g, "")}`;
   const items =
     rowSelection.selections === true
@@ -1488,10 +1489,34 @@ function SelectionMenu<T extends object>({
       document.removeEventListener("keydown", keyboard);
     };
   }, [open]);
+  useEffect(() => {
+    if (!open || !focusOnOpenRef.current) return;
+    const menuItems = popupRef.current?.querySelectorAll<HTMLButtonElement>('[role="menuitem"]');
+    menuItems?.[focusOnOpenRef.current === "first" ? 0 : menuItems.length - 1]?.focus();
+    focusOnOpenRef.current = null;
+  }, [open]);
   const choose = (action: () => void) => {
     action();
     setOpen(false);
     triggerRef.current?.focus();
+  };
+  const handleMenuKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
+    const menuItems = Array.from(popupRef.current?.querySelectorAll<HTMLButtonElement>('[role="menuitem"]') ?? []);
+    if (!menuItems.length) return;
+    const currentIndex = menuItems.indexOf(document.activeElement as HTMLButtonElement);
+    const targetIndex =
+      event.key === "Home"
+        ? 0
+        : event.key === "End"
+          ? menuItems.length - 1
+          : event.key === "ArrowDown"
+            ? (currentIndex + 1 + menuItems.length) % menuItems.length
+            : event.key === "ArrowUp"
+              ? (currentIndex - 1 + menuItems.length) % menuItems.length
+              : -1;
+    if (targetIndex < 0) return;
+    event.preventDefault();
+    menuItems[targetIndex]?.focus();
   };
   const popupContainer = open && triggerRef.current ? getPopupContainer(triggerRef.current) : undefined;
   const portalStyle =
@@ -1507,9 +1532,9 @@ function SelectionMenu<T extends object>({
         })()
       : undefined;
   const popup = open && (
-    <div ref={popupRef} id={popupId} role="group" aria-label="선택 작업 메뉴" className={selectionMenuPopupClass} style={portalStyle}>
+    <div ref={popupRef} id={popupId} role="menu" aria-label="선택 작업 메뉴" className={selectionMenuPopupClass} style={portalStyle} onKeyDown={handleMenuKeyDown}>
       {items.map((item) => (
-        <button type="button" key={item.key} className={selectionMenuItemClass} onClick={() => choose(item.action)}>
+        <button type="button" role="menuitem" key={item.key} className={selectionMenuItemClass} onClick={() => choose(item.action)}>
           {item.text}
         </button>
       ))}
@@ -1523,8 +1548,22 @@ function SelectionMenu<T extends object>({
         className={selectionMenuTriggerClass}
         aria-label="선택 작업"
         aria-expanded={open}
+        aria-haspopup="menu"
         aria-controls={popupId}
         onClick={() => setOpen((current) => !current)}
+        onKeyDown={(event) => {
+          if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
+          event.preventDefault();
+          const position = event.key === "ArrowDown" ? "first" : "last";
+          if (open) {
+            const menuItems = popupRef.current?.querySelectorAll<HTMLButtonElement>('[role="menuitem"]');
+            menuItems?.[position === "first" ? 0 : menuItems.length - 1]?.focus();
+            focusOnOpenRef.current = null;
+            return;
+          }
+          focusOnOpenRef.current = position;
+          setOpen(true);
+        }}
       >
         <svg viewBox="0 0 10 10" aria-hidden className={selectionMenuTriggerSvgClass} fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.4}>
           <path d="m2 3.5 3 3 3-3" />

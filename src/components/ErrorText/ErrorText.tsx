@@ -25,9 +25,9 @@ export const ErrorText = forwardRef<HTMLDivElement, ErrorTextProps>(({ className
   }, [hasContent, children]);
 
   return (
-    <div className={twMerge("grid transition-all duration-200 ease-out", hasContent ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0")}>
+    <div className={twMerge("grid transition-all duration-200 ease-out motion-reduce:transition-none", hasContent ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0")}>
       <div className="overflow-hidden">
-        <div ref={ref} className={twMerge("flex items-start pl-[4px] font-pretendard text-[12px] whitespace-nowrap text-[#fe5150]", className)} {...rest}>
+        <div ref={ref} role="alert" aria-live="polite" className={twMerge("flex min-w-0 items-start break-words pl-[4px] font-pretendard text-[12px] text-[#fe5150]", className)} {...rest}>
           {lastChildren}
         </div>
       </div>

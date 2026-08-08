@@ -8,6 +8,7 @@ const meta: Meta<typeof Toggle> = {
   title: 'Components/Toggle',
   component: Toggle,
   tags: ['autodocs'],
+  parameters: { docs: { description: { component: 'checked와 onChange로 상태를 제어하며 switch 역할과 키보드 조작을 제공하는 토글입니다.' } } },
   argTypes: {
     size: {
       control: 'select',
@@ -17,6 +18,7 @@ const meta: Meta<typeof Toggle> = {
     disabled: { control: 'boolean' },
   },
   args: {
+    'aria-label': '설정 사용',
     size: 'md',
     checked: false,
     disabled: false,
@@ -44,7 +46,7 @@ export const AllSizes: Story = {
   render: (args) => (
     <div className="flex items-center gap-4">
       {SIZES.map((size) => (
-        <Controlled key={size} {...args} size={size} />
+        <Controlled key={size} {...args} aria-label={`${size} 크기 설정 사용`} size={size} />
       ))}
     </div>
   ),
@@ -57,8 +59,8 @@ export const Disabled: Story = {
   },
   render: (args) => (
     <div className="flex items-center gap-2">
-      <Toggle {...args} checked={false} />
-      <Toggle {...args} checked={true} />
+      <Toggle {...args} aria-label="꺼진 설정" checked={false} />
+      <Toggle {...args} aria-label="켜진 설정" checked={true} />
     </div>
   ),
 };

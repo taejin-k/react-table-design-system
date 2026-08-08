@@ -8,6 +8,7 @@ const meta: Meta<TableProps<Member>> = {
   title: 'Components/Table/Sorting & Filtering',
   component: Table as ComponentType<TableProps<Member>>,
   tags: ['autodocs'],
+  parameters: { docs: { description: { component: '로컬·서버 정렬, 다중 우선순위, 기본·사용자 정의 필터를 포함한 Table 열 조작 API 예제입니다.' } } },
   args: { dataSource: members, columns, rowKey: 'key', pagination: { defaultPageSize: 8 }, bordered: true },
 };
 
