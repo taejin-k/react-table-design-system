@@ -12,7 +12,7 @@ const meta: Meta<TableProps<Member>> = {
     docs: {
       description: {
         component:
-          "checkbox·radio 선택, 선택 메뉴, 트리 연동과 제어 상태를 포함한 Table rowSelection API 예제입니다.",
+          "체크박스나 라디오로 원하는 행을 선택해요.  \n선택 메뉴·트리 연동과 제어 상태를 설정할 수 있어요.",
       },
     },
   },

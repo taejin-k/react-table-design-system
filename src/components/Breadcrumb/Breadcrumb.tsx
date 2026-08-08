@@ -14,7 +14,17 @@ export const Breadcrumb = forwardRef<HTMLElement, BreadcrumbProps>(
       <ol className="m-0 flex min-w-0 list-none flex-wrap items-center gap-y-1 p-0">
         {items.map(
           (
-            { key, title, href, icon, color, className: itemClassName, style, ...linkProps },
+            {
+              key,
+              title,
+              href,
+              onClick,
+              icon,
+              color,
+              className: itemClassName,
+              style,
+              ...linkProps
+            },
             index,
           ) => {
             const isCurrent = index === items.length - 1;
@@ -46,15 +56,30 @@ export const Breadcrumb = forwardRef<HTMLElement, BreadcrumbProps>(
                   <a
                     {...linkProps}
                     href={href}
+                    onClick={onClick}
                     aria-current={isCurrent ? "page" : undefined}
                     className={twMerge(
-                      contentVariants({ link: true, current: isCurrent }),
+                      contentVariants({ interactive: true, current: isCurrent }),
                       itemClassName,
                     )}
                     style={{ color, ...style }}
                   >
                     {content}
                   </a>
+                ) : onClick ? (
+                  <button
+                    type="button"
+                    onClick={onClick}
+                    aria-current={isCurrent ? "page" : undefined}
+                    className={twMerge(
+                      contentVariants({ interactive: true, current: isCurrent }),
+                      "appearance-none border-0 bg-transparent [font:inherit]",
+                      itemClassName,
+                    )}
+                    style={{ color, ...style }}
+                  >
+                    {content}
+                  </button>
                 ) : (
                   <span
                     aria-current={isCurrent ? "page" : undefined}
@@ -79,7 +104,7 @@ const contentVariants = cva(
   "inline-flex min-w-0 items-center gap-1 rounded px-1 py-0.5 text-[#999]",
   {
     variants: {
-      link: {
+      interactive: {
         true: "cursor-pointer no-underline transition-[color,background-color] hover:bg-[#f5f5f5] hover:text-[#111] focus-visible:bg-[#f5f5f5] focus-visible:text-[#111] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#0062df] motion-reduce:transition-none",
         false: "",
       },
@@ -89,7 +114,7 @@ const contentVariants = cva(
       },
     },
     defaultVariants: {
-      link: false,
+      interactive: false,
       current: false,
     },
   },

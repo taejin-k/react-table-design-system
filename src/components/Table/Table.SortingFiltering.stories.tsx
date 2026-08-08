@@ -12,7 +12,7 @@ const meta: Meta<TableProps<Member>> = {
     docs: {
       description: {
         component:
-          "로컬·서버 정렬, 다중 우선순위, 기본·사용자 정의 필터를 포함한 Table 열 조작 API 예제입니다.",
+          "열의 데이터를 정렬하거나 원하는 조건으로 필터링해요.  \n로컬·서버 정렬, 다중 우선순위와 사용자 정의 필터를 설정할 수 있어요.",
       },
     },
   },
@@ -131,7 +131,6 @@ export const CustomFilterDropdown: Story = {
               <div className="flex gap-2 p-2">
                 <input
                   className="h-8 min-w-[180px] rounded border border-[#ddd] px-[11px] text-[#111] outline-none focus:border-[#0062df]"
-                  aria-label="이름 검색"
                   value={String(selectedKeys[0] ?? "")}
                   onChange={(event) =>
                     setSelectedKeys(event.target.value ? [event.target.value] : [])
@@ -171,7 +170,6 @@ export const CustomSortCycleAndIcon: Story = {
             sortIcon: ({ sortOrder }) => (
               <span
                 className={`inline-grid w-3.5 place-items-center text-[13px] ${sortOrder ? "text-[#0062df]" : "text-[#ccc]"}`}
-                aria-hidden
               >
                 {sortOrder === "descend" ? "↓" : sortOrder === "ascend" ? "↑" : "↕"}
               </span>

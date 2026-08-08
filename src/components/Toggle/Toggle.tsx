@@ -1,17 +1,7 @@
-import { forwardRef, type ButtonHTMLAttributes, type MouseEvent } from "react";
-import { cva, type VariantProps } from "class-variance-authority";
+import { forwardRef, type MouseEvent } from "react";
+import { cva } from "class-variance-authority";
 import { twMerge } from "tailwind-merge";
-
-export interface ToggleProps
-  extends
-    Omit<
-      ButtonHTMLAttributes<HTMLButtonElement>,
-      "onChange" | "checked" | "size" | "type" | "role" | "aria-checked"
-    >,
-    VariantProps<typeof trackVariants> {
-  checked: boolean;
-  onChange?: (checked: boolean) => void;
-}
+import type { ToggleProps } from "./Toggle.types";
 
 export const Toggle = forwardRef<HTMLButtonElement, ToggleProps>(
   ({ size = "md", checked, onChange, onClick, disabled, className, ...rest }, ref) => {

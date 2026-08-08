@@ -14,6 +14,7 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
         className={twMerge(
           "inline-flex items-center gap-1.5",
           disabled ? "cursor-not-allowed" : "cursor-pointer",
+          className,
         )}
       >
         <input
@@ -21,7 +22,7 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
           id={inputId}
           type="checkbox"
           disabled={disabled}
-          className={twMerge(checkboxVariants({ error }), className)}
+          className={checkboxVariants({ error })}
           {...rest}
         />
         {label != null ? (

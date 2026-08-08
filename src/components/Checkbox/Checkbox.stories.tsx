@@ -29,10 +29,11 @@ const meta = {
     controls: { disable: true },
     docs: {
       description: {
-        component: "선택 여부를 표시하고 레이블과 오류 상태를 함께 표현하는 체크박스예요.",
+        component:
+          "항목을 선택하거나 선택 해제해요.  \n레이블을 표시하고 오류·비활성 상태를 설정할 수 있어요.",
       },
       page: () => (
-        <div className="checkbox-docs">
+        <div className="checkbox-docs component-docs">
           <Title />
           <Description />
           <Stories />
@@ -44,6 +45,8 @@ const meta = {
 | --- | --- | --- | --- |
 | \`label\` | 체크박스 오른쪽에 레이블을 표시해요. | \`ReactNode\` | - |
 | \`error\` | 테두리와 체크 색상을 오류 색상으로 표시해요. | \`boolean\` | \`false\` |
+| \`className\` | 최상위 요소에 Tailwind 클래스를 추가해요. | \`string\` | - |
+| \`onChange\` | 선택 상태가 바뀔 때 실행할 함수예요. | \`ChangeEventHandler<HTMLInputElement>\` | - |
           `}</Markdown>
         </div>
       ),
@@ -61,7 +64,7 @@ export const States: Story = {
   },
   render: (args, { viewMode }) =>
     viewMode === "docs" ? (
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
         <Checkbox label="기본" />
         <Checkbox error label="오류" />
         <Checkbox disabled label="비활성" />
@@ -82,7 +85,7 @@ export const Label: Story = {
     controls: { disable: false },
   },
   render: (args) => (
-    <div className="grid grid-cols-2 items-start gap-8">
+    <div className="flex items-center gap-8">
       <ControlledCheckbox {...args} label={undefined} />
       <ControlledCheckbox {...args} />
     </div>

@@ -1,16 +1,24 @@
-import type { AnchorHTMLAttributes, CSSProperties, HTMLAttributes, ReactNode } from "react";
+import type {
+  AnchorHTMLAttributes,
+  CSSProperties,
+  HTMLAttributes,
+  MouseEventHandler,
+  ReactNode,
+} from "react";
 
 export type BreadcrumbKey = string | number;
 
 export interface Item extends Omit<
   AnchorHTMLAttributes<HTMLAnchorElement>,
-  "children" | "color" | "href" | "title"
+  "children" | "color" | "href" | "onClick" | "title"
 > {
   key?: BreadcrumbKey;
   /** 화면에 표시할 경로 이름. */
   title: ReactNode;
   /** 있으면 링크로 렌더링하고 hover·focus 디자인을 적용한다. */
   href?: string;
+  /** 클릭할 때 실행하며, href가 없어도 hover·focus 디자인을 적용한다. */
+  onClick?: MouseEventHandler<HTMLElement>;
   /** 경로 이름 앞에 표시할 아이콘. */
   icon?: ReactNode;
   /** 해당 item의 글자와 아이콘 색상. */

@@ -38,6 +38,18 @@ describe("Breadcrumb", () => {
     expect(onClick).toHaveBeenCalledOnce();
   });
 
+  it("renders onClick items without href as interactive buttons", async () => {
+    const user = userEvent.setup();
+    const onClick = vi.fn();
+    render(<Breadcrumb items={[{ title: "프로젝트", onClick }, { title: "현재 위치" }]} />);
+
+    const button = screen.getByRole("button", { name: "프로젝트" });
+    expect(button).toHaveAttribute("type", "button");
+    expect(button.className).toContain("hover:bg-[#f5f5f5]");
+    await user.click(button);
+    expect(onClick).toHaveBeenCalledOnce();
+  });
+
   it("applies icon and color to each item", () => {
     render(
       <Breadcrumb

@@ -1,109 +1,119 @@
 import { useEffect, useState } from "react";
+import { Description, Markdown, Stories, Title } from "@storybook/addon-docs/blocks";
 import type { Meta, StoryObj } from "@storybook/react";
+import { storyDescriptions } from "../../storybook/story-descriptions";
 import { Radio } from "./Radio";
+import type { RadioProps } from "./Radio.types";
 
-const meta: Meta<typeof Radio> = {
+const storyDescription = (id: string) => ({
+  docs: { description: { story: storyDescriptions[id] } },
+});
+
+const meta = {
   title: "Components/Radio",
   component: Radio,
   tags: ["autodocs"],
+  args: { label: "레이블", checked: false, disabled: false, error: false },
+  argTypes: {
+    label: { name: "레이블", control: "text" },
+    checked: { name: "선택", control: "boolean" },
+    disabled: { name: "비활성", control: "boolean" },
+    error: { name: "오류", control: "boolean" },
+    className: { control: false, table: { disable: true } },
+    onChange: { control: false, table: { disable: true } },
+  },
   parameters: {
+    controls: { disable: true },
     docs: {
       description: {
-        component: "한 그룹에서 하나의 값만 선택하는 네이티브 radio 기반 컴포넌트입니다.",
+        component:
+          "여러 선택지 중 하나를 선택해요.  \n레이블을 표시하고 오류·비활성 상태를 설정할 수 있어요.",
       },
+      page: () => (
+        <div className="radio-docs component-docs">
+          <Title />
+          <Description />
+          <Stories />
+          <h2>API</h2>
+          <Markdown>{`
+### Radio
+
+| Name | Description | Type | Default |
+| --- | --- | --- | --- |
+| \`label\` | Radio 오른쪽에 레이블을 표시해요. | \`ReactNode\` | - |
+| \`error\` | 테두리와 선택 색상을 오류 색상으로 표시해요. | \`boolean\` | \`false\` |
+| \`className\` | 최상위 요소에 Tailwind 클래스를 추가해요. | \`string\` | - |
+| \`onChange\` | 선택 상태가 바뀔 때 실행할 함수예요. | \`ChangeEventHandler<HTMLInputElement>\` | - |
+          `}</Markdown>
+        </div>
+      ),
     },
   },
-  argTypes: {
-    checked: { control: "boolean" },
-    disabled: { control: "boolean" },
-    error: { control: "boolean" },
-  },
-  args: {
-    label: "레이블",
-    checked: false,
-    disabled: false,
-    error: false,
-  },
-};
+} satisfies Meta<typeof Radio>;
 
 export default meta;
-type Story = StoryObj<typeof Radio>;
+type Story = StoryObj<typeof meta>;
 
-const Controlled = (args: React.ComponentProps<typeof Radio>) => {
-  const [checked, setChecked] = useState(args.checked);
-  useEffect(() => setChecked(args.checked), [args.checked]);
-  return (
-    <Radio {...args} checked={checked} onChange={(event) => setChecked(event.target.checked)} />
-  );
+export const States: Story = {
+  parameters: { ...storyDescription("components-radio--states"), controls: { disable: false } },
+  render: (args, { viewMode }) =>
+    viewMode === "docs" ? (
+      <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
+        <Radio label="기본" />
+        <Radio error label="오류" />
+        <Radio disabled label="비활성" />
+        <Radio checked disabled label="비활성 · 선택" />
+      </div>
+    ) : (
+      <ControlledRadio {...args} />
+    ),
 };
 
-export const Default: Story = {
-  render: (args) => <Controlled {...args} />,
-};
-
-const StatefulRadio = (
-  props: Omit<React.ComponentProps<typeof Radio>, "checked" | "onChange"> & {
-    defaultChecked?: boolean;
-  },
-) => {
-  const { defaultChecked = false, ...rest } = props;
-  const [checked, setChecked] = useState(defaultChecked);
-  return (
-    <Radio {...rest} checked={checked} onChange={(event) => setChecked(event.target.checked)} />
-  );
-};
-
-export const AllStates: Story = {
+export const Label: Story = {
   argTypes: {
-    checked: { table: { disable: true } },
-    disabled: { table: { disable: true } },
-    error: { table: { disable: true } },
+    disabled: { control: false, table: { disable: true } },
+    error: { control: false, table: { disable: true } },
   },
+  parameters: { ...storyDescription("components-radio--label"), controls: { disable: false } },
   render: (args) => (
-    <div className="flex flex-wrap items-center gap-6">
-      <StatefulRadio {...args} defaultChecked={false} />
-      <StatefulRadio {...args} defaultChecked={true} />
-      <StatefulRadio {...args} error defaultChecked={false} />
-      <StatefulRadio {...args} error defaultChecked={true} />
-      <Radio {...args} checked={false} disabled />
-      <Radio {...args} checked={true} disabled />
+    <div className="flex items-center gap-8">
+      <ControlledRadio {...args} label={undefined} />
+      <ControlledRadio {...args} />
     </div>
   ),
 };
 
-// ============ 라벨 없음 ============
-
-export const NoLabel: Story = {
-  render: (args) => (
-    <div className="flex items-center gap-6">
-      <StatefulRadio {...args} aria-label="선택 안 됨" label={undefined} defaultChecked={false} />
-      <StatefulRadio {...args} aria-label="선택됨" label={undefined} defaultChecked={true} />
-      <Radio {...args} aria-label="비활성 선택 안 됨" label={undefined} checked={false} disabled />
-      <Radio {...args} aria-label="비활성 선택됨" label={undefined} checked={true} disabled />
-    </div>
-  ),
-};
-
-export const RadioGroup: Story = {
+export const Group: Story = {
+  parameters: { ...storyDescription("components-radio--group") },
   render: () => <RadioGroupStory />,
 };
 
+function ControlledRadio(args: RadioProps) {
+  const [checked, setChecked] = useState(Boolean(args.checked));
+  useEffect(() => setChecked(Boolean(args.checked)), [args.checked]);
+  return (
+    <Radio
+      {...args}
+      checked={checked}
+      onChange={(event) => {
+        setChecked(event.target.checked);
+        args.onChange?.(event);
+      }}
+    />
+  );
+}
+
 function RadioGroupStory() {
   const [value, setValue] = useState("a");
-  const options = [
-    { value: "a", label: "옵션 A" },
-    { value: "b", label: "옵션 B" },
-    { value: "c", label: "옵션 C" },
-  ];
   return (
-    <div className="flex items-center gap-6">
-      {options.map((option) => (
+    <div className="flex flex-wrap items-center gap-8">
+      {["a", "b", "c"].map((option) => (
         <Radio
-          key={option.value}
+          key={option}
           name="story-radio-group"
-          label={option.label}
-          checked={value === option.value}
-          onChange={() => setValue(option.value)}
+          label={`옵션 ${option.toUpperCase()}`}
+          checked={value === option}
+          onChange={() => setValue(option)}
         />
       ))}
     </div>

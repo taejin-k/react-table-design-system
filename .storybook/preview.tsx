@@ -8,9 +8,18 @@ const preview: Preview = {
     (Story, context) => {
       if (
         context.viewMode === "docs" &&
-        ["Components/Breadcrumb", "Components/Button", "Components/Checkbox"].includes(
-          context.title,
-        )
+        [
+          "Components/Breadcrumb",
+          "Components/Button",
+          "Components/Checkbox",
+          "Components/Chip",
+          "Components/ErrorText",
+          "Components/Icon",
+          "Components/Input",
+          "Components/Label",
+          "Components/Radio",
+          "Components/Toggle",
+        ].includes(context.title)
       ) {
         return createElement(Story);
       }
@@ -36,6 +45,7 @@ const preview: Preview = {
     layout: "padded",
     a11y: { test: "todo" },
     controls: {
+      exclude: /^aria-/,
       matchers: {
         color: /(background|color)$/i,
       },

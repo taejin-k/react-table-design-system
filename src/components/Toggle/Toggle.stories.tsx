@@ -1,73 +1,87 @@
 import { useEffect, useState } from "react";
+import { Description, Markdown, Stories, Title } from "@storybook/addon-docs/blocks";
 import type { Meta, StoryObj } from "@storybook/react";
+import { storyDescriptions } from "../../storybook/story-descriptions";
 import { Toggle } from "./Toggle";
+import type { ToggleProps } from "./Toggle.types";
 
-const SIZES = ["lg", "md", "sm"] as const;
+const sizes = ["lg", "md", "sm"] as const;
+const storyDescription = (id: string) => ({
+  docs: { description: { story: storyDescriptions[id] } },
+});
 
-const meta: Meta<typeof Toggle> = {
+const meta = {
   title: "Components/Toggle",
   component: Toggle,
   tags: ["autodocs"],
+  args: { size: "md", checked: false, disabled: false },
+  argTypes: {
+    size: { name: "크기", control: "select", options: sizes },
+    checked: { name: "선택", control: "boolean" },
+    disabled: { name: "비활성", control: "boolean" },
+    className: { control: false, table: { disable: true } },
+    onChange: { control: false, table: { disable: true } },
+  },
   parameters: {
+    controls: { disable: true },
     docs: {
       description: {
         component:
-          "checked와 onChange로 상태를 제어하며 switch 역할과 키보드 조작을 제공하는 토글입니다.",
+          "설정을 켜거나 꺼요.  \n크기를 선택하고 선택·오류·비활성 상태를 설정할 수 있어요.",
       },
+      page: () => (
+        <div className="toggle-docs component-docs">
+          <Title />
+          <Description />
+          <Stories />
+          <h2>API</h2>
+          <Markdown>{`
+### Toggle
+
+| Name | Description | Type | Default |
+| --- | --- | --- | --- |
+| \`size\` | Toggle의 크기를 설정해요. | \`lg \\| md \\| sm\` | \`md\` |
+| \`checked\` | 켜짐 상태를 설정해요. | \`boolean\` | - |
+| \`className\` | 최상위 요소에 Tailwind 클래스를 추가해요. | \`string\` | - |
+| \`onChange\` | 상태가 바뀔 때 변경된 값을 전달해요. | \`(checked: boolean) => void\` | - |
+          `}</Markdown>
+        </div>
+      ),
     },
   },
-  argTypes: {
-    size: {
-      control: "select",
-      options: SIZES,
-    },
-    checked: { control: "boolean" },
-    disabled: { control: "boolean" },
-  },
-  args: {
-    "aria-label": "설정 사용",
-    size: "md",
-    checked: false,
-    disabled: false,
-  },
-};
+} satisfies Meta<typeof Toggle>;
 
 export default meta;
-type Story = StoryObj<typeof Toggle>;
+type Story = StoryObj<typeof meta>;
 
-const Controlled = (args: React.ComponentProps<typeof Toggle>) => {
-  const [checked, setChecked] = useState(args.checked);
-  // args.checked는 Storybook control 값이므로, control이 바뀌면 내부 상태도 동기화한다.
-  useEffect(() => setChecked(args.checked), [args.checked]);
-  return <Toggle {...args} checked={checked} onChange={setChecked} />;
-};
-
-export const Default: Story = {
-  render: (args) => <Controlled {...args} />,
-};
-
-export const AllSizes: Story = {
-  argTypes: {
-    size: { table: { disable: true } },
-  },
+export const Sizes: Story = {
+  parameters: { ...storyDescription("components-toggle--sizes"), controls: { disable: false } },
   render: (args) => (
-    <div className="flex items-center gap-4">
-      {SIZES.map((size) => (
-        <Controlled key={size} {...args} aria-label={`${size} 크기 설정 사용`} size={size} />
+    <div className="flex flex-wrap items-center gap-8">
+      {sizes.map((size) => (
+        <ControlledToggle key={size} {...args} size={size} />
       ))}
     </div>
   ),
 };
 
-export const Disabled: Story = {
-  args: { disabled: true },
-  argTypes: {
-    checked: { table: { disable: true } },
-  },
-  render: (args) => (
-    <div className="flex items-center gap-2">
-      <Toggle {...args} aria-label="꺼진 설정" checked={false} />
-      <Toggle {...args} aria-label="켜진 설정" checked={true} />
-    </div>
-  ),
+export const States: Story = {
+  parameters: { ...storyDescription("components-toggle--states"), controls: { disable: false } },
+  render: (args, { viewMode }) =>
+    viewMode === "docs" ? (
+      <div className="flex flex-wrap items-center gap-8">
+        <Toggle checked={false} />
+        <Toggle checked />
+        <Toggle checked={false} disabled />
+        <Toggle checked disabled />
+      </div>
+    ) : (
+      <ControlledToggle {...args} />
+    ),
 };
+
+function ControlledToggle(args: ToggleProps) {
+  const [checked, setChecked] = useState(args.checked);
+  useEffect(() => setChecked(args.checked), [args.checked]);
+  return <Toggle {...args} checked={checked} onChange={setChecked} />;
+}

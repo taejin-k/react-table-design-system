@@ -202,24 +202,22 @@ const [value, setValue] = useState("");
 />;
 ```
 
-| prop             | 타입                      | 필수  | 기본값    | 설명                                                                          |
-| ---------------- | ------------------------- | ----- | --------- | ----------------------------------------------------------------------------- |
-| `size`           | `lg` \| `md` \| `sm`      | false | `md`      | 크기                                                                          |
-| `variant`        | `default` \| `filled`     | false | `default` | 스타일                                                                        |
-| `value`          | `string`                  | false | -         | 컨트롤드 값                                                                   |
-| `onChange`       | `(value: string) => void` | false | -         | 입력값과 함께 호출                                                            |
-| `label`          | `ReactNode`               | false | -         | 있으면 위에 [Label](#label) 렌더링                                            |
-| `required`       | `boolean`                 | false | `false`   | 실제 input에 required 적용 + Label이 있으면 `*` 표시                          |
-| `errorText`      | `ReactNode`               | false | -         | 있으면 아래에 [ErrorText](#errortext) 렌더링 + 테두리 warning 색              |
-| `disabled`       | `boolean`                 | false | `false`   | 비활성화                                                                      |
-| `allowClear`     | `boolean`                 | false | `false`   | 값 있을 때 지우기 버튼. 지운 뒤 input으로 포커스 복귀                         |
-| `showCount`      | `boolean`                 | false | `false`   | 글자수(`value.length`) 표시. `maxLength` 있으면 무시되고 `n / maxLength` 형식 |
-| `maxLength`      | `number`                  | false | -         | 최대 글자수. 한글 IME 조합 중에도 자체 검증해서 강제함                        |
-| `prefixIcon`     | `ReactNode`               | false | -         | 앞쪽 아이콘                                                                   |
-| `suffixIcon`     | `ReactNode`               | false | -         | 뒤쪽 아이콘                                                                   |
-| `rootClassName`  | `string`                  | false | -         | 입력 영역 wrapper 클래스 (`className`도 기존 호환을 위해 wrapper에 적용)      |
-| `inputClassName` | `string`                  | false | -         | 실제 input 엘리먼트 클래스                                                    |
-| `onClear`        | `() => void`              | false | -         | 지우기 버튼을 누른 직후 호출                                                  |
+| prop         | 타입                      | 필수  | 기본값    | 설명                                                                          |
+| ------------ | ------------------------- | ----- | --------- | ----------------------------------------------------------------------------- |
+| `size`       | `lg` \| `md` \| `sm`      | false | `md`      | 크기                                                                          |
+| `variant`    | `default` \| `filled`     | false | `default` | 스타일                                                                        |
+| `label`      | `ReactNode`               | false | -         | 있으면 위에 [Label](#label) 렌더링                                            |
+| `required`   | `boolean`                 | false | `false`   | 실제 input에 required 적용 + Label이 있으면 `*` 표시                          |
+| `errorText`  | `ReactNode`               | false | -         | 있으면 아래에 [ErrorText](#errortext) 렌더링 + 테두리 warning 색              |
+| `disabled`   | `boolean`                 | false | `false`   | 비활성화                                                                      |
+| `allowClear` | `boolean`                 | false | `false`   | 값 있을 때 지우기 버튼. 지운 뒤 input으로 포커스 복귀                         |
+| `showCount`  | `boolean`                 | false | `false`   | 글자수(`value.length`) 표시. `maxLength` 있으면 무시되고 `n / maxLength` 형식 |
+| `maxLength`  | `number`                  | false | -         | 최대 글자수. 한글 IME 조합 중에도 자체 검증해서 강제함                        |
+| `prefixIcon` | `ReactNode`               | false | -         | 앞쪽 아이콘                                                                   |
+| `suffixIcon` | `ReactNode`               | false | -         | 뒤쪽 아이콘                                                                   |
+| `className`  | `string`                  | false | -         | 최상위 요소 클래스                                                            |
+| `onBlur`     | `(value: string) => void` | false | -         | 포커스가 빠질 때 현재 입력값과 함께 호출                                      |
+| `onError`    | `(error: string) => void` | false | -         | 입력값이 바뀔 때 빈 문자열과 함께 호출                                        |
 
 `placeholder`, `disabled` 등 나머지 네이티브 `<input>` props도 지원합니다. `errorText`가 있으면 `aria-invalid`와 `aria-describedby`가 자동으로 연결됩니다.
 

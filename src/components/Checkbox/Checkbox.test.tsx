@@ -27,12 +27,13 @@ describe("Checkbox", () => {
     expect(onChange).not.toHaveBeenCalled();
   });
 
-  it("applies the error variant and merges an external class", () => {
+  it("applies the error variant to the input and an external class to the root", () => {
     render(<Checkbox aria-label="오류 선택" className="custom-checkbox" error />);
 
     const checkbox = screen.getByRole("checkbox", { name: "오류 선택" });
     expect(checkbox.className).toContain("border-[#fe5150]");
-    expect(checkbox).toHaveClass("custom-checkbox");
+    expect(checkbox).not.toHaveClass("custom-checkbox");
+    expect(checkbox.closest("label")).toHaveClass("custom-checkbox");
   });
 
   it("forwards native props and ref", () => {

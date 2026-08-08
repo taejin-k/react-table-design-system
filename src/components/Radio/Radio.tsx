@@ -1,13 +1,7 @@
-import { forwardRef, useId, type InputHTMLAttributes, type ReactNode } from "react";
+import { forwardRef, useId } from "react";
 import { cva } from "class-variance-authority";
 import { twMerge } from "tailwind-merge";
-
-export interface RadioProps extends Omit<InputHTMLAttributes<HTMLInputElement>, "type" | "size"> {
-  /** 있으면 라디오 오른쪽에 레이블 텍스트를 함께 렌더링한다. */
-  label?: ReactNode;
-  /** true면 테두리/선택 색이 warning(red) 색으로 바뀐다. */
-  error?: boolean;
-}
+import type { RadioProps } from "./Radio.types";
 
 export const Radio = forwardRef<HTMLInputElement, RadioProps>(
   ({ label, error = false, disabled, className, id, ...rest }, ref) => {
@@ -19,6 +13,7 @@ export const Radio = forwardRef<HTMLInputElement, RadioProps>(
         className={twMerge(
           "inline-flex items-center gap-1.5",
           disabled ? "cursor-not-allowed" : "cursor-pointer",
+          className,
         )}
       >
         <input
@@ -26,10 +21,10 @@ export const Radio = forwardRef<HTMLInputElement, RadioProps>(
           id={inputId}
           type="radio"
           disabled={disabled}
-          className={twMerge(radioVariants({ error }), className)}
+          className={radioVariants({ error })}
           {...rest}
         />
-        {label && (
+        {label != null ? (
           <span
             className={twMerge(
               "font-pretendard text-[14px] leading-4 whitespace-nowrap",
@@ -38,7 +33,7 @@ export const Radio = forwardRef<HTMLInputElement, RadioProps>(
           >
             {label}
           </span>
-        )}
+        ) : null}
       </label>
     );
   },

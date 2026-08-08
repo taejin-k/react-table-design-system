@@ -5,43 +5,29 @@ export const storyDescriptions: Record<string, string> = {
   "components-button--states": "기본, 그림자, 비활성, 전체 너비 상태를 사용할 수 있어요.",
   "components-button--icons": "버튼 이름의 앞뒤에 아이콘을 배치하거나 아이콘만 표시할 수 있어요.",
 
-  "components-checkbox--states":
-    "선택, 오류, 비활성 상태를 비교하고 Controls에서 직접 변경할 수 있어요.",
+  "components-checkbox--states": "기본, 오류, 비활성 상태를 선택할 수 있어요.",
   "components-checkbox--label": "레이블을 추가하거나 뺄 수 있어요.",
-  "components-radio--default": "checked와 onChange를 연결한 제어형 Radio입니다.",
-  "components-radio--all-states": "선택, 오류, 비활성 상태를 한 화면에서 비교합니다.",
-  "components-radio--no-label": "화면 텍스트 없이 aria-label로 이름을 제공하는 Radio입니다.",
-  "components-radio--radio-group": "같은 name을 공유하는 단일 선택 Radio 그룹입니다.",
+  "components-radio--states": "기본, 오류, 비활성 상태를 선택할 수 있어요.",
+  "components-radio--label": "레이블을 추가하거나 뺄 수 있어요.",
+  "components-radio--group": "같은 그룹에서 하나의 항목을 선택할 수 있어요.",
 
-  "components-toggle--default": "checked와 onChange를 연결한 접근 가능한 switch입니다.",
-  "components-toggle--all-sizes": "lg, md, sm 크기의 토글 트랙과 손잡이를 비교합니다.",
-  "components-toggle--disabled": "켜짐·꺼짐 상태의 비활성 Toggle을 비교합니다.",
+  "components-toggle--sizes": "세 가지 Toggle 크기를 선택할 수 있어요.",
+  "components-toggle--states": "켜짐과 비활성 상태를 선택할 수 있어요.",
 
-  "components-input--default": "value와 onChange를 연결한 기본 제어형 Input입니다.",
-  "components-input--all-sizes": "lg, md, sm 입력 높이와 글자 크기를 비교합니다.",
-  "components-input--with-label":
-    "htmlFor로 연결된 Label과 네이티브 required 입력을 함께 사용합니다.",
-  "components-input--with-error":
-    "aria-invalid와 aria-describedby로 오류 메시지가 연결된 입력입니다.",
-  "components-input--filled": "배경이 채워진 filled 입력 스타일입니다.",
-  "components-input--disabled": "수정할 수 없는 비활성 입력 상태입니다.",
-  "components-input--with-icon":
-    "앞 아이콘과 값을 지운 뒤 입력에 포커스를 돌려주는 clear 버튼을 사용합니다.",
-  "components-input--with-max-length": "maxLength 제한과 현재 글자 수를 함께 표시합니다.",
+  "components-input--sizes": "세 가지 Input 크기를 선택할 수 있어요.",
+  "components-input--states": "기본, 채움, 비활성 상태를 선택할 수 있어요.",
+  "components-input--label-and-error": "레이블, 필수 표시와 오류 문구를 추가할 수 있어요.",
+  "components-input--icons-and-count": "앞뒤 아이콘, 지우기 버튼과 글자 수를 표시할 수 있어요.",
 
-  "components-icon--default": "이름, 크기, 색상을 변경할 수 있는 기본 SVG Icon입니다.",
-  "components-icon--all-icons": "현재 제공하는 모든 아이콘 이름과 모양을 비교합니다.",
-  "components-icon--clickable":
-    "접근성 이름과 Enter·Space 키보드 조작을 제공하는 클릭 가능 Icon입니다.",
-  "components-chip--default": "색상과 표현 방식을 변경할 수 있는 기본 Chip입니다.",
-  "components-chip--all-colors": "모든 색상과 filled, soft-filled, outlined 조합을 비교합니다.",
-  "components-chip--with-icon": "Chip의 앞뒤에 아이콘을 배치한 조합을 비교합니다.",
-  "components-label--default": "폼 컨트롤의 이름을 제공하는 기본 Label입니다.",
-  "components-label--all-sizes": "lg, md, sm Label 글자 크기를 비교합니다.",
-  "components-label--required": "필수 입력임을 시각적으로 안내하는 별표 표시입니다.",
-  "components-errortext--default":
-    "폼 오류를 보조기기에 알리고 긴 문장을 줄바꿈하는 ErrorText입니다.",
-  "components-errortext--empty": "오류가 없을 때 공간이 접히는 빈 ErrorText 상태입니다.",
+  "components-icon--icons": "사용할 아이콘을 선택할 수 있어요.",
+  "components-icon--size-and-color": "아이콘의 크기와 색상을 변경할 수 있어요.",
+  "components-icon--clickable": "아이콘에 클릭 동작을 추가할 수 있어요.",
+  "components-chip--variants": "세 가지 표현 방식을 선택할 수 있어요.",
+  "components-chip--colors": "일곱 가지 Chip 색상을 선택할 수 있어요.",
+  "components-chip--icons": "Chip의 앞뒤에 아이콘을 추가할 수 있어요.",
+  "components-label--sizes": "세 가지 Label 크기를 선택할 수 있어요.",
+  "components-label--required": "필수 표시를 추가하거나 뺄 수 있어요.",
+  "components-errortext--message": "오류 문구를 추가하거나 뺄 수 있어요.",
 
   "components-breadcrumb--items": "상위 경로부터 현재 위치까지 각 항목을 순서대로 보여줘요.",
   "components-breadcrumb--with-icons": "각 항목에 아이콘을 더해 경로를 쉽게 구분할 수 있어요.",
@@ -80,7 +66,7 @@ export const storyDescriptions: Record<string, string> = {
   "components-table-api-compatibility--semantic-class-names-and-styles":
     "semantic classNames와 styles로 헤더, 행, 셀을 세부적으로 꾸밉니다.",
   "components-table-api-compatibility--native-root-props":
-    "aria, role, style 등 네이티브 root div 속성을 Table에 직접 전달합니다.",
+    "role, style 등 네이티브 root div 속성을 Table에 직접 전달합니다.",
   "components-table-api-compatibility--loading-boolean":
     "loading boolean만으로 기본 로딩 오버레이를 표시합니다.",
   "components-table-api-compatibility--loading-config":

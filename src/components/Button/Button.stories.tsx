@@ -40,17 +40,16 @@ const meta = {
     prefixIcon: { control: false, table: { disable: true } },
     suffixIcon: { control: false, table: { disable: true } },
     className: { control: false, table: { disable: true } },
-    "aria-label": { control: false, table: { disable: true } },
   },
   parameters: {
     controls: { disable: true },
     docs: {
       description: {
         component:
-          "작업의 중요도에 맞는 타입과 크기를 선택할 수 있는 버튼이에요. 아이콘, 비활성 상태, 그림자와 전체 너비를 지원해요.",
+          "클릭해서 특정 동작을 실행해요.  \n중요도에 따라 타입과 크기를 선택하고 아이콘·비활성 상태·그림자·전체 너비를 설정할 수 있어요.",
       },
       page: () => (
-        <div className="button-docs">
+        <div className="button-docs component-docs">
           <Title />
           <Description />
           <Stories />
@@ -67,6 +66,7 @@ const meta = {
 | \`iconOnly\` | 아이콘만 표시하는 정사각형 버튼으로 만들어요. | \`boolean\` | \`false\` |
 | \`shadow\` | 버튼에 그림자를 표시해요. | \`boolean\` | \`false\` |
 | \`fullWidth\` | 부모 요소의 너비를 모두 채워요. | \`boolean\` | \`false\` |
+| \`className\` | 외부에서 Tailwind 클래스를 추가해요. | \`string\` | - |
           `}</Markdown>
         </div>
       ),
@@ -216,7 +216,7 @@ function renderIconButton({ iconMode: _iconMode, ...args }: ButtonStoryArgs, mod
         </Button>
       );
     case "iconOnly":
-      return <Button {...args} key={mode} aria-label="추가" iconOnly prefixIcon={addIcon} />;
+      return <Button {...args} key={mode} iconOnly prefixIcon={addIcon} />;
     default:
       return (
         <Button {...args} key={mode}>

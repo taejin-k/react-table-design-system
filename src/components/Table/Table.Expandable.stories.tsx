@@ -23,7 +23,7 @@ const meta: Meta<TableProps<Member>> = {
     docs: {
       description: {
         component:
-          "상세 행과 트리 데이터를 제어형·비제어형으로 펼치는 Table expandable API 예제입니다.",
+          "행을 펼쳐 상세 내용이나 하위 데이터를 보여줘요.  \n제어·비제어 상태와 트리 데이터 확장을 설정할 수 있어요.",
       },
     },
   },
@@ -91,13 +91,10 @@ export const CustomExpandIcon: Story = {
           type="button"
           className="grid size-[17px] place-items-center rounded-sm border border-[#ddd] bg-white text-[#999] disabled:cursor-not-allowed disabled:opacity-50"
           disabled={!expandable}
-          aria-expanded={expanded}
-          aria-label={expanded ? "상세 닫기" : "상세 열기"}
           onClick={(event) => onExpand(record, event)}
         >
           <svg
             viewBox="0 0 12 12"
-            aria-hidden
             className={`size-2.5 stroke-current transition-transform ${expanded ? "rotate-90" : ""}`}
             fill="none"
             strokeLinecap="round"

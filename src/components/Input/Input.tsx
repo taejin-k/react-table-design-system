@@ -5,40 +5,14 @@ import {
   useId,
   useImperativeHandle,
   useRef,
-  type InputHTMLAttributes,
   type ReactNode,
 } from "react";
-import { cva, type VariantProps } from "class-variance-authority";
+import { cva } from "class-variance-authority";
 import { twMerge } from "tailwind-merge";
 import { Label } from "../Label";
 import { ErrorText } from "../ErrorText";
 import { Icon } from "../Icon";
-
-export interface InputProps
-  extends
-    Omit<InputHTMLAttributes<HTMLInputElement>, "size" | "prefix" | "value" | "onChange">,
-    Pick<VariantProps<typeof inputRowVariants>, "size" | "variant"> {
-  value?: string;
-  onChange?: (value: string) => void;
-  /** 있으면 입력창 위에 Label을 함께 렌더링한다. */
-  label?: ReactNode;
-  /** 있으면 입력창 아래에 ErrorText를 함께 렌더링하고, 입력창 테두리도 warning 색으로 바뀐다. */
-  errorText?: ReactNode;
-  /** true면 Label 뒤에 * 표시. label이 없으면 의미 없다. */
-  required?: boolean;
-  /** 입력값이 있을 때 지우기(X) 버튼을 보여준다. 누르면 onChange('')를 호출한다. */
-  allowClear?: boolean;
-  /** value.length만 보여준다. maxLength가 있으면 무시되고 "n / maxLength" 형식으로 대신 보여준다. */
-  showCount?: boolean;
-  prefixIcon?: ReactNode;
-  suffixIcon?: ReactNode;
-  /** 입력 영역 wrapper에 적용한다. 기존 className도 호환을 위해 wrapper에 적용된다. */
-  rootClassName?: string;
-  /** 실제 input 엘리먼트에 적용한다. */
-  inputClassName?: string;
-  /** 지우기 버튼을 누른 직후 호출한다. */
-  onClear?: () => void;
-}
+import type { InputProps } from "./Input.types";
 
 /** prefixIcon/suffixIcon에 onClick이 붙어있어도 무시하도록 제거한다(장식 목적). */
 function stripOnClick(node: ReactNode): ReactNode {
@@ -65,9 +39,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       disabled,
       id,
       className,
-      rootClassName,
-      inputClassName,
-      onClear,
+      onBlur,
+      onError,
       "aria-describedby": ariaDescribedBy,
       "aria-invalid": ariaInvalid,
       ...rest
@@ -76,28 +49,22 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
   ) => {
     const generatedId = useId();
     const inputId = id ?? generatedId;
+    const inputRef = useRef<HTMLInputElement>(null);
     const hasError = Boolean(errorText);
     const hasValue = Boolean(value);
     const errorId = `${inputId}-error`;
     const describedBy =
       [ariaDescribedBy, hasError ? errorId : undefined].filter(Boolean).join(" ") || undefined;
-    const inputRef = useRef<HTMLInputElement>(null);
     useImperativeHandle(ref, () => inputRef.current as HTMLInputElement);
 
     return (
-      <div className="flex w-full flex-col gap-[4px]">
+      <div className={twMerge("flex w-full flex-col gap-[4px]", className)}>
         {label && (
           <Label size={size} required={required} htmlFor={inputId}>
             {label}
           </Label>
         )}
-        <div
-          className={twMerge(
-            inputRowVariants({ size, variant, error: hasError, disabled }),
-            className,
-            rootClassName,
-          )}
-        >
+        <div className={inputRowVariants({ size, variant, error: hasError, disabled })}>
           {prefixIcon && (
             <span className="flex size-4 shrink-0 items-center justify-center">
               {stripOnClick(prefixIcon)}
@@ -115,13 +82,16 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             className={twMerge(
               inputVariants({ size, disabled }),
               "min-w-0 flex-1 bg-transparent outline-none placeholder:text-[#999]",
-              inputClassName,
             )}
+            onBlur={(event) => {
+              onBlur?.(event.currentTarget.value);
+            }}
             onChange={(event) => {
               const nextValue = event.target.value;
               // 한글 등 IME 조합 중에는 네이티브 maxLength가 강제되지 않아 직접 막는다.
               if (maxLength !== undefined && nextValue.length > maxLength) return;
               onChange?.(nextValue);
+              onError?.("");
             }}
             {...rest}
           />
@@ -136,11 +106,11 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             <button
               type="button"
               aria-label="입력 내용 지우기"
-              className="flex size-4 shrink-0 items-center justify-center rounded border-0 bg-transparent p-0 text-[#999] hover:text-[#111] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#0062df]"
+              className="flex size-4 shrink-0 cursor-pointer items-center justify-center rounded border-0 bg-transparent p-0 text-[#999] hover:text-[#111] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#0062df]"
               onMouseDown={(event) => event.preventDefault()}
               onClick={() => {
                 onChange?.("");
-                onClear?.();
+                onError?.("");
                 inputRef.current?.focus();
               }}
             >

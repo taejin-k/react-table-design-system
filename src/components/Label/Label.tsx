@@ -1,15 +1,7 @@
-import { forwardRef, type LabelHTMLAttributes, type ReactNode } from "react";
-import { cva, type VariantProps } from "class-variance-authority";
+import { forwardRef } from "react";
+import { cva } from "class-variance-authority";
 import { twMerge } from "tailwind-merge";
-
-export interface LabelProps
-  extends
-    Omit<LabelHTMLAttributes<HTMLLabelElement>, "children">,
-    VariantProps<typeof labelVariants> {
-  children: ReactNode;
-  /** true면 라벨 뒤에 빨간 * 표시를 붙인다. */
-  required?: boolean;
-}
+import type { LabelProps } from "./Label.types";
 
 export const Label = forwardRef<HTMLLabelElement, LabelProps>(
   ({ size = "md", required = false, className, children, ...rest }, ref) => {

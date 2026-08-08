@@ -12,7 +12,7 @@ const meta: Meta<TableProps<Member>> = {
     docs: {
       description: {
         component:
-          "페이지 크기, 빠른 이동, 위치, 제어 상태와 콜백을 포함한 Table pagination API 예제입니다.",
+          "많은 데이터를 여러 페이지로 나눠서 보여줘요.  \n페이지 크기·빠른 이동·위치·제어 상태와 변경 동작을 설정할 수 있어요.",
       },
     },
   },

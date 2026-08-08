@@ -12,7 +12,7 @@ const meta: Meta<TableProps<Member>> = {
     docs: {
       description: {
         component:
-          "Table의 Ant Design 호환 선언 방식, ref, semantic 스타일, locale와 네이티브 속성을 검증합니다.",
+          "Ant Design과 같은 방식으로 Table API를 사용할 수 있어요.  \n선언 방식·ref·semantic 스타일·locale과 네이티브 속성을 확인할 수 있어요.",
       },
     },
   },
@@ -45,7 +45,7 @@ export const SemanticClassNamesAndStyles: Story = {
   },
 };
 export const NativeRootProps: Story = {
-  args: { columns, "aria-label": "구성원 테이블", role: "region", style: { marginBlock: 12 } },
+  args: { columns, role: "region", style: { marginBlock: 12 } },
 };
 export const LoadingBoolean: Story = { args: { columns, loading: true } };
 export const LoadingConfig: Story = {
@@ -65,7 +65,6 @@ export const RowAndHeaderHooks: Story = {
     rowClassName: (record) => (record.status === "휴가" ? "[&>td]:bg-[#fffbe6]" : ""),
     onRow: (record) => ({
       title: `${record.name} 데이터 행`,
-      "aria-label": `${record.name} 데이터 행`,
     }),
     onHeaderRow: () => ({ className: "bg-[#e6f4ff]" }),
     rowHoverable: false,

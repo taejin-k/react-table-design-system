@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import type { ComponentType } from "react";
 import { Description, Markdown, Stories, Title } from "@storybook/addon-docs/blocks";
+import { fn } from "storybook/test";
 import { storyDescriptions } from "../../storybook/story-descriptions";
 import { Icon } from "../Icon";
 import { Breadcrumb } from "./Breadcrumb";
@@ -14,25 +15,27 @@ interface BreadcrumbStoryArgs extends BreadcrumbProps {
   currentColor?: string;
 }
 
+const handleItemClick = fn();
+
 const itemExamples = [
   [{ title: "홈" }],
   [{ title: "홈", href: "#" }, { title: "프로젝트" }],
   [
     { title: "홈", href: "#" },
-    { title: "프로젝트", href: "#projects" },
+    { title: "프로젝트", onClick: handleItemClick },
     { title: "디자인 시스템" },
   ],
   [
     { title: "홈", href: "#" },
-    { title: "프로젝트", href: "#projects" },
+    { title: "프로젝트", onClick: handleItemClick },
     { title: "디자인 시스템", href: "#design-system" },
     { title: "컴포넌트" },
   ],
   [
     { title: "홈", href: "#" },
-    { title: "프로젝트", href: "#projects" },
+    { title: "프로젝트", onClick: handleItemClick },
     { title: "디자인 시스템", href: "#design-system" },
-    { title: "컴포넌트", href: "#components" },
+    { title: "컴포넌트", onClick: handleItemClick },
     { title: "Breadcrumb" },
   ],
 ] satisfies Item[][];
@@ -47,17 +50,16 @@ const meta = {
   tags: ["autodocs"],
   argTypes: {
     items: { control: false, table: { disable: true } },
-    "aria-label": { control: false, table: { disable: true } },
   },
   parameters: {
     controls: { disable: true },
     docs: {
       description: {
         component:
-          "페이지 내 현재 위치와 이동 경로를 한눈에 보여줘요. 1단계부터 4단계 이상의 경로를 표시할 수 있고, 각 항목에 아이콘·링크·색상을 설정할 수 있어요.",
+          "페이지 내 현재 위치와 이동 경로를 한눈에 보여줘요.  \n1단계부터 4단계 이상의 경로를 표시할 수 있고, 각 항목에 아이콘·링크·클릭 동작·색상을 설정할 수 있어요.",
       },
       page: () => (
-        <div className="breadcrumb-docs">
+        <div className="breadcrumb-docs component-docs">
           <Title />
           <Description />
           <Stories />
@@ -68,6 +70,7 @@ const meta = {
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
 | \`items\` | 왼쪽의 상위 경로부터 현재 위치까지 순서대로 전달해요. | \`Item[]\` | \`[]\` |
+| \`className\` | 외부에서 Tailwind 클래스를 추가해요. | \`string\` | - |
 
 ### Item
 
@@ -80,6 +83,7 @@ const meta = {
 | \`href\` | 이동할 주소예요. 값이 있으면 링크와 호버 디자인을 적용해요. | \`string\` | - |
 | \`icon\` | 경로 이름 앞에 표시할 아이콘이에요. | \`ReactNode\` | - |
 | \`color\` | 해당 항목의 글자와 아이콘 색상이에요. | \`CSSProperties['color']\` | - |
+| \`onClick\` | 클릭할 때 실행할 함수예요. 값이 있으면 호버 디자인을 적용해요. | \`MouseEventHandler<HTMLElement>\` | - |
           `}</Markdown>
         </div>
       ),

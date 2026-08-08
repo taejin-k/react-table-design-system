@@ -1,27 +1,16 @@
-import { forwardRef, type HTMLAttributes, type ReactNode } from "react";
-import { cva, type VariantProps } from "class-variance-authority";
+import { forwardRef, type ReactNode } from "react";
+import { cva } from "class-variance-authority";
 import { twMerge } from "tailwind-merge";
-
-export interface ChipProps
-  extends
-    Omit<HTMLAttributes<HTMLSpanElement>, "prefix" | "color">,
-    VariantProps<typeof chipVariants> {
-  /** 아이콘 0~여러 개. 배열로 넘기면 각 아이콘이 Chip의 gap을 그대로 공유해 간격이 일정하다. onClick이 있으면 그대로 동작한다(예: 닫기 버튼). */
-  prefixIcon?: ReactNode;
-  /** 아이콘 0~여러 개. 배열로 넘기면 각 아이콘이 Chip의 gap을 그대로 공유해 간격이 일정하다. onClick이 있으면 그대로 동작한다(예: 닫기 버튼). */
-  suffixIcon?: ReactNode;
-}
+import type { ChipProps } from "./Chip.types";
 
 /** null/undefined/빈 배열이면 false. 배열이 아니면 일반 truthy 체크. */
 function hasContent(node: ReactNode): boolean {
   return Array.isArray(node) ? node.length > 0 : Boolean(node);
 }
 
-/** 아이콘이 들어가는 16x16 소켓. hover 시 아이콘 색상에 opacity-75를 적용한다. */
+/** 아이콘을 Chip의 텍스트와 같은 간격으로 배치하는 16x16 소켓. */
 const IconSocket = ({ children }: { children: ReactNode }) => (
-  <span className="inline-flex size-4 shrink-0 cursor-pointer items-center justify-center transition-opacity hover:opacity-75">
-    {children}
-  </span>
+  <span className="inline-flex size-4 shrink-0 items-center justify-center">{children}</span>
 );
 
 export const Chip = forwardRef<HTMLSpanElement, ChipProps>(
@@ -31,9 +20,9 @@ export const Chip = forwardRef<HTMLSpanElement, ChipProps>(
   ) => {
     return (
       <span ref={ref} className={twMerge(chipVariants({ color, variant }), className)} {...rest}>
-        {hasContent(prefixIcon) && <IconSocket>{prefixIcon}</IconSocket>}
+        {hasContent(prefixIcon) ? <IconSocket>{prefixIcon}</IconSocket> : null}
         {children}
-        {hasContent(suffixIcon) && <IconSocket>{suffixIcon}</IconSocket>}
+        {hasContent(suffixIcon) ? <IconSocket>{suffixIcon}</IconSocket> : null}
       </span>
     );
   },

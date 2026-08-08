@@ -30,7 +30,7 @@ const meta: Meta<TableProps<Member>> = {
     docs: {
       description: {
         component:
-          "Ant Design Table과 동일한 핵심 사용 패턴을 제공하는 독립 React 테이블입니다. `dataSource`, `columns`, `rowKey`, `pagination`, `rowSelection`, `expandable`, `scroll`, `onChange`를 사용합니다.",
+          "행과 열로 구성된 데이터를 정리해서 보여줘요.  \n정렬·필터·선택·확장·페이지네이션과 스크롤 등 데이터 탐색 기능을 설정할 수 있어요.",
       },
     },
   },
@@ -252,7 +252,6 @@ function EditableStory() {
           render: (value, record) => (
             <input
               className="h-8 w-full rounded border border-[#ddd] bg-white px-[11px] text-[#111] transition-colors outline-none focus:border-[#0062df]"
-              aria-label={`${record.name} 직무 편집`}
               value={String(value)}
               onChange={(event) =>
                 setRows((current) =>
@@ -301,11 +300,7 @@ function DragStory() {
       key: "drag",
       title: <span className="sr-only">행 이동</span>,
       width: 48,
-      render: () => (
-        <span className="cursor-grab text-[#999] select-none" aria-hidden>
-          ⠿
-        </span>
-      ),
+      render: () => <span className="cursor-grab text-[#999] select-none">⠿</span>,
     },
     ...columns,
   ];

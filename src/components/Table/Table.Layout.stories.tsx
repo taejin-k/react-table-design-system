@@ -12,7 +12,7 @@ const meta: Meta<TableProps<Member>> = {
     docs: {
       description: {
         component:
-          "고정 열·헤더·요약, 스크롤, 가상화, 그룹 헤더와 병합 셀 등 Table 레이아웃 기능입니다.",
+          "열과 헤더를 고정하고 필요한 영역만 스크롤해요.  \n요약·가상화·그룹 헤더와 병합 셀 등 레이아웃 기능을 설정할 수 있어요.",
       },
     },
   },
