@@ -4,7 +4,7 @@ import type { ComponentType } from "react";
 import { storyDescriptions } from "../../storybook/story-descriptions";
 import { Icon } from "../Icon";
 import { Button } from "./Button";
-import type { ButtonProps } from "./Button";
+import type { ButtonProps } from "./Button.types";
 
 type IconMode = "none" | "prefix" | "suffix" | "both" | "multiple" | "iconOnly";
 

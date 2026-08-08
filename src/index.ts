@@ -1,5 +1,5 @@
 export { Button } from './components/Button';
-export type { ButtonProps } from './components/Button';
+export type { ButtonProps, ButtonSize, ButtonType } from './components/Button';
 export { Icon } from './components/Icon';
 export type { IconProps, IconName } from './components/Icon';
 export { Chip } from './components/Chip';

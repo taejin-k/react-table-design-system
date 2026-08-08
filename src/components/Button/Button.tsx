@@ -1,15 +1,7 @@
-import { cloneElement, forwardRef, isValidElement, type ButtonHTMLAttributes, type ReactNode } from "react";
-import { cva, type VariantProps } from "class-variance-authority";
+import { cloneElement, forwardRef, isValidElement, type ReactNode } from "react";
+import { cva } from "class-variance-authority";
 import { twMerge } from "tailwind-merge";
-
-export interface ButtonProps
-  extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, "type" | "prefix">, VariantProps<typeof buttonVariants> {
-  htmlType?: ButtonHTMLAttributes<HTMLButtonElement>["type"];
-  /** 아이콘 0~여러 개. 배열로 넘기면 각 아이콘이 버튼의 gap을 그대로 공유해 간격이 일정하다. */
-  prefixIcon?: ReactNode;
-  /** 아이콘 0~여러 개. 배열로 넘기면 각 아이콘이 버튼의 gap을 그대로 공유해 간격이 일정하다. */
-  suffixIcon?: ReactNode;
-}
+import type { ButtonProps } from "./Button.types";
 
 /** null/undefined/빈 배열이면 false. 배열이 아니면 일반 truthy 체크. */
 function hasContent(node: ReactNode): boolean {
