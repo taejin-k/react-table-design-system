@@ -1,14 +1,9 @@
 /** Canvas와 Docs에서 각 Story가 무엇을 검증하는지 바로 알 수 있도록 제공하는 설명이다. */
 export const storyDescriptions: Record<string, string> = {
-  'components-button--default': '가장 기본적인 Button 사용법과 Controls로 변경 가능한 속성을 확인합니다.',
-  'components-button--all-types': 'primary, secondary, tertiary, dark, ghost 타입의 시각적 우선순위를 비교합니다.',
-  'components-button--with-shadow': '각 버튼 타입에 shadow 옵션을 적용한 상태를 비교합니다.',
-  'components-button--all-sizes': 'lg, md, sm 세 가지 높이와 여백을 비교합니다.',
-  'components-button--disabled': '비활성 버튼의 표현과 클릭 차단 상태를 확인합니다.',
-  'components-button--icon-only': '텍스트 없이 아이콘과 접근성 이름만 사용하는 정사각형 버튼입니다.',
-  'components-button--full-width': '부모 너비를 모두 채우는 fullWidth 버튼입니다.',
-  'components-button--multiple-icons': '앞뒤에 여러 아이콘을 배치할 때 간격과 클릭 영역을 확인합니다.',
-  'components-button--with-icon': '크기별 텍스트·앞 아이콘·뒤 아이콘 조합을 비교합니다.',
+  'components-button--types': '작업의 중요도에 맞게 다섯 가지 버튼 타입을 선택할 수 있어요.',
+  'components-button--sizes': '화면과 작업 환경에 맞게 세 가지 버튼 크기를 선택할 수 있어요.',
+  'components-button--states': '기본, 그림자, 비활성, 전체 너비 상태를 사용할 수 있어요.',
+  'components-button--icons': '버튼 이름의 앞뒤에 아이콘을 배치하거나 아이콘만 표시할 수 있어요.',
 
   'components-checkbox--default': 'checked와 onChange를 연결한 제어형 Checkbox입니다.',
   'components-checkbox--all-states': '선택, 오류, 비활성 상태를 한 화면에서 비교합니다.',

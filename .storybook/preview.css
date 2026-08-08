@@ -30,29 +30,36 @@
 .story-description strong { font-size: 15px; }
 .story-description p { margin: 0; color: #555; font-size: 13px; line-height: 1.6; }
 
-.breadcrumb-docs :is(h2, h3, h4):has(+ p) {
+:is(.breadcrumb-docs, .button-docs) :is(h2, h3, h4):has(+ p) {
   margin-bottom: 0;
 }
 
-.breadcrumb-docs :is(h2, h3, h4) + p {
+:is(.breadcrumb-docs, .button-docs) :is(h2, h3, h4) + p {
   margin-top: 6px;
   margin-bottom: 12px;
 }
 
-.breadcrumb-docs p + .sbdocs-preview {
+:is(.breadcrumb-docs, .button-docs) p + .sbdocs-preview {
   margin-top: 12px;
 }
 
-.breadcrumb-docs table {
+:is(.breadcrumb-docs, .button-docs) table {
   width: 100%;
   table-layout: fixed;
 }
 
-.breadcrumb-docs table :is(th, td):nth-child(1) { width: 14%; }
-.breadcrumb-docs table :is(th, td):nth-child(2) { width: 50%; }
-.breadcrumb-docs table :is(th, td):nth-child(3) { width: 24%; }
-.breadcrumb-docs table :is(th, td):nth-child(4) { width: 12%; }
+:is(.breadcrumb-docs, .button-docs) table :is(th, td):nth-child(1) { width: 14%; }
+:is(.breadcrumb-docs, .button-docs) table :is(th, td):nth-child(2) { width: 50%; }
+:is(.breadcrumb-docs, .button-docs) table :is(th, td):nth-child(3) { width: 24%; }
+:is(.breadcrumb-docs, .button-docs) table :is(th, td):nth-child(4) { width: 12%; }
 
-.breadcrumb-docs table :is(th, td) {
+:is(.breadcrumb-docs, .button-docs) table :is(th, td) {
+  overflow-wrap: anywhere;
+}
+
+:is(.breadcrumb-docs, .button-docs) table td code {
+  max-width: 100%;
+  line-height: 1.5;
+  white-space: normal;
   overflow-wrap: anywhere;
 }

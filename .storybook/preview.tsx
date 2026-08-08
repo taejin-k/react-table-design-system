@@ -6,7 +6,7 @@ import { storyDescriptions } from '../src/storybook/story-descriptions';
 const preview: Preview = {
   decorators: [
     (Story, context) => {
-      if (context.viewMode === 'docs' && context.title === 'Components/Breadcrumb') {
+      if (context.viewMode === 'docs' && ['Components/Breadcrumb', 'Components/Button'].includes(context.title)) {
         return createElement(Story);
       }
 

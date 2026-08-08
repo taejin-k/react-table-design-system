@@ -1,150 +1,196 @@
-import type { Meta, StoryObj } from '@storybook/react';
-import { Button } from './Button';
-import { Icon } from '../Icon';
+import { Description, Markdown, Stories, Title } from "@storybook/addon-docs/blocks";
+import type { Meta, StoryObj } from "@storybook/react";
+import type { ComponentType } from "react";
+import { storyDescriptions } from "../../storybook/story-descriptions";
+import { Icon } from "../Icon";
+import { Button } from "./Button";
+import type { ButtonProps } from "./Button";
 
-const meta: Meta<typeof Button> = {
-  title: 'Components/Button',
-  component: Button,
-  tags: ['autodocs'],
-  parameters: { docs: { description: { component: '우선순위, 크기, 아이콘, 비활성 상태를 지원하는 기본 작업 버튼입니다. 네이티브 button 속성과 ref를 전달할 수 있습니다.' } } },
-  argTypes: {
-    type: {
-      control: 'select',
-      options: ['primary', 'secondary', 'tertiary', 'dark', 'ghost'],
-    },
-    size: {
-      control: 'select',
-      options: ['lg', 'md', 'sm'],
-    },
-    iconOnly: { control: 'boolean' },
-    disabled: { control: 'boolean' },
-    shadow: { control: 'boolean' },
-    fullWidth: { control: 'boolean' },
-    htmlType: { table: { disable: true } },
-    prefixIcon: { control: false },
-    suffixIcon: { control: false },
-  },
+type IconMode = "none" | "prefix" | "suffix" | "both" | "multiple" | "iconOnly";
+
+interface ButtonStoryArgs extends ButtonProps {
+  iconMode?: IconMode;
+}
+
+const buttonTypes = ["primary", "secondary", "tertiary", "dark", "ghost"] as const;
+const buttonSizes = ["lg", "md", "sm"] as const;
+
+const storyDescription = (id: string) => ({
+  docs: { description: { story: storyDescriptions[id] } },
+});
+
+const meta = {
+  title: "Components/Button",
+  component: Button as ComponentType<ButtonStoryArgs>,
+  tags: ["autodocs"],
   args: {
-    type: 'primary',
-    size: 'md',
-    children: 'Button',
-    iconOnly: false,
-    disabled: false,
-    shadow: false,
-    fullWidth: false,
+    type: "primary",
+    size: "md",
+    children: "Button",
   },
-};
+  argTypes: {
+    type: { control: "select", options: buttonTypes },
+    size: { control: "select", options: buttonSizes },
+    children: { name: "버튼 이름", control: "text" },
+    disabled: { name: "비활성", control: "boolean" },
+    shadow: { name: "그림자", control: "boolean" },
+    fullWidth: { name: "전체 너비", control: "boolean" },
+    iconOnly: { control: false, table: { disable: true } },
+    htmlType: { control: false, table: { disable: true } },
+    prefixIcon: { control: false, table: { disable: true } },
+    suffixIcon: { control: false, table: { disable: true } },
+    className: { control: false, table: { disable: true } },
+    "aria-label": { control: false, table: { disable: true } },
+  },
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        component:
+          "작업의 중요도에 맞는 타입과 크기를 선택할 수 있는 버튼이에요. 아이콘, 비활성 상태, 그림자와 전체 너비를 지원해요.",
+      },
+      page: () => (
+        <div className="button-docs">
+          <Title />
+          <Description />
+          <Stories />
+          <h2>API</h2>
+          <Markdown>{`
+### Button
+
+| Name | Description | Type | Default |
+| --- | --- | --- | --- |
+| \`type\` | 버튼의 시각적 우선순위를 설정해요. | \`primary \\| secondary \\| tertiary \\| dark \\| ghost\` | \`primary\` |
+| \`size\` | 버튼의 높이와 내부 여백을 설정해요. | \`lg \\| md \\| sm\` | \`md\` |
+| \`prefixIcon\` | 버튼 이름 앞에 아이콘을 표시해요. | \`ReactNode\` | - |
+| \`suffixIcon\` | 버튼 이름 뒤에 아이콘을 표시해요. | \`ReactNode\` | - |
+| \`iconOnly\` | 아이콘만 표시하는 정사각형 버튼으로 만들어요. | \`boolean\` | \`false\` |
+| \`shadow\` | 버튼에 그림자를 표시해요. | \`boolean\` | \`false\` |
+| \`fullWidth\` | 부모 요소의 너비를 모두 채워요. | \`boolean\` | \`false\` |
+          `}</Markdown>
+        </div>
+      ),
+    },
+  },
+} satisfies Meta<ButtonStoryArgs>;
 
 export default meta;
-type Story = StoryObj<typeof Button>;
+type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
-  args: {
-    iconOnly: false
-  },
-
-  render: (args) => <Button {...args} />
-};
-
-export const AllTypes: Story = {
+export const Types: Story = {
   argTypes: {
-    type: { table: { disable: true } },
+    type: { control: false, table: { disable: true } },
+    children: { control: false, table: { disable: true } },
+    shadow: { control: false, table: { disable: true } },
+    fullWidth: { control: false, table: { disable: true } },
   },
-  render: (args) => (
-    <div className="flex items-center gap-2">
-      <Button {...args} type="primary" />
-      <Button {...args} type="secondary" />
-      <Button {...args} type="tertiary" />
-      <Button {...args} type="dark" />
-      <Button {...args} type="ghost" />
+  parameters: {
+    ...storyDescription("components-button--types"),
+    controls: { disable: false },
+  },
+  render: ({ iconMode: _iconMode, ...args }) => (
+    <div className="flex flex-wrap items-center gap-2">
+      {buttonTypes.map((type) => <Button {...args} key={type} type={type}>Button</Button>)}
     </div>
   ),
 };
 
-export const WithShadow: Story = {
+export const Sizes: Story = {
   argTypes: {
-    type: { table: { disable: true } },
-    shadow: { table: { disable: true } },
+    size: { control: false, table: { disable: true } },
+    children: { control: false, table: { disable: true } },
+    shadow: { control: false, table: { disable: true } },
+    fullWidth: { control: false, table: { disable: true } },
   },
-  render: (args) => (
-    <div className="flex items-center gap-2">
-      <Button {...args} shadow type="primary" />
-      <Button {...args} shadow type="secondary" />
-      <Button {...args} shadow type="tertiary" />
-      <Button {...args} shadow type="dark" />
-      <Button {...args} shadow type="ghost" />
+  parameters: {
+    ...storyDescription("components-button--sizes"),
+    controls: { disable: false },
+  },
+  render: ({ iconMode: _iconMode, ...args }) => (
+    <div className="flex flex-wrap items-center gap-2">
+      {buttonSizes.map((size) => <Button {...args} key={size} size={size}>Button</Button>)}
     </div>
   ),
 };
 
-export const AllSizes: Story = {
+export const States: Story = {
   argTypes: {
-    size: { table: { disable: true } },
+    children: { control: false, table: { disable: true } },
+    disabled: { control: false, table: { disable: true } },
+    shadow: { control: false, table: { disable: true } },
+    fullWidth: { control: false, table: { disable: true } },
   },
-  render: (args) => (
-    <div className="flex items-center gap-2">
-      <Button {...args} size="lg" />
-      <Button {...args} size="md" />
-      <Button {...args} size="sm" />
+  parameters: {
+    ...storyDescription("components-button--states"),
+    controls: { disable: false },
+  },
+  render: ({ iconMode: _iconMode, ...args }) => (
+    <div className="grid gap-3">
+      <div className="flex flex-wrap items-center gap-2">
+        <Button {...args}>기본</Button>
+        <Button {...args} shadow>그림자</Button>
+        <Button {...args} disabled>비활성</Button>
+      </div>
+      <div className="w-80 max-w-full">
+        <Button {...args} fullWidth>전체 너비</Button>
+      </div>
     </div>
   ),
 };
 
-export const Disabled: Story = {
-  args: { disabled: true },
-  render: (args) => <Button {...args} />,
-};
-
-export const IconOnly: Story = {
-  args: {
-    'aria-label': '추가',
-    iconOnly: true,
-    prefixIcon: <Icon icon="add" />,
-  },
-};
-
-export const FullWidth: Story = {
-  args: { fullWidth: true },
-  render: (args) => (
-    <div className="w-80">
-      <Button {...args} />
-    </div>
-  ),
-};
-
-export const MultipleIcons: Story = {
-  render: (args) => (
-    <Button
-      {...args}
-      prefixIcon={[<Icon icon="edit" key="edit" />, <Icon icon="delete" key="delete" />]}
-      suffixIcon={<Icon icon="close" />}
-    />
-  ),
-};
-
-export const WithIcon: Story = {
+export const Icons: Story = {
+  args: { iconMode: "prefix" },
   argTypes: {
-    size: { table: { disable: true } },
+    type: { control: false, table: { disable: true } },
+    size: { control: false, table: { disable: true } },
+    children: { control: false, table: { disable: true } },
+    shadow: { control: false, table: { disable: true } },
+    fullWidth: { control: false, table: { disable: true } },
+    iconMode: {
+      name: "아이콘 구성",
+      control: "select",
+      options: ["none", "prefix", "suffix", "both", "multiple", "iconOnly"],
+    },
   },
-  render: (args) => (
-    <div className="flex flex-col gap-4">
-      {(['lg', 'md', 'sm'] as const).map((size) => (
-        <div key={size} className="flex flex-wrap items-center gap-2">
-          <span className="w-6 text-xs text-[#777777]">{size}</span>
-          <Button {...args} size={size}>
-            Button
-          </Button>
-          <Button {...args} size={size} prefixIcon={<Icon icon="add" />}>
-            Button
-          </Button>
-          <Button {...args} size={size} suffixIcon={<Icon icon="add" />}>
-            Button
-          </Button>
-          <Button {...args} size={size} prefixIcon={<Icon icon="add" />} suffixIcon={<Icon icon="add" />}>
-            Button
-          </Button>
-        </div>
-      ))}
-    </div>
-  ),
+  parameters: {
+    ...storyDescription("components-button--icons"),
+    controls: { disable: false },
+  },
+  render: (args, { viewMode }) =>
+    viewMode === "docs" ? (
+      <div className="flex flex-wrap items-center gap-2">
+        {(["none", "prefix", "suffix", "both", "multiple", "iconOnly"] as const).map((mode) => renderIconButton(args, mode))}
+      </div>
+    ) : (
+      <div className="flex items-center">
+        {renderIconButton(args, args.iconMode ?? "prefix")}
+      </div>
+    ),
 };
+
+function renderIconButton({ iconMode: _iconMode, ...args }: ButtonStoryArgs, mode: IconMode) {
+  const addIcon = <Icon icon="add" />;
+
+  switch (mode) {
+    case "prefix":
+      return <Button {...args} key={mode} prefixIcon={addIcon}>Button</Button>;
+    case "suffix":
+      return <Button {...args} key={mode} suffixIcon={addIcon}>Button</Button>;
+    case "both":
+      return <Button {...args} key={mode} prefixIcon={addIcon} suffixIcon={addIcon}>Button</Button>;
+    case "multiple":
+      return (
+        <Button
+          {...args}
+          key={mode}
+          prefixIcon={[<Icon icon="edit" key="edit" />, <Icon icon="delete" key="delete" />]}
+          suffixIcon={<Icon icon="close" />}>
+          Button
+        </Button>
+      );
+    case "iconOnly":
+      return <Button {...args} key={mode} aria-label="추가" iconOnly prefixIcon={addIcon} />;
+    default:
+      return <Button {...args} key={mode}>Button</Button>;
+  }
+}
