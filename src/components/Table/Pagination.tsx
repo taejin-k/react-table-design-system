@@ -1,4 +1,11 @@
-import { useEffect, useState, type CSSProperties, type FocusEvent, type KeyboardEvent, type ReactNode } from "react";
+import {
+  useEffect,
+  useState,
+  type CSSProperties,
+  type FocusEvent,
+  type KeyboardEvent,
+  type ReactNode,
+} from "react";
 import { cva } from "class-variance-authority";
 import { twMerge } from "tailwind-merge";
 import type { PaginationConfig, PaginationItemType, PaginationPlacement } from "./Table.types";
@@ -37,16 +44,19 @@ function pageItems(current: number, total: number, less: boolean): PageItem[] {
   return items;
 }
 
-const navVariants = cva("flex flex-wrap items-center gap-2 font-pretendard text-[14px] text-[#111]", {
-  variants: {
-    align: {
-      start: "justify-start",
-      center: "justify-center",
-      end: "justify-end",
+const navVariants = cva(
+  "flex flex-wrap items-center gap-2 font-pretendard text-[14px] text-[#111]",
+  {
+    variants: {
+      align: {
+        start: "justify-start",
+        center: "justify-center",
+        end: "justify-end",
+      },
     },
+    defaultVariants: { align: "end" },
   },
-  defaultVariants: { align: "end" },
-});
+);
 
 const itemSizeVariants = cva(
   "inline-flex cursor-pointer items-center justify-center rounded border border-transparent text-[#111] transition-colors hover:bg-[#f5f5f5] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-40 aria-[current=page]:border-[#0062df] aria-[current=page]:bg-[#0062df] aria-[current=page]:text-white aria-[current=page]:transition-none aria-[current=page]:hover:bg-[#0062df]",
@@ -62,21 +72,44 @@ const itemSizeVariants = cva(
   },
 );
 
-const controlClass = "h-[32px] rounded border border-[#ddd] bg-white px-2 font-pretendard text-[14px] text-[#111] outline-none transition-colors focus-visible:border-[#0062df] disabled:bg-[#f8f8f8] disabled:text-[#999]";
+const controlClass =
+  "h-[32px] rounded border border-[#ddd] bg-white px-2 font-pretendard text-[14px] text-[#111] outline-none transition-colors focus-visible:border-[#0062df] disabled:bg-[#f8f8f8] disabled:text-[#999]";
 
 function Chevron({ direction }: { direction: "left" | "right" }) {
   return (
     <svg viewBox="0 0 12 12" aria-hidden className="size-3">
-      <path d={direction === "left" ? "M7.8 2 3.8 6l4 4" : "M4.2 2l4 4-4 4"} fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
+      <path
+        d={direction === "left" ? "M7.8 2 3.8 6l4 4" : "M4.2 2l4 4-4 4"}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={1.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }
 
-function renderItem(config: PaginationConfig, page: number, type: PaginationItemType, originalElement: ReactNode) {
+function renderItem(
+  config: PaginationConfig,
+  page: number,
+  type: PaginationItemType,
+  originalElement: ReactNode,
+) {
   return config.itemRender?.(page, type, originalElement) ?? originalElement;
 }
 
-export function Pagination({ config, page, pageSize, total, pageCount, placement, onChange, className = "", style }: PaginationProps) {
+export function Pagination({
+  config,
+  page,
+  pageSize,
+  total,
+  pageCount,
+  placement,
+  onChange,
+  className = "",
+  style,
+}: PaginationProps) {
   const [jumpValue, setJumpValue] = useState("");
   const [simpleValue, setSimpleValue] = useState(String(page));
   useEffect(() => setSimpleValue(String(page)), [page]);
@@ -84,12 +117,24 @@ export function Pagination({ config, page, pageSize, total, pageCount, placement
   const start = total ? (page - 1) * pageSize + 1 : 0;
   const end = Math.min(total, page * pageSize);
   const sizeChanger = config.showSizeChanger ?? total > (config.totalBoundaryShowSizeChanger ?? 50);
-  const pageSizeOptions = [...new Set([pageSize, ...(config.pageSizeOptions ?? [10, 20, 50, 100]).map(Number)])].sort((left, right) => left - right);
+  const pageSizeOptions = [
+    ...new Set([pageSize, ...(config.pageSizeOptions ?? [10, 20, 50, 100]).map(Number)]),
+  ].sort((left, right) => left - right);
   const disabled = config.disabled ?? false;
   const size = config.size ?? "medium";
-  const semanticClassNames = typeof config.classNames === "function" ? config.classNames({ current: page, pageSize, total }) : config.classNames;
-  const semanticStyles = typeof config.styles === "function" ? config.styles({ current: page, pageSize, total }) : config.styles;
-  const placementAlign = placement.endsWith("Start") ? "start" : placement.endsWith("Center") ? "center" : "end";
+  const semanticClassNames =
+    typeof config.classNames === "function"
+      ? config.classNames({ current: page, pageSize, total })
+      : config.classNames;
+  const semanticStyles =
+    typeof config.styles === "function"
+      ? config.styles({ current: page, pageSize, total })
+      : config.styles;
+  const placementAlign = placement.endsWith("Start")
+    ? "start"
+    : placement.endsWith("Center")
+      ? "center"
+      : "end";
   const align = config.align ?? placementAlign;
   const itemClassName = twMerge(itemSizeVariants({ size }), semanticClassNames?.item);
   const itemStyle = semanticStyles?.item;
@@ -149,7 +194,9 @@ export function Pagination({ config, page, pageSize, total, pageCount, placement
       style={{ ...config.style, ...style, ...semanticStyles?.root }}
       aria-label={config["aria-label"] ?? "페이지네이션"}
     >
-      {config.showTotal && <span className="text-[#999]">{config.showTotal(total, [start, end])}</span>}
+      {config.showTotal && (
+        <span className="text-[#999]">{config.showTotal(total, [start, end])}</span>
+      )}
       <div className="flex items-center gap-1">
         {renderItem(config, page - 1, "prev", prev)}
         {config.simple ? (
@@ -175,7 +222,10 @@ export function Pagination({ config, page, pageSize, total, pageCount, placement
             if (item === "jump-prev" || item === "jump-next") {
               const delta = config.showLessItems ? 3 : 5;
               const target = item === "jump-prev" ? page - delta : page + delta;
-              const label = item === "jump-prev" ? ((delta === 3 ? locale.prev_3 : locale.prev_5) ?? `이전 ${delta}페이지`) : ((delta === 3 ? locale.next_3 : locale.next_5) ?? `다음 ${delta}페이지`);
+              const label =
+                item === "jump-prev"
+                  ? ((delta === 3 ? locale.prev_3 : locale.prev_5) ?? `이전 ${delta}페이지`)
+                  : ((delta === 3 ? locale.next_3 : locale.next_5) ?? `다음 ${delta}페이지`);
               const element = (
                 <button
                   type="button"
@@ -189,14 +239,22 @@ export function Pagination({ config, page, pageSize, total, pageCount, placement
                   •••
                 </button>
               );
-              return <span key={item}>{config.showPrevNextJumpers === false ? null : renderItem(config, target, item, element)}</span>;
+              return (
+                <span key={item}>
+                  {config.showPrevNextJumpers === false
+                    ? null
+                    : renderItem(config, target, item, element)}
+                </span>
+              );
             }
             const element = (
               <button
                 type="button"
                 className={itemClassName}
                 style={itemStyle}
-                title={config.showTitle === false ? undefined : `${item} ${locale.page ?? "페이지"}`}
+                title={
+                  config.showTitle === false ? undefined : `${item} ${locale.page ?? "페이지"}`
+                }
                 aria-label={`${item} ${locale.page ?? "페이지"}`}
                 aria-current={item === page ? "page" : undefined}
                 disabled={disabled}
@@ -213,7 +271,10 @@ export function Pagination({ config, page, pageSize, total, pageCount, placement
       {sizeChanger && (
         <select
           aria-label={locale.page_size ?? "페이지 크기"}
-          disabled={disabled || (typeof config.showSizeChanger === "object" && config.showSizeChanger.disabled)}
+          disabled={
+            disabled ||
+            (typeof config.showSizeChanger === "object" && config.showSizeChanger.disabled)
+          }
           value={pageSize}
           onChange={(event) => {
             const nextSize = Number(event.target.value);
@@ -262,7 +323,11 @@ export function Pagination({ config, page, pageSize, total, pageCount, placement
             />
           </label>
           {typeof config.showQuickJumper === "object" && config.showQuickJumper.goButton ? (
-            <button type="submit" disabled={disabled} className="cursor-pointer rounded bg-[#0062df] px-2 py-1 text-white disabled:cursor-not-allowed disabled:opacity-40">
+            <button
+              type="submit"
+              disabled={disabled}
+              className="cursor-pointer rounded bg-[#0062df] px-2 py-1 text-white disabled:cursor-not-allowed disabled:opacity-40"
+            >
               {config.showQuickJumper.goButton}
             </button>
           ) : (

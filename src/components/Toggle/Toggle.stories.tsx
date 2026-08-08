@@ -1,25 +1,32 @@
-import { useEffect, useState } from 'react';
-import type { Meta, StoryObj } from '@storybook/react';
-import { Toggle } from './Toggle';
+import { useEffect, useState } from "react";
+import type { Meta, StoryObj } from "@storybook/react";
+import { Toggle } from "./Toggle";
 
-const SIZES = ['lg', 'md', 'sm'] as const;
+const SIZES = ["lg", "md", "sm"] as const;
 
 const meta: Meta<typeof Toggle> = {
-  title: 'Components/Toggle',
+  title: "Components/Toggle",
   component: Toggle,
-  tags: ['autodocs'],
-  parameters: { docs: { description: { component: 'checked와 onChange로 상태를 제어하며 switch 역할과 키보드 조작을 제공하는 토글입니다.' } } },
+  tags: ["autodocs"],
+  parameters: {
+    docs: {
+      description: {
+        component:
+          "checked와 onChange로 상태를 제어하며 switch 역할과 키보드 조작을 제공하는 토글입니다.",
+      },
+    },
+  },
   argTypes: {
     size: {
-      control: 'select',
+      control: "select",
       options: SIZES,
     },
-    checked: { control: 'boolean' },
-    disabled: { control: 'boolean' },
+    checked: { control: "boolean" },
+    disabled: { control: "boolean" },
   },
   args: {
-    'aria-label': '설정 사용',
-    size: 'md',
+    "aria-label": "설정 사용",
+    size: "md",
     checked: false,
     disabled: false,
   },

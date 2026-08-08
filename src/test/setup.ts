@@ -1,4 +1,4 @@
-import '@testing-library/jest-dom/vitest';
+import "@testing-library/jest-dom/vitest";
 
 if (!HTMLElement.prototype.scrollTo) HTMLElement.prototype.scrollTo = () => undefined;
 if (!HTMLElement.prototype.scrollBy) HTMLElement.prototype.scrollBy = () => undefined;

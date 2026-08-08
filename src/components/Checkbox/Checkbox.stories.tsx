@@ -1,71 +1,107 @@
-import { useEffect, useState } from 'react';
-import type { Meta, StoryObj } from '@storybook/react';
-import { Checkbox } from './Checkbox';
+import { Description, Markdown, Stories, Title } from "@storybook/addon-docs/blocks";
+import type { Meta, StoryObj } from "@storybook/react";
+import { useEffect, useState } from "react";
+import { storyDescriptions } from "../../storybook/story-descriptions";
+import { Checkbox } from "./Checkbox";
+import type { CheckboxProps } from "./Checkbox.types";
 
-const meta: Meta<typeof Checkbox> = {
-  title: 'Components/Checkbox',
+const storyDescription = (id: string) => ({
+  docs: { description: { story: storyDescriptions[id] } },
+});
+
+const meta = {
+  title: "Components/Checkbox",
   component: Checkbox,
-  tags: ['autodocs'],
-  parameters: { docs: { description: { component: '네이티브 checkbox 동작을 유지하면서 레이블, 오류, 비활성 표현을 제공하는 선택 컴포넌트입니다.' } } },
-  argTypes: {
-    checked: { control: 'boolean' },
-    disabled: { control: 'boolean' },
-    error: { control: 'boolean' },
-  },
+  tags: ["autodocs"],
   args: {
-    label: '레이블',
-    checked: false,
-    disabled: false,
-    error: false,
+    label: "레이블",
   },
-};
+  argTypes: {
+    label: { name: "레이블", control: "text" },
+    checked: { name: "선택", control: "boolean" },
+    disabled: { name: "비활성", control: "boolean" },
+    error: { name: "오류", control: "boolean" },
+    className: { control: false, table: { disable: true } },
+    id: { control: false, table: { disable: true } },
+    onChange: { control: false, table: { disable: true } },
+  },
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: {
+        component: "선택 여부를 표시하고 레이블과 오류 상태를 함께 표현하는 체크박스예요.",
+      },
+      page: () => (
+        <div className="checkbox-docs">
+          <Title />
+          <Description />
+          <Stories />
+          <h2>API</h2>
+          <Markdown>{`
+### Checkbox
+
+| Name | Description | Type | Default |
+| --- | --- | --- | --- |
+| \`label\` | 체크박스 오른쪽에 레이블을 표시해요. | \`ReactNode\` | - |
+| \`error\` | 테두리와 체크 색상을 오류 색상으로 표시해요. | \`boolean\` | \`false\` |
+          `}</Markdown>
+        </div>
+      ),
+    },
+  },
+} satisfies Meta<typeof Checkbox>;
 
 export default meta;
-type Story = StoryObj<typeof Checkbox>;
+type Story = StoryObj<typeof meta>;
 
-const Controlled = (args: React.ComponentProps<typeof Checkbox>) => {
-  const [checked, setChecked] = useState(args.checked);
-  useEffect(() => setChecked(args.checked), [args.checked]);
-  return <Checkbox {...args} checked={checked} onChange={(event) => setChecked(event.target.checked)} />;
+export const States: Story = {
+  parameters: {
+    ...storyDescription("components-checkbox--states"),
+    controls: { disable: false },
+  },
+  render: (args, { viewMode }) =>
+    viewMode === "docs" ? (
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Checkbox label="기본" />
+        <Checkbox error label="오류" />
+        <Checkbox disabled label="비활성" />
+        <Checkbox defaultChecked disabled label="비활성 · 선택" />
+      </div>
+    ) : (
+      <ControlledCheckbox {...args} />
+    ),
 };
 
-export const Default: Story = {
-  render: (args) => <Controlled {...args} />,
-};
-
-const StatefulCheckbox = (props: Omit<React.ComponentProps<typeof Checkbox>, 'checked' | 'onChange'> & { defaultChecked?: boolean }) => {
-  const { defaultChecked = false, ...rest } = props;
-  const [checked, setChecked] = useState(defaultChecked);
-  return <Checkbox {...rest} checked={checked} onChange={(event) => setChecked(event.target.checked)} />;
-};
-
-export const AllStates: Story = {
+export const Label: Story = {
   argTypes: {
-    checked: { table: { disable: true } },
-    disabled: { table: { disable: true } },
-    error: { table: { disable: true } },
+    disabled: { control: false, table: { disable: true } },
+    error: { control: false, table: { disable: true } },
+  },
+  parameters: {
+    ...storyDescription("components-checkbox--label"),
+    controls: { disable: false },
   },
   render: (args) => (
-    <div className="flex flex-wrap items-center gap-6">
-      <StatefulCheckbox {...args} defaultChecked={false} />
-      <StatefulCheckbox {...args} defaultChecked={true} />
-      <StatefulCheckbox {...args} error defaultChecked={false} />
-      <StatefulCheckbox {...args} error defaultChecked={true} />
-      <Checkbox {...args} checked={false} disabled />
-      <Checkbox {...args} checked={true} disabled />
+    <div className="grid grid-cols-2 items-start gap-8">
+      <ControlledCheckbox {...args} label={undefined} />
+      <ControlledCheckbox {...args} />
     </div>
   ),
 };
 
-// ============ 라벨 없음 ============
+function ControlledCheckbox(args: CheckboxProps) {
+  const [checked, setChecked] = useState(Boolean(args.checked));
 
-export const NoLabel: Story = {
-  render: (args) => (
-    <div className="flex items-center gap-6">
-      <StatefulCheckbox {...args} aria-label="선택 안 됨" label={undefined} defaultChecked={false} />
-      <StatefulCheckbox {...args} aria-label="선택됨" label={undefined} defaultChecked={true} />
-      <Checkbox {...args} aria-label="비활성 선택 안 됨" label={undefined} checked={false} disabled />
-      <Checkbox {...args} aria-label="비활성 선택됨" label={undefined} checked={true} disabled />
-    </div>
-  ),
-};
+  useEffect(() => setChecked(Boolean(args.checked)), [args.checked]);
+
+  return (
+    <Checkbox
+      {...args}
+      checked={checked}
+      onChange={(event) => {
+        setChecked(event.target.checked);
+        args.onChange?.(event);
+      }}
+    />
+  );
+}

@@ -1,12 +1,17 @@
-import { createElement } from 'react';
-import type { Preview } from '@storybook/react';
-import './preview.css';
-import { storyDescriptions } from '../src/storybook/story-descriptions';
+import { createElement } from "react";
+import type { Preview } from "@storybook/react";
+import "./preview.css";
+import { storyDescriptions } from "../src/storybook/story-descriptions";
 
 const preview: Preview = {
   decorators: [
     (Story, context) => {
-      if (context.viewMode === 'docs' && ['Components/Breadcrumb', 'Components/Button'].includes(context.title)) {
+      if (
+        context.viewMode === "docs" &&
+        ["Components/Breadcrumb", "Components/Button", "Components/Checkbox"].includes(
+          context.title,
+        )
+      ) {
         return createElement(Story);
       }
 
@@ -15,21 +20,21 @@ const preview: Preview = {
         storyDescriptions[context.id] ??
         `${context.name} 기능의 기본 사용법과 상호작용, 관련 속성을 확인합니다.`;
       return createElement(
-        'div',
-        { className: 'story-documented-frame' },
+        "div",
+        { className: "story-documented-frame" },
         createElement(
-          'aside',
-          { className: 'story-description', role: 'note', 'aria-label': 'Story 기능 설명' },
-          createElement('span', null, context.title.replace('Components/', '').replace('/', ' / ')),
-          createElement('p', null, String(description)),
+          "aside",
+          { className: "story-description", role: "note", "aria-label": "Story 기능 설명" },
+          createElement("span", null, context.title.replace("Components/", "").replace("/", " / ")),
+          createElement("p", null, String(description)),
         ),
         createElement(Story),
       );
     },
   ],
   parameters: {
-    layout: 'padded',
-    a11y: { test: 'todo' },
+    layout: "padded",
+    a11y: { test: "todo" },
     controls: {
       matchers: {
         color: /(background|color)$/i,

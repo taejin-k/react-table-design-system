@@ -33,6 +33,8 @@
     "dev": "tsup --watch",
     "check-types": "tsc --noEmit",
     "lint": "oxlint src .storybook tsup.config.ts vitest.config.mts",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "test": "vitest run",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
@@ -70,6 +72,8 @@
     "jsdom": "^28.1.0",
     "oxlint": "^1.50.0",
     "pretendard": "^1.3.9",
+    "prettier": "^3.9.6",
+    "prettier-plugin-tailwindcss": "^0.8.1",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "storybook": "^10.5.7",

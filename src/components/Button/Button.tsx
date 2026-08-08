@@ -11,7 +11,8 @@ function hasContent(node: ReactNode): boolean {
 /** prefixIcon/suffixIcon으로 내려온 엘리먼트에 onClick이 붙어있어도 무시하도록 제거한다. */
 function stripOnClick(node: ReactNode): ReactNode {
   if (Array.isArray(node)) return node.map(stripOnClick);
-  if (isValidElement<{ onClick?: unknown }>(node)) return cloneElement(node, { onClick: undefined });
+  if (isValidElement<{ onClick?: unknown }>(node))
+    return cloneElement(node, { onClick: undefined });
   return node;
 }
 
@@ -36,14 +37,22 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     const suffixIcon = stripOnClick(rawSuffixIcon);
     const hasIcon = hasContent(prefixIcon) || hasContent(suffixIcon);
     const effectiveIconOnly = iconOnly && hasIcon;
-    const icon = effectiveIconOnly ? (hasContent(prefixIcon) ? prefixIcon : suffixIcon) : prefixIcon;
+    const icon = effectiveIconOnly
+      ? hasContent(prefixIcon)
+        ? prefixIcon
+        : suffixIcon
+      : prefixIcon;
 
     return (
       <button
         ref={ref}
         type={htmlType}
-        className={twMerge(buttonVariants({ type, size, iconOnly: effectiveIconOnly, shadow, fullWidth }), className)}
-        {...rest}>
+        className={twMerge(
+          buttonVariants({ type, size, iconOnly: effectiveIconOnly, shadow, fullWidth }),
+          className,
+        )}
+        {...rest}
+      >
         {icon}
         {!effectiveIconOnly && children}
         {!effectiveIconOnly && suffixIcon}
@@ -55,19 +64,19 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 Button.displayName = "Button";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-1 rounded font-pretendard font-medium whitespace-nowrap transition-[color,background-color,box-shadow] cursor-pointer disabled:cursor-not-allowed",
+  "inline-flex cursor-pointer items-center justify-center gap-1 rounded font-pretendard font-medium whitespace-nowrap transition-[color,background-color,box-shadow] disabled:cursor-not-allowed",
   {
     variants: {
       type: {
         primary:
-          "ring-1 ring-inset ring-transparent bg-[#0062df] text-white hover:bg-[#227cef] disabled:ring-[#dddddd] disabled:bg-[#f5f5f5] disabled:text-[#999999]",
+          "bg-[#0062df] text-white ring-1 ring-transparent ring-inset hover:bg-[#227cef] disabled:bg-[#f5f5f5] disabled:text-[#999999] disabled:ring-[#dddddd]",
         secondary:
-          "ring-1 ring-inset ring-[#999999] bg-white text-[#111111] hover:bg-[#f5f5f5] disabled:ring-[#dddddd] disabled:bg-[#f5f5f5] disabled:text-[#999999]",
+          "bg-white text-[#111111] ring-1 ring-[#999999] ring-inset hover:bg-[#f5f5f5] disabled:bg-[#f5f5f5] disabled:text-[#999999] disabled:ring-[#dddddd]",
         tertiary:
-          "ring-1 ring-inset ring-transparent bg-[#f5f5f5] text-[#111111] hover:ring-[#999999] disabled:ring-[#dddddd] disabled:text-[#999999]",
-        dark: "ring-1 ring-inset ring-transparent bg-[#111111] text-white hover:bg-[#303030] disabled:ring-[#dddddd] disabled:bg-[#f5f5f5] disabled:text-[#999999]",
+          "bg-[#f5f5f5] text-[#111111] ring-1 ring-transparent ring-inset hover:ring-[#999999] disabled:text-[#999999] disabled:ring-[#dddddd]",
+        dark: "bg-[#111111] text-white ring-1 ring-transparent ring-inset hover:bg-[#303030] disabled:bg-[#f5f5f5] disabled:text-[#999999] disabled:ring-[#dddddd]",
         ghost:
-          "ring-1 ring-inset ring-transparent bg-white text-[#111111] hover:ring-[#999999] disabled:ring-[#dddddd] disabled:bg-[#f5f5f5] disabled:text-[#999999]",
+          "bg-white text-[#111111] ring-1 ring-transparent ring-inset hover:ring-[#999999] disabled:bg-[#f5f5f5] disabled:text-[#999999] disabled:ring-[#dddddd]",
       },
       size: {
         lg: "h-10 px-3.5 text-base",

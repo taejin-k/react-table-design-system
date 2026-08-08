@@ -3,7 +3,11 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { twMerge } from "tailwind-merge";
 
 export interface ToggleProps
-  extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, "onChange" | "checked" | "size" | "type" | "role" | "aria-checked">,
+  extends
+    Omit<
+      ButtonHTMLAttributes<HTMLButtonElement>,
+      "onChange" | "checked" | "size" | "type" | "role" | "aria-checked"
+    >,
     VariantProps<typeof trackVariants> {
   checked: boolean;
   onChange?: (checked: boolean) => void;
@@ -33,43 +37,49 @@ export const Toggle = forwardRef<HTMLButtonElement, ToggleProps>(
 
 Toggle.displayName = "Toggle";
 
-const trackVariants = cva("relative inline-flex shrink-0 cursor-pointer items-center rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0062df] motion-reduce:transition-none disabled:cursor-not-allowed disabled:opacity-50", {
-  variants: {
-    size: {
-      lg: "h-[30px] w-[50px]",
-      md: "h-[24px] w-[40px]",
-      sm: "h-[20px] w-[32px]",
+const trackVariants = cva(
+  "relative inline-flex shrink-0 cursor-pointer items-center rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0062df] disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none",
+  {
+    variants: {
+      size: {
+        lg: "h-[30px] w-[50px]",
+        md: "h-[24px] w-[40px]",
+        sm: "h-[20px] w-[32px]",
+      },
+      checked: {
+        true: "bg-[#0062df]",
+        false: "bg-[#ddd]",
+      },
     },
-    checked: {
-      true: "bg-[#0062df]",
-      false: "bg-[#ddd]",
+    defaultVariants: {
+      size: "md",
+      checked: false,
     },
   },
-  defaultVariants: {
-    size: "md",
-    checked: false,
-  },
-});
+);
 
-const knobVariants = cva("absolute top-[3px] rounded-full bg-white transition-[left] duration-200 ease-out motion-reduce:transition-none", {
-  variants: {
-    size: {
-      lg: "size-[24px]",
-      md: "size-[18px]",
-      sm: "size-[14px]",
+const knobVariants = cva(
+  "absolute top-[3px] rounded-full bg-white transition-[left] duration-200 ease-out motion-reduce:transition-none",
+  {
+    variants: {
+      size: {
+        lg: "size-[24px]",
+        md: "size-[18px]",
+        sm: "size-[14px]",
+      },
+      checked: {
+        true: "",
+        false: "left-[3px]",
+      },
     },
-    checked: {
-      true: "",
-      false: "left-[3px]",
+    compoundVariants: [
+      { checked: true, size: "lg", className: "left-[23px]" },
+      { checked: true, size: "md", className: "left-[19px]" },
+      { checked: true, size: "sm", className: "left-[15px]" },
+    ],
+    defaultVariants: {
+      size: "md",
+      checked: false,
     },
   },
-  compoundVariants: [
-    { checked: true, size: "lg", className: "left-[23px]" },
-    { checked: true, size: "md", className: "left-[19px]" },
-    { checked: true, size: "sm", className: "left-[15px]" },
-  ],
-  defaultVariants: {
-    size: "md",
-    checked: false,
-  },
-});
+);

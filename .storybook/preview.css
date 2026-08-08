@@ -1,6 +1,6 @@
-@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
-@import 'tailwindcss';
-@import '../theme.css' layer(theme);
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");
+@import "tailwindcss";
+@import "../theme.css" layer(theme);
 
 .story-documented-frame {
   display: grid;
@@ -26,38 +26,56 @@
   font-family: Pretendard, sans-serif;
 }
 
-.story-description span { color: #777; font-size: 12px; }
-.story-description strong { font-size: 15px; }
-.story-description p { margin: 0; color: #555; font-size: 13px; line-height: 1.6; }
+.story-description span {
+  color: #666;
+  font-size: 12px;
+}
+.story-description strong {
+  font-size: 15px;
+}
+.story-description p {
+  margin: 0;
+  color: #555;
+  font-size: 13px;
+  line-height: 1.6;
+}
 
-:is(.breadcrumb-docs, .button-docs) :is(h2, h3, h4):has(+ p) {
+:is(.breadcrumb-docs, .button-docs, .checkbox-docs) :is(h2, h3, h4):has(+ p) {
   margin-bottom: 0;
 }
 
-:is(.breadcrumb-docs, .button-docs) :is(h2, h3, h4) + p {
+:is(.breadcrumb-docs, .button-docs, .checkbox-docs) :is(h2, h3, h4) + p {
   margin-top: 6px;
   margin-bottom: 12px;
 }
 
-:is(.breadcrumb-docs, .button-docs) p + .sbdocs-preview {
+:is(.breadcrumb-docs, .button-docs, .checkbox-docs) p + .sbdocs-preview {
   margin-top: 12px;
 }
 
-:is(.breadcrumb-docs, .button-docs) table {
+:is(.breadcrumb-docs, .button-docs, .checkbox-docs) table {
   width: 100%;
   table-layout: fixed;
 }
 
-:is(.breadcrumb-docs, .button-docs) table :is(th, td):nth-child(1) { width: 14%; }
-:is(.breadcrumb-docs, .button-docs) table :is(th, td):nth-child(2) { width: 50%; }
-:is(.breadcrumb-docs, .button-docs) table :is(th, td):nth-child(3) { width: 24%; }
-:is(.breadcrumb-docs, .button-docs) table :is(th, td):nth-child(4) { width: 12%; }
+:is(.breadcrumb-docs, .button-docs, .checkbox-docs) table :is(th, td):nth-child(1) {
+  width: 14%;
+}
+:is(.breadcrumb-docs, .button-docs, .checkbox-docs) table :is(th, td):nth-child(2) {
+  width: 50%;
+}
+:is(.breadcrumb-docs, .button-docs, .checkbox-docs) table :is(th, td):nth-child(3) {
+  width: 24%;
+}
+:is(.breadcrumb-docs, .button-docs, .checkbox-docs) table :is(th, td):nth-child(4) {
+  width: 12%;
+}
 
-:is(.breadcrumb-docs, .button-docs) table :is(th, td) {
+:is(.breadcrumb-docs, .button-docs, .checkbox-docs) table :is(th, td) {
   overflow-wrap: anywhere;
 }
 
-:is(.breadcrumb-docs, .button-docs) table td code {
+:is(.breadcrumb-docs, .button-docs, .checkbox-docs) table td code {
   max-width: 100%;
   line-height: 1.5;
   white-space: normal;

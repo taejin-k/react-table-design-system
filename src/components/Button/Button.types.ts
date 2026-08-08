@@ -4,7 +4,10 @@ export type ButtonType = "primary" | "secondary" | "tertiary" | "dark" | "ghost"
 
 export type ButtonSize = "lg" | "md" | "sm";
 
-export interface ButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, "type" | "prefix"> {
+export interface ButtonProps extends Omit<
+  ButtonHTMLAttributes<HTMLButtonElement>,
+  "type" | "prefix"
+> {
   type?: ButtonType;
   size?: ButtonSize;
   iconOnly?: boolean;

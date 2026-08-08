@@ -1,4 +1,13 @@
-import { cloneElement, forwardRef, isValidElement, useId, useImperativeHandle, useRef, type InputHTMLAttributes, type ReactNode } from "react";
+import {
+  cloneElement,
+  forwardRef,
+  isValidElement,
+  useId,
+  useImperativeHandle,
+  useRef,
+  type InputHTMLAttributes,
+  type ReactNode,
+} from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { twMerge } from "tailwind-merge";
 import { Label } from "../Label";
@@ -6,7 +15,8 @@ import { ErrorText } from "../ErrorText";
 import { Icon } from "../Icon";
 
 export interface InputProps
-  extends Omit<InputHTMLAttributes<HTMLInputElement>, "size" | "prefix" | "value" | "onChange">,
+  extends
+    Omit<InputHTMLAttributes<HTMLInputElement>, "size" | "prefix" | "value" | "onChange">,
     Pick<VariantProps<typeof inputRowVariants>, "size" | "variant"> {
   value?: string;
   onChange?: (value: string) => void;
@@ -32,7 +42,8 @@ export interface InputProps
 
 /** prefixIcon/suffixIcon에 onClick이 붙어있어도 무시하도록 제거한다(장식 목적). */
 function stripOnClick(node: ReactNode): ReactNode {
-  if (isValidElement<{ onClick?: unknown }>(node)) return cloneElement(node, { onClick: undefined });
+  if (isValidElement<{ onClick?: unknown }>(node))
+    return cloneElement(node, { onClick: undefined });
   return node;
 }
 
@@ -68,7 +79,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     const hasError = Boolean(errorText);
     const hasValue = Boolean(value);
     const errorId = `${inputId}-error`;
-    const describedBy = [ariaDescribedBy, hasError ? errorId : undefined].filter(Boolean).join(" ") || undefined;
+    const describedBy =
+      [ariaDescribedBy, hasError ? errorId : undefined].filter(Boolean).join(" ") || undefined;
     const inputRef = useRef<HTMLInputElement>(null);
     useImperativeHandle(ref, () => inputRef.current as HTMLInputElement);
 
@@ -79,8 +91,18 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             {label}
           </Label>
         )}
-        <div className={twMerge(inputRowVariants({ size, variant, error: hasError, disabled }), className, rootClassName)}>
-          {prefixIcon && <span className="flex size-4 shrink-0 items-center justify-center">{stripOnClick(prefixIcon)}</span>}
+        <div
+          className={twMerge(
+            inputRowVariants({ size, variant, error: hasError, disabled }),
+            className,
+            rootClassName,
+          )}
+        >
+          {prefixIcon && (
+            <span className="flex size-4 shrink-0 items-center justify-center">
+              {stripOnClick(prefixIcon)}
+            </span>
+          )}
           <input
             ref={inputRef}
             id={inputId}
@@ -90,7 +112,11 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             required={required}
             aria-invalid={ariaInvalid ?? (hasError || undefined)}
             aria-describedby={describedBy}
-            className={twMerge(inputVariants({ size, disabled }), "min-w-0 flex-1 bg-transparent outline-none placeholder:text-[#999]", inputClassName)}
+            className={twMerge(
+              inputVariants({ size, disabled }),
+              "min-w-0 flex-1 bg-transparent outline-none placeholder:text-[#999]",
+              inputClassName,
+            )}
             onChange={(event) => {
               const nextValue = event.target.value;
               // 한글 등 IME 조합 중에는 네이티브 maxLength가 강제되지 않아 직접 막는다.
@@ -100,8 +126,10 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             {...rest}
           />
           {(showCount || maxLength !== undefined) && (
-            <span className="shrink-0 whitespace-nowrap font-pretendard text-[12px] text-[#aaa]">
-              {maxLength !== undefined ? `${value?.length ?? 0} / ${maxLength}` : (value?.length ?? 0)}
+            <span className="shrink-0 font-pretendard text-[12px] whitespace-nowrap text-[#aaa]">
+              {maxLength !== undefined
+                ? `${value?.length ?? 0} / ${maxLength}`
+                : (value?.length ?? 0)}
             </span>
           )}
           {allowClear && hasValue && !disabled && (
@@ -119,9 +147,15 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
               <Icon icon="close" size={16} aria-hidden />
             </button>
           )}
-          {suffixIcon && <span className="flex size-4 shrink-0 items-center justify-center">{stripOnClick(suffixIcon)}</span>}
+          {suffixIcon && (
+            <span className="flex size-4 shrink-0 items-center justify-center">
+              {stripOnClick(suffixIcon)}
+            </span>
+          )}
         </div>
-        <ErrorText id={errorId} className="-mt-0.5">{errorText}</ErrorText>
+        <ErrorText id={errorId} className="-mt-0.5">
+          {errorText}
+        </ErrorText>
       </div>
     );
   },
@@ -160,7 +194,7 @@ const inputRowVariants = cva(
   },
 );
 
-const inputVariants = cva("font-pretendard font-medium leading-[1.6] text-[#111]", {
+const inputVariants = cva("font-pretendard leading-[1.6] font-medium text-[#111]", {
   variants: {
     size: {
       lg: "text-[16px]",

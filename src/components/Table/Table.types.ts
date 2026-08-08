@@ -116,7 +116,8 @@ export type TableSummaryCellProps = TdHTMLAttributes<HTMLTableCellElement> & {
 };
 
 export type PaginationItemType = "page" | "prev" | "next" | "jump-prev" | "jump-next";
-export type PaginationPlacement = "topStart" | "topCenter" | "topEnd" | "bottomStart" | "bottomCenter" | "bottomEnd" | "none";
+export type PaginationPlacement =
+  "topStart" | "topCenter" | "topEnd" | "bottomStart" | "bottomCenter" | "bottomEnd" | "none";
 
 export type PaginationConfig = {
   "aria-label"?: string;
@@ -130,7 +131,9 @@ export type PaginationConfig = {
   total?: number;
   placement?: PaginationPlacement[];
   /** @deprecated placement을 쓴다. */
-  position?: Array<"topLeft" | "topCenter" | "topRight" | "bottomLeft" | "bottomCenter" | "bottomRight" | "none">;
+  position?: Array<
+    "topLeft" | "topCenter" | "topRight" | "bottomLeft" | "bottomCenter" | "bottomRight" | "none"
+  >;
   align?: "start" | "center" | "end";
   disabled?: boolean;
   hideOnSinglePage?: boolean;
@@ -160,10 +163,16 @@ export type PaginationConfig = {
   };
   classNames?:
     | { root?: string; item?: string }
-    | ((info: { current: number; pageSize: number; total: number }) => { root?: string; item?: string });
+    | ((info: { current: number; pageSize: number; total: number }) => {
+        root?: string;
+        item?: string;
+      });
   styles?:
     | { root?: CSSProperties; item?: CSSProperties }
-    | ((info: { current: number; pageSize: number; total: number }) => { root?: CSSProperties; item?: CSSProperties });
+    | ((info: { current: number; pageSize: number; total: number }) => {
+        root?: CSSProperties;
+        item?: CSSProperties;
+      });
   onChange?: (page: number, pageSize: number) => void;
   onShowSizeChange?: (current: number, size: number) => void;
 };
@@ -175,7 +184,10 @@ export type SelectionItem = {
 };
 
 export type RowSelectMethod = "all" | "none" | "invert" | "single" | "multiple";
-export type TableRowCheckboxProps = Omit<InputHTMLAttributes<HTMLInputElement>, "checked" | "defaultChecked" | "type">;
+export type TableRowCheckboxProps = Omit<
+  InputHTMLAttributes<HTMLInputElement>,
+  "checked" | "defaultChecked" | "type"
+>;
 
 export type RowSelection<T> = {
   type?: "checkbox" | "radio";
@@ -191,7 +203,12 @@ export type RowSelection<T> = {
   selections?: boolean | SelectionItem[];
   getCheckboxProps?: (record: T) => TableRowCheckboxProps;
   getTitleCheckboxProps?: () => TableRowCheckboxProps;
-  renderCell?: (checked: boolean, record: T, index: number, originNode: ReactNode) => ReactNode | RenderedCell<T>;
+  renderCell?: (
+    checked: boolean,
+    record: T,
+    index: number,
+    originNode: ReactNode,
+  ) => ReactNode | RenderedCell<T>;
   onCell?: (record: T, rowIndex?: number) => TdHTMLAttributes<HTMLTableCellElement>;
   onChange?: (selectedRowKeys: Key[], selectedRows: T[], info: { type: RowSelectMethod }) => void;
   onSelect?: (record: T, selected: boolean, selectedRows: T[], nativeEvent: Event) => void;
@@ -265,7 +282,9 @@ export type TableComponents<T> = {
   };
   body?: {
     wrapper?: ElementType;
-    row?: ComponentType<HTMLAttributes<HTMLTableRowElement> & { "data-row-key"?: Key; record?: T; index?: number }>;
+    row?: ComponentType<
+      HTMLAttributes<HTMLTableRowElement> & { "data-row-key"?: Key; record?: T; index?: number }
+    >;
     cell?: ElementType;
   };
 };
@@ -309,7 +328,10 @@ export type TableLoadingConfig = {
   style?: CSSProperties;
 };
 
-export type TableProps<T extends object> = Omit<HTMLAttributes<HTMLDivElement>, "children" | "title" | "onChange" | "onScroll"> & {
+export type TableProps<T extends object> = Omit<
+  HTMLAttributes<HTMLDivElement>,
+  "children" | "title" | "onChange" | "onScroll"
+> & {
   children?: ReactNode;
   dataSource?: T[];
   column?: Partial<ColumnType<T>>;
@@ -330,13 +352,21 @@ export type TableProps<T extends object> = Omit<HTMLAttributes<HTMLDivElement>, 
   tableLayout?: "auto" | "fixed";
   rowClassName?: (record: T, index: number, indent: number) => string;
   rowHoverable?: boolean;
-  sticky?: boolean | { offsetHeader?: number; offsetSummary?: number; offsetScroll?: number; getContainer?: () => Window | HTMLElement };
+  sticky?:
+    | boolean
+    | {
+        offsetHeader?: number;
+        offsetSummary?: number;
+        offsetScroll?: number;
+        getContainer?: () => Window | HTMLElement;
+      };
   virtual?: boolean;
   scroll?: { x?: string | number | true; y?: string | number; scrollToFirstRowOnChange?: boolean };
   sortDirections?: SortOrder[];
   rootClassName?: string;
   className?: string;
-  classNames?: TableSemanticClassNames | ((info: { props: TableProps<T> }) => TableSemanticClassNames);
+  classNames?:
+    TableSemanticClassNames | ((info: { props: TableProps<T> }) => TableSemanticClassNames);
   styles?: TableSemanticStyles | ((info: { props: TableProps<T> }) => TableSemanticStyles);
   components?: TableComponents<T>;
   getPopupContainer?: (triggerNode: HTMLElement) => HTMLElement;
@@ -360,5 +390,11 @@ export type SorterResult<T> = {
 
 export type TableRef = {
   nativeElement: HTMLDivElement | null;
-  scrollTo: (config: { index?: number; key?: Key; top?: number; offset?: number; align?: "start" | "center" | "end" | "nearest" }) => void;
+  scrollTo: (config: {
+    index?: number;
+    key?: Key;
+    top?: number;
+    offset?: number;
+    align?: "start" | "center" | "end" | "nearest";
+  }) => void;
 };
