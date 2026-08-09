@@ -46,18 +46,18 @@ Figma 변경 → 코드 변경 → Storybook 업데이트 → 배포
 
 ## 설치
 
-GitHub Packages(사내 전용)에 배포됩니다. 설치할 레포의 `.npmrc`에 추가합니다.
+개인 GitHub Packages에 배포됩니다. 설치할 레포의 `.npmrc`에 추가합니다.
 
 ```
-@dunamu-futurewiz:registry=https://npm.pkg.github.com
+@taejin-k:registry=https://npm.pkg.github.com
 //npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
 ```
 
-`GITHUB_TOKEN`은 `read:packages` 권한이 있는 GitHub Personal Access Token
-(SSO 조직이면 조직에 Authorize 필요)을 환경변수로 설정합니다.
+`GITHUB_TOKEN`은 `read:packages` 권한이 있는 GitHub Personal Access Token을
+환경변수로 설정합니다.
 
 ```bash
-pnpm add @dunamu-futurewiz/wizard-design
+pnpm add @taejin-k/wizard-design
 ```
 
 설치·업데이트 후에도 에디터가 새 타입을 못 읽어오는 경우가 있습니다(특히
@@ -72,7 +72,7 @@ pnpm add @dunamu-futurewiz/wizard-design
 앱 진입점(`layout.tsx`, `_app.tsx` 등)에서 스타일시트를 한 번 import합니다.
 
 ```ts
-import "@dunamu-futurewiz/wizard-design/style.css";
+import "@taejin-k/wizard-design/style.css";
 ```
 
 `style.css`는 Pretendard 웹폰트를 jsDelivr CDN에서 불러옵니다. 외부 CDN을
@@ -80,7 +80,7 @@ import "@dunamu-futurewiz/wizard-design/style.css";
 `font-family`를 제공해야 합니다.
 
 ```tsx
-import { Button, Icon } from '@dunamu-futurewiz/wizard-design';
+import { Button, Icon } from '@taejin-k/wizard-design';
 
 <Button type="primary" size="lg">
   버튼

@@ -20,7 +20,7 @@ CSS.Translate.toString(null);
 arrayMove([], 0, 0);`);
 
     expect(source).toContain("import { useState } from 'react';");
-    expect(source).toContain("import { Icon, Table } from '@dunamu-futurewiz/wizard-design';");
+    expect(source).toContain("import { Icon, Table } from '@taejin-k/wizard-design';");
     expect(source).toContain("import { closestCenter, DndContext } from '@dnd-kit/core';");
     expect(source).toContain(
       "import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';",
@@ -29,7 +29,7 @@ arrayMove([], 0, 0);`);
   });
 
   it("does not duplicate an existing import", () => {
-    const source = withStoryImports(`import { Input } from '@dunamu-futurewiz/wizard-design';
+    const source = withStoryImports(`import { Input } from '@taejin-k/wizard-design';
 
 <Input placeholder="입력하세요" />`);
 

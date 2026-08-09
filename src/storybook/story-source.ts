@@ -1,4 +1,4 @@
-const packageName = "@dunamu-futurewiz/wizard-design";
+const packageName = "@taejin-k/wizard-design";
 
 const componentExports = [
   "Breadcrumb",

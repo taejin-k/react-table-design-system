@@ -1,6 +1,6 @@
 {
-  "name": "@dunamu-futurewiz/wizard-design",
-  "version": "0.9.3",
+  "name": "@taejin-k/wizard-design",
+  "version": "0.9.4",
   "description": "Wizard 디자인 시스템",
   "license": "UNLICENSED",
   "publishConfig": {
