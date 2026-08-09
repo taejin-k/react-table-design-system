@@ -3,3 +3,40 @@
 @import "tailwindcss/preflight.css" layer(base);
 @import "../../theme.css" layer(theme);
 @import "tailwindcss/utilities.css" layer(utilities);
+
+@layer components {
+  [data-table-scroll-container] {
+    scrollbar-color: #a8a8a8 transparent;
+    scrollbar-width: thin;
+  }
+
+  [data-table-scroll-container]::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  [data-table-scroll-container]::-webkit-scrollbar-track,
+  [data-table-scroll-container]::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+
+  [data-table-scroll-container]::-webkit-scrollbar-thumb {
+    min-width: 32px;
+    min-height: 32px;
+    border: 2px solid transparent;
+    border-radius: 9999px;
+    background: #a8a8a8;
+    background-clip: padding-box;
+  }
+
+  [data-table-scroll-container]::-webkit-scrollbar-thumb:hover {
+    background: #8f8f8f;
+    background-clip: padding-box;
+  }
+
+  [data-table-scroll-container]::-webkit-scrollbar-button {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+}
