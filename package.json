@@ -1,6 +1,6 @@
 {
   "name": "@taejin-k/wizard-design",
-  "version": "0.9.7",
+  "version": "0.9.8",
   "description": "Wizard 디자인 시스템",
   "license": "UNLICENSED",
   "publishConfig": {
@@ -10,7 +10,9 @@
     "type": "git",
     "url": "git+https://github.com/taejin-k/react-table-design-system.git"
   },
-  "sideEffects": false,
+  "sideEffects": [
+    "**/*.css"
+  ],
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",

@@ -19,6 +19,7 @@ Tailwind CSS 기반 디자인 시스템입니다.
   - [Checkbox](#checkbox)
   - [Radio](#radio)
   - [Breadcrumb](#breadcrumb)
+  - [Illustrations](#illustrations)
   - [Table](#table)
 - [Storybook](#storybook)
 - [배포 (메인테이너용)](#배포-메인테이너용)
@@ -265,9 +266,13 @@ const [value, setValue] = useState("");
 
 `href`가 있는 항목에만 마우스 호버와 키보드 포커스 디자인이 적용돼요. `title`, `href`, `icon`, `color` 외에도 `target`, `rel`, `onClick`, `className`, `style` 같은 링크 속성을 전달할 수 있어요.
 
+### Illustrations
+
+빈 목록, 검색 결과 없음, 오류와 네트워크 상태 등 화면 상태를 이미지와 문구로 보여줘요. `type`으로 상황을 선택하고 `size`로 크기를 조절할 수 있어요.
+
 ### Table
 
-Ant Design과 익숙한 핵심 API 사용 패턴을 제공하는 독립 Table입니다. `dataSource`/`columns`/`rowKey` 기본 사용부터 정렬·필터·행 선택(체크박스/라디오/트리)·확장 행·고정 컬럼·sticky 헤더·가상 스크롤(1,000+ 행)·`components` 슬롯 교체·`ref.scrollTo`를 제공합니다. Ant Design 전체 구현과 완전히 동일하다는 의미는 아니며, 실제 지원 범위와 예제는 Storybook을 기준으로 합니다.
+Ant Design과 익숙한 핵심 API 사용 패턴을 제공하는 독립 Table입니다. `dataSource`/`columns`/`rowKey` 기본 사용부터 정렬·필터·행 선택(체크박스/라디오/트리)·확장 행·페이지네이션·고정 헤더와 컬럼·반응형 컬럼·행과 열 드래그·가상 스크롤·병합 셀·`ref.scrollTo`를 제공합니다. Ant Design 전체 구현과 완전히 동일하다는 의미는 아니며, 실제 지원 범위와 예제는 Storybook을 기준으로 합니다.
 
 ```tsx
 <Table<Member>
