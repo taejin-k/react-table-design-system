@@ -2,6 +2,7 @@ import { Description, Markdown, Stories, Title } from "@storybook/addon-docs/blo
 import type { Meta, StoryObj } from "@storybook/react";
 import { useEffect, useState } from "react";
 import { storyDescriptions } from "../../storybook/story-descriptions";
+import { withStoryImports } from "../../storybook/story-source";
 import { Checkbox } from "./Checkbox";
 import type { CheckboxProps } from "./Checkbox.types";
 
@@ -45,6 +46,7 @@ const meta = {
 | --- | --- | --- | --- |
 | \`label\` | 체크박스 오른쪽에 레이블을 표시해요. | \`ReactNode\` | - |
 | \`error\` | 테두리와 체크 색상을 오류 색상으로 표시해요. | \`boolean\` | \`false\` |
+| \`indeterminate\` | 일부 항목만 선택된 중간 상태를 표시해요. | \`boolean\` | \`false\` |
 | \`className\` | 최상위 요소에 Tailwind 클래스를 추가해요. | \`string\` | - |
 | \`onChange\` | 선택 상태가 바뀔 때 실행할 함수예요. | \`ChangeEventHandler<HTMLInputElement>\` | - |
           `}</Markdown>
@@ -61,6 +63,26 @@ export const States: Story = {
   parameters: {
     ...storyDescription("components-checkbox--states"),
     controls: { disable: false },
+    docs: {
+      source: {
+        code: withStoryImports(`function CheckboxStates() {
+  const [checked, setChecked] = useState(false);
+
+  return (
+    <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
+      <Checkbox
+        checked={checked}
+        label="기본"
+        onChange={(event) => setChecked(event.target.checked)}
+      />
+      <Checkbox error label="오류" />
+      <Checkbox disabled label="비활성" />
+      <Checkbox defaultChecked disabled label="비활성 · 선택" />
+    </div>
+  );
+}`),
+      },
+    },
   },
   render: (args, { viewMode }) =>
     viewMode === "docs" ? (
@@ -83,6 +105,28 @@ export const Label: Story = {
   parameters: {
     ...storyDescription("components-checkbox--label"),
     controls: { disable: false },
+    docs: {
+      source: {
+        code: withStoryImports(`function CheckboxLabels() {
+  const [withoutLabel, setWithoutLabel] = useState(false);
+  const [withLabel, setWithLabel] = useState(false);
+
+  return (
+    <div className="flex items-center gap-8">
+      <Checkbox
+        checked={withoutLabel}
+        onChange={(event) => setWithoutLabel(event.target.checked)}
+      />
+      <Checkbox
+        checked={withLabel}
+        label="레이블"
+        onChange={(event) => setWithLabel(event.target.checked)}
+      />
+    </div>
+  );
+}`),
+      },
+    },
   },
   render: (args) => (
     <div className="flex items-center gap-8">

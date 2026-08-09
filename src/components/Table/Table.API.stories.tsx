@@ -1,120 +1,194 @@
-import { useRef, type ComponentType, type HTMLAttributes } from "react";
+import { useRef, type ComponentType } from "react";
 import type { Meta, StoryObj } from "@storybook/react";
+import { storyDescriptions } from "../../storybook/story-descriptions";
+import { Illustrations } from "../Illustrations";
+import { withStoryImports } from "../../storybook/story-source";
+import { formatTableStorySource } from "../../storybook/table-story-source";
+import { Button } from "../Button/Button";
 import { columns, largeData, members, type Member } from "./Table.playground-data";
 import { Table } from "./Table";
-import type { TableProps, TableRef } from "./Table.types";
+import type { ColumnsType, TableProps, TableRef } from "./Table.types";
 
 const meta: Meta<TableProps<Member>> = {
-  title: "Components/Table/API Compatibility",
+  id: "components-table-api-compatibility",
+  title: "Components/Table",
   component: Table as ComponentType<TableProps<Member>>,
-  tags: ["autodocs"],
+  tags: ["!autodocs"],
   parameters: {
+    controls: { disable: true },
     docs: {
+      source: { transform: formatTableStorySource },
       description: {
         component:
           "Ant Design과 같은 방식으로 Table API를 사용할 수 있어요.  \n선언 방식·ref·semantic 스타일·locale과 네이티브 속성을 확인할 수 있어요.",
       },
     },
   },
-  args: { dataSource: members.slice(0, 6), rowKey: "key", pagination: false },
+  args: { dataSource: members.slice(0, 5), pagination: false },
 };
+
+const storyDescription = (id: string) => ({
+  docs: { description: { story: storyDescriptions[id] } },
+});
 
 export default meta;
 type Story = StoryObj<TableProps<Member>>;
 
-export const ColumnsProp: Story = { args: { columns } };
+const groupedColumns = [
+  {
+    title: "구성원",
+    children: [
+      { key: "name", dataIndex: "name", title: "이름", width: 150 },
+      { key: "role", dataIndex: "role", title: "직무", minWidth: 190 },
+    ],
+  },
+  {
+    title: "업무 정보",
+    children: [
+      { key: "team", dataIndex: "team", title: "팀", width: 120 },
+      { key: "projects", dataIndex: "projects", title: "프로젝트", width: 110 },
+    ],
+  },
+];
 
-export const ColumnJSX: Story = {
-  render: (args) => (
-    <Table<Member> {...args}>
-      <Table.ColumnGroup<Member> title="구성원">
-        <Table.Column<Member> title="이름" dataIndex="name" key="name" />
-        <Table.Column<Member> title="직무" dataIndex="role" key="role" />
-      </Table.ColumnGroup>
-      <Table.Column<Member> title="팀" dataIndex="team" key="team" />
-      <Table.Column<Member> title="프로젝트" dataIndex="projects" key="projects" align="right" />
-    </Table>
-  ),
+const fixedColumns: ColumnsType<Member> = [
+  { key: "name", dataIndex: "name", title: "이름", width: 220, fixed: "left" },
+  { key: "role", dataIndex: "role", title: "직무", minWidth: 190 },
+  { key: "team", dataIndex: "team", title: "팀", width: 220 },
+  { key: "status", dataIndex: "status", title: "상태", width: 180 },
+  { key: "joinedAt", dataIndex: "joinedAt", title: "합류일", width: 200 },
+  { key: "memberKey", dataIndex: "key", title: "구성원 ID", width: 180 },
+  {
+    key: "projects",
+    dataIndex: "projects",
+    title: "프로젝트",
+    width: 220,
+    fixed: "right",
+  },
+];
+
+export const GroupedHeaders: Story = {
+  args: { columns: groupedColumns },
+  parameters: storyDescription("components-table-api-compatibility--grouped-headers"),
 };
 
-export const SemanticClassNamesAndStyles: Story = {
+export const Headerless: Story = {
+  parameters: storyDescription("components-table-api-compatibility--headerless"),
+  args: { columns, showHeader: false },
+};
+
+export const FixedHeader: Story = {
+  parameters: {
+    ...storyDescription("components-table-api-compatibility--fixed-header"),
+    tableScrollYComment: "테이블 본문의 세로 높이를 정하면 헤더가 자동으로 고정돼요.",
+  },
+  args: { dataSource: members, columns, pagination: false, scroll: { y: 280 } },
+};
+
+export const FixedColumns: Story = {
+  parameters: {
+    ...storyDescription("components-table-api-compatibility--fixed-columns"),
+    tableColumnsComment:
+      "고정 열의 위치를 정확하게 계산하려면 fixed를 설정한 column.width가 필요해요.",
+    tableScrollXComment: "컬럼 너비와 콘텐츠에 필요한 만큼 가로 스크롤 영역을 만들어요.",
+  },
   args: {
-    columns,
-    classNames: { header: { cell: "text-[#0062df]" }, body: { row: "even:[&>td]:bg-[#fafafa]" } },
-    styles: { cell: { fontVariantNumeric: "tabular-nums" } },
+    columns: fixedColumns,
+    scroll: { x: "max-content" },
   },
 };
-export const NativeRootProps: Story = {
-  args: { columns, role: "region", style: { marginBlock: 12 } },
-};
-export const LoadingBoolean: Story = { args: { columns, loading: true } };
-export const LoadingConfig: Story = {
-  args: { columns, loading: { spinning: true, tip: "구성원을 불러오는 중", delay: 0 } },
+
+export const Loading: Story = {
+  parameters: storyDescription("components-table-api-compatibility--loading"),
+  args: { columns, loading: { tip: "구성원을 불러오는 중" } },
 };
 export const Empty: Story = {
-  args: { columns, dataSource: [], locale: { emptyText: <div>아직 구성원이 없습니다.</div> } },
-};
-
-export const SharedColumnDefaults: Story = {
-  args: { columns, column: { align: "center", className: "text-[#0062df]" } },
-};
-
-export const RowAndHeaderHooks: Story = {
+  parameters: storyDescription("components-table-api-compatibility--empty"),
   args: {
     columns,
-    rowClassName: (record) => (record.status === "휴가" ? "[&>td]:bg-[#fffbe6]" : ""),
-    onRow: (record) => ({
-      title: `${record.name} 데이터 행`,
-    }),
-    onHeaderRow: () => ({ className: "bg-[#e6f4ff]" }),
-    rowHoverable: false,
+    dataSource: [],
+    locale: {
+      emptyText: <Illustrations description="아직 구성원이 없어요" />,
+    },
   },
 };
 
-function StoryBodyRow({
-  record,
-  index: _index,
-  ...props
-}: HTMLAttributes<HTMLTableRowElement> & { record?: Member; index?: number }) {
-  return <tr {...props} data-member-key={record?.key} />;
-}
+export const ImperativeScrollTo: Story = {
+  name: "Scroll To",
+  parameters: {
+    ...storyDescription("components-table-api-compatibility--imperative-scroll-to"),
+    tableSource: false,
+    docs: {
+      ...storyDescription("components-table-api-compatibility--imperative-scroll-to").docs,
+      source: {
+        code: withStoryImports(`const columns = [
+  { key: 'name', dataIndex: 'name', title: '이름', width: 150 },
+  { key: 'role', dataIndex: 'role', title: '직무', minWidth: 190 },
+  { key: 'team', dataIndex: 'team', title: '팀', width: 120 },
+  { key: 'projects', dataIndex: 'projects', title: '프로젝트', width: 110 },
+];
 
-export const CustomTableComponents: Story = {
-  args: {
-    columns,
-    components: { body: { row: StoryBodyRow } },
-    rowClassName: (_record, index) => (index % 2 ? "[&>td]:bg-[#fafafa]" : ""),
+const members = Array.from({ length: 100 }, (_, index) => ({
+  key: \`M-\${index + 1}\`,
+  name: \`구성원 \${String(index + 1).padStart(3, '0')}\`,
+  role: 'Product Designer',
+  team: 'Design',
+  projects: index,
+}));
+
+function ImperativeScrollTable() {
+  const tableRef = useRef(null);
+
+  return (
+    <>
+      <div className="mb-4 flex gap-2">
+        <Button type="secondary" onClick={() => tableRef.current?.scrollTo({ index: 0, align: 'start' })}>
+          첫 행
+        </Button>
+        <Button type="secondary" onClick={() => tableRef.current?.scrollTo({ key: 'M-75', align: 'center' })}>
+          75번째 행
+        </Button>
+        <Button type="secondary" onClick={() => tableRef.current?.scrollTo({ index: 99, align: 'end' })}>
+          마지막 행
+        </Button>
+      </div>
+      <Table
+        ref={tableRef}
+        dataSource={members}
+        columns={columns}
+        pagination={false}
+        virtual
+        scroll={{ y: 300 }}
+      />
+    </>
+  );
+}`),
+      },
+    },
   },
+  render: (args) => <ImperativeScrollStory {...args} />,
 };
-
-export const ImperativeScrollTo: Story = { render: (args) => <ImperativeScrollStory {...args} /> };
 
 function ImperativeScrollStory(args: TableProps<Member>) {
   const ref = useRef<TableRef>(null);
   return (
     <>
       <div className="mb-4 flex gap-2">
-        <button
-          type="button"
-          className="h-8 rounded border border-[#ddd] px-3 text-[#111] hover:bg-[#f5f5f5]"
+        <Button
+          type="secondary"
           onClick={() => ref.current?.scrollTo({ index: 0, align: "start" })}
         >
           첫 행
-        </button>
-        <button
-          type="button"
-          className="h-8 rounded border border-[#ddd] px-3 text-[#111] hover:bg-[#f5f5f5]"
+        </Button>
+        <Button
+          type="secondary"
           onClick={() => ref.current?.scrollTo({ key: "V-75", align: "center" })}
         >
           75번째 행
-        </button>
-        <button
-          type="button"
-          className="h-8 rounded border border-[#ddd] px-3 text-[#111] hover:bg-[#f5f5f5]"
-          onClick={() => ref.current?.scrollTo({ index: 99, align: "end" })}
-        >
+        </Button>
+        <Button type="secondary" onClick={() => ref.current?.scrollTo({ index: 99, align: "end" })}>
           마지막 행
-        </button>
+        </Button>
       </div>
       <Table<Member>
         {...args}
@@ -122,71 +196,8 @@ function ImperativeScrollStory(args: TableProps<Member>) {
         dataSource={largeData.slice(0, 100)}
         columns={columns}
         virtual
-        scroll={{ x: 900, y: 300 }}
+        scroll={{ y: 300 }}
       />
     </>
   );
 }
-
-export const LocalizedInterface: Story = {
-  args: {
-    columns,
-    dataSource: members.slice(0, 4),
-    rowSelection: { selections: true },
-    expandable: { expandedRowRender: (record) => <div>{record.name} profile</div> },
-    locale: {
-      filterTitle: "Filter options",
-      filterConfirm: "Apply",
-      filterReset: "Reset",
-      filterSearchPlaceholder: "Search options",
-      emptyText: "No members",
-      selectionAll: "Select every row",
-      selectInvert: "Invert this page",
-      selectNone: "Clear selection",
-      expand: "Open row",
-      collapse: "Close row",
-      triggerAsc: "Sort ascending",
-      triggerDesc: "Sort descending",
-      cancelSort: "Clear sorting",
-    },
-  },
-};
-
-export const ColumnPresentationProps: Story = {
-  args: {
-    columns: columns.map((column) =>
-      column.key === "role"
-        ? { ...column, hidden: true }
-        : column.key === "name"
-          ? {
-              ...column,
-              ellipsis: { showTitle: false },
-              minWidth: 180,
-              onHeaderCell: () => ({ className: "bg-[#e6f4ff]" }),
-            }
-          : column.key === "team"
-            ? {
-                ...column,
-                onCell: (record: Member) => ({
-                  title: `${record.team} 팀`,
-                  className:
-                    record.team === "Design"
-                      ? "bg-[#f6ffed] font-semibold text-[#237804]"
-                      : undefined,
-                }),
-              }
-            : column,
-    ),
-  },
-};
-
-export const ColumnAlignment: Story = {
-  args: {
-    columns: [
-      { title: "왼쪽 정렬", dataIndex: "name", key: "name", align: "left" },
-      { title: "가운데 정렬", dataIndex: "team", key: "team", align: "center" },
-      { title: "오른쪽 정렬", dataIndex: "projects", key: "projects", align: "right" },
-    ],
-    bordered: true,
-  },
-};

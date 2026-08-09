@@ -2,10 +2,7 @@ import { Description, Markdown, Stories, Title } from "@storybook/addon-docs/blo
 import type { Meta, StoryObj } from "@storybook/react";
 import { fn } from "storybook/test";
 import { storyDescriptions } from "../../storybook/story-descriptions";
-import { Icon } from "./Icon";
-import type { IconName } from "./Icon.types";
-
-const iconNames: IconName[] = ["add", "close", "delete", "edit", "edit-square", "home", "setting"];
+import { Icon, iconNames } from "./Icon";
 const storyDescription = (id: string) => ({
   docs: { description: { story: storyDescriptions[id] } },
 });
@@ -58,11 +55,15 @@ type Story = StoryObj<typeof meta>;
 export const Icons: Story = {
   parameters: { ...storyDescription("components-icon--icons"), controls: { disable: false } },
   render: (args) => (
-    <div className="flex flex-wrap items-end gap-8">
+    <div className="grid w-full grid-cols-2 gap-x-6 gap-y-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
       {iconNames.map((name) => (
-        <div key={name} className="flex flex-col items-center gap-2">
-          <Icon {...args} icon={name} />
-          <span className="text-xs text-[#666]">{name}</span>
+        <div key={name} className="grid min-w-0 grid-rows-[24px_32px] place-items-center gap-2">
+          <span className="flex size-6 items-center justify-center">
+            <Icon {...args} icon={name} />
+          </span>
+          <span className="flex h-8 max-w-full items-start justify-center text-center text-xs leading-4 break-words text-[#666]">
+            {name}
+          </span>
         </div>
       ))}
     </div>

@@ -1,179 +1,68 @@
-import { useState, type ComponentType } from "react";
+import type { ComponentType } from "react";
 import type { Meta, StoryObj } from "@storybook/react";
+import { storyDescriptions } from "../../storybook/story-descriptions";
+import { formatTableStorySource } from "../../storybook/table-story-source";
 import { largeData, columns, members, type Member } from "./Table.playground-data";
 import { Table } from "./Table";
 import type { TableProps } from "./Table.types";
 
 const meta: Meta<TableProps<Member>> = {
-  title: "Components/Table/Pagination",
+  id: "components-table-pagination",
+  title: "Components/Table",
   component: Table as ComponentType<TableProps<Member>>,
-  tags: ["autodocs"],
+  tags: ["!autodocs"],
   parameters: {
+    controls: { disable: true },
     docs: {
+      source: { transform: formatTableStorySource },
       description: {
         component:
-          "많은 데이터를 여러 페이지로 나눠서 보여줘요.  \n페이지 크기·빠른 이동·위치·제어 상태와 변경 동작을 설정할 수 있어요.",
+          "많은 데이터를 여러 페이지로 나눠서 보여줘요.  \n페이지 크기·빠른 이동·위치와 표시 방식을 설정할 수 있어요.",
       },
     },
   },
-  args: { dataSource: largeData.slice(0, 185), columns, rowKey: "key", bordered: true },
+  args: { dataSource: largeData.slice(0, 185), columns },
 };
+
+const storyDescription = (id: string) => ({
+  docs: { description: { story: storyDescriptions[id] } },
+});
 
 export default meta;
 type Story = StoryObj<TableProps<Member>>;
 
-export const Basic: Story = { args: { pagination: { defaultPageSize: 6 } } };
-
-export const SizeChanger: Story = {
-  args: { pagination: { defaultPageSize: 6, showSizeChanger: true, pageSizeOptions: [6, 12, 24] } },
+export const Pagination: Story = {
+  parameters: storyDescription("components-table-pagination--pagination"),
 };
 
-export const QuickJumperAndTotal: Story = {
+export const PaginationPageControls: Story = {
+  parameters: storyDescription("components-table-pagination--pagination-page-controls"),
   args: {
     pagination: {
-      defaultPageSize: 6,
+      showSizeChanger: true, // 기본값: 전체 데이터가 50개를 초과하면 true
+      pageSizeOptions: [10, 20, 50], // 기본값: [10, 20, 50, 100]
       showQuickJumper: true,
       showTotal: (total, range) => `${range[0]}-${range[1]} / 총 ${total}명`,
     },
   },
 };
 
-export const Placement: Story = {
-  args: { pagination: { defaultPageSize: 6, placement: ["topStart", "bottomEnd"] } },
+export const PaginationPlacement: Story = {
+  parameters: storyDescription("components-table-pagination--pagination-placement"),
+  args: { pagination: { placement: ["topStart", "bottomEnd"] } },
 };
 
-export const CenterAligned: Story = {
-  args: { pagination: { defaultPageSize: 6, align: "center" } },
+export const PaginationSimple: Story = {
+  args: { pagination: { simple: true } },
+  parameters: storyDescription("components-table-pagination--pagination-simple"),
 };
 
-export const Simple: Story = { args: { pagination: { defaultPageSize: 6, simple: true } } };
-
-export const PageSizePreservesCurrent: Story = {
-  args: {
-    pagination: {
-      defaultCurrent: 3,
-      defaultPageSize: 6,
-      showSizeChanger: true,
-      pageSizeOptions: [6, 12, 24],
-      showTotal: (total, range) => `${range[0]}-${range[1]} / ${total}`,
-    },
-  },
+export const PaginationDisabled: Story = {
+  parameters: storyDescription("components-table-pagination--pagination-disabled"),
+  args: { pagination: { disabled: true } },
 };
 
-export const Small: Story = {
-  args: { pagination: { defaultPageSize: 6, size: "small", showLessItems: true } },
+export const PaginationHideOnSinglePage: Story = {
+  parameters: storyDescription("components-table-pagination--pagination-hide-on-single-page"),
+  args: { dataSource: members.slice(0, 4), pagination: { hideOnSinglePage: true } },
 };
-
-export const Disabled: Story = {
-  args: {
-    pagination: { pageSize: 6, showSizeChanger: true, showQuickJumper: true, disabled: true },
-  },
-};
-
-export const HideOnSinglePage: Story = {
-  args: { dataSource: members.slice(0, 4), pagination: { pageSize: 10, hideOnSinglePage: true } },
-};
-
-export const EmptyHidesPagination: Story = {
-  args: { dataSource: [], pagination: { pageSize: 10 } },
-};
-
-export const Controlled: Story = { render: (args) => <ControlledPagination {...args} /> };
-
-function ControlledPagination(args: TableProps<Member>) {
-  const [pagination, setPagination] = useState({ current: 2, pageSize: 6 });
-  return (
-    <Table<Member>
-      {...args}
-      pagination={{
-        ...pagination,
-        onChange: (current, pageSize) => setPagination({ current, pageSize }),
-      }}
-    />
-  );
-}
-
-export const CustomItemRender: Story = {
-  args: {
-    pagination: {
-      defaultCurrent: 8,
-      defaultPageSize: 6,
-      itemRender: (page, type, element) =>
-        type === "page" ? <span title={`${page}번 페이지`}>{element}</span> : element,
-    },
-  },
-};
-
-export const GoButtonAndLocale: Story = {
-  args: {
-    pagination: {
-      defaultPageSize: 6,
-      showQuickJumper: { goButton: "이동" },
-      showSizeChanger: true,
-      pageSizeOptions: [6, 12, 24],
-      locale: {
-        jump_to: "페이지 이동",
-        page: "쪽",
-        page_size: "페이지당 행 수",
-        items_per_page: "개씩",
-        prev_page: "이전 쪽",
-        next_page: "다음 쪽",
-      },
-    },
-  },
-};
-
-export const SemanticAndResponsive: Story = {
-  args: {
-    pagination: {
-      defaultPageSize: 6,
-      responsive: true,
-      showTitle: false,
-      classNames: { root: "rounded-md bg-[#f7fbff] px-2", item: "font-medium" },
-      styles: {
-        root: { borderTop: "1px dashed #91caff" },
-        item: { fontVariantNumeric: "tabular-nums" },
-      },
-    },
-  },
-};
-
-export const HiddenJumpControls: Story = {
-  args: {
-    pagination: {
-      defaultCurrent: 12,
-      defaultPageSize: 6,
-      showLessItems: true,
-      showPrevNextJumpers: false,
-    },
-  },
-};
-
-export const ReadOnlySimple: Story = {
-  args: { pagination: { defaultCurrent: 4, defaultPageSize: 6, simple: { readOnly: true } } },
-};
-
-export const CallbackContract: Story = { render: (args) => <PaginationCallbackStory {...args} /> };
-
-function PaginationCallbackStory(args: TableProps<Member>) {
-  const [events, setEvents] = useState({ change: "아직 없음", size: "아직 없음" });
-  return (
-    <>
-      <p className="mb-4 text-[#999]">
-        onChange: {events.change} · onShowSizeChange: {events.size}
-      </p>
-      <Table<Member>
-        {...args}
-        pagination={{
-          defaultPageSize: 6,
-          showSizeChanger: true,
-          pageSizeOptions: [6, 12, 24],
-          onChange: (page, pageSize) =>
-            setEvents((current) => ({ ...current, change: `${page}페이지 / ${pageSize}개` })),
-          onShowSizeChange: (page, pageSize) =>
-            setEvents((current) => ({ ...current, size: `${page}페이지 / ${pageSize}개` })),
-        }}
-      />
-    </>
-  );
-}

@@ -122,65 +122,31 @@ export const members: Member[] = [
   },
 ];
 
-const statusPillClass: Record<Member["status"], string> = {
-  활성: "bg-[#f6ffed] text-[#237804]",
-  휴가: "bg-[#fffbe6] text-[#ad4e00]",
-  대기: "bg-[#f5f5f5] text-[#999]",
-};
+export const teamFilters = ["Design", "Platform", "Growth", "Data", "Product", "Mobile"].map(
+  (value) => ({ text: value, value }),
+);
+
+export const statusFilters = ["활성", "휴가", "대기"].map((value) => ({ text: value, value }));
 
 export const columns: ColumnsType<Member> = [
   {
-    title: "이름",
-    dataIndex: "name",
     key: "name",
+    dataIndex: "name",
+    title: "이름",
     width: 150,
-    fixed: "left",
-    sorter: (a, b) => a.name.localeCompare(b.name),
-    ellipsis: true,
   },
-  { title: "직무", dataIndex: "role", key: "role", width: 190, ellipsis: true, responsive: ["sm"] },
+  { key: "role", dataIndex: "role", title: "직무", minWidth: 190 },
   {
-    title: "팀",
-    dataIndex: "team",
     key: "team",
+    dataIndex: "team",
+    title: "팀",
     width: 120,
-    filters: ["Design", "Platform", "Growth", "Data", "Product", "Mobile"].map((value) => ({
-      text: value,
-      value,
-    })),
-    onFilter: (value, record) => record.team === value,
-    filterSearch: true,
   },
   {
-    title: "상태",
-    dataIndex: "status",
-    key: "status",
-    width: 100,
-    filters: ["활성", "휴가", "대기"].map((value) => ({ text: value, value })),
-    onFilter: (value, record) => record.status === value,
-    render: (value) => (
-      <span
-        className={`inline-flex rounded-full px-2 py-0.5 text-[12px] leading-5 ${statusPillClass[value as Member["status"]]}`}
-      >
-        {String(value)}
-      </span>
-    ),
-  },
-  {
-    title: "프로젝트",
-    dataIndex: "projects",
     key: "projects",
+    dataIndex: "projects",
+    title: "프로젝트",
     width: 110,
-    align: "right",
-    sorter: { compare: (a, b) => a.projects - b.projects, multiple: 2 },
-  },
-  {
-    title: "합류일",
-    dataIndex: "joinedAt",
-    key: "joinedAt",
-    width: 140,
-    sorter: { compare: (a, b) => a.joinedAt.localeCompare(b.joinedAt), multiple: 1 },
-    responsive: ["md"],
   },
 ];
 

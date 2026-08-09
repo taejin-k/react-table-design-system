@@ -104,6 +104,7 @@ import { Button, Icon } from '@dunamu-futurewiz/wizard-design';
 | `fullWidth`  | `boolean`                                                   | false | `false`   | 부모 너비 100%                          |
 | `prefixIcon` | `ReactNode`                                                 | false | -         | 앞쪽 아이콘. 배열로 0~여러 개 전달 가능 |
 | `suffixIcon` | `ReactNode`                                                 | false | -         | 뒤쪽 아이콘. 배열로 0~여러 개 전달 가능 |
+| `onClick`    | `MouseEventHandler<HTMLButtonElement>`                      | false | -         | 클릭할 때 실행할 함수                   |
 
 `disabled`, `onClick` 등 나머지 네이티브 `<button>` props는 그대로 지원합니다.
 `iconOnly`를 사용할 때는 동작을 설명하는 `aria-label`을 반드시 함께 전달합니다.
@@ -202,22 +203,24 @@ const [value, setValue] = useState("");
 />;
 ```
 
-| prop         | 타입                      | 필수  | 기본값    | 설명                                                                          |
-| ------------ | ------------------------- | ----- | --------- | ----------------------------------------------------------------------------- |
-| `size`       | `lg` \| `md` \| `sm`      | false | `md`      | 크기                                                                          |
-| `variant`    | `default` \| `filled`     | false | `default` | 스타일                                                                        |
-| `label`      | `ReactNode`               | false | -         | 있으면 위에 [Label](#label) 렌더링                                            |
-| `required`   | `boolean`                 | false | `false`   | 실제 input에 required 적용 + Label이 있으면 `*` 표시                          |
-| `errorText`  | `ReactNode`               | false | -         | 있으면 아래에 [ErrorText](#errortext) 렌더링 + 테두리 warning 색              |
-| `disabled`   | `boolean`                 | false | `false`   | 비활성화                                                                      |
-| `allowClear` | `boolean`                 | false | `false`   | 값 있을 때 지우기 버튼. 지운 뒤 input으로 포커스 복귀                         |
-| `showCount`  | `boolean`                 | false | `false`   | 글자수(`value.length`) 표시. `maxLength` 있으면 무시되고 `n / maxLength` 형식 |
-| `maxLength`  | `number`                  | false | -         | 최대 글자수. 한글 IME 조합 중에도 자체 검증해서 강제함                        |
-| `prefixIcon` | `ReactNode`               | false | -         | 앞쪽 아이콘                                                                   |
-| `suffixIcon` | `ReactNode`               | false | -         | 뒤쪽 아이콘                                                                   |
-| `className`  | `string`                  | false | -         | 최상위 요소 클래스                                                            |
-| `onBlur`     | `(value: string) => void` | false | -         | 포커스가 빠질 때 현재 입력값과 함께 호출                                      |
-| `onError`    | `(error: string) => void` | false | -         | 입력값이 바뀔 때 빈 문자열과 함께 호출                                        |
+| prop         | 타입                      | 필수  | 기본값    | 설명                                                             |
+| ------------ | ------------------------- | ----- | --------- | ---------------------------------------------------------------- |
+| `size`       | `lg` \| `md` \| `sm`      | false | `md`      | 크기                                                             |
+| `variant`    | `default` \| `filled`     | false | `default` | 스타일                                                           |
+| `label`      | `ReactNode`               | false | -         | 있으면 위에 [Label](#label) 렌더링                               |
+| `required`   | `boolean`                 | false | `false`   | 실제 input에 required 적용 + Label이 있으면 `*` 표시             |
+| `errorText`  | `ReactNode`               | false | -         | 있으면 아래에 [ErrorText](#errortext) 렌더링 + 테두리 warning 색 |
+| `disabled`   | `boolean`                 | false | `false`   | 비활성화                                                         |
+| `allowClear` | `boolean`                 | false | `false`   | 값 있을 때 지우기 버튼. 지운 뒤 input으로 포커스 복귀            |
+| `showCount`  | `boolean`                 | false | `false`   | 글자 수 표시. `maxLength`가 있으면 `n / maxLength` 형식          |
+| `maxLength`  | `number`                  | false | -         | 최대 글자수. 한글 IME 조합 중에도 자체 검증해서 강제함           |
+| `prefixIcon` | `ReactNode`               | false | -         | 앞쪽 아이콘                                                      |
+| `suffixIcon` | `ReactNode`               | false | -         | 뒤쪽 아이콘                                                      |
+| `className`  | `string`                  | false | -         | 최상위 요소 클래스                                               |
+| `onChange`   | `(value: string) => void` | false | -         | 입력값이 바뀔 때 변경된 입력값과 함께 호출                       |
+| `onBlur`     | `() => void`              | false | -         | 포커스가 빠질 때 호출                                            |
+| `onError`    | `(error: string) => void` | false | -         | 입력값이 바뀔 때 빈 문자열과 함께 호출                           |
+| `onEnter`    | `() => void`              | false | -         | Enter를 누를 때 호출                                             |
 
 `placeholder`, `disabled` 등 나머지 네이티브 `<input>` props도 지원합니다. `errorText`가 있으면 `aria-invalid`와 `aria-describedby`가 자동으로 연결됩니다.
 
@@ -264,13 +267,12 @@ const [value, setValue] = useState("");
 
 ### Table
 
-Ant Design과 익숙한 핵심 API 사용 패턴을 제공하는 독립 Table입니다. `dataSource`/`columns`/`rowKey` 기본 사용부터 정렬·필터·행 선택(체크박스/라디오/트리)·확장 행·고정 컬럼·sticky 헤더·가상 스크롤(1,000+ 행)·`Table.Summary`·`components` 슬롯 교체·`ref.scrollTo`를 제공합니다. Ant Design 전체 구현과 완전히 동일하다는 의미는 아니며, 실제 지원 범위와 예제는 Storybook을 기준으로 합니다.
+Ant Design과 익숙한 핵심 API 사용 패턴을 제공하는 독립 Table입니다. `dataSource`/`columns`/`rowKey` 기본 사용부터 정렬·필터·행 선택(체크박스/라디오/트리)·확장 행·고정 컬럼·sticky 헤더·가상 스크롤(1,000+ 행)·`components` 슬롯 교체·`ref.scrollTo`를 제공합니다. Ant Design 전체 구현과 완전히 동일하다는 의미는 아니며, 실제 지원 범위와 예제는 Storybook을 기준으로 합니다.
 
 ```tsx
 <Table<Member>
   dataSource={members}
   columns={columns}
-  rowKey="key"
   rowSelection={{}}
   pagination={{ defaultPageSize: 10 }}
 />

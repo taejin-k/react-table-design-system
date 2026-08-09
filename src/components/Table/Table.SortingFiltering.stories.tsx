@@ -1,246 +1,195 @@
 import { useState, type ComponentType } from "react";
 import type { Meta, StoryObj } from "@storybook/react";
-import { columns, members, type Member } from "./Table.playground-data";
+import { storyDescriptions } from "../../storybook/story-descriptions";
+import { withStoryImports } from "../../storybook/story-source";
+import { formatTableStorySource } from "../../storybook/table-story-source";
+import { columns, members, statusFilters, type Member } from "./Table.playground-data";
 import { Table } from "./Table";
-import type { ColumnsType, FilterKey, TableProps } from "./Table.types";
+import type { ColumnsType, TableProps } from "./Table.types";
 
 const meta: Meta<TableProps<Member>> = {
-  title: "Components/Table/Sorting & Filtering",
+  id: "components-table-sorting-filtering",
+  title: "Components/Table",
   component: Table as ComponentType<TableProps<Member>>,
-  tags: ["autodocs"],
+  tags: ["!autodocs"],
   parameters: {
+    controls: { disable: true },
     docs: {
+      source: { transform: formatTableStorySource },
       description: {
         component:
-          "열의 데이터를 정렬하거나 원하는 조건으로 필터링해요.  \n로컬·서버 정렬, 다중 우선순위와 사용자 정의 필터를 설정할 수 있어요.",
+          "열의 데이터를 정렬하거나 원하는 조건으로 필터링해요.  \n변경된 정렬·필터 조건을 서버 요청에 전달할 수 있어요.",
       },
     },
   },
   args: {
-    dataSource: members,
+    dataSource: members.slice(0, 5),
     columns,
-    rowKey: "key",
-    pagination: { defaultPageSize: 8 },
-    bordered: true,
+    pagination: false,
   },
 };
+
+const storyDescription = (id: string) => ({
+  docs: { description: { story: storyDescriptions[id] } },
+});
 
 export default meta;
 type Story = StoryObj<TableProps<Member>>;
 
-export const LocalSorter: Story = {
-  args: { columns: columns.map((column) => ({ ...column, filters: undefined })) },
-};
-export const MultipleSorter: Story = {
-  args: { columns: columns.map((column) => ({ ...column, filters: undefined })) },
-};
-export const ServerSorter: Story = {
-  args: {
-    columns: columns.map((column) =>
-      column.key === "name"
-        ? { ...column, sorter: true }
-        : { ...column, sorter: undefined, filters: undefined },
-    ),
-  },
-};
-export const ServerFilter: Story = {
-  args: {
-    columns: columns.map((column) =>
-      column.key === "status"
-        ? { ...column, onFilter: undefined, sorter: undefined }
-        : { ...column, sorter: undefined, filters: undefined },
-    ),
-  },
-  parameters: {
-    docs: {
-      description: {
-        story:
-          "`filters`만 두고 `onFilter`를 생략하면 UI 상태와 `onChange`만 변경되고 dataSource는 로컬에서 줄어들지 않습니다.",
-      },
-    },
-  },
-};
-export const MenuFilter: Story = {
-  args: { columns: columns.map((column) => ({ ...column, sorter: undefined })) },
-};
+const filteringColumns: ColumnsType<Member> = [
+  { key: "name", dataIndex: "name", title: "이름", minWidth: 150 },
+  { key: "team", dataIndex: "team", title: "팀", width: 120 },
+  { key: "status", dataIndex: "status", title: "상태", width: 100 },
+  { key: "projects", dataIndex: "projects", title: "프로젝트", width: 110 },
+];
 
-const treeFilterColumns: ColumnsType<Member> = columns.map((column) =>
-  column.key === "team"
-    ? {
-        ...column,
-        filterMode: "tree",
-        filterSearch: true,
-        filters: [
-          {
-            text: "제품 조직",
-            value: "product-group",
-            children: [
-              { text: "Design", value: "Design" },
-              { text: "Product", value: "Product" },
-            ],
-          },
-          {
-            text: "기술 조직",
-            value: "engineering-group",
-            children: [
-              { text: "Platform", value: "Platform" },
-              { text: "Mobile", value: "Mobile" },
-            ],
-          },
-        ],
-      }
-    : column,
+const serverColumns: ColumnsType<Member> = filteringColumns.map((column) =>
+  column.key === "name"
+    ? { ...column, sorter: true }
+    : column.key === "status"
+      ? { ...column, filters: statusFilters }
+      : column,
 );
-export const TreeFilterAndSearch: Story = { args: { columns: treeFilterColumns } };
 
-export const ControlledFilter: Story = { render: (args) => <ControlledFilterStory {...args} /> };
+export const ServerTable: Story = {
+  parameters: {
+    ...storyDescription("components-table-sorting-filtering--server-table"),
+    tableSource: false,
+    docs: {
+      ...storyDescription("components-table-sorting-filtering--server-table").docs,
+      source: {
+        code: withStoryImports(`const members = [
+  { key: 'M-1001', name: '김민준', team: 'Design', status: '활성', projects: 8 },
+  // ...나머지 4개 항목
+];
 
-function ControlledFilterStory(args: TableProps<Member>) {
-  const [teams, setTeams] = useState<FilterKey[]>(["Design"]);
-  const controlledColumns = columns.map((column) =>
-    column.key === "team" ? { ...column, filteredValue: teams } : column,
-  );
+const statusFilters = [
+  { text: '활성', value: '활성' },
+  { text: '휴가', value: '휴가' },
+  { text: '대기', value: '대기' },
+];
+
+const columns = [
+  { key: 'name', dataIndex: 'name', title: '이름', minWidth: 150, sorter: true },
+  { key: 'team', dataIndex: 'team', title: '팀', width: 120 },
+  { key: 'status', dataIndex: 'status', title: '상태', width: 100, filters: statusFilters },
+  { key: 'projects', dataIndex: 'projects', title: '프로젝트', width: 110 },
+];
+
+type RequestParams = {
+  page: number;
+  perPage: number;
+  sort: {
+    column: string | null;
+    order: 'ascend' | 'descend' | null;
+  };
+  filter: Record<string, string[]>;
+};
+
+function ServerTable() {
+  const [requestParams, setRequestParams] = useState<RequestParams>({
+    page: 1,
+    perPage: 2,
+    sort: {
+      column: null,
+      order: null,
+    },
+    filter: {
+      status: [],
+    },
+  });
+
   return (
     <>
-      <div className="mb-4 flex gap-2">
-        <button
-          type="button"
-          className="h-8 rounded border border-[#ddd] px-3 text-[#111] hover:bg-[#f5f5f5]"
-          onClick={() => setTeams(teams.length ? [] : ["Design"])}
-        >
-          {teams.length ? "필터 해제" : "Design 필터"}
-        </button>
-      </div>
-      <Table<Member>
-        {...args}
-        columns={controlledColumns}
-        onChange={(_pagination, filters) => setTeams(filters.team ?? [])}
+      <pre>{JSON.stringify(requestParams, null, 2)}</pre>
+      <Table
+        dataSource={members}
+        columns={columns}
+        pagination={{
+          defaultPageSize: 2,
+          pageSizeOptions: [2, 5, 10],
+          showSizeChanger: true,
+        }}
+        onChange={(pagination, filters, sorter) => {
+          const currentSorter = Array.isArray(sorter) ? sorter[0] : sorter;
+          const nextParams = {
+            page: pagination.current ?? 1,
+            perPage: pagination.pageSize ?? 2,
+            sort: {
+              column: currentSorter.field ? String(currentSorter.field) : null,
+              order: currentSorter.order ?? null,
+            },
+            filter: Object.fromEntries(
+              Object.entries(filters).map(([column, values]) => [
+                column,
+                (values ?? []).map(String),
+              ]),
+            ),
+          };
+
+          setRequestParams(nextParams);
+
+          // 여기서 nextParams를 서버 API 요청에 전달해요.
+        }}
       />
     </>
   );
-}
-
-export const CustomFilterDropdown: Story = {
-  args: {
-    columns: columns.map((column) =>
-      column.key === "name"
-        ? {
-            ...column,
-            filters: undefined,
-            filterDropdown: ({ selectedKeys, setSelectedKeys, confirm, clearFilters }) => (
-              <div className="flex gap-2 p-2">
-                <input
-                  className="h-8 min-w-[180px] rounded border border-[#ddd] px-[11px] text-[#111] outline-none focus:border-[#0062df]"
-                  value={String(selectedKeys[0] ?? "")}
-                  onChange={(event) =>
-                    setSelectedKeys(event.target.value ? [event.target.value] : [])
-                  }
-                />
-                <button
-                  type="button"
-                  className="h-8 rounded bg-[#0062df] px-3 text-white hover:opacity-90"
-                  onClick={() => confirm()}
-                >
-                  검색
-                </button>
-                <button
-                  type="button"
-                  className="h-8 rounded border border-[#ddd] px-3 text-[#111] hover:bg-[#f5f5f5]"
-                  onClick={() => clearFilters?.()}
-                >
-                  초기화
-                </button>
-              </div>
-            ),
-            onFilter: (value, record) => record.name.includes(String(value)),
-          }
-        : column,
-    ),
+}`),
+      },
+    },
   },
-};
-
-export const CustomSortCycleAndIcon: Story = {
   args: {
-    columns: columns.map((column) =>
-      column.key === "projects"
-        ? {
-            ...column,
-            filters: undefined,
-            sortDirections: ["descend", "ascend", null],
-            sortIcon: ({ sortOrder }) => (
-              <span
-                className={`inline-grid w-3.5 place-items-center text-[13px] ${sortOrder ? "text-[#0062df]" : "text-[#ccc]"}`}
-              >
-                {sortOrder === "descend" ? "↓" : sortOrder === "ascend" ? "↑" : "↕"}
-              </span>
-            ),
-          }
-        : { ...column, sorter: undefined, filters: undefined },
-    ),
+    columns: serverColumns,
+    pagination: {
+      defaultPageSize: 2,
+      pageSizeOptions: [2, 5, 10],
+      showSizeChanger: true,
+    },
   },
+  render: (args) => <ServerTableStory {...args} />,
 };
 
-export const SingleSelectFilter: Story = {
-  args: {
-    columns: columns.map((column) =>
-      column.key === "status"
-        ? { ...column, filterMultiple: false, sorter: undefined }
-        : { ...column, sorter: undefined, filters: undefined },
-    ),
-  },
-};
+function ServerTableStory(args: TableProps<Member>) {
+  const [requestParams, setRequestParams] = useState({
+    page: 1,
+    perPage: 2,
+    sort: {
+      column: null as string | null,
+      order: null as string | null,
+    },
+    filter: {
+      status: [] as string[],
+    } as Record<string, string[]>,
+  });
 
-export const DefaultFilterAndReset: Story = {
-  args: {
-    columns: columns.map((column) =>
-      column.key === "team"
-        ? {
-            ...column,
-            defaultFilteredValue: ["Design"],
-            filterResetToDefaultFilteredValue: true,
-            sorter: undefined,
-          }
-        : { ...column, sorter: undefined, filters: undefined },
-    ),
-  },
-};
-
-export const ConfirmOnlyFilter: Story = {
-  args: {
-    columns: columns.map((column) =>
-      column.key === "status"
-        ? { ...column, filterOnClose: false, sorter: undefined }
-        : { ...column, sorter: undefined, filters: undefined },
-    ),
-  },
-};
-
-export const ControlledFilterPopupAndPortal: Story = {
-  render: (args) => <ControlledFilterPopupStory {...args} />,
-};
-
-function ControlledFilterPopupStory(args: TableProps<Member>) {
-  const [open, setOpen] = useState(false);
-  const controlledColumns = columns.map((column) =>
-    column.key === "team"
-      ? { ...column, filterDropdownProps: { open, onOpenChange: setOpen } }
-      : { ...column, filters: undefined },
-  );
   return (
     <>
-      <div className="mb-4 flex gap-2">
-        <button
-          type="button"
-          className="h-8 rounded border border-[#ddd] px-3 text-[#111] hover:bg-[#f5f5f5]"
-          onClick={() => setOpen((current) => !current)}
-        >
-          {open ? "필터 닫기" : "필터 열기"}
-        </button>
-      </div>
+      <pre className="mb-4 overflow-x-auto rounded-lg bg-[#f5f5f5] p-4 text-[13px] text-[#333]">
+        {JSON.stringify(requestParams, null, 2)}
+      </pre>
       <Table<Member>
         {...args}
-        columns={controlledColumns}
-        getPopupContainer={() => document.body}
+        onChange={(pagination, filters, sorter) => {
+          const currentSorter = Array.isArray(sorter) ? sorter[0] : sorter;
+          const nextParams = {
+            page: pagination.current ?? 1,
+            perPage: pagination.pageSize ?? 2,
+            sort: {
+              column: currentSorter.field ? String(currentSorter.field) : null,
+              order: currentSorter.order ?? null,
+            },
+            filter: Object.fromEntries(
+              Object.entries(filters).map(([column, values]) => [
+                column,
+                (values ?? []).map(String),
+              ]),
+            ),
+          };
+
+          setRequestParams(nextParams);
+
+          // 여기서 nextParams를 서버 API 요청에 전달해요.
+        }}
       />
     </>
   );

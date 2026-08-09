@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { Table } from "./Table";
@@ -6,8 +6,65 @@ import type { ColumnsType } from "./Table.types";
 
 type Row = { key: string; name: string; team: string };
 const data: Row[] = [{ key: "1", name: "김민준", team: "Design" }];
+const rows: Row[] = [
+  { key: "1", name: "김민준", team: "Design" },
+  { key: "2", name: "이서연", team: "Platform" },
+  { key: "3", name: "박지호", team: "Design" },
+];
 
 describe("Table regressions", () => {
+  it("데이터가 없으면 기본 일러스트레이션과 안내 문구를 표시한다", () => {
+    const { container } = render(
+      <Table columns={[{ title: "이름", dataIndex: "name" }]} dataSource={[]} pagination={false} />,
+    );
+
+    expect(screen.getByText("데이터가 없어요")).toBeInTheDocument();
+    const illustration = container.querySelector('svg[viewBox="0 0 128 128"]');
+    expect(illustration).toBeInTheDocument();
+    expect(illustration?.parentElement).toHaveClass("size-24");
+    expect(container.querySelector("tbody td")).toHaveClass("border-b", "border-[#f0f0f0]");
+  });
+
+  it("bordered 빈 상태에서는 외곽 하단선만 표시한다", () => {
+    const { container } = render(
+      <Table
+        bordered
+        columns={[{ title: "이름", dataIndex: "name" }]}
+        dataSource={[]}
+        pagination={false}
+      />,
+    );
+
+    expect(container.querySelector("tbody td")).not.toHaveClass("border-b");
+    expect(container.querySelector(".rounded-lg.bg-white")).toHaveClass(
+      "border",
+      "border-[#f0f0f0]",
+    );
+  });
+
+  it("uses fixed table layout by default", () => {
+    const { container, rerender } = render(
+      <Table
+        columns={[{ title: "이름", dataIndex: "name" }]}
+        dataSource={data}
+        pagination={false}
+      />,
+    );
+
+    expect(container.querySelector("table")).toHaveStyle({ tableLayout: "fixed" });
+
+    rerender(
+      <Table
+        columns={[{ title: "이름", dataIndex: "name" }]}
+        dataSource={data}
+        pagination={false}
+        tableLayout="auto"
+      />,
+    );
+
+    expect(container.querySelector("table")).toHaveStyle({ tableLayout: "auto" });
+  });
+
   it("renders multiple anonymous column groups without duplicate-key errors", () => {
     const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
     const columns: ColumnsType<Row> = [
@@ -21,54 +78,271 @@ describe("Table regressions", () => {
     consoleError.mockRestore();
   });
 
-  it("closes the selection menu when clicking outside", async () => {
+  it("sorts rows and reports the sorter state", async () => {
     const user = userEvent.setup();
+    const onChange = vi.fn();
     render(
       <Table
-        columns={[{ title: "이름", dataIndex: "name" }]}
-        dataSource={data}
-        rowSelection={{ selections: true }}
+        columns={[
+          {
+            title: "이름",
+            dataIndex: "name",
+            sorter: (left, right) => left.name.localeCompare(right.name, "ko"),
+          },
+        ]}
+        dataSource={[rows[2], rows[0], rows[1]]}
+        onChange={onChange}
         pagination={false}
       />,
     );
 
-    await user.click(screen.getByRole("button", { name: "선택 작업" }));
-    expect(screen.getByRole("menu", { name: "선택 작업 메뉴" })).toBeInTheDocument();
-    await user.click(document.body);
-    expect(screen.queryByRole("menu", { name: "선택 작업 메뉴" })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "이름 정렬" }));
+    expect(screen.getAllByRole("row")[1]).toHaveTextContent("김민준");
+    expect(onChange).toHaveBeenLastCalledWith(
+      expect.any(Object),
+      expect.any(Object),
+      expect.objectContaining({ order: "ascend" }),
+      expect.objectContaining({ action: "sort" }),
+    );
+
+    await user.click(screen.getByRole("button", { name: "이름 정렬" }));
+    expect(screen.getAllByRole("row")[1]).toHaveTextContent("이서연");
   });
 
-  it("opens the selection menu with ArrowDown and focuses its first item", async () => {
+  it("filters rows after confirming the filter menu", async () => {
     const user = userEvent.setup();
     render(
       <Table
-        columns={[{ title: "이름", dataIndex: "name" }]}
-        dataSource={data}
-        rowSelection={{ selections: true }}
+        columns={[
+          {
+            title: "팀",
+            dataIndex: "team",
+            filters: [
+              { text: "Design", value: "Design" },
+              { text: "Platform", value: "Platform" },
+            ],
+            onFilter: (value, record) => record.team === value,
+          },
+        ]}
+        dataSource={rows}
         pagination={false}
       />,
     );
 
-    const trigger = screen.getByRole("button", { name: "선택 작업" });
-    trigger.focus();
-    await user.keyboard("{ArrowDown}");
-    expect(screen.getAllByRole("menuitem")[0]).toHaveFocus();
+    await user.click(screen.getByRole("button", { name: "팀 필터" }));
+    await user.click(screen.getByRole("checkbox", { name: "Design" }));
+    await user.click(screen.getByRole("button", { name: "확인" }));
+
+    expect(screen.getAllByText("Design")).toHaveLength(2);
+    expect(screen.queryByText("Platform")).not.toBeInTheDocument();
+    expect(screen.getAllByRole("row")).toHaveLength(3);
   });
 
-  it("moves focus into a selection menu that was opened by click", async () => {
+  it("changes pages and page size without stale rows", async () => {
+    const user = userEvent.setup();
+    render(
+      <Table
+        columns={[{ title: "이름", dataIndex: "name" }]}
+        dataSource={rows}
+        pagination={{ defaultPageSize: 1, showSizeChanger: true, pageSizeOptions: [1, 2] }}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "2 페이지" }));
+    expect(screen.getByText("이서연")).toBeInTheDocument();
+    expect(screen.queryByText("김민준")).not.toBeInTheDocument();
+
+    await user.selectOptions(screen.getByRole("combobox", { name: "페이지 크기" }), "2");
+    expect(screen.getByText("박지호")).toBeInTheDocument();
+    expect(screen.queryByText("김민준")).not.toBeInTheDocument();
+  });
+
+  it("uses the design-system medium input for quick page jumps", async () => {
+    const user = userEvent.setup();
+    render(
+      <Table
+        columns={[{ title: "이름", dataIndex: "name" }]}
+        dataSource={rows}
+        pagination={{ defaultPageSize: 1, showQuickJumper: true }}
+      />,
+    );
+
+    const quickJumper = screen.getByRole("textbox", { name: "이동할 페이지" });
+    expect(quickJumper.parentElement).toHaveClass("h-[30px]");
+
+    await user.type(quickJumper, "3{Enter}");
+    expect(screen.getByText("박지호")).toBeInTheDocument();
+  });
+
+  it("expands and collapses detail rows", async () => {
     const user = userEvent.setup();
     render(
       <Table
         columns={[{ title: "이름", dataIndex: "name" }]}
         dataSource={data}
-        rowSelection={{ selections: true }}
+        expandable={{ expandedRowRender: (record) => `${record.name} 상세 정보` }}
         pagination={false}
       />,
     );
 
-    const trigger = screen.getByRole("button", { name: "선택 작업" });
+    const trigger = screen.getByRole("button", { name: "행 펼치기" });
     await user.click(trigger);
-    await user.keyboard("{ArrowDown}");
-    expect(screen.getAllByRole("menuitem")[0]).toHaveFocus();
+    const detail = screen.getByText("김민준 상세 정보");
+    expect(detail).toBeInTheDocument();
+    expect(detail.closest("td")).toHaveClass("!bg-[#fafafa]");
+    await user.click(screen.getByRole("button", { name: "행 접기" }));
+    expect(screen.queryByText("김민준 상세 정보")).not.toBeInTheDocument();
+  });
+
+  it("uses the expanded background for child tree rows", () => {
+    render(
+      <Table
+        columns={[{ title: "이름", dataIndex: "name" }]}
+        dataSource={[
+          {
+            key: "parent",
+            name: "상위 구성원",
+            team: "Design",
+            children: [{ key: "child", name: "하위 구성원", team: "Design" }],
+          },
+        ]}
+        expandable={{ defaultExpandAllRows: true }}
+        pagination={false}
+      />,
+    );
+
+    expect(screen.getByText("하위 구성원").closest("tr")).toHaveClass("[&>td]:bg-[#fafafa]");
+    expect(screen.getByText("상위 구성원").closest("tr")).not.toHaveClass("[&>td]:bg-[#fafafa]");
+  });
+
+  it("uses radio selection as a single controlled choice", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(
+      <Table
+        columns={[{ title: "이름", dataIndex: "name" }]}
+        dataSource={rows}
+        rowSelection={{ type: "radio", onChange }}
+        pagination={false}
+      />,
+    );
+
+    const radios = screen.getAllByRole("radio");
+    await user.click(radios[0]);
+    await user.click(radios[1]);
+    expect(radios[0]).not.toBeChecked();
+    expect(radios[1]).toBeChecked();
+    expect(onChange).toHaveBeenLastCalledWith(
+      ["2"],
+      [rows[1]],
+      expect.objectContaining({ type: "single" }),
+    );
+  });
+
+  it("renders internal row drag handles without custom row components", () => {
+    const { container } = render(
+      <Table
+        columns={[{ title: "이름", dataIndex: "name" }]}
+        dataSource={rows}
+        pagination={false}
+        rowDrag
+      />,
+    );
+
+    expect(screen.getAllByRole("button")).toHaveLength(rows.length);
+    expect(container.querySelectorAll("tbody tr[data-row-key]")).toHaveLength(rows.length);
+    expect(container.querySelectorAll("tbody td:first-child svg")).toHaveLength(rows.length);
+  });
+
+  it("makes columns draggable without custom header components", () => {
+    render(
+      <Table
+        columns={[
+          { key: "name", title: "이름", dataIndex: "name" },
+          { key: "team", title: "팀", dataIndex: "team" },
+        ]}
+        dataSource={rows}
+        pagination={false}
+        columnDrag
+      />,
+    );
+
+    const headers = screen.getAllByRole("columnheader");
+    expect(headers).toHaveLength(2);
+    headers.forEach((header) => expect(header).toHaveClass("cursor-grab"));
+  });
+
+  it("fixes the header automatically when scroll.y creates a vertical viewport", () => {
+    const { container } = render(
+      <Table
+        columns={[{ title: "이름", dataIndex: "name" }]}
+        dataSource={rows}
+        pagination={false}
+        scroll={{ y: 120 }}
+      />,
+    );
+
+    const scrollRegion = screen.getByRole("region", { name: "테이블 스크롤 영역" });
+    const headerRegion = container.querySelector("[data-table-header-scroll]");
+
+    expect(headerRegion?.querySelector("thead")).toBeInTheDocument();
+    expect(scrollRegion.querySelector("thead")).not.toBeInTheDocument();
+    expect(scrollRegion.querySelector("tbody")).toBeInTheDocument();
+    expect(scrollRegion).toHaveStyle({ maxHeight: "120px" });
+  });
+
+  it("keeps a separated header aligned with horizontal body scrolling", () => {
+    const { container } = render(
+      <Table
+        columns={[
+          { title: "이름", dataIndex: "name", width: 200 },
+          { title: "팀", dataIndex: "team", width: 200 },
+        ]}
+        dataSource={rows}
+        pagination={false}
+        scroll={{ x: 600, y: 120 }}
+      />,
+    );
+
+    const scrollRegion = screen.getByRole("region", { name: "테이블 스크롤 영역" });
+    const headerRegion = container.querySelector<HTMLElement>("[data-table-header-scroll]");
+
+    Object.defineProperty(scrollRegion, "scrollLeft", { configurable: true, value: 80 });
+    fireEvent.scroll(scrollRegion);
+
+    expect(headerRegion?.scrollLeft).toBe(80);
+  });
+
+  it("adds internal vertical cell borders in bordered mode", () => {
+    const { container } = render(
+      <Table
+        bordered
+        columns={[
+          { title: "이름", dataIndex: "name" },
+          { title: "팀", dataIndex: "team" },
+        ]}
+        dataSource={rows}
+        pagination={false}
+      />,
+    );
+
+    expect(container.querySelector("table")).toHaveClass(
+      "[&>thead>tr>th:not(:last-child)]:border-r",
+      "[&>tbody>tr>td:not(:last-child)]:border-r",
+    );
+  });
+
+  it("applies pagination classes", () => {
+    render(
+      <Table
+        columns={[{ title: "이름", dataIndex: "name" }]}
+        dataSource={rows}
+        pagination={{ pageSize: 1, className: "pagination-class" }}
+      />,
+    );
+
+    expect(screen.getByRole("navigation", { name: "페이지네이션" })).toHaveClass(
+      "pagination-class",
+    );
   });
 });

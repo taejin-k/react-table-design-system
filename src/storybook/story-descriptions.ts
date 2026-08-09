@@ -17,7 +17,8 @@ export const storyDescriptions: Record<string, string> = {
   "components-input--sizes": "세 가지 Input 크기를 선택할 수 있어요.",
   "components-input--states": "기본, 채움, 비활성 상태를 선택할 수 있어요.",
   "components-input--label-and-error": "레이블, 필수 표시와 오류 문구를 추가할 수 있어요.",
-  "components-input--icons-and-count": "앞뒤 아이콘, 지우기 버튼과 글자 수를 표시할 수 있어요.",
+  "components-input--icons-and-count":
+    "아이콘과 지우기 버튼을 추가하고 글자 수를 현재 값 또는 현재/최대 값으로 표시할 수 있어요.",
 
   "components-icon--icons": "사용할 아이콘을 선택할 수 있어요.",
   "components-icon--size-and-color": "아이콘의 크기와 색상을 변경할 수 있어요.",
@@ -33,192 +34,73 @@ export const storyDescriptions: Record<string, string> = {
   "components-breadcrumb--with-icons": "각 항목에 아이콘을 더해 경로를 쉽게 구분할 수 있어요.",
   "components-breadcrumb--item-colors": "각 항목의 글자와 아이콘에 원하는 색상을 적용할 수 있어요.",
 
-  "components-table--feature-guide":
-    "Table이 제공하는 데이터, 사용자 조작, 레이아웃, 확장 API를 한눈에 살펴봅니다.",
-  "components-table--basic": "dataSource와 columns를 전달하는 가장 기본적인 사용법입니다.",
-  "components-table--selection-and-operations":
-    "제어형 행 선택과 선택된 행을 대상으로 하는 상단 작업 버튼을 함께 사용합니다.",
-  "components-table--filter-and-multiple-sorter":
-    "열 필터, 다중 정렬, 페이지 크기 변경을 한 테이블에서 조합합니다.",
-  "components-table--production-pagination":
-    "총 개수, 빠른 이동, 페이지 크기 변경을 포함한 실무형 페이지네이션입니다.",
-  "components-table--expandable-and-tree":
-    "트리 데이터, 기본 확장 상태, 행 선택을 함께 사용하는 복합 예제입니다.",
-  "components-table--grouped-header-and-merged-cells":
-    "그룹 헤더와 rowSpan 기반 병합 셀을 함께 렌더링합니다.",
-  "components-table--fixed-and-responsive":
-    "좌우 고정 열, sticky 헤더, 가로·세로 스크롤을 결합합니다.",
-  "components-table--virtual-thousand-rows":
-    "1,000개 행을 windowing 방식으로 렌더링해 스크롤 성능을 유지합니다.",
-  "components-table--title-footer-summary-and-empty":
-    "title, footer, summary와 현재 페이지 데이터를 이용한 합계를 표시합니다.",
-  "components-table--loading-and-empty": "로딩 오버레이와 사용자 정의 빈 상태를 비교합니다.",
-  "components-table--editable-cells": "render로 입력 요소를 배치하고 셀 값을 직접 수정합니다.",
-  "components-table--drag-row-sorting":
-    "행을 드래그하거나 키보드로 이동하며 주변 행이 애니메이션으로 재배치됩니다.",
-  "components-table--drag-column-sorting":
-    "헤더를 드래그해 열 순서를 변경하며 본문 셀 순서도 함께 갱신됩니다.",
+  "components-illustrations--types": "상태와 안내 목적에 맞는 열두 가지 이미지를 선택할 수 있어요",
+  "components-illustrations--sizes": "화면에 맞게 세 가지 이미지 크기를 선택할 수 있어요",
 
-  "components-table-api-compatibility--columns-prop":
-    "columns 배열을 사용하는 표준 Table 열 정의 방식입니다.",
-  "components-table-api-compatibility--column-jsx":
-    "Table.Column과 Table.ColumnGroup JSX 문법으로 동일한 열 모델을 구성합니다.",
-  "components-table-api-compatibility--semantic-class-names-and-styles":
-    "semantic classNames와 styles로 헤더, 행, 셀을 세부적으로 꾸밉니다.",
-  "components-table-api-compatibility--native-root-props":
-    "role, style 등 네이티브 root div 속성을 Table에 직접 전달합니다.",
-  "components-table-api-compatibility--loading-boolean":
-    "loading boolean만으로 기본 로딩 오버레이를 표시합니다.",
-  "components-table-api-compatibility--loading-config":
-    "indicator, tip, delay 등 확장된 loading 설정을 사용합니다.",
+  "components-table--basic": "dataSource와 columns를 전달하는 가장 기본적인 사용법이에요.",
+  "components-table--size": "size로 행 높이와 셀 여백을 조절해요.",
+  "components-table--bordered": "모든 셀 경계를 표시하는 bordered 테이블이에요.",
+  "components-table--alignment": "컬럼별 왼쪽, 가운데, 오른쪽 정렬을 비교해요.",
+  "components-table--ellipsis": "ellipsis로 컬럼 너비보다 긴 내용을 말줄임표로 표시해요.",
+  "components-table--sorter":
+    "비교 함수로 하나의 컬럼을 정렬하거나 multiple 우선순위로 여러 컬럼을 함께 정렬해요.",
+  "components-table--filter":
+    "트리 검색, 다중·단일 선택, 확인 시 적용과 기본값 복원을 컬럼별로 비교해요.",
+  "components-table--checkbox": "여러 행을 선택하고 onChange로 선택한 key를 관리해요.",
+  "components-table--checkbox-width": "columnWidth로 체크박스 컬럼의 가로 길이를 설정해요.",
+  "components-table--checkbox-disabled": "getCheckboxProps로 특정 행의 체크박스를 비활성화해요.",
+  "components-table--checkbox-fixed": "가로 스크롤 중 선택 체크박스 컬럼을 왼쪽에 고정해요.",
+  "components-table--all-checkbox-hidden": "헤더의 전체 선택 체크박스를 숨겨요.",
+  "components-table--checkbox-default": "defaultSelectedRowKeys로 처음 선택된 행을 지정해요.",
+  "components-table--radio": "하나의 행을 선택하고 onChange로 선택한 key를 관리해요.",
+  "components-table--drag-row-sorting":
+    "행을 드래그하거나 키보드로 이동하며 주변 행이 애니메이션으로 재배치돼요.",
+  "components-table--drag-column-sorting":
+    "헤더를 드래그해 열 순서를 변경하며 본문 셀 순서도 함께 갱신돼요.",
+
+  "components-table-api-compatibility--grouped-headers":
+    "columns의 children으로 여러 단계의 그룹 헤더를 만들어요.",
+  "components-table-api-compatibility--headerless":
+    "showHeader=false로 열 헤더를 숨기고 데이터만 표시해요.",
+  "components-table-api-compatibility--fixed-header":
+    "scroll.y로 본문의 세로 높이를 정하고 헤더를 상단에 고정해요.",
+  "components-table-api-compatibility--fixed-columns":
+    "이름은 왼쪽, 프로젝트는 오른쪽에 고정하고 가운데 열만 가로 스크롤해요.",
+  "components-table-api-compatibility--loading":
+    "데이터를 불러오는 동안 로딩 상태와 안내 문구를 표시해요.",
   "components-table-api-compatibility--empty":
-    "locale.emptyText로 데이터가 없을 때의 안내 내용을 교체합니다.",
-  "components-table-api-compatibility--shared-column-defaults":
-    "column 공통 설정을 모든 열에 적용하고 열별 속성으로 다시 덮어씁니다.",
-  "components-table-api-compatibility--row-and-header-hooks":
-    "rowClassName, onRow, onHeaderRow, rowHoverable로 행과 헤더 DOM을 제어합니다.",
-  "components-table-api-compatibility--custom-table-components":
-    "components로 기본 body row 요소를 사용자 컴포넌트로 교체합니다.",
+    "locale.emptyText에 Illustrations를 전달해 데이터가 없을 때의 안내를 표시해요.",
   "components-table-api-compatibility--imperative-scroll-to":
-    "Table ref의 scrollTo로 index나 key에 해당하는 가상 행으로 이동합니다.",
-  "components-table-api-compatibility--localized-interface":
-    "필터, 정렬, 선택, 확장, 빈 상태의 사용자 문구를 locale로 바꿉니다.",
-  "components-table-api-compatibility--column-presentation-props":
-    "hidden, ellipsis, minWidth, onCell, onHeaderCell 같은 열 표시 속성을 조합합니다.",
-  "components-table-api-compatibility--column-alignment":
-    "열별 왼쪽, 가운데, 오른쪽 정렬을 같은 화면에서 비교합니다.",
+    "Table ref의 scrollTo로 index나 key에 해당하는 가상 행으로 이동해요.",
 
   "components-table-expandable--expanded-row":
-    "expandedRowRender로 각 데이터 행 아래에 상세 콘텐츠를 펼칩니다.",
+    "expandedRowRender로 각 데이터 행 아래에 상세 콘텐츠를 펼쳐요.",
   "components-table-expandable--tree-data":
-    "children 기반 트리 행과 들여쓰기, 기본 전체 펼침을 사용합니다.",
-  "components-table-expandable--controlled":
-    "expandedRowKeys와 onExpandedRowsChange로 펼침 상태를 부모에서 제어합니다.",
+    "children 기반 트리 행과 들여쓰기, 기본 전체 펼침을 사용해요.",
   "components-table-expandable--expand-by-row-click":
-    "아이콘뿐 아니라 행 전체를 클릭해 상세 영역을 열고 닫습니다.",
-  "components-table-expandable--custom-expand-icon":
-    "expandIcon으로 사용자 정의 펼침 버튼과 회전 상태를 렌더링합니다.",
-  "components-table-expandable--hide-expand-column":
-    "전용 확장 열을 숨기고 행 클릭만으로 상세 영역을 제어합니다.",
-  "components-table-expandable--eligible-rows-and-fixed-column":
-    "rowExpandable로 대상 행을 제한하고 확장 열을 왼쪽에 고정합니다.",
-  "components-table-expandable--expanded-row-class-name":
-    "expandedRowClassName으로 펼쳐진 상세 행에 별도 스타일을 적용합니다.",
-  "components-table-expandable--custom-children-and-callbacks":
-    "childrenColumnName으로 사용자 정의 자식 키를 읽고 펼침 콜백을 확인합니다.",
+    "아이콘뿐 아니라 행 전체를 클릭해 상세 영역을 열고 닫아요.",
+  "components-table-expandable--eligible-rows": "rowExpandable로 펼칠 수 있는 행을 제한해요.",
 
-  "components-table-layout--bordered": "모든 셀 경계를 표시하는 bordered 테이블입니다.",
-  "components-table-layout--compact": "small 크기와 bordered를 결합한 고밀도 테이블입니다.",
-  "components-table-layout--fixed-header": "세로 스크롤 중 헤더를 상단에 고정합니다.",
-  "components-table-layout--fixed-columns":
-    "이름은 왼쪽, 합류일은 오른쪽에 고정하고 가운데 열만 가로 스크롤합니다.",
   "components-table-layout--responsive-columns":
-    "responsive 배열에 따라 좁은 화면에서 일부 열을 자동으로 숨깁니다.",
+    "브라우저 너비에 따라 컬럼을 단계적으로 보여줘요.\nxs 0px / sm 640px / md 768px / lg 1024px / xl 1280px / xxl 1536px 이상",
   "components-table-layout--virtual-thousand-rows":
-    "고정 높이 스크롤 영역에서 1,000개 행을 가상 렌더링합니다.",
-  "components-table-layout--grouped-headers":
-    "ColumnGroup 구조로 여러 단계의 그룹 헤더를 만듭니다.",
-  "components-table-layout--merged-rows": "onCell의 rowSpan을 이용해 인접한 본문 셀을 병합합니다.",
-  "components-table-layout--summary": "Table.Summary.Row와 Cell로 표 하단 합계 행을 구성합니다.",
-  "components-table-layout--fixed-top-summary":
-    "summary를 헤더 아래에 고정하고 본문만 세로로 스크롤합니다.",
-  "components-table-layout--title-and-footer":
-    "현재 페이지 데이터를 받는 title과 footer 영역을 표시합니다.",
-  "components-table-layout--headerless": "showHeader=false로 열 헤더를 숨기고 데이터만 표시합니다.",
-  "components-table-layout--fixed-bottom-summary":
-    "summary를 스크롤 영역 하단에 고정해 합계를 계속 노출합니다.",
-  "components-table-layout--scroll-events-and-sticky-offsets":
-    "onScroll 이벤트 값과 sticky 헤더 offset을 실시간으로 확인합니다.",
-
-  "components-table-pagination--basic":
-    "숫자 페이지, 이전·다음 이동과 기본 페이지네이션을 사용합니다.",
-  "components-table-pagination--size-changer":
-    "showSizeChanger와 pageSizeOptions로 페이지당 행 수를 변경합니다.",
-  "components-table-pagination--quick-jumper-and-total":
-    "총 범위 표시와 Enter로 확정하는 빠른 페이지 이동을 사용합니다.",
-  "components-table-pagination--placement":
-    "같은 페이지네이션을 상단 시작점과 하단 끝점에 배치하고 상태를 동기화합니다.",
-  "components-table-pagination--center-aligned":
-    "pagination.align을 center로 지정해 컨트롤을 가운데 정렬합니다.",
-  "components-table-pagination--simple":
-    "현재 페이지 입력과 전체 페이지 수만 표시하는 simple 모드입니다.",
-  "components-table-pagination--page-size-preserves-current":
-    "페이지 크기를 바꿔도 가능한 경우 현재 페이지를 유지합니다.",
-  "components-table-pagination--small":
-    "small 크기와 showLessItems를 적용한 작은 페이지네이션입니다.",
-  "components-table-pagination--disabled":
-    "이동, 크기 변경, 빠른 이동을 모두 비활성화한 상태입니다.",
-  "components-table-pagination--hide-on-single-page":
-    "한 페이지만 존재할 때 hideOnSinglePage로 페이지네이션을 숨깁니다.",
-  "components-table-pagination--empty-hides-pagination":
-    "데이터가 0개일 때 페이지네이션을 렌더링하지 않습니다.",
-  "components-table-pagination--controlled": "current와 pageSize를 부모 상태에서 함께 제어합니다.",
-  "components-table-pagination--custom-item-render":
-    "itemRender로 숫자 페이지 요소를 감싸거나 교체합니다.",
-  "components-table-pagination--go-button-and-locale":
-    "Quick Jumper 이동 버튼과 페이지네이션 전용 locale 문구를 사용합니다.",
-  "components-table-pagination--semantic-and-responsive":
-    "responsive, showTitle, classNames, styles로 좁은 화면 표시를 조절합니다.",
-  "components-table-pagination--hidden-jump-controls":
-    "showPrevNextJumpers=false로 생략 구간 점프 버튼을 숨깁니다.",
-  "components-table-pagination--read-only-simple":
-    "simple.readOnly로 직접 입력 없이 현재 페이지와 전체 페이지만 표시합니다.",
-  "components-table-pagination--callback-contract":
-    "페이지 이동과 페이지 크기 변경 시 콜백 인자를 확인합니다.",
-
-  "components-table-selection--checkbox": "여러 행을 선택할 수 있는 기본 checkbox 선택 열입니다.",
-  "components-table-selection--radio": "한 행만 선택할 수 있는 radio 선택 모드입니다.",
-  "components-table-selection--disabled-rows":
-    "getCheckboxProps로 특정 상태의 행을 선택할 수 없게 만듭니다.",
-  "components-table-selection--fixed-selection-column":
-    "가로 스크롤 중 선택 체크박스 열을 왼쪽에 고정합니다.",
-  "components-table-selection--custom-selection-cell":
-    "renderCell로 원본 체크박스를 감싸 추가 표현을 제공합니다.",
-  "components-table-selection--selection-menu":
-    "전체 선택, 현재 페이지 반전, 선택 해제 작업을 키보드 지원 메뉴로 제공합니다.",
-  "components-table-selection--selection-constants":
-    "Table.SELECTION_ALL, INVERT, NONE 상수를 선택 메뉴에 사용합니다.",
-  "components-table-selection--shift-range-selection":
-    "Shift를 누른 채 다른 행을 선택해 범위를 한 번에 선택합니다.",
-  "components-table-selection--controlled-selection":
-    "selectedRowKeys와 onChange로 선택 상태를 부모에서 제어합니다.",
-  "components-table-selection--selection-column-configuration":
-    "선택 열 제목, 너비, 정렬, 헤더 체크박스와 셀 속성을 사용자화합니다.",
-  "components-table-selection--custom-selection-action":
-    "사용자 정의 selections 항목으로 조건에 맞는 행을 일괄 선택합니다.",
+    "고정 높이 스크롤 영역에서 1,000개 행을 가상 렌더링해요.",
+  "components-table-layout--merged-rows": "onCell의 rowSpan을 이용해 인접한 본문 셀을 병합해요.",
+  "components-table-pagination--pagination":
+    "숫자 페이지, 이전·다음 이동과 기본 페이지네이션을 사용해요.",
+  "components-table-pagination--pagination-page-controls":
+    "페이지당 행 수를 바꾸거나 번호를 직접 입력하고 현재 범위와 전체 건수를 확인해요.",
+  "components-table-pagination--pagination-placement":
+    "같은 페이지네이션을 상단 시작점과 하단 끝점에 배치하고 상태를 동기화해요.",
+  "components-table-pagination--pagination-simple":
+    "현재 페이지 입력과 전체 페이지 수만 표시하는 simple 모드예요.",
+  "components-table-pagination--pagination-disabled":
+    "이동, 크기 변경, 빠른 이동을 모두 비활성화한 상태예요.",
+  "components-table-pagination--pagination-hide-on-single-page":
+    "한 페이지만 존재할 때 hideOnSinglePage로 페이지네이션을 숨겨요.",
   "components-table-selection--associated-tree-selection":
-    "checkStrictly=false로 부모와 자식 선택 상태를 연동합니다.",
-  "components-table-selection--preserve-selection-across-data-changes":
-    "dataSource가 교체되어도 기존 선택 키를 보존합니다.",
-  "components-table-selection--hidden-select-all-and-defaults":
-    "헤더 전체 선택을 숨기고 초기 선택 키를 지정합니다.",
-  "components-table-selection--selection-callbacks":
-    "개별 선택과 전체 상태 변경 콜백의 호출 정보를 확인합니다.",
+    "checkStrictly=false로 부모와 자식 선택 상태를 연동해요.",
 
-  "components-table-sorting-filtering--local-sorter":
-    "비교 함수를 사용해 현재 dataSource를 브라우저에서 정렬합니다.",
-  "components-table-sorting-filtering--multiple-sorter":
-    "multiple 우선순위가 있는 여러 sorter를 순서대로 적용합니다.",
-  "components-table-sorting-filtering--server-sorter":
-    "sorter=true로 데이터는 변경하지 않고 onChange에 정렬 상태만 전달합니다.",
-  "components-table-sorting-filtering--server-filter":
-    "onFilter 없이 필터 UI와 상태만 관리해 서버 요청에 연결합니다.",
-  "components-table-sorting-filtering--menu-filter":
-    "체크박스 메뉴에서 여러 필터 값을 선택하고 확인합니다.",
-  "components-table-sorting-filtering--tree-filter-and-search":
-    "그룹화된 tree 필터 항목을 검색해 선택합니다.",
-  "components-table-sorting-filtering--controlled-filter":
-    "filteredValue와 onChange로 필터 값을 부모 상태에서 제어합니다.",
-  "components-table-sorting-filtering--custom-filter-dropdown":
-    "filterDropdown render props로 사용자 정의 검색 UI를 만듭니다.",
-  "components-table-sorting-filtering--custom-sort-cycle-and-icon":
-    "sortDirections 순환 순서와 sortIcon을 사용자화합니다.",
-  "components-table-sorting-filtering--single-select-filter":
-    "filterMultiple=false로 하나의 필터 값만 선택합니다.",
-  "components-table-sorting-filtering--default-filter-and-reset":
-    "defaultFilteredValue와 기본값 복원형 reset 동작을 사용합니다.",
-  "components-table-sorting-filtering--confirm-only-filter":
-    "filterOnClose=false로 확인 버튼에서만 필터를 확정합니다.",
-  "components-table-sorting-filtering--controlled-filter-popup-and-portal":
-    "필터 열림 상태를 제어하고 메뉴를 body에 포털 렌더링합니다.",
+  "components-table-sorting-filtering--server-table":
+    "페이지, 페이지당 행 수, 정렬과 필터 조건을 onChange로 받아 서버 API 요청 파라미터로 사용해요.",
 };

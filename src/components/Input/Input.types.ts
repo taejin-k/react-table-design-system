@@ -18,7 +18,8 @@ export interface InputProps extends Omit<
   prefixIcon?: ReactNode;
   suffixIcon?: ReactNode;
   className?: string;
-  onBlur?: (value: string) => void;
+  onBlur?: () => void;
   onChange?: (value: string) => void;
   onError?: (error: string) => void;
+  onEnter?: () => void;
 }

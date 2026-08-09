@@ -4,11 +4,12 @@ import {
   type CSSProperties,
   type FocusEvent,
   type KeyboardEvent,
-  type ReactNode,
 } from "react";
 import { cva } from "class-variance-authority";
 import { twMerge } from "tailwind-merge";
-import type { PaginationConfig, PaginationItemType, PaginationPlacement } from "./Table.types";
+import { Icon } from "../Icon/Icon";
+import { Input } from "../Input";
+import type { PaginationConfig, PaginationPlacement } from "./Table.types";
 
 type PaginationProps = {
   config: PaginationConfig;
@@ -74,30 +75,6 @@ const itemSizeVariants = cva(
 
 const controlClass =
   "h-[32px] rounded border border-[#ddd] bg-white px-2 font-pretendard text-[14px] text-[#111] outline-none transition-colors focus-visible:border-[#0062df] disabled:bg-[#f8f8f8] disabled:text-[#999]";
-
-function Chevron({ direction }: { direction: "left" | "right" }) {
-  return (
-    <svg viewBox="0 0 12 12" aria-hidden className="size-3">
-      <path
-        d={direction === "left" ? "M7.8 2 3.8 6l4 4" : "M4.2 2l4 4-4 4"}
-        fill="none"
-        stroke="currentColor"
-        strokeWidth={1.5}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function renderItem(
-  config: PaginationConfig,
-  page: number,
-  type: PaginationItemType,
-  originalElement: ReactNode,
-) {
-  return config.itemRender?.(page, type, originalElement) ?? originalElement;
-}
 
 export function Pagination({
   config,
@@ -171,7 +148,7 @@ export function Pagination({
       disabled={disabled || page <= 1}
       onClick={() => jump(page - 1)}
     >
-      <Chevron direction="left" />
+      <Icon icon="chevron-left" size={12} />
     </button>
   );
   const next = (
@@ -184,13 +161,18 @@ export function Pagination({
       disabled={disabled || page >= pageCount}
       onClick={() => jump(page + 1)}
     >
-      <Chevron direction="right" />
+      <Icon icon="chevron-right" size={12} />
     </button>
   );
 
   return (
     <nav
-      className={twMerge(navVariants({ align }), className, semanticClassNames?.root)}
+      className={twMerge(
+        navVariants({ align }),
+        config.className,
+        className,
+        semanticClassNames?.root,
+      )}
       style={{ ...config.style, ...style, ...semanticStyles?.root }}
       aria-label={config["aria-label"] ?? "페이지네이션"}
     >
@@ -198,7 +180,7 @@ export function Pagination({
         <span className="text-[#999]">{config.showTotal(total, [start, end])}</span>
       )}
       <div className="flex items-center gap-1">
-        {renderItem(config, page - 1, "prev", prev)}
+        {prev}
         {config.simple ? (
           <span className="flex items-center gap-1">
             <input
@@ -240,11 +222,7 @@ export function Pagination({
                 </button>
               );
               return (
-                <span key={item}>
-                  {config.showPrevNextJumpers === false
-                    ? null
-                    : renderItem(config, target, item, element)}
-                </span>
+                <span key={item}>{config.showPrevNextJumpers === false ? null : element}</span>
               );
             }
             const element = (
@@ -263,10 +241,10 @@ export function Pagination({
                 {item}
               </button>
             );
-            return <span key={item}>{renderItem(config, item, "page", element)}</span>;
+            return <span key={item}>{element}</span>;
           })
         )}
-        {renderItem(config, page + 1, "next", next)}
+        {next}
       </div>
       {sizeChanger && (
         <select
@@ -305,21 +283,16 @@ export function Pagination({
         >
           <label className="flex items-center gap-1 text-[#999]">
             {locale.jump_to ?? "이동"}
-            <input
+            <Input
               aria-label="이동할 페이지"
+              className="w-[48px] [&_input]:text-center"
               inputMode="numeric"
               disabled={disabled}
+              size="md"
               value={jumpValue}
-              onChange={(event) => {
-                if (/^\d*$/.test(event.target.value)) setJumpValue(event.target.value);
+              onChange={(value) => {
+                if (/^\d*$/.test(value)) setJumpValue(value);
               }}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") {
-                  event.preventDefault();
-                  commitJump();
-                }
-              }}
-              className={twMerge(controlClass, "w-[40px] text-center")}
             />
           </label>
           {typeof config.showQuickJumper === "object" && config.showQuickJumper.goButton ? (

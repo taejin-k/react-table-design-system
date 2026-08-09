@@ -1,435 +1,677 @@
-import { useState, type ComponentType, type HTMLAttributes } from "react";
-import {
-  closestCenter,
-  DndContext,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-} from "@dnd-kit/core";
-import {
-  arrayMove,
-  horizontalListSortingStrategy,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  useSortable,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
+import { useState, type ComponentType } from "react";
 import type { Meta, StoryObj } from "@storybook/react";
-import { columns, largeData, members, type Member } from "./Table.playground-data";
+import { storyDescriptions } from "../../storybook/story-descriptions";
+import { withStoryImports } from "../../storybook/story-source";
+import { formatTableStorySource } from "../../storybook/table-story-source";
+import { columns, members, statusFilters, type Member } from "./Table.playground-data";
 import { Table } from "./Table";
 import type { ColumnsType, Key, TableProps } from "./Table.types";
 
 const meta: Meta<TableProps<Member>> = {
   title: "Components/Table",
   component: Table as ComponentType<TableProps<Member>>,
-  tags: ["autodocs"],
+  tags: ["!autodocs"],
   parameters: {
+    controls: { disable: true },
     docs: {
+      source: { transform: formatTableStorySource },
       description: {
         component:
           "행과 열로 구성된 데이터를 정리해서 보여줘요.  \n정렬·필터·선택·확장·페이지네이션과 스크롤 등 데이터 탐색 기능을 설정할 수 있어요.",
       },
     },
   },
-  argTypes: {
-    size: { control: "inline-radio", options: ["large", "medium", "small"] },
-    bordered: { control: "boolean" },
-    loading: { control: "boolean" },
-    sticky: { control: "boolean" },
-    virtual: { control: "boolean" },
-  },
   args: {
-    dataSource: members,
+    dataSource: members.slice(0, 5),
     columns,
-    rowKey: "key",
-    size: "large",
-    bordered: false,
-    loading: false,
-    pagination: { defaultPageSize: 6 },
+    pagination: false,
   },
 };
+
+const storyDescription = (id: string) => ({
+  docs: { description: { story: storyDescriptions[id] } },
+});
+
+const tableStoryDataSource = `const members = [
+  {
+    key: 'M-1001',
+    name: '김민준',
+    role: 'Product Designer',
+    team: 'Design',
+    projects: 8,
+  },
+  // ...나머지 4개 항목
+];
+
+const columns = [
+  {
+    key: 'name',
+    dataIndex: 'name',
+    title: '이름',
+    width: 150,
+  },
+  {
+    key: 'role',
+    dataIndex: 'role',
+    title: '직무',
+    minWidth: 190,
+  },
+  {
+    key: 'team',
+    dataIndex: 'team',
+    title: '팀',
+    width: 120,
+  },
+  {
+    key: 'projects',
+    dataIndex: 'projects',
+    title: '프로젝트',
+    width: 110,
+  },
+];`;
+
+const dragColumnStoryDataSource = `const members = [
+  {
+    key: 'M-1001',
+    name: '김민준',
+    role: 'Product Designer',
+    team: 'Design',
+    projects: 8,
+  },
+  // ...나머지 4개 항목
+];
+
+// width가 있는 컬럼은 고정하고, 직무 컬럼은 남은 공간을 사용해요.
+const columns = [
+  { key: 'name', dataIndex: 'name', title: '이름', width: 150 },
+  { key: 'role', dataIndex: 'role', title: '직무', minWidth: 190 },
+  { key: 'team', dataIndex: 'team', title: '팀', width: 120 },
+  { key: 'projects', dataIndex: 'projects', title: '프로젝트', width: 110 },
+];`;
+
+const sorterColumns: ColumnsType<Member> = columns.map((column) =>
+  column.key === "name"
+    ? { ...column, sorter: (a, b) => a.name.localeCompare(b.name) }
+    : column.key === "team"
+      ? { ...column, sorter: { compare: (a, b) => a.team.localeCompare(b.team), multiple: 1 } }
+      : column.key === "projects"
+        ? { ...column, sorter: { compare: (a, b) => a.projects - b.projects, multiple: 2 } }
+        : column,
+);
+
+const checkboxFixedColumns: ColumnsType<Member> = [
+  ...columns.map((column) => (column.key === "role" ? column : { ...column, width: 220 })),
+  {
+    key: "status",
+    dataIndex: "status",
+    title: "상태",
+    width: 180,
+  },
+  {
+    key: "joinedAt",
+    dataIndex: "joinedAt",
+    title: "합류일",
+    width: 200,
+  },
+  {
+    key: "memberKey",
+    dataIndex: "key",
+    title: "구성원 ID",
+    width: 180,
+  },
+];
+
+const filterColumns: ColumnsType<Member> = [
+  columns[0],
+  {
+    key: "team",
+    dataIndex: "team",
+    title: "팀",
+    width: 160,
+    filterMode: "tree", // 필터 항목을 트리로 표시해요.
+    filterSearch: true, // 필터 목록 위에 검색창을 표시해요.
+    filters: [
+      {
+        text: "제품 조직",
+        value: "product-group",
+        children: [
+          { text: "Design", value: "Design" },
+          { text: "Product", value: "Product" },
+        ],
+      },
+      {
+        text: "기술 조직",
+        value: "engineering-group",
+        children: [
+          { text: "Platform", value: "Platform" },
+          { text: "Mobile", value: "Mobile" },
+        ],
+      },
+    ],
+    onFilter: (value, record) => record.team === value,
+  },
+  {
+    key: "status",
+    dataIndex: "status",
+    title: "상태",
+    width: 120,
+    filters: statusFilters,
+    onFilter: (value, record) => record.status === value,
+  },
+  {
+    key: "role",
+    dataIndex: "role",
+    title: "직무",
+    minWidth: 190,
+    filters: [
+      { text: "디자인", value: "design" },
+      { text: "개발", value: "engineering" },
+      { text: "기획", value: "product" },
+      { text: "데이터", value: "data" },
+    ],
+    filterMultiple: false, // 라디오로 하나의 값만 선택해요.
+    onFilter: (value, record) => {
+      if (value === "design") return record.role.includes("Designer");
+      if (value === "engineering") return record.role.includes("Engineer");
+      if (value === "product") return record.role.includes("Manager");
+      return record.role.includes("Analyst");
+    },
+  },
+  {
+    key: "projects",
+    dataIndex: "projects",
+    title: "프로젝트",
+    width: 120,
+    filters: [
+      { text: "5개 이하", value: "low" },
+      { text: "6~9개", value: "middle" },
+      { text: "10개 이상", value: "high" },
+    ],
+    filterOnClose: false, // 선택한 뒤 확인을 눌러야 필터를 적용해요.
+    onFilter: (value, record) => {
+      if (value === "low") return record.projects <= 5;
+      if (value === "middle") return record.projects >= 6 && record.projects <= 9;
+      return record.projects >= 10;
+    },
+  },
+  {
+    key: "joinedAt",
+    dataIndex: "joinedAt",
+    title: "합류일",
+    width: 140,
+    filters: [
+      { text: "전체 기간", value: "all" },
+      { text: "2024년", value: "2024" },
+    ],
+    defaultFilteredValue: ["all"], // 처음 적용할 필터 값이에요.
+    filterResetToDefaultFilteredValue: true, // 초기화하면 기본값으로 돌아가요.
+    onFilter: (value, record) => value === "all" || record.joinedAt.startsWith(String(value)),
+  },
+];
 
 export default meta;
 type Story = StoryObj<TableProps<Member>>;
 
-export const FeatureGuide: Story = {
-  render: () => (
-    <section className="grid grid-cols-2 gap-3">
-      <div className="rounded-lg border border-[#f0f0f0] bg-white p-4">
-        <h2 className="mb-1.5 text-[16px] font-semibold">데이터와 열</h2>
-        <p className="leading-relaxed text-[#999]">
-          columns/JSX Column, 공통 column 설정, 렌더링, 병합, 숨김, 반응형, 정렬과 필터
-        </p>
-      </div>
-      <div className="rounded-lg border border-[#f0f0f0] bg-white p-4">
-        <h2 className="mb-1.5 text-[16px] font-semibold">사용자 조작</h2>
-        <p className="leading-relaxed text-[#999]">
-          페이지네이션, 체크박스·라디오 선택, 선택 작업, 확장 행, 행·열 드래그
-        </p>
-      </div>
-      <div className="rounded-lg border border-[#f0f0f0] bg-white p-4">
-        <h2 className="mb-1.5 text-[16px] font-semibold">레이아웃</h2>
-        <p className="leading-relaxed text-[#999]">
-          fixed/sticky, 가상 스크롤, summary, title/footer, 크기와 테두리
-        </p>
-      </div>
-      <div className="rounded-lg border border-[#f0f0f0] bg-white p-4">
-        <h2 className="mb-1.5 text-[16px] font-semibold">확장 API</h2>
-        <p className="leading-relaxed text-[#999]">
-          semantic class/style, components 교체, DOM 훅, locale, ref scrollTo
-        </p>
-      </div>
-    </section>
-  ),
+export const Basic: Story = {
+  parameters: storyDescription("components-table--basic"),
 };
 
-export const Basic: Story = {};
-
-export const SelectionAndOperations: Story = {
-  render: (args) => <SelectionStory {...args} />,
+export const Size: Story = {
+  args: { size: "small" },
+  parameters: storyDescription("components-table--size"),
 };
 
-function SelectionStory(args: TableProps<Member>) {
-  const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
-  return (
-    <div>
-      <div className="mb-4 flex gap-2">
-        <button
-          type="button"
-          className="h-8 rounded border border-[#0062df] bg-[#0062df] px-3.5 text-white transition-colors hover:opacity-90 disabled:border-[#ddd] disabled:bg-black/5 disabled:text-[#999]"
-          disabled={!selectedRowKeys.length}
-          onClick={() => setSelectedRowKeys([])}
-        >
-          선택 해제 ({selectedRowKeys.length})
-        </button>
-      </div>
-      <Table<Member>
-        {...args}
-        rowSelection={{ selectedRowKeys, selections: true, onChange: setSelectedRowKeys }}
-      />
-    </div>
-  );
-}
+export const Bordered: Story = {
+  args: { bordered: true },
+  parameters: storyDescription("components-table--bordered"),
+};
 
-export const FilterAndMultipleSorter: Story = {
+export const Alignment: Story = {
+  parameters: storyDescription("components-table--alignment"),
   args: {
     bordered: true,
-    pagination: { defaultPageSize: 8, showSizeChanger: true, pageSizeOptions: [4, 8, 12] },
-  },
-};
-
-export const ProductionPagination: Story = {
-  args: {
-    dataSource: largeData.slice(0, 185),
-    pagination: {
-      defaultPageSize: 6,
-      pageSizeOptions: [6, 12, 24],
-      showSizeChanger: true,
-      showQuickJumper: true,
-      showTotal: (total, range) => `${range[0]}-${range[1]} / 총 ${total}명`,
-    },
-    bordered: true,
-  },
-};
-
-export const ExpandableAndTree: Story = {
-  args: {
-    dataSource: [
-      { ...members[0], children: [{ ...members[5], key: "M-1001-1", name: "한지우 (하위)" }] },
-      ...members.slice(1, 6),
-    ],
-    expandable: { defaultExpandAllRows: true },
-    rowSelection: {},
-    pagination: false,
-  },
-};
-
-export const GroupedHeaderAndMergedCells: Story = {
-  args: {
     columns: [
+      { key: "name", dataIndex: "name", title: "왼쪽 정렬", width: 150, align: "left" },
+      { key: "team", dataIndex: "team", title: "가운데 정렬", minWidth: 190, align: "center" },
       {
-        title: "구성원",
-        children: [
-          { title: "이름", dataIndex: "name", key: "name", width: 160 },
-          { title: "직무", dataIndex: "role", key: "role", width: 190 },
-        ],
-      },
-      {
-        title: "조직 정보",
-        children: [
-          { title: "팀", dataIndex: "team", key: "team" },
-          { title: "상태", dataIndex: "status", key: "status" },
-        ],
-      },
-      {
-        title: "프로젝트",
-        dataIndex: "projects",
         key: "projects",
+        dataIndex: "projects",
+        title: "오른쪽 정렬",
+        width: 110,
         align: "right",
-        onCell: (_record: Member, index: number) =>
-          index === 0 ? { rowSpan: 2 } : index === 1 ? { rowSpan: 0 } : {},
       },
-    ] as ColumnsType<Member>,
-    pagination: false,
-    bordered: true,
+    ],
   },
 };
 
-export const FixedAndResponsive: Story = {
+export const Ellipsis: Story = {
+  parameters: storyDescription("components-table--ellipsis"),
   args: {
+    dataSource: members.slice(0, 5).map((member, index) =>
+      index === 0
+        ? {
+            ...member,
+            role: "Global Product Design System, User Experience Research Strategy, Cross-platform Interaction Architecture, Accessibility, and Visual Language Principal Designer",
+          }
+        : member,
+    ),
     columns: columns.map((column) =>
-      column.key === "joinedAt"
-        ? { ...column, fixed: "right", responsive: undefined }
-        : { ...column, responsive: undefined },
+      column.key === "role" ? { ...column, ellipsis: true } : column,
     ),
-    scroll: { x: 1600, y: 342 },
-    sticky: true,
-    pagination: false,
-    bordered: true,
   },
 };
 
-export const VirtualThousandRows: Story = {
-  args: {
-    dataSource: largeData,
-    virtual: true,
-    scroll: { x: 900, y: 420 },
-    pagination: false,
-    sticky: true,
-    size: "small",
+export const Sorter: Story = {
+  parameters: {
+    ...storyDescription("components-table--sorter"),
+    tableSource: false,
+    docs: {
+      ...storyDescription("components-table--sorter").docs,
+      source: {
+        code: withStoryImports(`const members = [
+  { key: 'M-1001', name: '김민준', role: 'Product Designer', team: 'Design', projects: 8 },
+  // ...나머지 4개 항목
+];
+
+const columns = [
+  {
+    key: 'name',
+    dataIndex: 'name',
+    title: '이름',
+    // 하나의 컬럼만 정렬할 때는 비교 함수를 바로 전달해요.
+    sorter: (a, b) => a.name.localeCompare(b.name),
   },
-};
-
-export const TitleFooterSummaryAndEmpty: Story = {
-  args: {
-    title: () => "구성원 현황",
-    footer: (data) => `현재 ${data.length}개 행 표시`,
-    summary: (data) => (
-      <div className="flex justify-end gap-10">
-        <strong>프로젝트 합계</strong>
-        <span>{data.reduce((sum, row) => sum + row.projects, 0)}</span>
-      </div>
-    ),
-    pagination: { defaultPageSize: 6 },
-    bordered: true,
+  {
+    key: 'role',
+    dataIndex: 'role',
+    title: '직무',
   },
+  {
+    key: 'team',
+    dataIndex: 'team',
+    title: '팀',
+    sorter: {
+      compare: (a, b) => a.team.localeCompare(b.team),
+      // 여러 컬럼을 함께 정렬할 때 multiple을 사용해요.
+      // 생략하면 한 번에 하나의 컬럼만 정렬돼요.
+      multiple: 1,
+    },
+  },
+  {
+    key: 'projects',
+    dataIndex: 'projects',
+    title: '프로젝트',
+    sorter: {
+      compare: (a, b) => a.projects - b.projects,
+      // multiple 숫자가 클수록 먼저 정렬해요.
+      multiple: 2,
+    },
+  },
+];
+
+function SorterTable() {
+  return <Table dataSource={members} columns={columns} pagination={false} />;
+}`),
+      },
+    },
+  },
+  args: { columns: sorterColumns },
 };
 
-export const LoadingAndEmpty: Story = {
-  render: () => (
-    <div className="grid min-w-0 gap-8 [&>*]:min-w-0">
-      <Table<Member>
-        dataSource={members.slice(0, 3)}
-        columns={columns}
-        rowKey="key"
-        loading
-        scroll={{ x: 900 }}
-        pagination={false}
-      />
-      <Table<Member>
-        dataSource={[]}
-        columns={columns}
-        rowKey="key"
-        scroll={{ x: 900 }}
-        locale={{ emptyText: <div>📭 아직 구성원이 없습니다.</div> }}
-        pagination={false}
-      />
-    </div>
-  ),
+export const Filter: Story = {
+  parameters: {
+    ...storyDescription("components-table--filter"),
+    tableSource: false,
+    docs: {
+      ...storyDescription("components-table--filter").docs,
+      source: {
+        code: withStoryImports(`const members = [
+  {
+    key: 'M-1001',
+    name: '김민준',
+    role: 'Product Designer',
+    team: 'Design',
+    status: '활성',
+    projects: 8,
+    joinedAt: '2023-02-14',
+  },
+  // ...나머지 4개 항목
+];
+
+const teamFilters = [
+  {
+    text: '제품 조직',
+    value: 'product-group',
+    children: [
+      { text: 'Design', value: 'Design' },
+      { text: 'Product', value: 'Product' },
+    ],
+  },
+  {
+    text: '기술 조직',
+    value: 'engineering-group',
+    children: [
+      { text: 'Platform', value: 'Platform' },
+      { text: 'Mobile', value: 'Mobile' },
+    ],
+  },
+];
+
+const statusFilters = [
+  { text: '활성', value: '활성' },
+  { text: '휴가', value: '휴가' },
+  { text: '대기', value: '대기' },
+];
+
+const roleFilters = [
+  { text: '디자인', value: 'design' },
+  { text: '개발', value: 'engineering' },
+  { text: '기획', value: 'product' },
+  { text: '데이터', value: 'data' },
+];
+
+const projectFilters = [
+  { text: '5개 이하', value: 'low' },
+  { text: '6~9개', value: 'middle' },
+  { text: '10개 이상', value: 'high' },
+];
+
+const joinedAtFilters = [
+  { text: '전체 기간', value: 'all' },
+  { text: '2024년', value: '2024' },
+];
+
+const columns = [
+  { key: 'name', dataIndex: 'name', title: '이름' },
+  {
+    key: 'team',
+    dataIndex: 'team',
+    title: '팀',
+    filters: teamFilters,
+    filterMode: 'tree', // 필터 항목을 트리로 표시해요.
+    filterSearch: true, // 필터 목록 위에 검색창을 표시해요.
+    onFilter: (value, record) => record.team === value,
+  },
+  {
+    key: 'status',
+    dataIndex: 'status',
+    title: '상태',
+    filters: statusFilters, // 기본값이 다중 선택이라 일반 체크박스를 표시해요.
+    onFilter: (value, record) => record.status === value,
+  },
+  {
+    key: 'role',
+    dataIndex: 'role',
+    title: '직무',
+    filters: roleFilters,
+    filterMultiple: false, // 라디오로 하나의 값만 선택해요.
+    onFilter: (value, record) => {
+      if (value === 'design') return record.role.includes('Designer');
+      if (value === 'engineering') return record.role.includes('Engineer');
+      if (value === 'product') return record.role.includes('Manager');
+      return record.role.includes('Analyst');
+    },
+  },
+  {
+    key: 'projects',
+    dataIndex: 'projects',
+    title: '프로젝트',
+    filters: projectFilters,
+    filterOnClose: false, // 선택한 뒤 확인을 눌러야 필터를 적용해요.
+    onFilter: (value, record) => {
+      if (value === 'low') return record.projects <= 5;
+      if (value === 'middle') return record.projects >= 6 && record.projects <= 9;
+      return record.projects >= 10;
+    },
+  },
+  {
+    key: 'joinedAt',
+    dataIndex: 'joinedAt',
+    title: '합류일',
+    filters: joinedAtFilters,
+    defaultFilteredValue: ['all'], // 처음 적용할 필터 값이에요.
+    filterResetToDefaultFilteredValue: true, // 초기화하면 기본값으로 돌아가요.
+    onFilter: (value, record) =>
+      value === 'all' || record.joinedAt.startsWith(String(value)),
+  },
+];
+
+function FilterTable() {
+  return <Table dataSource={members} columns={columns} pagination={false} />;
+}`),
+      },
+    },
+  },
+  args: { columns: filterColumns },
 };
 
-export const EditableCells: Story = { render: () => <EditableStory /> };
+export const Checkbox: Story = {
+  parameters: {
+    ...storyDescription("components-table--checkbox"),
+    tableSource: false,
+    docs: {
+      ...storyDescription("components-table--checkbox").docs,
+      source: {
+        code: withStoryImports(`${tableStoryDataSource}
 
-function EditableStory() {
-  const [rows, setRows] = useState(members.slice(0, 6));
-  const editableColumns: ColumnsType<Member> = columns.map((column) =>
-    column.key === "role"
-      ? {
-          ...column,
-          render: (value, record) => (
-            <input
-              className="h-8 w-full rounded border border-[#ddd] bg-white px-[11px] text-[#111] transition-colors outline-none focus:border-[#0062df]"
-              value={String(value)}
-              onChange={(event) =>
-                setRows((current) =>
-                  current.map((row) =>
-                    row.key === record.key ? { ...row, role: event.target.value } : row,
-                  ),
-                )
-              }
-            />
-          ),
-        }
-      : column,
+function CheckboxTable() {
+  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+
+  return (
+    <Table
+      dataSource={members}
+      columns={columns}
+      pagination={false}
+      rowSelection={{
+        type: 'checkbox',
+        selectedRowKeys,
+        onChange: setSelectedRowKeys,
+      }}
+    />
   );
+}`),
+      },
+    },
+  },
+  render: (args) => <CheckboxStory {...args} />,
+};
+
+export const CheckboxWidth: Story = {
+  parameters: storyDescription("components-table--checkbox-width"),
+  args: {
+    rowSelection: {
+      type: "checkbox",
+      columnWidth: 80,
+    },
+  },
+};
+
+export const CheckboxDisabled: Story = {
+  parameters: storyDescription("components-table--checkbox-disabled"),
+  args: {
+    rowSelection: {
+      type: "checkbox",
+      getCheckboxProps: (record) => ({
+        disabled: record.status === "대기",
+      }),
+    },
+  },
+};
+
+export const CheckboxFixed: Story = {
+  parameters: storyDescription("components-table--checkbox-fixed"),
+  args: {
+    columns: checkboxFixedColumns,
+    rowSelection: { type: "checkbox", fixed: true },
+    scroll: { x: "max-content" },
+  },
+};
+
+export const AllCheckboxHidden: Story = {
+  parameters: storyDescription("components-table--all-checkbox-hidden"),
+  args: { rowSelection: { type: "checkbox", hideSelectAll: true } },
+};
+
+export const CheckboxDefault: Story = {
+  parameters: storyDescription("components-table--checkbox-default"),
+  args: {
+    rowSelection: {
+      type: "checkbox",
+      defaultSelectedRowKeys: ["M-1001", "M-1002"],
+    },
+  },
+};
+
+export const Radio: Story = {
+  parameters: {
+    ...storyDescription("components-table--radio"),
+    tableSource: false,
+    docs: {
+      ...storyDescription("components-table--radio").docs,
+      source: {
+        code: withStoryImports(`${tableStoryDataSource}
+
+function RadioTable() {
+  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+
+  return (
+    <Table
+      dataSource={members}
+      columns={columns}
+      pagination={false}
+      rowSelection={{
+        type: 'radio',
+        selectedRowKeys,
+        onChange: setSelectedRowKeys,
+      }}
+    />
+  );
+}`),
+      },
+    },
+  },
+  render: (args) => <RadioStory {...args} />,
+};
+
+function CheckboxStory(args: TableProps<Member>) {
+  const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
+
   return (
     <Table<Member>
-      dataSource={rows}
-      columns={editableColumns}
-      rowKey="key"
-      pagination={false}
-      bordered
+      {...args}
+      rowSelection={{
+        type: "checkbox",
+        selectedRowKeys,
+        onChange: setSelectedRowKeys,
+      }}
     />
   );
 }
 
-export const DragRowSorting: Story = { render: () => <DragStory /> };
-export const DragColumnSorting: Story = { render: () => <DragColumnStory /> };
+function RadioStory(args: TableProps<Member>) {
+  const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
 
-function DragStory() {
-  const [rows, setRows] = useState(members.slice(0, 6));
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
-  );
-  const handleDragEnd = ({ active, over }: DragEndEvent) => {
-    if (!over || active.id === over.id) return;
-    setRows((current) =>
-      arrayMove(
-        current,
-        current.findIndex((row) => row.key === active.id),
-        current.findIndex((row) => row.key === over.id),
-      ),
-    );
-  };
-  const dragColumns: ColumnsType<Member> = [
-    {
-      key: "drag",
-      title: <span className="sr-only">행 이동</span>,
-      width: 48,
-      render: () => <span className="cursor-grab text-[#999] select-none">⠿</span>,
-    },
-    ...columns,
-  ];
   return (
-    <>
-      <p className="mb-4 text-[#999]">
-        행을 잡아 원하는 위치로 드래그하세요. 주변 행이 이동 경로에 맞춰 부드럽게 재배치됩니다.
-      </p>
-      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-        <SortableContext items={rows.map((row) => row.key)} strategy={verticalListSortingStrategy}>
-          <Table<Member>
-            dataSource={rows}
-            columns={dragColumns}
-            rowKey="key"
-            pagination={false}
-            components={{ body: { row: SortableRow } }}
-          />
-        </SortableContext>
-      </DndContext>
-    </>
+    <Table<Member>
+      {...args}
+      rowSelection={{
+        type: "radio",
+        selectedRowKeys,
+        onChange: setSelectedRowKeys,
+      }}
+    />
   );
 }
 
-type SortableRowProps = HTMLAttributes<HTMLTableRowElement> & {
-  "data-row-key"?: Key;
-  record?: Member;
-  index?: number;
+export const DragRowSorting: Story = {
+  name: "Drag Row",
+  parameters: {
+    ...storyDescription("components-table--drag-row-sorting"),
+    tableSource: false,
+    docs: {
+      ...storyDescription("components-table--drag-row-sorting").docs,
+      source: {
+        code: withStoryImports(`${tableStoryDataSource}
+
+function DragRowTable() {
+  const [rows, setRows] = useState(members);
+
+  return (
+    <Table
+      dataSource={rows}
+      columns={columns}
+      pagination={false}
+      rowDrag={{
+        onChange: (nextRows) => {
+          setRows(nextRows);
+
+          // 필요하면 여기서 변경된 순서를 API로 저장해요.
+        },
+      }}
+    />
+  );
+}`),
+      },
+    },
+  },
+  render: () => <DragStory />,
+};
+export const DragColumnSorting: Story = {
+  name: "Drag Column",
+  parameters: {
+    ...storyDescription("components-table--drag-column-sorting"),
+    tableSource: false,
+    docs: {
+      ...storyDescription("components-table--drag-column-sorting").docs,
+      source: {
+        code: withStoryImports(`${dragColumnStoryDataSource}
+
+function DragColumnTable() {
+  const [currentColumns, setCurrentColumns] = useState(columns);
+
+  return (
+    <Table
+      dataSource={members}
+      columns={currentColumns}
+      pagination={false}
+      columnDrag={{
+        onChange: (nextColumns) => {
+          setCurrentColumns(nextColumns);
+
+          // 필요하면 여기서 변경된 열 순서를 API로 저장해요.
+        },
+      }}
+    />
+  );
+}`),
+      },
+    },
+  },
+  render: () => <DragColumnStory />,
 };
 
-function SortableRow({
-  record: _record,
-  index: _index,
-  style,
-  className = "",
-  ...props
-}: SortableRowProps) {
-  const id = String(props["data-row-key"]);
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id,
-  });
+function DragStory() {
+  const [rows, setRows] = useState(members.slice(0, 5));
+
   return (
-    <tr
-      ref={setNodeRef}
-      {...props}
-      {...attributes}
-      {...listeners}
-      role="row"
-      className={`${className} relative cursor-grab active:cursor-grabbing ${isDragging ? "z-10 opacity-90 drop-shadow-lg" : ""}`}
-      style={{
-        ...style,
-        transform: CSS.Transform.toString(transform),
-        transition: transition ?? "transform 220ms cubic-bezier(.2,.8,.2,1)",
-      }}
+    <Table<Member>
+      dataSource={rows}
+      columns={columns}
+      pagination={false}
+      rowDrag={{ onChange: setRows }}
     />
   );
 }
 
 function DragColumnStory() {
-  const [dragColumns, setDragColumns] = useState<ColumnsType<Member>>(() =>
-    columns.map((column) => ({ ...column, sorter: undefined, filters: undefined })),
-  );
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
-  );
-  const keys = dragColumns.map((column, index) => String(column.key ?? column.dataIndex ?? index));
-  const handleDragEnd = ({ active, over }: DragEndEvent) => {
-    if (!over || active.id === over.id) return;
-    setDragColumns((current) => {
-      const currentKeys = current.map((column, index) =>
-        String(column.key ?? column.dataIndex ?? index),
-      );
-      return arrayMove(
-        [...current],
-        currentKeys.indexOf(String(active.id)),
-        currentKeys.indexOf(String(over.id)),
-      );
-    });
-  };
-  return (
-    <>
-      <p className="mb-4 text-[#999]">
-        열 헤더를 잡아 좌우로 이동하세요. 다른 열이 자연스럽게 자리를 비웁니다.
-      </p>
-      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-        <SortableContext items={keys} strategy={horizontalListSortingStrategy}>
-          <Table<Member>
-            dataSource={members.slice(0, 6)}
-            columns={dragColumns}
-            rowKey="key"
-            pagination={false}
-            components={{ header: { cell: SortableHeaderCell } }}
-          />
-        </SortableContext>
-      </DndContext>
-    </>
-  );
-}
+  const [currentColumns, setCurrentColumns] = useState(columns);
 
-type SortableHeaderCellProps = HTMLAttributes<HTMLTableCellElement> & {
-  column?: ColumnsType<Member>[number];
-  index?: number;
-};
-
-function SortableHeaderCell({
-  column,
-  index = 0,
-  style,
-  className = "",
-  ...props
-}: SortableHeaderCellProps) {
-  const id = String(column?.key ?? column?.dataIndex ?? index);
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id,
-  });
-  const horizontalTransform = transform ? { ...transform, y: 0 } : null;
   return (
-    <th
-      ref={setNodeRef}
-      {...props}
-      {...attributes}
-      {...listeners}
-      role="columnheader"
-      className={`${className} cursor-grab active:cursor-grabbing ${isDragging ? "z-10" : ""}`}
-      style={{
-        ...style,
-        transform: CSS.Transform.toString(horizontalTransform),
-        transition: transition ?? "transform 220ms cubic-bezier(.2,.8,.2,1)",
-      }}
+    <Table<Member>
+      dataSource={members.slice(0, 5)}
+      columns={currentColumns}
+      pagination={false}
+      columnDrag={{ onChange: setCurrentColumns }}
     />
   );
 }

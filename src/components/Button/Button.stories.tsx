@@ -40,6 +40,7 @@ const meta = {
     prefixIcon: { control: false, table: { disable: true } },
     suffixIcon: { control: false, table: { disable: true } },
     className: { control: false, table: { disable: true } },
+    onClick: { control: false, table: { disable: true } },
   },
   parameters: {
     controls: { disable: true },
@@ -67,6 +68,7 @@ const meta = {
 | \`shadow\` | 버튼에 그림자를 표시해요. | \`boolean\` | \`false\` |
 | \`fullWidth\` | 부모 요소의 너비를 모두 채워요. | \`boolean\` | \`false\` |
 | \`className\` | 외부에서 Tailwind 클래스를 추가해요. | \`string\` | - |
+| \`onClick\` | 버튼을 클릭할 때 실행할 함수예요. | \`MouseEventHandler<HTMLButtonElement>\` | - |
           `}</Markdown>
         </div>
       ),

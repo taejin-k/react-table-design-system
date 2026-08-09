@@ -1,6 +1,5 @@
 /* oxlint-disable react/only-export-components -- The generic compound Table API is exported as one library component. */
 import {
-  Children,
   forwardRef,
   Fragment,
   isValidElement,
@@ -17,9 +16,17 @@ import {
   type KeyboardEvent as ReactKeyboardEvent,
   type ReactElement,
   type ReactNode,
+  type UIEvent as ReactUIEvent,
 } from "react";
 import { createPortal } from "react-dom";
+import { type DragEndEvent } from "@dnd-kit/core";
+import { arrayMove } from "@dnd-kit/sortable";
 import { twMerge } from "tailwind-merge";
+import { Button } from "../Button/Button";
+import { Checkbox } from "../Checkbox/Checkbox";
+import { Icon } from "../Icon/Icon";
+import { Illustrations } from "../Illustrations/Illustrations";
+import { Radio } from "../Radio/Radio";
 import {
   breakpointWidths,
   columnKey,
@@ -29,11 +36,18 @@ import {
   maxDepth,
 } from "./Table.utils";
 import { Pagination } from "./Pagination";
+import {
+  ColumnSortableContext,
+  RowDragHandle,
+  RowSortableContext,
+  SortableTableHeaderCell,
+  SortableTableRow,
+  TableDragProvider,
+} from "./Table.row-drag";
 import type {
   ColumnTitleProps,
   ColumnType,
   ColumnsType,
-  FilterDropdownProps,
   FilterItem,
   FilterKey,
   FilterValue,
@@ -42,29 +56,16 @@ import type {
   PaginationPlacement,
   RenderedCell,
   RowSelectMethod,
-  SelectionItem,
   SortOrder,
   SorterResult,
   TableProps,
   TableRef,
-  TableColumnGroupProps,
-  TableColumnProps,
-  TableSummaryCellProps,
-  TableSummaryProps,
-  TableSummaryRowProps,
-  TableSemanticClassNames,
-  TableSemanticStyles,
 } from "./Table.types";
 
 type SortState<T> = { column: ColumnType<T>; key: string; order: SortOrder; priority: number };
 type FlatRow<T> = { record: T; depth: number; parent?: Key };
-type CellComponent = React.ElementType;
-
-const EMPTY_CLASS_NAMES: TableSemanticClassNames = {};
-const EMPTY_STYLES: TableSemanticStyles = {};
-const SELECTION_ALL: SelectionItem = { key: "all", text: "Select all data" };
-const SELECTION_INVERT: SelectionItem = { key: "invert", text: "Invert current page" };
-const SELECTION_NONE: SelectionItem = { key: "none", text: "Select none" };
+const EMPTY_DATA_SOURCE: never[] = [];
+const EMPTY_COLUMNS: never[] = [];
 
 // ---- 스타일 상수 (wizard-design cva/Tailwind 컨벤션, GROO 색상) ----
 
@@ -80,27 +81,22 @@ const headerCellBaseClass = "bg-[#f5f5f5] text-left text-[14px] font-semibold te
 const nestedHeaderBorderClass = "border-r border-[#e5e5e5]";
 const headerCellSortedClass = "bg-[#eee]";
 const cellLastNoRightBorder = "border-r-0";
-
-const checkboxClass =
-  "relative m-0 size-4 shrink-0 cursor-pointer appearance-none rounded border border-[#ddd] bg-white bg-[length:12px_12px] bg-center bg-no-repeat transition-colors hover:border-[#0062df] checked:border-[#0062df] checked:bg-[#0062df] checked:bg-[image:url('data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2012%2012%22%3E%3Cpath%20fill%3D%22none%22%20stroke%3D%22white%22%20stroke-width%3D%221.7%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20d%3D%22m2.2%206.1%202.3%202.3%205.3-5.2%22%2F%3E%3C%2Fsvg%3E')] indeterminate:border-[#0062df] indeterminate:bg-[#0062df] indeterminate:bg-[image:url('data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2012%2012%22%3E%3Cpath%20fill%3D%22none%22%20stroke%3D%22white%22%20stroke-width%3D%221.7%22%20stroke-linecap%3D%22round%22%20d%3D%22M3%206h6%22%2F%3E%3C%2Fsvg%3E')] disabled:cursor-not-allowed disabled:border-[#ddd] disabled:bg-[#f5f5f5] disabled:opacity-65 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#0062df]";
-const radioClass =
-  "relative m-0 size-4 shrink-0 cursor-pointer appearance-none rounded-full border border-[#ddd] bg-white transition-colors hover:border-[#0062df] checked:border-[#0062df] checked:bg-[#0062df] checked:shadow-[inset_0_0_0_4px_white] disabled:cursor-not-allowed disabled:border-[#ddd] disabled:bg-[#f5f5f5] disabled:opacity-65 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#0062df]";
+const borderedGridClass =
+  "[&>thead>tr>th:not(:last-child)]:border-r [&>thead>tr>th:not(:last-child)]:border-[#f0f0f0] [&>tbody>tr>td:not(:last-child)]:border-r [&>tbody>tr>td:not(:last-child)]:border-[#f0f0f0] [&>tfoot>tr>td:not(:last-child)]:border-r [&>tfoot>tr>td:not(:last-child)]:border-[#f0f0f0]";
 
 const headerContentClass = "inline-flex min-w-0 items-center gap-0.5";
+const dragCellClass = "!px-2 text-center";
 const selectionCellClass = "!px-4 text-center";
 const expandCellClass = "!px-4 text-center";
 const expandCellBodyClass = "!px-0 text-start";
 const expandIndentClass = "flex min-h-[17px] items-center";
-const selectionHeadClass = "relative inline-flex items-center";
+const selectionHeadClass = "relative inline-flex -translate-y-px items-center align-middle";
 
 const iconButtonClass =
   "inline-grid size-6 cursor-pointer place-items-center rounded border-0 bg-transparent p-0 text-[#999] transition-colors hover:text-[#111] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#0062df]";
 const iconButtonActiveClass = "text-[#0062df]";
-const sortIconClass = "size-[12px] fill-[#ccc]";
-const sortIconPathActiveClass = "fill-[#0062df]";
-const filterIconClass = "size-[14px] fill-current";
 const expandButtonClass =
-  "inline-grid size-[17px] cursor-pointer place-items-center rounded-sm border border-[#ddd] bg-white text-[14px] leading-none text-[#999]";
+  "inline-grid size-[17px] cursor-pointer place-items-center rounded-sm border border-[#ddd] bg-white text-[#999]";
 const expandPlaceholderClass = "inline-block size-[17px]";
 const filterWrapClass = "relative";
 
@@ -117,92 +113,19 @@ const filterSearchClass =
   "mb-1.5 h-8 w-full rounded border border-[#ddd] bg-white px-[11px] text-[#111] outline-none transition-colors focus:border-[#0062df]";
 const filterActionsClass =
   "mt-1.5 flex items-center justify-between gap-2 border-t border-[#f0f0f0] pt-2";
-const filterActionButtonClass =
-  "h-6 cursor-pointer rounded border-0 bg-transparent px-2 text-[#0062df] hover:bg-[#f5f5f5]";
-const filterActionPrimaryClass = "bg-[#0062df] text-white hover:bg-[#0062df] hover:opacity-90";
-
-const selectionMenuTriggerClass =
-  "grid h-6 w-[18px] cursor-pointer place-items-center rounded border-0 bg-transparent p-0 text-[#999] transition-colors hover:bg-[#f5f5f5] hover:text-[#111] aria-expanded:bg-[#f5f5f5] aria-expanded:text-[#111]";
-const selectionMenuTriggerSvgClass =
-  "w-2.5 stroke-current transition-transform group-aria-expanded:rotate-180";
-const selectionMenuPopupClass = `absolute z-[1050] top-7 left-[-8px] grid min-w-[180px] gap-0.5 rounded-lg border border-[#eee] bg-white p-1 ${menuShadow}`;
-const selectionMenuItemClass =
-  "min-h-8 cursor-pointer whitespace-nowrap rounded border-0 bg-transparent px-3 py-[5px] text-left text-[#111] hover:bg-[#f5f5f5]";
 
 const ellipsisClass = "block w-full overflow-hidden text-ellipsis whitespace-nowrap";
 const emptyClass = "h-[184px] text-center text-[#999]";
-const emptyStateClass = "inline-grid justify-items-center gap-3";
-const emptyStateSvgClass = "w-16 fill-[#fafafa] stroke-[#ddd]";
 
 const loadingOverlayClass =
   "absolute inset-0 z-10 grid place-items-center rounded-[inherit] bg-white/75 backdrop-blur-[1px]";
 const loadingContentClass = "inline-flex items-center gap-2.5 text-[#0062df]";
-const spinnerClass =
-  "size-6 animate-spin rounded-full border-2 border-[#0062df]/20 border-t-[#0062df]";
-
 const fixedLeftLastShadowBaseClass =
   "after:pointer-events-none after:absolute after:right-0 after:top-0 after:bottom-[-1px] after:z-[1] after:w-[30px] after:translate-x-full after:content-[''] after:shadow-[inset_10px_0_8px_-8px_rgba(5,5,5,0)] after:transition-shadow";
 const fixedLeftLastShadowVisibleClass = "after:shadow-[inset_10px_0_8px_-8px_rgba(5,5,5,0.12)]";
 const fixedRightFirstShadowBaseClass =
   "before:pointer-events-none before:absolute before:left-0 before:top-0 before:bottom-[-1px] before:z-[1] before:w-[30px] before:-translate-x-full before:content-[''] before:shadow-[inset_-10px_0_8px_-8px_rgba(5,5,5,0)] before:transition-shadow";
 const fixedRightFirstShadowVisibleClass = "before:shadow-[inset_-10px_0_8px_-8px_rgba(5,5,5,0.12)]";
-
-function Column<T extends object>(_props: TableColumnProps<T>) {
-  return null;
-}
-
-function ColumnGroup<T extends object>(_props: TableColumnGroupProps<T>) {
-  return null;
-}
-
-function columnsFromChildren<T extends object>(children: ReactNode): ColumnsType<T> {
-  return Children.toArray(children).flatMap((child) => {
-    if (!isValidElement(child) || (child.type !== Column && child.type !== ColumnGroup)) return [];
-    const element = child as ReactElement<TableColumnProps<T> & { children?: ReactNode }>;
-    const { children: nested, ...columnProps } = element.props;
-    const nestedColumns = columnsFromChildren<T>(nested);
-    return [
-      {
-        ...columnProps,
-        ...(nestedColumns.length ? { children: nestedColumns } : {}),
-      } as ColumnType<T>,
-    ];
-  });
-}
-
-function SummaryBase({ children }: TableSummaryProps) {
-  return <>{children}</>;
-}
-
-function SummaryRow(props: TableSummaryRowProps) {
-  return <tr {...props} />;
-}
-
-function SummaryCell({ index, ...props }: TableSummaryCellProps) {
-  return <td data-column-index={index} {...props} />;
-}
-
-const Summary = Object.assign(SummaryBase, { Row: SummaryRow, Cell: SummaryCell });
-
-function asClassGroup(value: TableSemanticClassNames["header"]) {
-  return typeof value === "object" ? value : undefined;
-}
-
-function asStyleGroup(value: TableSemanticStyles["header"]) {
-  return value && ("wrapper" in value || "row" in value || "cell" in value)
-    ? (value as { wrapper?: CSSProperties; row?: CSSProperties; cell?: CSSProperties })
-    : undefined;
-}
-
-function asPaginationClassGroup(value: TableSemanticClassNames["pagination"]) {
-  return typeof value === "object" ? value : undefined;
-}
-
-function asPaginationStyleGroup(value: TableSemanticStyles["pagination"]) {
-  return value && ("root" in value || "item" in value)
-    ? (value as { root?: CSSProperties; item?: CSSProperties })
-    : undefined;
-}
 
 function fixedSide(fixed?: ColumnType<object>["fixed"]) {
   if (fixed === true || fixed === "left" || fixed === "start") return "left";
@@ -236,36 +159,28 @@ function normalizePlacement(config: PaginationConfig): PaginationPlacement[] {
 
 function InnerTable<T extends object>(props: TableProps<T>, ref: React.ForwardedRef<TableRef>) {
   const {
-    children,
-    dataSource = [],
-    column: sharedColumn,
+    dataSource: sourceDataSource = EMPTY_DATA_SOURCE,
     columns: sourceColumns,
     rowKey = "key" as keyof T,
     pagination = {},
     rowSelection,
+    rowDrag,
+    columnDrag,
     expandable,
     bordered = false,
     loading = false,
     size = "large",
-    title,
-    footer,
-    summary,
     locale = {},
     showHeader = true,
     showSorterTooltip = true,
-    tableLayout = "auto",
+    tableLayout = "fixed",
     rowClassName,
     rowHoverable = true,
-    sticky = false,
     virtual = false,
     scroll,
     sortDirections = ["ascend", "descend"],
-    rootClassName = "",
     className = "",
-    classNames: classNamesProp,
-    styles: stylesProp,
     style: rootStyle,
-    components,
     getPopupContainer = () => document.body,
     onChange,
     onRow,
@@ -273,33 +188,33 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
     onScroll,
     ...rootProps
   } = props;
-  const classNames =
-    (typeof classNamesProp === "function" ? classNamesProp({ props }) : classNamesProp) ??
-    EMPTY_CLASS_NAMES;
-  const styles =
-    (typeof stylesProp === "function" ? stylesProp({ props }) : stylesProp) ?? EMPTY_STYLES;
-  const headerClasses = asClassGroup(classNames.header);
-  const bodyClasses = asClassGroup(classNames.body);
-  const paginationClasses = asPaginationClassGroup(classNames.pagination);
-  const headerStyles = asStyleGroup(styles.header);
-  const bodyStyles = asStyleGroup(styles.body);
-  const paginationStyles = asPaginationStyleGroup(styles.pagination);
   const rootRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const headerScrollRef = useRef<HTMLDivElement>(null);
   const filterTriggers = useRef(new Map<string, HTMLButtonElement>());
   const selectionCache = useRef(new Map<Key, T>());
-  const lastSelectedIndex = useRef<number | null>(null);
   const selectionName = `wizard-table-selection-${useId().replace(/:/g, "")}`;
+  const rowDragEnabled = Boolean(rowDrag);
+  const rowDragConfig = typeof rowDrag === "object" ? rowDrag : undefined;
+  const columnDragEnabled = Boolean(columnDrag);
+  const columnDragConfig = typeof columnDrag === "object" ? columnDrag : undefined;
+  const [dragDataSource, setDragDataSource] = useState<T[]>(sourceDataSource);
+  const [verticalScrollbarWidth, setVerticalScrollbarWidth] = useState(0);
 
-  const columns = useMemo(() => {
-    const merge = (items: ColumnsType<T>): ColumnsType<T> =>
-      items.map((item) => ({
-        ...sharedColumn,
-        ...item,
-        children: item.children ? merge(item.children) : undefined,
-      }));
-    return merge(sourceColumns ?? columnsFromChildren<T>(children));
-  }, [children, sharedColumn, sourceColumns]);
+  useEffect(() => {
+    if (rowDragEnabled) setDragDataSource(sourceDataSource);
+  }, [rowDragEnabled, sourceDataSource]);
+
+  const dataSource = rowDragEnabled ? dragDataSource : sourceDataSource;
+
+  const sourceColumnsResolved = sourceColumns ?? EMPTY_COLUMNS;
+  const [dragColumns, setDragColumns] = useState<ColumnsType<T>>(sourceColumnsResolved);
+
+  useEffect(() => {
+    if (columnDragEnabled) setDragColumns(sourceColumnsResolved);
+  }, [columnDragEnabled, sourceColumnsResolved]);
+
+  const columns = columnDragEnabled ? dragColumns : sourceColumnsResolved;
   const [internalPage, setInternalPage] = useState(
     typeof pagination === "object" ? (pagination.defaultCurrent ?? 1) : 1,
   );
@@ -337,6 +252,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
     () => new Set(expandable?.defaultExpandedRowKeys ?? []),
   );
   const [scrollTop, setScrollTop] = useState(0);
+  const [scrollViewportWidth, setScrollViewportWidth] = useState(0);
   const [viewportWidth, setViewportWidth] = useState(() =>
     typeof window === "undefined" ? 1440 : window.innerWidth,
   );
@@ -346,6 +262,9 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
   const [scrollBoundary, setScrollBoundary] = useState({ left: false, right: false });
   const measureScrollBoundary = useCallback((node: HTMLDivElement | null) => {
     if (!node) return;
+    setScrollViewportWidth((current) =>
+      current === node.clientWidth ? current : node.clientWidth,
+    );
     const maxScrollLeft = Math.max(0, node.scrollWidth - node.clientWidth);
     const next = { left: node.scrollLeft > 1, right: node.scrollLeft < maxScrollLeft - 1 };
     setScrollBoundary((current) =>
@@ -358,10 +277,12 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
       const node = event.currentTarget;
       const horizontalStep = Math.max(48, Math.round(node.clientWidth * 0.15));
       const verticalStep = Math.max(48, Math.round(node.clientHeight * 0.8));
+      const canScrollHorizontally =
+        Boolean(scroll?.x) || scrollBoundary.left || scrollBoundary.right;
       const movement =
-        event.key === "ArrowLeft" && scroll?.x
+        event.key === "ArrowLeft" && canScrollHorizontally
           ? { left: -horizontalStep }
-          : event.key === "ArrowRight" && scroll?.x
+          : event.key === "ArrowRight" && canScrollHorizontally
             ? { left: horizontalStep }
             : event.key === "PageUp" && scroll?.y
               ? { top: -verticalStep }
@@ -372,7 +293,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
       event.preventDefault();
       node.scrollBy({ ...movement, behavior: "smooth" });
     },
-    [scroll?.x, scroll?.y],
+    [scroll?.x, scroll?.y, scrollBoundary.left, scrollBoundary.right],
   );
 
   useEffect(() => {
@@ -622,6 +543,62 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
     ? Math.max(0, (allFlatRows.length - virtualStart - renderedRows.length) * rowHeight)
     : 0;
 
+  const handleRowDragEnd = useCallback(
+    ({ active, over }: DragEndEvent) => {
+      if (!over || active.id === over.id) return;
+
+      const activeIndex = dataSource.findIndex(
+        (record, index) => `row:${String(keyOf(record, index))}` === String(active.id),
+      );
+      const overIndex = dataSource.findIndex(
+        (record, index) => `row:${String(keyOf(record, index))}` === String(over.id),
+      );
+      if (activeIndex < 0 || overIndex < 0) return;
+
+      const nextDataSource = arrayMove(dataSource, activeIndex, overIndex);
+      setDragDataSource(nextDataSource);
+      rowDragConfig?.onChange?.(nextDataSource, {
+        activeKey: keyOf(dataSource[activeIndex], activeIndex),
+        overKey: keyOf(dataSource[overIndex], overIndex),
+        activeIndex,
+        overIndex,
+      });
+    },
+    [dataSource, keyOf, rowDragConfig],
+  );
+
+  const handleColumnDragEnd = useCallback(
+    ({ active, over }: DragEndEvent) => {
+      if (!over || active.id === over.id) return;
+
+      const activeIndex = columns.findIndex(
+        (item, index) => `column:${columnKey(item, index)}` === String(active.id),
+      );
+      const overIndex = columns.findIndex(
+        (item, index) => `column:${columnKey(item, index)}` === String(over.id),
+      );
+      if (activeIndex < 0 || overIndex < 0) return;
+
+      const nextColumns = arrayMove([...columns], activeIndex, overIndex);
+      setDragColumns(nextColumns);
+      columnDragConfig?.onChange?.(nextColumns, {
+        activeKey: columnKey(columns[activeIndex], activeIndex),
+        overKey: columnKey(columns[overIndex], overIndex),
+        activeIndex,
+        overIndex,
+      });
+    },
+    [columnDragConfig, columns],
+  );
+
+  const handleTableDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      if (event.active.data.current?.dragType === "column") handleColumnDragEnd(event);
+      else if (event.active.data.current?.dragType === "row") handleRowDragEnd(event);
+    },
+    [handleColumnDragEnd, handleRowDragEnd],
+  );
+
   const emitChange = (
     action: "paginate" | "sort" | "filter",
     nextPage = safePage,
@@ -641,7 +618,6 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
       leafColumns.flatMap((item, index) => {
         const key = columnKey(item, index);
         return item.filters?.length ||
-          item.filterDropdown ||
           item.filteredValue !== undefined ||
           item.defaultFilteredValue !== undefined
           ? [[key, nextFilters[key]?.length ? nextFilters[key] : null]]
@@ -703,7 +679,6 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
     setFilters((current) => ({ ...current, [key]: values }));
     if (closeDropdown) {
       setFilterOpen(null);
-      item.filterDropdownProps?.onOpenChange?.(false);
     }
     setInternalPage(1);
     pageConfig?.onChange?.(1, pageSize);
@@ -721,24 +696,16 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
       applyFilter(item, index, filterDraft[key] ?? activeFilters[key] ?? []);
     else {
       setFilterOpen(null);
-      item.filterDropdownProps?.onOpenChange?.(false);
     }
   };
 
-  const updateSelection = (
-    next: Set<Key>,
-    type: RowSelectMethod,
-    record?: T,
-    selected?: boolean,
-    event?: Event,
-  ) => {
+  const updateSelection = (next: Set<Key>, type: RowSelectMethod) => {
     if (!rowSelection?.selectedRowKeys) setSelectedKeys(next);
     const source = rowSelection?.preserveSelectedRowKeys
       ? [...selectionCache.current.values()]
       : allDataRows;
     const selectedRows = source.filter((row) => next.has(keyOf(row)));
     rowSelection?.onChange?.([...next], selectedRows, { type });
-    if (record && event) rowSelection?.onSelect?.(record, Boolean(selected), selectedRows, event);
     return selectedRows;
   };
 
@@ -751,19 +718,9 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
   const partlyChecked = !allChecked && changeableKeys.some((key) => controlledSelected.has(key));
   const selectAll = (selected: boolean) => {
     const next = new Set(controlledSelected);
-    const changed = changeableRows.filter((record) => selected !== next.has(keyOf(record)));
     changeableKeys.forEach((key) => (selected ? next.add(key) : next.delete(key)));
-    const selectedRows = updateSelection(next, selected ? "all" : "none");
-    rowSelection?.onSelectAll?.(selected, selectedRows, changed);
-    if (!selected) rowSelection?.onSelectNone?.();
+    updateSelection(next, selected ? "all" : "none");
   };
-  const invertSelection = () => {
-    const next = new Set(controlledSelected);
-    changeableKeys.forEach((key) => (next.has(key) ? next.delete(key) : next.add(key)));
-    updateSelection(next, "invert");
-    rowSelection?.onSelectInvert?.([...next]);
-  };
-
   const conductTreeSelection = (next: Set<Key>, record: T, selected: boolean) => {
     const key = keyOf(record);
     const visit = (currentKey: Key) => {
@@ -814,11 +771,12 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
     expandable?.onExpandedRowsChange?.([...next]);
   };
 
+  const dragWidth = rowDragEnabled ? Number(rowDragConfig?.columnWidth ?? 48) : 0;
   const selectionWidth = rowSelection ? Number(rowSelection.columnWidth ?? 48) : 0;
   const expandWidth =
     expandable && expandable.showExpandColumn !== false ? Number(expandable.columnWidth ?? 48) : 0;
   const leftOffsets = useMemo(() => {
-    let offset = selectionWidth + expandWidth;
+    let offset = dragWidth + selectionWidth + expandWidth;
     const map: Record<string, number> = {};
     leafColumns.forEach((item, index) => {
       if (fixedSide(item.fixed as ColumnType<object>["fixed"]) === "left") {
@@ -827,7 +785,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
       }
     });
     return map;
-  }, [expandWidth, leafColumns, selectionWidth]);
+  }, [dragWidth, expandWidth, leafColumns, selectionWidth]);
   const rightOffsets = useMemo(() => {
     let offset =
       fixedSide(expandable?.fixed as ColumnType<object>["fixed"]) === "right" ? expandWidth : 0;
@@ -853,7 +811,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
   };
   const selectionFixedStyle: CSSProperties =
     fixedSide(rowSelection?.fixed as ColumnType<object>["fixed"]) === "left"
-      ? { position: "sticky", left: 0, zIndex: 3 }
+      ? { position: "sticky", left: dragWidth, zIndex: 3 }
       : {};
   const selectionHeaderFixedStyle: CSSProperties = selectionFixedStyle.position
     ? { ...selectionFixedStyle, zIndex: 7 }
@@ -861,15 +819,21 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
   const expandSide = fixedSide(expandable?.fixed as ColumnType<object>["fixed"]);
   const expandFixedStyle: CSSProperties =
     expandSide === "left"
-      ? { position: "sticky", left: selectionWidth, zIndex: 3 }
+      ? { position: "sticky", left: dragWidth + selectionWidth, zIndex: 3 }
       : expandSide === "right"
         ? { position: "sticky", right: 0, zIndex: 3 }
         : {};
   const expandHeaderFixedStyle: CSSProperties = expandFixedStyle.position
     ? { ...expandFixedStyle, zIndex: 7 }
     : expandFixedStyle;
+  const dragFixedStyle: CSSProperties = rowDragEnabled
+    ? { position: "sticky", left: 0, zIndex: 3 }
+    : {};
+  const dragHeaderFixedStyle: CSSProperties = { ...dragFixedStyle, zIndex: 7 };
   const extraColumnCount =
-    (rowSelection ? 1 : 0) + (expandable && expandable.showExpandColumn !== false ? 1 : 0);
+    (rowDragEnabled ? 1 : 0) +
+    (rowSelection ? 1 : 0) +
+    (expandable && expandable.showExpandColumn !== false ? 1 : 0);
   const fullColSpan = leafColumns.length + extraColumnCount;
   const lastLeftFixedIndex = leafColumns.reduce(
     (last, item, index) =>
@@ -1001,8 +965,6 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
         : (locale.cancelSort ?? "정렬 해제");
   };
 
-  const HeaderRow = components?.header?.row ?? "tr";
-  const HeaderCell = components?.header?.cell ?? "th";
   const renderHeaderRows = () => {
     const depth = maxDepth(responsiveColumns);
     return Array.from({ length: depth }, (_, level) => {
@@ -1018,20 +980,23 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
             const tooltipTitle =
               typeof tooltip === "object" && tooltip.title
                 ? String(tooltip.title)
-                : nextSortLabel(item, order);
+                : (locale.sortTitle ?? nextSortLabel(item, order));
             const headerProps = item.onHeaderCell?.(item, leafIndex) ?? {};
-            const customProps = components?.header?.cell ? { column: item, index: leafIndex } : {};
             const itemLeaves = item.children?.length ? flattenColumns(item.children) : [item];
             const visualLastIndex = leafColumns.indexOf(itemLeaves[itemLeaves.length - 1]);
             const resolvedColSpan = item.children?.length ? leafCount(item) : item.colSpan;
-            const filterIsOpen = item.filterDropdownProps?.open ?? filterOpen === key;
+            const filterIsOpen = filterOpen === key;
             if (resolvedColSpan === 0 || item.rowSpan === 0) return;
+            const draggableColumn = columnDragEnabled && depth === 1 && !item.children;
+            const RenderedHeaderCell: React.ElementType = draggableColumn
+              ? SortableTableHeaderCell
+              : "th";
             cells.push(
-              <HeaderCell
+              <RenderedHeaderCell
                 key={`${headerPath}-${key}-${level}`}
+                {...(draggableColumn ? { component: "th", dragId: `column:${key}` } : {})}
                 colSpan={resolvedColSpan}
                 rowSpan={item.children?.length ? 1 : (item.rowSpan ?? depth - level)}
-                {...customProps}
                 {...headerProps}
                 title={
                   tooltip &&
@@ -1045,8 +1010,6 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
                   minWidth: tableLayout === "auto" ? item.minWidth : undefined,
                   textAlign: item.align,
                   ...(!item.children ? headerFixedStyle(item, leafIndex) : {}),
-                  ...headerStyles?.cell,
-                  ...styles.cell,
                   ...headerProps.style,
                 }}
                 className={twMerge(
@@ -1057,8 +1020,6 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
                   !item.children && fixedClass(item, leafIndex),
                   isNestedHeader && nestedHeaderBorderClass,
                   visualLastIndex === leafColumns.length - 1 && cellLastNoRightBorder,
-                  headerClasses?.cell,
-                  classNames.cell,
                   item.className,
                   headerProps.className,
                 )}
@@ -1086,10 +1047,21 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
                           : undefined
                       }
                     >
-                      {item.sortIcon?.({ sortOrder: order }) ?? <SortGlyph order={order} />}
+                      <Icon
+                        icon="sorter"
+                        size={12}
+                        color="#ccc"
+                        className={
+                          order === "ascend"
+                            ? "[&>path:first-child]:fill-[#0062df]"
+                            : order === "descend"
+                              ? "[&>path:last-child]:fill-[#0062df]"
+                              : undefined
+                        }
+                      />
                     </button>
                   )}
-                  {(item.filters?.length || item.filterDropdown) && !item.children ? (
+                  {item.filters?.length && !item.children ? (
                     <span className={filterWrapClass}>
                       <button
                         ref={(node) => {
@@ -1109,15 +1081,12 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
                             [key]: activeFilters[key] ?? [],
                           }));
                           setFilterOpen(open ? key : null);
-                          item.filterDropdownProps?.onOpenChange?.(open);
                         }}
                         aria-label={`${String(renderTitle(item))} 필터`}
                         aria-haspopup="dialog"
                         aria-expanded={filterIsOpen}
                       >
-                        {typeof item.filterIcon === "function"
-                          ? item.filterIcon(Boolean(item.filtered || activeFilters[key]?.length))
-                          : (item.filterIcon ?? <FilterGlyph />)}
+                        <Icon icon="filter" size={14} />
                       </button>
                       {filterIsOpen && (
                         <FilterMenu
@@ -1129,7 +1098,6 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
                             filterTriggers.current.get(key) &&
                             getPopupContainer?.(filterTriggers.current.get(key)!)
                           }
-                          className={item.filterDropdownProps?.className}
                           onValues={(values) =>
                             setFilterDraft((draft) => ({ ...draft, [key]: values }))
                           }
@@ -1140,38 +1108,47 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
                     </span>
                   ) : null}
                 </span>
-              </HeaderCell>,
+              </RenderedHeaderCell>,
             );
           } else if (item.children?.length) visit(item.children, current + 1, headerPath);
         });
       visit(responsiveColumns, 0);
 
-      const titleCheckbox =
+      const selectionTitle =
         rowSelection && rowSelection.type !== "radio" && !rowSelection.hideSelectAll ? (
-          <SelectionCheckbox
+          <Checkbox
             aria-label="모든 행 선택"
-            {...rowSelection.getTitleCheckboxProps?.()}
             checked={allChecked}
             indeterminate={partlyChecked}
             onChange={(event) => selectAll(event.target.checked)}
           />
         ) : null;
-      const selectionTitle = rowSelection
-        ? typeof rowSelection.columnTitle === "function"
-          ? rowSelection.columnTitle(titleCheckbox)
-          : (rowSelection.columnTitle ?? titleCheckbox)
-        : null;
       const headerRowProps = onHeaderRow?.(responsiveColumns, level) ?? {};
       return (
-        <HeaderRow
+        <tr
           key={level}
-          {...(components?.header?.row ? { columns: responsiveColumns, index: level } : {})}
           {...headerRowProps}
-          className={twMerge(headerClasses?.row, headerRowProps.className)}
-          style={{ ...headerStyles?.row, ...headerRowProps.style }}
+          className={headerRowProps.className}
+          style={headerRowProps.style}
         >
+          {level === 0 && rowDragEnabled && (
+            <th
+              rowSpan={depth}
+              className={twMerge(
+                cellBaseClass,
+                cellSizePad[size],
+                headerCellBaseClass,
+                isNestedHeader && nestedHeaderBorderClass,
+                dragCellClass,
+              )}
+              style={{
+                width: rowDragConfig?.columnWidth ?? 48,
+                ...dragHeaderFixedStyle,
+              }}
+            />
+          )}
           {level === 0 && rowSelection && (
-            <HeaderCell
+            <th
               rowSpan={depth}
               className={twMerge(
                 cellBaseClass,
@@ -1187,24 +1164,11 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
                 ...selectionHeaderFixedStyle,
               }}
             >
-              <span className={selectionHeadClass}>
-                {selectionTitle}
-                {rowSelection.selections && !rowSelection.hideSelectAll && (
-                  <SelectionMenu
-                    rowSelection={rowSelection}
-                    changeableKeys={changeableKeys}
-                    onAll={() => selectAll(true)}
-                    onInvert={invertSelection}
-                    onNone={() => selectAll(false)}
-                    locale={locale}
-                    getPopupContainer={getPopupContainer}
-                  />
-                )}
-              </span>
-            </HeaderCell>
+              <span className={selectionHeadClass}>{selectionTitle}</span>
+            </th>
           )}
           {level === 0 && expandable && expandable.showExpandColumn !== false && (
-            <HeaderCell
+            <th
               rowSpan={depth}
               className={twMerge(
                 cellBaseClass,
@@ -1219,16 +1183,15 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
               {expandable.columnTitle ?? (
                 <span className="sr-only">{locale.expand ?? "행 펼치기"}</span>
               )}
-            </HeaderCell>
+            </th>
           )}
           {cells}
-        </HeaderRow>
+        </tr>
       );
     });
   };
 
-  const RowComponent = components?.body?.row ?? "tr";
-  const Cell = components?.body?.cell ?? "td";
+  const RenderedRowComponent: React.ElementType = rowDragEnabled ? SortableTableRow : "tr";
   const renderRow = ({ record, depth }: FlatRow<T>, visibleIndex: number) => {
     const actualIndex = virtualStart + visibleIndex;
     const key = keyOf(record, actualIndex);
@@ -1238,18 +1201,15 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
       (expandable?.rowExpandable?.(record) ?? true);
     const expanded = controlledExpanded.has(key);
     const rowProps = onRow?.(record, actualIndex) ?? {};
-    const customRowProps = components?.body?.row ? { record, index: actualIndex } : {};
     const customClass = rowClassName?.(record, actualIndex, depth) ?? "";
     const rowClass = twMerge(
+      depth > 0 && "[&>td]:bg-[#fafafa]",
       rowHoverable && "hover:[&>td]:bg-[#f5f5f5]",
       controlledSelected.has(key) && "[&>td]:bg-[#eef0f8] hover:[&>td]:bg-[#e3e7f5]",
-      bodyClasses?.row,
-      classNames.row,
       customClass,
       rowProps.className,
     );
     const checkboxProps = rowSelection?.getCheckboxProps?.(record) ?? {};
-    const selectionCellProps = rowSelection?.onCell?.(record, actualIndex) ?? {};
     const checked = controlledSelected.has(key);
     const selection = rowSelection;
     const selectionInputProps = selection
@@ -1260,72 +1220,32 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
           "aria-label": checkboxProps["aria-label"] ?? `${String(key)} 행 선택`,
           onChange: (event: React.ChangeEvent<HTMLInputElement>) => {
             const next = selection.type === "radio" ? new Set<Key>() : new Set(controlledSelected);
-            const native = event.nativeEvent as MouseEvent;
-            if (
-              native.shiftKey &&
-              lastSelectedIndex.current !== null &&
-              selection.type !== "radio"
-            ) {
-              const start = Math.min(lastSelectedIndex.current, actualIndex);
-              const end = Math.max(lastSelectedIndex.current, actualIndex);
-              const changed = allFlatRows
-                .slice(start, end + 1)
-                .map((item) => item.record)
-                .filter((item) => !selection.getCheckboxProps?.(item).disabled);
-              changed.forEach((item) =>
-                event.target.checked ? next.add(keyOf(item)) : next.delete(keyOf(item)),
-              );
-              const selectedRows = updateSelection(next, "multiple");
-              selection.onSelectMultiple?.(event.target.checked, selectedRows, changed);
-            } else {
-              if (selection.checkStrictly === false && selection.type !== "radio")
-                conductTreeSelection(next, record, event.target.checked);
-              else if (event.target.checked) next.add(key);
-              else next.delete(key);
-              updateSelection(
-                next,
-                selection.type === "radio" ? "single" : "multiple",
-                record,
-                event.target.checked,
-                event.nativeEvent,
-              );
-            }
-            lastSelectedIndex.current = actualIndex;
+            if (selection.checkStrictly === false && selection.type !== "radio")
+              conductTreeSelection(next, record, event.target.checked);
+            else if (event.target.checked) next.add(key);
+            else next.delete(key);
+            updateSelection(next, selection.type === "radio" ? "single" : "multiple");
           },
         }
       : null;
     const originSelectionNode =
       selection && selectionInputProps ? (
         selection.type === "radio" ? (
-          <input {...selectionInputProps} type="radio" className={radioClass} />
+          <Radio {...selectionInputProps} />
         ) : (
-          <SelectionCheckbox
-            {...selectionInputProps}
-            indeterminate={treeSelectionIndeterminate(key)}
-          />
+          <Checkbox {...selectionInputProps} indeterminate={treeSelectionIndeterminate(key)} />
         )
       ) : null;
-    const renderedSelection = rowSelection?.renderCell?.(
-      checked,
-      record,
-      actualIndex,
-      originSelectionNode,
-    );
-    const selectionRenderedCell =
-      renderedSelection && isRenderedCell(renderedSelection) ? renderedSelection : null;
-
     return (
       <Fragment key={key}>
-        <RowComponent
+        <RenderedRowComponent
+          {...(rowDragEnabled ? { component: "tr", dragId: `row:${String(key)}` } : {})}
           data-row-key={key}
           data-row-depth={depth}
-          {...customRowProps}
           {...rowProps}
           className={rowClass}
           style={{
             height: virtual ? rowHeight : undefined,
-            ...bodyStyles?.row,
-            ...styles.row,
             ...rowProps.style,
           }}
           onClick={(event: React.MouseEvent<HTMLTableRowElement>) => {
@@ -1342,41 +1262,36 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
               toggleExpand(record);
           }}
         >
+          {rowDragEnabled && (
+            <td
+              className={twMerge(cellBaseClass, cellSizePad[size], dragCellClass)}
+              style={{
+                width: rowDragConfig?.columnWidth ?? 48,
+                ...dragFixedStyle,
+              }}
+            >
+              <RowDragHandle />
+            </td>
+          )}
           {rowSelection && (
-            <Cell
-              {...(components?.body?.cell
-                ? { record, index: actualIndex, column: "selection" }
-                : {})}
-              {...selectionCellProps}
-              {...selectionRenderedCell?.props}
+            <td
               className={twMerge(
                 cellBaseClass,
                 cellSizePad[size],
                 selectionCellClass,
                 selectionBoundaryClass,
-                selectionCellProps.className,
-                selectionRenderedCell?.props?.className,
               )}
               style={{
                 width: rowSelection.columnWidth ?? 48,
                 textAlign: rowSelection.align,
                 ...selectionFixedStyle,
-                ...selectionCellProps.style,
-                ...selectionRenderedCell?.props?.style,
               }}
             >
-              {selectionRenderedCell ? (
-                selectionRenderedCell.children
-              ) : (
-                <span className="flex items-center justify-center">
-                  {(renderedSelection as ReactNode) ?? originSelectionNode}
-                </span>
-              )}
-            </Cell>
+              <span className="flex items-center justify-center">{originSelectionNode}</span>
+            </td>
           )}
           {expandable && expandable.showExpandColumn !== false && (
-            <Cell
-              {...(components?.body?.cell ? { record, index: actualIndex, column: "expand" } : {})}
+            <td
               className={twMerge(
                 cellBaseClass,
                 cellSizePad[size],
@@ -1389,41 +1304,30 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
                 className={expandIndentClass}
                 style={{ paddingInlineStart: 15 + depth * (expandable.indentSize ?? 15) }}
               >
-                {expandable.expandIcon?.({
-                  expanded,
-                  record,
-                  expandable: canExpand,
-                  onExpand: (item, event) => {
-                    event.stopPropagation();
-                    toggleExpand(item);
-                  },
-                }) ??
-                  (canExpand ? (
-                    <button
-                      type="button"
-                      className={expandButtonClass}
-                      aria-expanded={expanded}
-                      aria-label={
-                        expanded ? (locale.collapse ?? "행 접기") : (locale.expand ?? "행 펼치기")
-                      }
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        toggleExpand(record);
-                      }}
-                    >
-                      {expanded ? "−" : "+"}
-                    </button>
-                  ) : (
-                    <span className={expandPlaceholderClass} aria-hidden />
-                  ))}
+                {canExpand ? (
+                  <button
+                    type="button"
+                    className={expandButtonClass}
+                    aria-expanded={expanded}
+                    aria-label={
+                      expanded ? (locale.collapse ?? "행 접기") : (locale.expand ?? "행 펼치기")
+                    }
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      toggleExpand(record);
+                    }}
+                  >
+                    <Icon icon={expanded ? "remove" : "add"} size={12} />
+                  </button>
+                ) : (
+                  <span className={expandPlaceholderClass} aria-hidden />
+                )}
               </span>
-            </Cell>
+            </td>
           )}
           {leafColumns.map((item, columnIndex) => (
             <BodyCell
               key={columnKey(item, columnIndex)}
-              component={Cell}
-              custom={Boolean(components?.body?.cell)}
               item={item}
               record={record}
               rowIndex={actualIndex}
@@ -1434,24 +1338,19 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
                 fixedClass(item, columnIndex),
                 groupBoundaryLeafIndices.has(columnIndex) && nestedHeaderBorderClass,
                 columnIndex === leafColumns.length - 1 && cellLastNoRightBorder,
-                bodyClasses?.cell,
-                classNames.cell,
               )}
-              style={{ ...bodyStyles?.cell, ...styles.cell }}
             />
           ))}
-        </RowComponent>
+        </RenderedRowComponent>
         {expandable?.expandedRowRender && expanded && (
-          <tr
-            className={twMerge(
-              "bg-[#f5f5f5]",
-              typeof expandable.expandedRowClassName === "function"
-                ? expandable.expandedRowClassName(record, actualIndex, depth)
-                : expandable.expandedRowClassName,
-            )}
-          >
+          <tr className="bg-[#fafafa]">
             <td
-              className={twMerge(cellBaseClass, cellSizePad[size], cellLastNoRightBorder)}
+              className={twMerge(
+                cellBaseClass,
+                cellSizePad[size],
+                cellLastNoRightBorder,
+                "!bg-[#fafafa]",
+              )}
               colSpan={fullColSpan}
             >
               {expandable.expandedRowRender(record, actualIndex, depth, expanded)}
@@ -1476,108 +1375,180 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
         pageCount={pageCount}
         placement={placement}
         onChange={changePage}
-        className={twMerge(
-          typeof classNames.pagination === "string"
-            ? classNames.pagination
-            : paginationClasses?.root,
-          placement.startsWith("top") ? "pb-4" : "pt-4",
-        )}
-        style={
-          (typeof styles.pagination === "object" && !paginationStyles
-            ? styles.pagination
-            : paginationStyles?.root) as CSSProperties | undefined
-        }
+        className={placement.startsWith("top") ? "pb-4" : "pt-4"}
       />
     ) : null;
   const topPagination = placements.filter((item) => item.startsWith("top")).map(renderPagination);
   const bottomPagination = placements
     .filter((item) => item.startsWith("bottom"))
     .map(renderPagination);
-  const TableElement = components?.table ?? "table";
-  const HeaderWrapper = components?.header?.wrapper ?? "thead";
-  const BodyWrapper = components?.body?.wrapper ?? "tbody";
   const effectiveLayout =
     tableLayout === "fixed" || scroll?.x || leafColumns.some((item) => item.ellipsis || item.fixed)
       ? "fixed"
       : "auto";
+  const flexibleColumnCount = leafColumns.filter((item) => item.width == null).length;
+  const canDistributeFixedWidth =
+    effectiveLayout === "fixed" &&
+    flexibleColumnCount > 0 &&
+    leafColumns.every((item) => item.width == null || typeof item.width === "number") &&
+    [dragWidth, selectionWidth, expandWidth].every(Number.isFinite);
+  const fixedPixelWidth = canDistributeFixedWidth
+    ? dragWidth +
+      selectionWidth +
+      expandWidth +
+      leafColumns.reduce(
+        (total, item) => total + (typeof item.width === "number" ? item.width : 0),
+        0,
+      )
+    : 0;
+  const flexibleMinimumWidth = canDistributeFixedWidth
+    ? leafColumns.reduce(
+        (total, item) => total + (item.width == null ? (item.minWidth ?? 0) : 0),
+        0,
+      )
+    : 0;
+  const minimumFixedTableWidth = fixedPixelWidth + flexibleMinimumWidth;
+  const requestedFixedLayoutWidth =
+    typeof scroll?.x === "number"
+      ? Math.max(scroll.x, scrollViewportWidth)
+      : scroll?.x
+        ? 0
+        : scrollViewportWidth;
+  const fixedLayoutWidth = Math.max(requestedFixedLayoutWidth, minimumFixedTableWidth);
+  const flexibleExtraWidth =
+    canDistributeFixedWidth && fixedLayoutWidth > minimumFixedTableWidth
+      ? (fixedLayoutWidth - minimumFixedTableWidth) / flexibleColumnCount
+      : undefined;
   const emptyText =
     typeof locale.emptyText === "function"
       ? locale.emptyText()
       : (locale.emptyText ?? <DefaultEmpty />);
   const loadingConfig = typeof loading === "object" ? loading : undefined;
-  const summaryContent = summary?.(pageData);
-  const compoundSummary = isValidElement(summaryContent) && summaryContent.type === SummaryBase;
-  const summaryFixed = compoundSummary
-    ? (summaryContent as ReactElement<TableSummaryProps>).props.fixed
-    : false;
-  const summaryPosition = summaryFixed === "top" ? "top" : summaryFixed ? "bottom" : null;
-  const SummaryWrapper = summaryPosition === "top" ? "tbody" : "tfoot";
-  const summaryElement = summary ? (
-    <SummaryWrapper
-      className={twMerge(
-        "[&>tr>td]:border-t [&>tr>td]:border-[#f0f0f0] [&>tr>td]:bg-white [&>tr>td]:p-4",
-        summaryPosition && "sticky z-[4]",
-        summaryPosition === "top" && "top-0",
-        summaryPosition === "bottom" && "bottom-0",
-        !summaryPosition &&
-          sticky &&
-          typeof sticky === "object" &&
-          sticky.offsetSummary !== undefined &&
-          "sticky bottom-0 z-[4]",
-      )}
-      style={
-        summaryPosition === "top"
-          ? {
-              top:
-                (typeof sticky === "object" ? (sticky.offsetHeader ?? 0) : 0) +
-                (showHeader ? maxDepth(responsiveColumns) * rowHeight : 0),
-            }
-          : summaryPosition === "bottom" ||
-              (sticky && typeof sticky === "object" && sticky.offsetSummary !== undefined)
-            ? { bottom: typeof sticky === "object" ? sticky.offsetSummary : 0 }
-            : undefined
-      }
-    >
-      {compoundSummary ? (
-        summaryContent
-      ) : (
-        <tr>
-          <td
-            className={twMerge(cellBaseClass, cellSizePad[size], cellLastNoRightBorder)}
-            colSpan={fullColSpan}
-          >
-            {summaryContent}
-          </td>
-        </tr>
-      )}
-    </SummaryWrapper>
-  ) : null;
-  const summaryRowCount = summary
-    ? compoundSummary
-      ? Children.count((summaryContent as ReactElement<TableSummaryProps>).props.children)
-      : 1
-    : 0;
-  const wrapperMaxHeight =
-    typeof scroll?.y === "number"
-      ? scroll.y +
-        (showHeader ? maxDepth(responsiveColumns) * rowHeight : 0) +
-        summaryRowCount * rowHeight
-      : scroll?.y;
+  const wrapperMaxHeight = scroll?.y;
 
   useLayoutEffect(() => {
     const node = scrollRef.current;
-    if (!scroll?.x || !node) {
+    if (!node) {
       setScrollBoundary({ left: false, right: false });
+      setVerticalScrollbarWidth(0);
       return;
     }
-    measureScrollBoundary(node);
+    const measure = () => {
+      measureScrollBoundary(node);
+      setVerticalScrollbarWidth(scroll?.y ? node.offsetWidth - node.clientWidth : 0);
+    };
+    measure();
     if (typeof ResizeObserver === "undefined") return;
-    const observer = new ResizeObserver(() => measureScrollBoundary(node));
+    const observer = new ResizeObserver(measure);
     observer.observe(node);
     const table = node.querySelector("table");
     if (table) observer.observe(table);
     return () => observer.disconnect();
-  }, [leafColumns, measureScrollBoundary, pageData.length, scroll?.x]);
+  }, [leafColumns, measureScrollBoundary, pageData.length, scroll?.x, scroll?.y]);
+
+  const hasHorizontalOverflow = scrollBoundary.left || scrollBoundary.right;
+  const tableStyle: CSSProperties = {
+    tableLayout: effectiveLayout,
+    minWidth:
+      typeof scroll?.x === "number"
+        ? Math.max(scroll.x, minimumFixedTableWidth)
+        : scroll?.x === "max-content"
+          ? "max-content"
+          : minimumFixedTableWidth || undefined,
+  };
+  const renderColumnGroup = () => (
+    <colgroup>
+      {rowDragEnabled && <col style={{ width: rowDragConfig?.columnWidth ?? 48 }} />}
+      {rowSelection && <col style={{ width: rowSelection.columnWidth ?? 48 }} />}
+      {expandable && expandable.showExpandColumn !== false && (
+        <col style={{ width: expandable.columnWidth ?? 48 }} />
+      )}
+      {leafColumns.map((item, index) => (
+        <col
+          key={columnKey(item, index)}
+          style={{
+            width:
+              item.width ??
+              (flexibleExtraWidth == null
+                ? item.minWidth
+                : (item.minWidth ?? 0) + flexibleExtraWidth),
+            minWidth: effectiveLayout === "auto" ? item.minWidth : undefined,
+          }}
+        />
+      ))}
+    </colgroup>
+  );
+  const tableHeader = showHeader ? (
+    <ColumnSortableContext
+      enabled={columnDragEnabled}
+      items={leafColumns.map((item, index) => `column:${columnKey(item, index)}`)}
+    >
+      <thead>{renderHeaderRows()}</thead>
+    </ColumnSortableContext>
+  ) : null;
+  const tableBody = (
+    <>
+      <RowSortableContext
+        enabled={rowDragEnabled}
+        items={allFlatRows.map(({ record }, index) => `row:${String(keyOf(record, index))}`)}
+      >
+        <tbody className={twMerge(bordered && "[&>tr:last-child>td]:border-b-0")}>
+          {topPad > 0 && (
+            <tr aria-hidden>
+              <td
+                className={cellLastNoRightBorder}
+                colSpan={fullColSpan}
+                style={{ height: topPad, padding: 0 }}
+              />
+            </tr>
+          )}
+          {renderedRows.map(renderRow)}
+          {bottomPad > 0 && (
+            <tr aria-hidden>
+              <td
+                className={cellLastNoRightBorder}
+                colSpan={fullColSpan}
+                style={{ height: bottomPad, padding: 0 }}
+              />
+            </tr>
+          )}
+          {!loadingVisible && allFlatRows.length === 0 && (
+            <tr>
+              <td
+                className={twMerge(
+                  emptyClass,
+                  cellLastNoRightBorder,
+                  !bordered && "border-b border-[#f0f0f0]",
+                )}
+                colSpan={fullColSpan}
+              >
+                {emptyText}
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </RowSortableContext>
+    </>
+  );
+  const loadingElement = loadingVisible ? (
+    <div
+      className={twMerge(loadingOverlayClass, loadingConfig?.className)}
+      style={loadingConfig?.style}
+    >
+      <div className={loadingContentClass}>
+        {loadingConfig?.indicator ?? <Icon icon="loading" size={24} />}
+        {loadingConfig?.tip && <span>{loadingConfig.tip}</span>}
+        <span className="sr-only">로딩 중</span>
+      </div>
+    </div>
+  ) : null;
+  const handleTableScroll = (event: ReactUIEvent<HTMLDivElement>) => {
+    if (headerScrollRef.current)
+      headerScrollRef.current.scrollLeft = event.currentTarget.scrollLeft;
+    if (virtual) setScrollTop(event.currentTarget.scrollTop);
+    measureScrollBoundary(event.currentTarget);
+    onScroll?.(event);
+  };
 
   return (
     <div
@@ -1585,160 +1556,91 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
       ref={rootRef}
       className={twMerge(
         "relative w-full font-pretendard text-[14px] leading-[1.5715] text-[#111]",
-        rootClassName,
         className,
-        classNames.root,
       )}
-      style={{ ...rootStyle, ...styles.root }}
+      style={rootStyle}
       aria-busy={loadingVisible}
     >
       {topPagination}
-      <div
-        className={twMerge(
-          "w-full rounded-lg bg-white",
-          bordered && "border border-[#f0f0f0]",
-          classNames.section,
-        )}
-        style={styles.section}
-      >
-        {title && (
-          <div
-            className={twMerge(
-              "rounded-t-lg border-b border-[#f0f0f0] bg-white p-4 font-semibold",
-              classNames.title,
-            )}
-            style={styles.title}
-          >
-            {title(pageData)}
-          </div>
-        )}
-        <div
-          ref={scrollRef}
-          className={twMerge(
-            "relative w-full overflow-hidden rounded-[inherit] bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0062df]",
-            scroll?.x && "overflow-x-auto",
-            classNames.wrapper,
-            classNames.content,
-          )}
-          role={scroll?.x || scroll?.y ? "region" : undefined}
-          aria-label={scroll?.x || scroll?.y ? "테이블 스크롤 영역" : undefined}
-          tabIndex={scroll?.x || scroll?.y ? 0 : undefined}
-          style={{
-            overflowX: scroll?.x ? "auto" : undefined,
-            overflowY: scroll?.y ? "auto" : undefined,
-            maxHeight: wrapperMaxHeight,
-            ...styles.content,
-            ...styles.wrapper,
-          }}
-          onKeyDown={handleScrollKeyDown}
-          onScroll={(event) => {
-            if (virtual) setScrollTop(event.currentTarget.scrollTop);
-            if (scroll?.x) measureScrollBoundary(event.currentTarget);
-            onScroll?.(event);
-          }}
+      <div className={twMerge("w-full rounded-lg bg-white", bordered && "border border-[#f0f0f0]")}>
+        <TableDragProvider
+          enabled={rowDragEnabled || columnDragEnabled}
+          onDragEnd={handleTableDragEnd}
         >
-          <TableElement
-            className={twMerge("w-full border-separate border-spacing-0", classNames.table)}
-            style={{
-              tableLayout: effectiveLayout,
-              minWidth:
-                typeof scroll?.x === "number"
-                  ? scroll.x
-                  : scroll?.x === "max-content"
-                    ? "max-content"
-                    : undefined,
-              ...styles.table,
-            }}
-          >
-            <colgroup>
-              {rowSelection && <col style={{ width: rowSelection.columnWidth ?? 48 }} />}
-              {expandable && expandable.showExpandColumn !== false && (
-                <col style={{ width: expandable.columnWidth ?? 48 }} />
+          {scroll?.y ? (
+            <div className="relative rounded-[inherit]">
+              {showHeader && (
+                <div
+                  ref={headerScrollRef}
+                  data-table-header-scroll
+                  className="w-full overflow-hidden rounded-t-[inherit] bg-white"
+                  style={{ paddingRight: verticalScrollbarWidth }}
+                >
+                  <table
+                    className={twMerge(
+                      "w-full border-separate border-spacing-0",
+                      bordered && borderedGridClass,
+                    )}
+                    style={tableStyle}
+                  >
+                    {renderColumnGroup()}
+                    {tableHeader}
+                  </table>
+                </div>
               )}
-              {leafColumns.map((item, index) => (
-                <col
-                  key={columnKey(item, index)}
-                  style={{ width: item.width, minWidth: item.minWidth }}
-                />
-              ))}
-            </colgroup>
-            {showHeader && (
-              <HeaderWrapper
+              <div
+                ref={scrollRef}
+                data-table-scroll-container
                 className={twMerge(
-                  sticky && "sticky z-[5] [&>tr>th]:sticky [&>tr>th]:z-[4]",
-                  typeof classNames.header === "string"
-                    ? classNames.header
-                    : headerClasses?.wrapper,
+                  "relative w-full overflow-auto rounded-b-[inherit] bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0062df]",
+                  !showHeader && "rounded-t-[inherit]",
                 )}
-                style={{
-                  top: typeof sticky === "object" ? (sticky.offsetHeader ?? 0) : 0,
-                  ...headerStyles?.wrapper,
-                }}
+                role="region"
+                aria-label="테이블 스크롤 영역"
+                tabIndex={0}
+                style={{ maxHeight: wrapperMaxHeight }}
+                onKeyDown={handleScrollKeyDown}
+                onScroll={handleTableScroll}
               >
-                {renderHeaderRows()}
-              </HeaderWrapper>
-            )}
-            {summaryPosition === "top" && summaryElement}
-            <BodyWrapper
-              className={twMerge(
-                bordered && "[&>tr:last-child>td]:border-b-0",
-                typeof classNames.body === "string" ? classNames.body : bodyClasses?.wrapper,
-              )}
-              style={bodyStyles?.wrapper}
-            >
-              {topPad > 0 && (
-                <tr aria-hidden>
-                  <td
-                    className={cellLastNoRightBorder}
-                    colSpan={fullColSpan}
-                    style={{ height: topPad, padding: 0 }}
-                  />
-                </tr>
-              )}
-              {renderedRows.map(renderRow)}
-              {bottomPad > 0 && (
-                <tr aria-hidden>
-                  <td
-                    className={cellLastNoRightBorder}
-                    colSpan={fullColSpan}
-                    style={{ height: bottomPad, padding: 0 }}
-                  />
-                </tr>
-              )}
-              {!loadingVisible && allFlatRows.length === 0 && (
-                <tr>
-                  <td className={twMerge(emptyClass, cellLastNoRightBorder)} colSpan={fullColSpan}>
-                    {emptyText}
-                  </td>
-                </tr>
-              )}
-            </BodyWrapper>
-            {summaryPosition !== "top" && summaryElement}
-          </TableElement>
-          {loadingVisible && (
-            <div
-              className={twMerge(loadingOverlayClass, loadingConfig?.className)}
-              style={loadingConfig?.style}
-            >
-              <div className={loadingContentClass}>
-                {loadingConfig?.indicator ?? <span className={spinnerClass} aria-hidden />}
-                {loadingConfig?.tip && <span>{loadingConfig.tip}</span>}
-                <span className="sr-only">로딩 중</span>
+                <table
+                  className={twMerge(
+                    "w-full border-separate border-spacing-0",
+                    bordered && borderedGridClass,
+                  )}
+                  style={tableStyle}
+                >
+                  {renderColumnGroup()}
+                  {tableBody}
+                </table>
+                {loadingElement}
               </div>
             </div>
+          ) : (
+            <div
+              ref={scrollRef}
+              data-table-scroll-container
+              className="relative w-full overflow-x-auto overflow-y-hidden rounded-[inherit] bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0062df]"
+              role={scroll?.x || hasHorizontalOverflow ? "region" : undefined}
+              aria-label={scroll?.x || hasHorizontalOverflow ? "테이블 스크롤 영역" : undefined}
+              tabIndex={scroll?.x || hasHorizontalOverflow ? 0 : undefined}
+              onKeyDown={handleScrollKeyDown}
+              onScroll={handleTableScroll}
+            >
+              <table
+                className={twMerge(
+                  "w-full border-separate border-spacing-0",
+                  bordered && borderedGridClass,
+                )}
+                style={tableStyle}
+              >
+                {renderColumnGroup()}
+                {tableHeader}
+                {tableBody}
+              </table>
+              {loadingElement}
+            </div>
           )}
-        </div>
-        {footer && (
-          <div
-            className={twMerge(
-              "rounded-b-lg border-t border-[#f0f0f0] bg-white p-4 text-[#999]",
-              classNames.footer,
-            )}
-            style={styles.footer}
-          >
-            {footer(pageData)}
-          </div>
-        )}
+        </TableDragProvider>
       </div>
       {bottomPagination}
     </div>
@@ -1746,25 +1648,19 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
 }
 
 type BodyCellProps<T extends object> = {
-  component: CellComponent;
-  custom: boolean;
   item: ColumnType<T>;
   record: T;
   rowIndex: number;
   fixedStyle: CSSProperties;
   className: string;
-  style: CSSProperties;
 };
 
 function BodyCellInner<T extends object>({
-  component: Cell,
-  custom,
   item,
   record,
   rowIndex,
   fixedStyle,
   className,
-  style,
 }: BodyCellProps<T>) {
   const value = getValue(record, item.dataIndex);
   const cellProps = item.onCell?.(record, rowIndex) ?? {};
@@ -1773,8 +1669,7 @@ function BodyCellInner<T extends object>({
   const mergedProps = { ...cellProps, ...renderedCell?.props };
   if (mergedProps.colSpan === 0 || mergedProps.rowSpan === 0) return null;
   return (
-    <Cell
-      {...(custom ? { record, index: rowIndex, column: item } : {})}
+    <td
       {...mergedProps}
       scope={item.rowScope}
       title={
@@ -1788,7 +1683,6 @@ function BodyCellInner<T extends object>({
         minWidth: item.minWidth,
         textAlign: item.align,
         ...fixedStyle,
-        ...style,
         ...mergedProps.style,
       }}
     >
@@ -1799,9 +1693,9 @@ function BodyCellInner<T extends object>({
       ) : renderedCell ? (
         renderedCell.children
       ) : (
-        rendered
+        (rendered as ReactNode)
       )}
-    </Cell>
+    </td>
   );
 }
 
@@ -1809,7 +1703,6 @@ const BodyCell = memo(BodyCellInner, (previous, next) => {
   if (
     previous.item !== next.item ||
     previous.rowIndex !== next.rowIndex ||
-    previous.component !== next.component ||
     previous.className !== next.className
   )
     return false;
@@ -1817,215 +1710,6 @@ const BodyCell = memo(BodyCellInner, (previous, next) => {
     ? !next.item.shouldCellUpdate(next.record, previous.record)
     : false;
 }) as typeof BodyCellInner;
-
-function SelectionCheckbox({
-  indeterminate,
-  className,
-  ...props
-}: React.InputHTMLAttributes<HTMLInputElement> & { indeterminate?: boolean }) {
-  const ref = useRef<HTMLInputElement>(null);
-  useEffect(() => {
-    if (ref.current) ref.current.indeterminate = Boolean(indeterminate);
-  }, [indeterminate]);
-  return (
-    <input ref={ref} type="checkbox" className={twMerge(checkboxClass, className)} {...props} />
-  );
-}
-
-function SelectionMenu<T extends object>({
-  rowSelection,
-  changeableKeys,
-  onAll,
-  onInvert,
-  onNone,
-  locale,
-  getPopupContainer,
-}: {
-  rowSelection: NonNullable<TableProps<T>["rowSelection"]>;
-  changeableKeys: Key[];
-  onAll: () => void;
-  onInvert: () => void;
-  onNone: () => void;
-  locale: NonNullable<TableProps<T>["locale"]>;
-  getPopupContainer: (triggerNode: HTMLElement) => HTMLElement;
-}) {
-  const [open, setOpen] = useState(false);
-  const rootRef = useRef<HTMLDivElement>(null);
-  const triggerRef = useRef<HTMLButtonElement>(null);
-  const popupRef = useRef<HTMLDivElement>(null);
-  const focusOnOpenRef = useRef<"first" | "last" | null>(null);
-  const popupId = `wizard-table-selection-menu-${useId().replace(/:/g, "")}`;
-  const items =
-    rowSelection.selections === true
-      ? [
-          { key: "all", text: locale.selectionAll ?? "전체 데이터 선택", action: onAll },
-          { key: "invert", text: locale.selectInvert ?? "현재 페이지 선택 반전", action: onInvert },
-          { key: "none", text: locale.selectNone ?? "선택 해제", action: onNone },
-        ]
-      : (rowSelection.selections || []).map((item) =>
-          item === SELECTION_ALL
-            ? { key: item.key, text: locale.selectionAll ?? item.text, action: onAll }
-            : item === SELECTION_INVERT
-              ? { key: item.key, text: locale.selectInvert ?? item.text, action: onInvert }
-              : item === SELECTION_NONE
-                ? { key: item.key, text: locale.selectNone ?? item.text, action: onNone }
-                : { key: item.key, text: item.text, action: () => item.onSelect?.(changeableKeys) },
-        );
-  useEffect(() => {
-    if (!open) return;
-    const pointer = (event: PointerEvent) => {
-      if (
-        !rootRef.current?.contains(event.target as Node) &&
-        !popupRef.current?.contains(event.target as Node)
-      )
-        setOpen(false);
-    };
-    const keyboard = (event: KeyboardEvent) => {
-      if (event.key !== "Escape") return;
-      event.preventDefault();
-      setOpen(false);
-      triggerRef.current?.focus();
-    };
-    document.addEventListener("pointerdown", pointer);
-    document.addEventListener("keydown", keyboard);
-    return () => {
-      document.removeEventListener("pointerdown", pointer);
-      document.removeEventListener("keydown", keyboard);
-    };
-  }, [open]);
-  useEffect(() => {
-    if (!open || !focusOnOpenRef.current) return;
-    const menuItems = popupRef.current?.querySelectorAll<HTMLButtonElement>('[role="menuitem"]');
-    menuItems?.[focusOnOpenRef.current === "first" ? 0 : menuItems.length - 1]?.focus();
-    focusOnOpenRef.current = null;
-  }, [open]);
-  const choose = (action: () => void) => {
-    action();
-    setOpen(false);
-    triggerRef.current?.focus();
-  };
-  const handleMenuKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
-    const menuItems = Array.from(
-      popupRef.current?.querySelectorAll<HTMLButtonElement>('[role="menuitem"]') ?? [],
-    );
-    if (!menuItems.length) return;
-    const currentIndex = menuItems.indexOf(document.activeElement as HTMLButtonElement);
-    const targetIndex =
-      event.key === "Home"
-        ? 0
-        : event.key === "End"
-          ? menuItems.length - 1
-          : event.key === "ArrowDown"
-            ? (currentIndex + 1 + menuItems.length) % menuItems.length
-            : event.key === "ArrowUp"
-              ? (currentIndex - 1 + menuItems.length) % menuItems.length
-              : -1;
-    if (targetIndex < 0) return;
-    event.preventDefault();
-    menuItems[targetIndex]?.focus();
-  };
-  const popupContainer =
-    open && triggerRef.current ? getPopupContainer(triggerRef.current) : undefined;
-  const portalStyle =
-    popupContainer && triggerRef.current
-      ? (() => {
-          const triggerRect = triggerRef.current!.getBoundingClientRect();
-          const containerRect =
-            popupContainer === document.body
-              ? { top: 0, left: 0 }
-              : popupContainer.getBoundingClientRect();
-          return {
-            position: popupContainer === document.body ? ("fixed" as const) : ("absolute" as const),
-            top: triggerRect.bottom - containerRect.top + 4,
-            left: triggerRect.left - containerRect.left - 8,
-          };
-        })()
-      : undefined;
-  const popup = open && (
-    <div
-      ref={popupRef}
-      id={popupId}
-      role="menu"
-      aria-label="선택 작업 메뉴"
-      className={selectionMenuPopupClass}
-      style={portalStyle}
-      onKeyDown={handleMenuKeyDown}
-    >
-      {items.map((item) => (
-        <button
-          type="button"
-          role="menuitem"
-          key={item.key}
-          className={selectionMenuItemClass}
-          onClick={() => choose(item.action)}
-        >
-          {item.text}
-        </button>
-      ))}
-    </div>
-  );
-  return (
-    <div ref={rootRef} className="group absolute top-1/2 left-full ml-0.5 -translate-y-1/2">
-      <button
-        ref={triggerRef}
-        type="button"
-        className={selectionMenuTriggerClass}
-        aria-label="선택 작업"
-        aria-expanded={open}
-        aria-haspopup="menu"
-        aria-controls={popupId}
-        onClick={() => setOpen((current) => !current)}
-        onKeyDown={(event) => {
-          if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
-          event.preventDefault();
-          const position = event.key === "ArrowDown" ? "first" : "last";
-          if (open) {
-            const menuItems =
-              popupRef.current?.querySelectorAll<HTMLButtonElement>('[role="menuitem"]');
-            menuItems?.[position === "first" ? 0 : menuItems.length - 1]?.focus();
-            focusOnOpenRef.current = null;
-            return;
-          }
-          focusOnOpenRef.current = position;
-          setOpen(true);
-        }}
-      >
-        <svg
-          viewBox="0 0 10 10"
-          aria-hidden
-          className={selectionMenuTriggerSvgClass}
-          fill="none"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={1.4}
-        >
-          <path d="m2 3.5 3 3 3-3" />
-        </svg>
-      </button>
-      {popup && popupContainer ? createPortal(popup, popupContainer) : popup}
-    </div>
-  );
-}
-
-function SortGlyph({ order }: { order: SortOrder }) {
-  return (
-    <svg className={sortIconClass} viewBox="0 0 12 14" aria-hidden>
-      <path className={order === "ascend" ? sortIconPathActiveClass : ""} d="M6 2 2.5 6h7L6 2Z" />
-      <path
-        className={order === "descend" ? sortIconPathActiveClass : ""}
-        d="m6 12 3.5-4h-7L6 12Z"
-      />
-    </svg>
-  );
-}
-
-function FilterGlyph() {
-  return (
-    <svg className={filterIconClass} viewBox="0 0 16 16" aria-hidden>
-      <path d="M2.7 3.25a.75.75 0 0 1 .63-.35h9.34a.75.75 0 0 1 .57 1.24L9.5 8.5v3.35a.75.75 0 0 1-.37.65l-1.5.87A.75.75 0 0 1 6.5 12.7V8.5L2.76 4.14a.75.75 0 0 1-.06-.89Z" />
-    </svg>
-  );
-}
 
 function FilterMenu<T extends object>({
   item,
@@ -2074,29 +1758,12 @@ function FilterMenu<T extends object>({
     };
   }, [onClose, trigger]);
 
-  const close = () => onClose();
-  const confirm: FilterDropdownProps["confirm"] = (options) =>
-    onApply(values, options?.closeDropdown !== false);
-  const clearFilters: NonNullable<FilterDropdownProps["clearFilters"]> = (options) => {
+  const confirm = () => onApply(values, true);
+  const clearFilters = () => {
     const next = item.filterResetToDefaultFilteredValue ? (item.defaultFilteredValue ?? []) : [];
     onValues(next);
-    if (options?.confirm !== false) onApply(next, options?.closeDropdown !== false);
-    else if (options?.closeDropdown) close();
   };
-  const customProps: FilterDropdownProps = {
-    setSelectedKeys: onValues,
-    selectedKeys: values,
-    confirm,
-    clearFilters,
-    close,
-    filters: item.filters,
-    visible: true,
-  };
-  const content =
-    typeof item.filterDropdown === "function"
-      ? item.filterDropdown(customProps)
-      : item.filterDropdown;
-  const defaultContent = (
+  const content = (
     <>
       {item.filterSearch && (
         <input
@@ -2125,18 +1792,14 @@ function FilterMenu<T extends object>({
       <div className={filterActionsClass}>
         <button
           type="button"
-          className={filterActionButtonClass}
-          onClick={() => clearFilters({ confirm: false })}
+          className="h-6 cursor-pointer border-0 bg-transparent px-2 text-[#0062df]"
+          onClick={clearFilters}
         >
           {locale.filterReset ?? "초기화"}
         </button>
-        <button
-          type="button"
-          className={twMerge(filterActionButtonClass, filterActionPrimaryClass)}
-          onClick={() => confirm()}
-        >
+        <Button size="md" onClick={() => confirm()}>
           {locale.filterConfirm ?? "확인"}
-        </button>
+        </Button>
       </div>
     </>
   );
@@ -2164,7 +1827,7 @@ function FilterMenu<T extends object>({
       aria-label={locale.filterTitle ?? "필터 메뉴"}
       onClick={(event) => event.stopPropagation()}
     >
-      {content ?? defaultContent}
+      {content}
     </div>
   );
   return popupContainer ? createPortal(menu, popupContainer) : menu;
@@ -2220,29 +1883,30 @@ function FilterOptions({
               />
             </>
           ) : (
-            <label
-              className={filterOptionLabelClass}
-              style={{ paddingInlineStart: 8 + depth * 12 }}
-            >
-              <input
-                type={multiple ? "checkbox" : "radio"}
-                name={multiple ? undefined : radioName}
-                className={multiple ? checkboxClass : radioClass}
-                checked={values.includes(item.value)}
-                onChange={(event) =>
-                  onValues(
-                    multiple
-                      ? event.target.checked
+            <div className={filterOptionLabelClass} style={{ paddingInlineStart: 8 + depth * 12 }}>
+              {multiple ? (
+                <Checkbox
+                  className="w-full"
+                  label={item.text}
+                  checked={values.includes(item.value)}
+                  onChange={(event) =>
+                    onValues(
+                      event.target.checked
                         ? [...values, item.value]
-                        : values.filter((value) => value !== item.value)
-                      : event.target.checked
-                        ? [item.value]
-                        : [],
-                  )
-                }
-              />
-              {item.text}
-            </label>
+                        : values.filter((value) => value !== item.value),
+                    )
+                  }
+                />
+              ) : (
+                <Radio
+                  className="w-full"
+                  label={item.text}
+                  name={radioName}
+                  checked={values.includes(item.value)}
+                  onChange={(event) => onValues(event.target.checked ? [item.value] : [])}
+                />
+              )}
+            </div>
           )}
         </div>
       ))}
@@ -2251,39 +1915,11 @@ function FilterOptions({
 }
 
 function DefaultEmpty() {
-  return (
-    <div className={emptyStateClass}>
-      <svg
-        viewBox="0 0 64 41"
-        aria-hidden
-        className={emptyStateSvgClass}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path d="M8 10h48l-6 24H14L8 10Z" />
-        <path d="M20 10 25 3h14l5 7" />
-        <path d="M14 34c4-5 8-7 13-7h10c5 0 9 2 13 7" />
-      </svg>
-      <span>데이터가 없습니다.</span>
-    </div>
-  );
+  return <Illustrations description="데이터가 없어요" />;
 }
 
-type TableComponent = {
-  <T extends object>(props: TableProps<T> & { ref?: React.Ref<TableRef> }): ReactElement;
-  Column: typeof Column;
-  ColumnGroup: typeof ColumnGroup;
-  Summary: typeof Summary;
-  SELECTION_ALL: SelectionItem;
-  SELECTION_INVERT: SelectionItem;
-  SELECTION_NONE: SelectionItem;
-};
+type TableComponent = <T extends object>(
+  props: TableProps<T> & { ref?: React.Ref<TableRef> },
+) => ReactElement;
 
-export const Table = Object.assign(forwardRef(InnerTable), {
-  Column,
-  ColumnGroup,
-  Summary,
-  SELECTION_ALL,
-  SELECTION_INVERT,
-  SELECTION_NONE,
-}) as TableComponent;
+export const Table = forwardRef(InnerTable) as TableComponent;

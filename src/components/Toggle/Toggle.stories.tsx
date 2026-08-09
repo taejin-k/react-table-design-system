@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Description, Markdown, Stories, Title } from "@storybook/addon-docs/blocks";
 import type { Meta, StoryObj } from "@storybook/react";
 import { storyDescriptions } from "../../storybook/story-descriptions";
+import { withStoryImports } from "../../storybook/story-source";
 import { Toggle } from "./Toggle";
 import type { ToggleProps } from "./Toggle.types";
 
@@ -26,8 +27,7 @@ const meta = {
     controls: { disable: true },
     docs: {
       description: {
-        component:
-          "설정을 켜거나 꺼요.  \n크기를 선택하고 선택·오류·비활성 상태를 설정할 수 있어요.",
+        component: "설정을 켜거나 꺼요.  \n크기를 선택하고 켜짐·비활성 상태를 설정할 수 있어요.",
       },
       page: () => (
         <div className="toggle-docs component-docs">
@@ -43,7 +43,7 @@ const meta = {
 | \`size\` | Toggle의 크기를 설정해요. | \`lg \\| md \\| sm\` | \`md\` |
 | \`checked\` | 켜짐 상태를 설정해요. | \`boolean\` | - |
 | \`className\` | 최상위 요소에 Tailwind 클래스를 추가해요. | \`string\` | - |
-| \`onChange\` | 상태가 바뀔 때 변경된 값을 전달해요. | \`(checked: boolean) => void\` | - |
+| \`onChange\` | 상태가 바뀔 때 실행할 함수예요. 변경된 상태를 인자로 받아요. | \`(checked: boolean) => void\` | - |
           `}</Markdown>
         </div>
       ),
@@ -55,23 +55,52 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Sizes: Story = {
-  parameters: { ...storyDescription("components-toggle--sizes"), controls: { disable: false } },
-  render: (args) => (
-    <div className="flex flex-wrap items-center gap-8">
-      {sizes.map((size) => (
-        <ControlledToggle key={size} {...args} size={size} />
-      ))}
-    </div>
-  ),
-};
+  parameters: {
+    ...storyDescription("components-toggle--sizes"),
+    controls: { disable: false, include: ["크기"] },
+    docs: {
+      ...storyDescription("components-toggle--sizes").docs,
+      source: {
+        code: withStoryImports(`function LargeToggle() {
+  const [enabled, setEnabled] = useState(false);
 
-export const States: Story = {
-  parameters: { ...storyDescription("components-toggle--states"), controls: { disable: false } },
+  return <Toggle size="lg" checked={enabled} onChange={setEnabled} />;
+}`),
+      },
+    },
+  },
   render: (args, { viewMode }) =>
     viewMode === "docs" ? (
       <div className="flex flex-wrap items-center gap-8">
-        <Toggle checked={false} />
-        <Toggle checked />
+        {sizes.map((size) => (
+          <ControlledToggle key={size} {...args} size={size} />
+        ))}
+      </div>
+    ) : (
+      <ControlledToggle {...args} />
+    ),
+};
+
+export const States: Story = {
+  parameters: {
+    ...storyDescription("components-toggle--states"),
+    controls: { disable: false, include: ["선택", "비활성"] },
+    docs: {
+      ...storyDescription("components-toggle--states").docs,
+      source: {
+        code: withStoryImports(`function BasicToggle() {
+  const [enabled, setEnabled] = useState(false);
+
+  return <Toggle checked={enabled} onChange={setEnabled} />;
+}`),
+      },
+    },
+  },
+  render: (args, { viewMode }) =>
+    viewMode === "docs" ? (
+      <div className="flex flex-wrap items-center gap-8">
+        <ControlledToggle checked={false} />
+        <ControlledToggle checked />
         <Toggle checked={false} disabled />
         <Toggle checked disabled />
       </div>

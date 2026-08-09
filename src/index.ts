@@ -18,6 +18,12 @@ export { Radio } from "./components/Radio";
 export type { RadioProps } from "./components/Radio";
 export { Breadcrumb } from "./components/Breadcrumb";
 export type { BreadcrumbKey, BreadcrumbProps, Item } from "./components/Breadcrumb";
+export { Illustrations } from "./components/Illustrations";
+export type {
+  IllustrationSize,
+  IllustrationType,
+  IllustrationsProps,
+} from "./components/Illustrations";
 export { Table } from "./components/Table";
 export type {
   AlignType,
@@ -27,34 +33,26 @@ export type {
   ColumnType,
   DataIndex,
   ExpandableConfig,
-  ExpandIconProps,
-  FilterDropdownProps,
   FilterItem,
   FilterKey,
   FilterValue,
   FixedType,
   Key,
   PaginationConfig,
-  PaginationItemType,
   PaginationPlacement,
   RenderedCell,
+  RowDragConfig,
+  RowDragInfo,
+  ColumnDragConfig,
+  ColumnDragInfo,
   RowSelectMethod,
   RowSelection,
-  SelectionItem,
   SortOrder,
   SorterResult,
   TableChangeExtra,
-  TableColumnGroupProps,
-  TableColumnProps,
-  TableComponents,
   TableLoadingConfig,
   TableLocale,
   TableProps,
   TableRef,
   TableRowCheckboxProps,
-  TableSemanticClassNames,
-  TableSemanticStyles,
-  TableSummaryCellProps,
-  TableSummaryProps,
-  TableSummaryRowProps,
 } from "./components/Table";

@@ -16,8 +16,10 @@
 
 .story-description {
   display: grid;
+  width: 100%;
+  max-width: none;
+  box-sizing: border-box;
   gap: 4px;
-  max-width: 960px;
   padding: 14px 16px;
   border: 1px solid #e8e8e8;
   border-radius: 8px;
@@ -40,6 +42,31 @@
   line-height: 1.6;
 }
 
+.story-description p > span,
+.component-story-description > span {
+  display: block;
+}
+
+.story-description p > span {
+  color: inherit;
+  font-size: inherit;
+}
+
+.story-description p > .story-description-detail,
+.component-story-description-detail {
+  margin-top: 6px;
+  color: #677589;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.6;
+  letter-spacing: 0.01em;
+}
+
+.story-description p > .story-description-detail-same-color,
+.component-story-description > .story-description-detail-same-color {
+  color: inherit;
+}
+
 .component-docs :is(h2, h3, h4):has(+ p) {
   margin-bottom: 0;
 }
@@ -47,6 +74,11 @@
 .component-docs :is(h2, h3, h4) + p {
   margin-top: 6px;
   margin-bottom: 12px;
+}
+
+.component-docs > h2:last-of-type ~ h3,
+.component-docs > h2:last-of-type ~ div > h3 {
+  margin-top: 32px;
 }
 
 .component-docs p + .sbdocs-preview {
@@ -59,13 +91,13 @@
 }
 
 .component-docs table :is(th, td):nth-child(1) {
-  width: 14%;
+  width: 24%;
 }
 .component-docs table :is(th, td):nth-child(2) {
-  width: 50%;
+  width: 36%;
 }
 .component-docs table :is(th, td):nth-child(3) {
-  width: 24%;
+  width: 28%;
 }
 .component-docs table :is(th, td):nth-child(4) {
   width: 12%;
@@ -78,6 +110,11 @@
 .component-docs table td code {
   max-width: 100%;
   line-height: 1.5;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.component-docs table td:first-child code {
   white-space: normal;
   overflow-wrap: anywhere;
 }

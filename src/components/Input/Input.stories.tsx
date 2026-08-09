@@ -2,11 +2,23 @@ import { useEffect, useState } from "react";
 import { Description, Markdown, Stories, Title } from "@storybook/addon-docs/blocks";
 import type { Meta, StoryObj } from "@storybook/react";
 import { storyDescriptions } from "../../storybook/story-descriptions";
+import { withStoryImports } from "../../storybook/story-source";
 import { Icon } from "../Icon";
 import { Input } from "./Input";
+import type { InputProps } from "./Input.types";
 
 const sizes = ["lg", "md", "sm"] as const;
-const validateEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const createLimitedValue = (value: string, maxLength?: number) => {
+  const nextValue = `${value}1`;
+  return maxLength === undefined ? nextValue : nextValue.slice(0, maxLength);
+};
+const validateEmail = (value: string) => {
+  if (!value.trim()) return "이메일을 입력해 주세요.";
+  if (value.length > 50) return "이메일은 50자 이하로 입력해 주세요.";
+  if (!EMAIL_PATTERN.test(value)) return "이메일 형식을 확인해 주세요.";
+  return "";
+};
 const storyDescription = (id: string) => ({
   docs: { description: { story: storyDescriptions[id] } },
 });
@@ -15,7 +27,13 @@ const meta = {
   title: "Components/Input",
   component: Input,
   tags: ["autodocs"],
-  args: { placeholder: "입력하세요" },
+  args: {
+    placeholder: "입력하세요",
+    required: false,
+    allowClear: false,
+    showCount: false,
+    disabled: false,
+  },
   argTypes: {
     size: { name: "크기", control: "select", options: sizes },
     variant: { name: "표현 방식", control: "select", options: ["default", "filled"] },
@@ -33,6 +51,7 @@ const meta = {
     onBlur: { control: false, table: { disable: true } },
     onChange: { control: false, table: { disable: true } },
     onError: { control: false, table: { disable: true } },
+    onEnter: { control: false, table: { disable: true } },
   },
   parameters: {
     controls: { disable: true },
@@ -62,8 +81,10 @@ const meta = {
 | \`prefixIcon\` | 입력 영역 앞에 아이콘을 표시해요. | \`ReactNode\` | - |
 | \`suffixIcon\` | 입력 영역 뒤에 아이콘을 표시해요. | \`ReactNode\` | - |
 | \`className\` | 최상위 요소에 Tailwind 클래스를 추가해요. | \`string\` | - |
-| \`onBlur\` | 포커스가 빠질 때 현재 입력값을 전달해요. | \`(value: string) => void\` | - |
+| \`onChange\` | 입력값이 바뀔 때 실행할 함수예요. 변경된 입력값을 인자로 받아요. | \`(value: string) => void\` | - |
+| \`onBlur\` | Input에서 포커스가 빠질 때 실행할 함수예요. | \`() => void\` | - |
 | \`onError\` | 입력값이 바뀔 때 오류 문구를 비워요. | \`(error: string) => void\` | - |
+| \`onEnter\` | Enter를 누를 때 실행할 함수예요. | \`() => void\` | - |
           `}</Markdown>
         </div>
       ),
@@ -75,18 +96,47 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Sizes: Story = {
-  parameters: { ...storyDescription("components-input--sizes"), controls: { disable: false } },
-  render: (args) => (
-    <div className="grid max-w-xl gap-4">
-      {sizes.map((size) => (
-        <Input key={size} {...args} size={size} />
-      ))}
-    </div>
-  ),
+  parameters: {
+    ...storyDescription("components-input--sizes"),
+    controls: { disable: false, include: ["placeholder", "크기"] },
+    docs: {
+      ...storyDescription("components-input--sizes").docs,
+      source: {
+        code: withStoryImports(`<div className="grid max-w-xl gap-4">
+  <Input placeholder="입력하세요" size="lg" />
+  <Input placeholder="입력하세요" />
+  <Input placeholder="입력하세요" size="sm" />
+</div>`),
+      },
+    },
+  },
+  render: (args, { viewMode }) =>
+    viewMode === "docs" ? (
+      <div className="grid max-w-xl gap-4">
+        {sizes.map((size) => (
+          <Input key={size} {...args} size={size} />
+        ))}
+      </div>
+    ) : (
+      <Input {...args} />
+    ),
 };
 
 export const States: Story = {
-  parameters: { ...storyDescription("components-input--states"), controls: { disable: false } },
+  parameters: {
+    ...storyDescription("components-input--states"),
+    controls: { disable: false, include: ["placeholder", "표현 방식", "비활성"] },
+    docs: {
+      ...storyDescription("components-input--states").docs,
+      source: {
+        code: withStoryImports(`<div className="grid max-w-xl gap-4">
+  <Input placeholder="기본" />
+  <Input variant="filled" defaultValue="입력값" />
+  <Input defaultValue="입력값" disabled />
+</div>`),
+      },
+    },
+  },
   render: (args, { viewMode }) =>
     viewMode === "docs" ? (
       <div className="grid max-w-xl gap-4">
@@ -104,32 +154,46 @@ export const LabelAndError: Story = {
     label: "이메일",
     required: true,
     value: "email",
-    errorText: "이메일을 확인해 주세요.",
+    errorText: validateEmail("email"),
   },
   parameters: {
-    controls: { disable: false },
+    controls: {
+      disable: false,
+      include: ["placeholder", "입력값", "레이블", "오류 문구", "필수 표시"],
+    },
     docs: {
       description: { story: storyDescriptions["components-input--label-and-error"] },
       source: {
-        code: `const EMAIL_ERROR_MESSAGE = '이메일을 확인해 주세요.';
-const validateEmail = (value) => /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(value);
-const [email, setEmail] = useState('email');
-const [errorText, setErrorText] = useState(EMAIL_ERROR_MESSAGE);
-
-const handleBlur = (value) => {
-  setErrorText(validateEmail(value) ? '' : EMAIL_ERROR_MESSAGE);
+        code: withStoryImports(`const validateEmail = (value) => {
+  if (!value.trim()) return '이메일을 입력해 주세요.';
+  if (value.length > 50) return '이메일은 50자 이하로 입력해 주세요.';
+  if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(value)) {
+    return '이메일 형식을 확인해 주세요.';
+  }
+  return '';
 };
 
-<Input
-  label="이메일"
-  placeholder="입력하세요"
-  required
-  value={email}
-  errorText={errorText}
-  onBlur={handleBlur}
-  onChange={setEmail}
-  onError={setErrorText}
-/>`,
+function EmailInput() {
+  const [email, setEmail] = useState('email');
+  const [errorText, setErrorText] = useState(validateEmail('email'));
+
+  const handleBlur = () => {
+    setErrorText(validateEmail(email));
+  };
+
+  return (
+    <Input
+      label="이메일"
+      placeholder="입력하세요"
+      required
+      value={email}
+      errorText={errorText}
+      onBlur={handleBlur}
+      onChange={setEmail}
+      onError={setErrorText}
+    />
+  );
+}`),
       },
     },
   },
@@ -153,9 +217,9 @@ const handleBlur = (value) => {
         {...inputProps}
         value={value}
         errorText={errorText}
-        onBlur={(currentValue) => {
-          setErrorText(validateEmail(currentValue) ? "" : controlledErrorText);
-          onBlur?.(currentValue);
+        onBlur={() => {
+          setErrorText(validateEmail(value));
+          onBlur?.();
         }}
         onChange={(nextValue) => {
           setValue(nextValue);
@@ -173,45 +237,88 @@ const handleBlur = (value) => {
 export const IconsAndCount: Story = {
   args: {
     allowClear: true,
-    maxLength: 10,
+    showCount: true,
+    maxLength: 5,
     prefixIcon: <Icon icon="setting" />,
     suffixIcon: <Icon icon="edit" />,
     value: "검색어",
   },
   parameters: {
-    controls: { disable: false },
+    controls: {
+      disable: false,
+      include: ["placeholder", "입력값", "지우기", "글자 수", "최대 글자 수"],
+    },
     docs: {
       description: { story: storyDescriptions["components-input--icons-and-count"] },
       source: {
-        code: `const [value, setValue] = useState('검색어');
+        code: withStoryImports(`function SearchInputs() {
+  const [keyword, setKeyword] = useState('검색어');
+  const [limitedKeyword, setLimitedKeyword] = useState('검색어1');
 
-<Input
-  allowClear
-  maxLength={10}
-  placeholder="입력하세요"
-  prefixIcon={<Icon icon="setting" />}
-  suffixIcon={<Icon icon="edit" />}
-  value={value}
-  onChange={setValue}
-/>`,
+  return (
+    <div className="grid max-w-xl gap-4">
+      <Input
+        allowClear
+        showCount
+        prefixIcon={<Icon icon="setting" />}
+        suffixIcon={<Icon icon="edit" />}
+        value={keyword}
+        onChange={setKeyword}
+      />
+      <Input
+        allowClear
+        showCount
+        maxLength={5}
+        prefixIcon={<Icon icon="setting" />}
+        suffixIcon={<Icon icon="edit" />}
+        value={limitedKeyword}
+        onChange={setLimitedKeyword}
+      />
+    </div>
+  );
+}`),
       },
     },
   },
-  render: function Render(args) {
-    const { value: controlledValue = "", onChange, ...inputProps } = args;
-    const [value, setValue] = useState(controlledValue);
+  render: (args) => <CountExamples {...args} />,
+};
 
-    useEffect(() => setValue(controlledValue), [controlledValue]);
+function CountExamples({
+  value: controlledValue = "",
+  maxLength,
+  onChange,
+  ...inputProps
+}: InputProps) {
+  const [keyword, setKeyword] = useState(controlledValue);
+  const [limitedKeyword, setLimitedKeyword] = useState(() =>
+    createLimitedValue(controlledValue, maxLength),
+  );
 
-    return (
+  useEffect(() => setKeyword(controlledValue), [controlledValue]);
+  useEffect(
+    () => setLimitedKeyword(createLimitedValue(controlledValue, maxLength)),
+    [controlledValue, maxLength],
+  );
+
+  return (
+    <div className="grid max-w-xl gap-4">
       <Input
         {...inputProps}
-        value={value}
+        value={keyword}
         onChange={(nextValue) => {
-          setValue(nextValue);
+          setKeyword(nextValue);
           onChange?.(nextValue);
         }}
       />
-    );
-  },
-};
+      <Input
+        {...inputProps}
+        maxLength={maxLength}
+        value={limitedKeyword}
+        onChange={(nextValue) => {
+          setLimitedKeyword(nextValue);
+          onChange?.(nextValue);
+        }}
+      />
+    </div>
+  );
+}

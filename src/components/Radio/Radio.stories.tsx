@@ -2,8 +2,15 @@ import { useEffect, useState } from "react";
 import { Description, Markdown, Stories, Title } from "@storybook/addon-docs/blocks";
 import type { Meta, StoryObj } from "@storybook/react";
 import { storyDescriptions } from "../../storybook/story-descriptions";
+import { withStoryImports } from "../../storybook/story-source";
 import { Radio } from "./Radio";
 import type { RadioProps } from "./Radio.types";
+
+const paymentOptions = [
+  { label: "신용카드", value: "card" },
+  { label: "계좌이체", value: "transfer" },
+  { label: "간편결제", value: "easy-pay" },
+] as const;
 
 const storyDescription = (id: string) => ({
   docs: { description: { story: storyDescriptions[id] } },
@@ -55,14 +62,48 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const States: Story = {
-  parameters: { ...storyDescription("components-radio--states"), controls: { disable: false } },
+  parameters: {
+    ...storyDescription("components-radio--states"),
+    controls: {
+      disable: false,
+      include: ["레이블", "선택", "오류", "비활성"],
+    },
+    docs: {
+      ...storyDescription("components-radio--states").docs,
+      source: {
+        code: withStoryImports(`function RadioStates() {
+  const [selected, setSelected] = useState('basic');
+
+  return (
+    <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
+      <Radio
+        checked={selected === 'basic'}
+        label="기본"
+        name="radio-state"
+        onChange={() => setSelected('basic')}
+      />
+      <Radio
+        checked={selected === 'error'}
+        error
+        label="오류"
+        name="radio-state"
+        onChange={() => setSelected('error')}
+      />
+      <Radio disabled label="비활성" name="radio-state" />
+      <Radio checked disabled label="비활성 · 선택" name="radio-state" />
+    </div>
+  );
+}`),
+      },
+    },
+  },
   render: (args, { viewMode }) =>
     viewMode === "docs" ? (
       <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
         <Radio label="기본" />
         <Radio error label="오류" />
         <Radio disabled label="비활성" />
-        <Radio checked disabled label="비활성 · 선택" />
+        <Radio defaultChecked disabled label="비활성 · 선택" />
       </div>
     ) : (
       <ControlledRadio {...args} />
@@ -70,11 +111,34 @@ export const States: Story = {
 };
 
 export const Label: Story = {
-  argTypes: {
-    disabled: { control: false, table: { disable: true } },
-    error: { control: false, table: { disable: true } },
+  parameters: {
+    ...storyDescription("components-radio--label"),
+    controls: { disable: false, include: ["레이블", "선택"] },
+    docs: {
+      ...storyDescription("components-radio--label").docs,
+      source: {
+        code: withStoryImports(`function RadioLabels() {
+  const [selected, setSelected] = useState('without-label');
+
+  return (
+    <div className="flex items-center gap-8">
+      <Radio
+        checked={selected === 'without-label'}
+        name="label-example"
+        onChange={() => setSelected('without-label')}
+      />
+      <Radio
+        checked={selected === 'with-label'}
+        label="레이블"
+        name="label-example"
+        onChange={() => setSelected('with-label')}
+      />
+    </div>
+  );
+}`),
+      },
+    },
   },
-  parameters: { ...storyDescription("components-radio--label"), controls: { disable: false } },
   render: (args) => (
     <div className="flex items-center gap-8">
       <ControlledRadio {...args} label={undefined} />
@@ -84,7 +148,37 @@ export const Label: Story = {
 };
 
 export const Group: Story = {
-  parameters: { ...storyDescription("components-radio--group") },
+  parameters: {
+    ...storyDescription("components-radio--group"),
+    docs: {
+      ...storyDescription("components-radio--group").docs,
+      source: {
+        code: withStoryImports(`const options = [
+  { label: '신용카드', value: 'card' },
+  { label: '계좌이체', value: 'transfer' },
+  { label: '간편결제', value: 'easy-pay' },
+];
+
+function PaymentMethods() {
+  const [paymentMethod, setPaymentMethod] = useState('card');
+
+  return (
+    <div className="flex flex-wrap items-center gap-8">
+      {options.map((option) => (
+        <Radio
+          key={option.value}
+          name="payment-method"
+          label={option.label}
+          checked={paymentMethod === option.value}
+          onChange={() => setPaymentMethod(option.value)}
+        />
+      ))}
+    </div>
+  );
+}`),
+      },
+    },
+  },
   render: () => <RadioGroupStory />,
 };
 
@@ -104,16 +198,17 @@ function ControlledRadio(args: RadioProps) {
 }
 
 function RadioGroupStory() {
-  const [value, setValue] = useState("a");
+  const [value, setValue] = useState("card");
+
   return (
     <div className="flex flex-wrap items-center gap-8">
-      {["a", "b", "c"].map((option) => (
+      {paymentOptions.map((option) => (
         <Radio
-          key={option}
-          name="story-radio-group"
-          label={`옵션 ${option.toUpperCase()}`}
-          checked={value === option}
-          onChange={() => setValue(option)}
+          key={option.value}
+          name="payment-method"
+          label={option.label}
+          checked={value === option.value}
+          onChange={() => setValue(option.value)}
         />
       ))}
     </div>

@@ -5,6 +5,7 @@ import {
   useId,
   useImperativeHandle,
   useRef,
+  useState,
   type ReactNode,
 } from "react";
 import { cva } from "class-variance-authority";
@@ -37,10 +38,13 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       prefixIcon,
       suffixIcon,
       disabled,
+      defaultValue,
       id,
       className,
       onBlur,
       onError,
+      onEnter,
+      onKeyDown,
       "aria-describedby": ariaDescribedBy,
       "aria-invalid": ariaInvalid,
       ...rest
@@ -50,8 +54,10 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     const generatedId = useId();
     const inputId = id ?? generatedId;
     const inputRef = useRef<HTMLInputElement>(null);
+    const [uncontrolledValue, setUncontrolledValue] = useState(() => String(defaultValue ?? ""));
+    const currentValue = value ?? uncontrolledValue;
     const hasError = Boolean(errorText);
-    const hasValue = Boolean(value);
+    const hasValue = currentValue.length > 0;
     const errorId = `${inputId}-error`;
     const describedBy =
       [ariaDescribedBy, hasError ? errorId : undefined].filter(Boolean).join(" ") || undefined;
@@ -64,7 +70,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             {label}
           </Label>
         )}
-        <div className={inputRowVariants({ size, variant, error: hasError, disabled })}>
+        <div className={twMerge(inputRowVariants({ size, variant, error: hasError, disabled }))}>
           {prefixIcon && (
             <span className="flex size-4 shrink-0 items-center justify-center">
               {stripOnClick(prefixIcon)}
@@ -73,7 +79,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           <input
             ref={inputRef}
             id={inputId}
-            value={value}
+            value={currentValue}
             maxLength={maxLength}
             disabled={disabled}
             required={required}
@@ -83,39 +89,46 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
               inputVariants({ size, disabled }),
               "min-w-0 flex-1 bg-transparent outline-none placeholder:text-[#999]",
             )}
-            onBlur={(event) => {
-              onBlur?.(event.currentTarget.value);
-            }}
+            onBlur={onBlur}
             onChange={(event) => {
               const nextValue = event.target.value;
               // 한글 등 IME 조합 중에는 네이티브 maxLength가 강제되지 않아 직접 막는다.
               if (maxLength !== undefined && nextValue.length > maxLength) return;
+              if (value === undefined) setUncontrolledValue(nextValue);
               onChange?.(nextValue);
               onError?.("");
             }}
+            onKeyDown={(event) => {
+              onKeyDown?.(event);
+              if (
+                !event.defaultPrevented &&
+                event.key === "Enter" &&
+                !event.nativeEvent.isComposing
+              ) {
+                onEnter?.();
+              }
+            }}
             {...rest}
           />
-          {(showCount || maxLength !== undefined) && (
+          {showCount && (
             <span className="shrink-0 font-pretendard text-[12px] whitespace-nowrap text-[#aaa]">
               {maxLength !== undefined
-                ? `${value?.length ?? 0} / ${maxLength}`
-                : (value?.length ?? 0)}
+                ? `${currentValue.length} / ${maxLength}`
+                : currentValue.length}
             </span>
           )}
           {allowClear && hasValue && !disabled && (
-            <button
-              type="button"
-              aria-label="입력 내용 지우기"
-              className="flex size-4 shrink-0 cursor-pointer items-center justify-center rounded border-0 bg-transparent p-0 text-[#999] hover:text-[#111] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#0062df]"
+            <Icon
+              icon="close"
+              className="shrink-0 text-[#999]"
               onMouseDown={(event) => event.preventDefault()}
               onClick={() => {
+                if (value === undefined) setUncontrolledValue("");
                 onChange?.("");
                 onError?.("");
                 inputRef.current?.focus();
               }}
-            >
-              <Icon icon="close" size={16} aria-hidden />
-            </button>
+            />
           )}
           {suffixIcon && (
             <span className="flex size-4 shrink-0 items-center justify-center">
