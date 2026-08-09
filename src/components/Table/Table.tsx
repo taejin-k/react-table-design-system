@@ -1918,8 +1918,10 @@ function DefaultEmpty() {
   return <Illustrations description="데이터가 없어요" />;
 }
 
-type TableComponent = <T extends object>(
-  props: TableProps<T> & { ref?: React.Ref<TableRef> },
-) => ReactElement;
+type TableComponent = {
+  <T extends object>(props: TableProps<T> & { ref?: React.Ref<TableRef> }): ReactElement;
+  displayName?: string;
+};
 
 export const Table = forwardRef(InnerTable) as TableComponent;
+Table.displayName = "Table";
