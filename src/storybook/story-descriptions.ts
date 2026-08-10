@@ -34,6 +34,26 @@ export const storyDescriptions: Record<string, string> = {
   "components-breadcrumb--with-icons": "각 항목에 아이콘을 더해 경로를 쉽게 구분할 수 있어요.",
   "components-breadcrumb--item-colors": "각 항목의 글자와 아이콘에 원하는 색상을 적용할 수 있어요.",
 
+  "components-tooltip--basic": "요소에 마우스를 올리면 짧은 설명을 표시해요.",
+  "components-tooltip--placements": "대상을 기준으로 열두 가지 위치에 설명을 배치할 수 있어요.",
+  "components-tooltip--triggers": "hover, focus, click 중 표시 동작을 선택할 수 있어요.",
+  "components-tooltip--appearance": "배경 색상과 화살표 표시 여부를 변경할 수 있어요.",
+  "components-tooltip--controlled": "open과 onOpenChange로 표시 상태를 직접 관리할 수 있어요.",
+
+  "components-dropdown--basic": "대상에 마우스를 올리면 작업 메뉴를 표시해요.",
+  "components-dropdown--placements": "대상을 기준으로 열두 가지 위치에 메뉴를 배치할 수 있어요.",
+  "components-dropdown--menu-items":
+    "아이콘, 구분선, 비활성, 위험 작업과 하위 메뉴를 구성할 수 있어요.",
+  "components-dropdown--selectable": "선택 가능한 메뉴에서 하나 이상의 항목을 관리할 수 있어요.",
+  "components-dropdown--controlled":
+    "open과 onOpenChange로 메뉴 표시 상태를 직접 관리할 수 있어요.",
+
+  "components-popover--basic": "요소에 마우스를 올리면 제목과 추가 내용을 표시해요.",
+  "components-popover--placements": "대상을 기준으로 열두 가지 위치에 카드를 배치할 수 있어요.",
+  "components-popover--triggers": "hover, focus, click 중 표시 동작을 선택할 수 있어요.",
+  "components-popover--actions": "카드 안에 설명과 실행 버튼을 함께 배치할 수 있어요.",
+  "components-popover--controlled": "open과 onOpenChange로 카드 표시 상태를 직접 관리할 수 있어요.",
+
   "components-illustrations--types": "상태와 안내 목적에 맞는 열두 가지 이미지를 선택할 수 있어요",
   "components-illustrations--sizes": "화면에 맞게 세 가지 이미지 크기를 선택할 수 있어요",
 

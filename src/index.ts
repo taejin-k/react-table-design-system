@@ -18,6 +18,20 @@ export { Radio } from "./components/Radio";
 export type { RadioProps } from "./components/Radio";
 export { Breadcrumb } from "./components/Breadcrumb";
 export type { BreadcrumbKey, BreadcrumbProps, Item } from "./components/Breadcrumb";
+export { Tooltip } from "./components/Tooltip";
+export type { TooltipPlacement, TooltipProps, TooltipTrigger } from "./components/Tooltip";
+export { Dropdown } from "./components/Dropdown";
+export type {
+  DropdownClickInfo,
+  DropdownItem,
+  DropdownMenu,
+  DropdownOpenSource,
+  DropdownPlacement,
+  DropdownProps,
+  DropdownTrigger,
+} from "./components/Dropdown";
+export { Popover } from "./components/Popover";
+export type { PopoverPlacement, PopoverProps, PopoverTrigger } from "./components/Popover";
 export { Illustrations } from "./components/Illustrations";
 export type {
   IllustrationSize,

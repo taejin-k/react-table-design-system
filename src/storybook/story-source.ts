@@ -5,13 +5,16 @@ const componentExports = [
   "Button",
   "Checkbox",
   "Chip",
+  "Dropdown",
   "ErrorText",
   "Icon",
   "Input",
   "Illustrations",
   "Label",
+  "Popover",
   "Radio",
   "Table",
+  "Tooltip",
   "Toggle",
 ] as const;
 
@@ -59,6 +62,21 @@ export function withStoryImports(source: string) {
   ].filter(Boolean);
 
   return imports.length ? `${imports.join("\n")}\n\n${example}` : example;
+}
+
+export function formatTooltipStorySource(source: string) {
+  const withoutDefaults = source
+    .replace(/\s+placement=(?:"top"|'top'|\{"top"\}|\{'top'\})/g, "")
+    .replace(/\s+trigger=(?:"hover"|'hover'|\{"hover"\}|\{'hover'\})/g, "")
+    .replace(/\s+arrow=\{true\}/g, "")
+    .replace(/\s+arrow(?=\s|\/?>)/g, "")
+    .replace(/\s+autoAdjustOverflow=\{true\}/g, "")
+    .replace(/\s+autoAdjustOverflow(?=\s|\/?>)/g, "")
+    .replace(/\s+mouseEnterDelay=\{0\.1\}/g, "")
+    .replace(/\s+mouseLeaveDelay=\{0\.1\}/g, "")
+    .replace(/\s+>/g, ">");
+
+  return withStoryImports(withoutDefaults);
 }
 
 function wrapBareJsx(source: string) {

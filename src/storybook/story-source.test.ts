@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { withStoryImports } from "./story-source";
+import { formatTooltipStorySource, withStoryImports } from "./story-source";
 
 describe("withStoryImports", () => {
   it("adds design-system, React, and dnd-kit imports used by an example", () => {
@@ -51,5 +51,40 @@ arrayMove([], 0, 0);`);
 <Breadcrumb items={items} />`);
 
     expect(source).toContain("const items = [{ title: '홈' }];\n\nfunction BreadcrumbExample()");
+  });
+});
+
+describe("formatTooltipStorySource", () => {
+  it("omits Tooltip props that already use component defaults", () => {
+    const source = formatTooltipStorySource(`<Tooltip
+  arrow
+  autoAdjustOverflow={true}
+  mouseEnterDelay={0.1}
+  mouseLeaveDelay={0.1}
+  placement="top"
+  title="도움말"
+  trigger="hover"
+>
+  <Button type="secondary">대상</Button>
+</Tooltip>`);
+
+    expect(source).toContain("import { Button, Tooltip } from '@taejin-k/wizard-design';");
+    expect(source).toContain('title="도움말"');
+    expect(source).not.toContain("placement=");
+    expect(source).not.toContain("trigger=");
+    expect(source).not.toContain("autoAdjustOverflow");
+    expect(source).not.toContain("mouseEnterDelay");
+    expect(source).not.toContain("mouseLeaveDelay");
+    expect(source).not.toMatch(/\sarrow(?:\s|=)/);
+  });
+
+  it("keeps Tooltip props when they differ from component defaults", () => {
+    const source = formatTooltipStorySource(
+      '<Tooltip arrow={false} placement="right" trigger="click" title="도움말"><button /></Tooltip>',
+    );
+
+    expect(source).toContain("arrow={false}");
+    expect(source).toContain('placement="right"');
+    expect(source).toContain('trigger="click"');
   });
 });
