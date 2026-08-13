@@ -16,6 +16,7 @@ export type IconName =
   | "chevron-up"
   | "close"
   | "close-circle"
+  | "clock"
   | "copy"
   | "delete"
   | "download"

@@ -7,7 +7,7 @@ import { withStoryImports } from "../../storybook/story-source";
 import { Button } from "../Button";
 import { Icon } from "../Icon";
 import { Dropdown } from "./Dropdown";
-import type { DropdownItem, DropdownPlacement } from "./Dropdown.types";
+import type { DropdownItem, DropdownPlacement, DropdownTrigger } from "./Dropdown.types";
 
 const placements: DropdownPlacement[] = [
   "topLeft",
@@ -23,6 +23,7 @@ const placements: DropdownPlacement[] = [
   "bottom",
   "bottomRight",
 ];
+const triggers: DropdownTrigger[] = ["hover", "focus", "click"];
 const handleMenuClick = fn();
 const basicItems: DropdownItem[] = [
   { key: "edit", label: "수정" },
@@ -30,8 +31,15 @@ const basicItems: DropdownItem[] = [
   { key: "share", label: "공유" },
 ];
 const richItems: DropdownItem[] = [
-  { key: "edit", label: "수정", icon: <Icon icon="edit" /> },
-  { key: "copy", label: "복사", icon: <Icon icon="copy" />, extra: "⌘C" },
+  {
+    key: "document",
+    label: "문서 작업",
+    type: "group",
+    children: [
+      { key: "edit", label: "수정", icon: <Icon icon="edit" /> },
+      { key: "copy", label: "복사", icon: <Icon icon="copy" />, extra: "⌘C" },
+    ],
+  },
   { key: "disabled", label: "이동", disabled: true },
   { key: "divider", type: "divider" },
   {
@@ -173,6 +181,43 @@ function BasicDropdown() {
   ),
 };
 
+export const Triggers: Story = {
+  parameters: {
+    ...storyDescription("components-dropdown--triggers"),
+    controls: { disable: true },
+    docs: {
+      source: {
+        code: withStoryImports(`const triggers = ['hover', 'focus', 'click'] as const;
+const items = [
+  { key: 'edit', label: '수정' },
+  { key: 'copy', label: '복사' },
+];
+
+function DropdownTriggers() {
+  return (
+    <div className="flex min-h-32 items-center justify-center gap-3">
+      {triggers.map((trigger) => (
+        <Dropdown key={trigger} menu={{ items }} trigger={trigger}>
+          <Button type="secondary">{trigger}</Button>
+        </Dropdown>
+      ))}
+    </div>
+  );
+}`),
+      },
+    },
+  },
+  render: () => (
+    <div className="flex min-h-32 items-center justify-center gap-3">
+      {triggers.map((trigger) => (
+        <Dropdown key={trigger} menu={{ items: basicItems }} trigger={trigger}>
+          <Button type="secondary">{trigger}</Button>
+        </Dropdown>
+      ))}
+    </div>
+  ),
+};
+
 export const Placements: Story = {
   parameters: {
     ...storyDescription("components-dropdown--placements"),
@@ -240,8 +285,15 @@ export const MenuItems: Story = {
     docs: {
       source: {
         code: withStoryImports(`const items = [
-  { key: 'edit', label: '수정', icon: <Icon icon="edit" /> },
-  { key: 'copy', label: '복사', icon: <Icon icon="copy" />, extra: '⌘C' },
+  {
+    key: 'document',
+    label: '문서 작업',
+    type: 'group' as const,
+    children: [
+      { key: 'edit', label: '수정', icon: <Icon icon="edit" /> },
+      { key: 'copy', label: '복사', icon: <Icon icon="copy" />, extra: '⌘C' },
+    ],
+  },
   { key: 'disabled', label: '이동', disabled: true },
   { key: 'divider', type: 'divider' as const },
   {
@@ -282,22 +334,20 @@ export const Selectable: Story = {
     controls: { disable: true },
     docs: {
       source: {
-        code: withStoryImports(`function SelectableDropdown() {
-  const [selectedKeys, setSelectedKeys] = useState(['design']);
-  const items = [
+        code: withStoryImports(`const items = [
     { key: 'design', label: 'Design' },
     { key: 'platform', label: 'Platform' },
     { key: 'growth', label: 'Growth' },
-  ];
+];
 
+function SelectableDropdown() {
   return (
     <div className="flex min-h-32 items-center justify-center">
       <Dropdown
         menu={{
           items,
           selectable: true,
-          selectedKeys,
-          onSelect: ({ selectedKeys }) => setSelectedKeys(selectedKeys),
+          defaultSelectedKeys: ['design'],
         }}
         trigger="click"
       >
@@ -310,6 +360,146 @@ export const Selectable: Story = {
     },
   },
   render: () => <SelectableDropdown />,
+};
+
+export const ItemClick: Story = {
+  parameters: {
+    ...storyDescription("components-dropdown--item-click"),
+    controls: { disable: true },
+    docs: {
+      source: {
+        code: withStoryImports(`function ItemClickDropdown() {
+  const [action, setAction] = useState('작업 선택');
+  const items = [
+    { key: 'edit', label: '수정', onClick: () => setAction('수정 선택됨') },
+    { key: 'copy', label: '복사', onClick: () => setAction('복사 선택됨') },
+  ];
+
+  return (
+    <div className="flex min-h-32 items-center justify-center">
+      <Dropdown menu={{ items }} trigger="click">
+        <Button type="secondary">{action}</Button>
+      </Dropdown>
+    </div>
+  );
+}`),
+      },
+    },
+  },
+  render: () => <ItemClickDropdown />,
+};
+
+export const Arrow: Story = {
+  parameters: {
+    ...storyDescription("components-dropdown--arrow"),
+    controls: { disable: true },
+    docs: {
+      source: {
+        code: withStoryImports(`const items = [
+  { key: 'edit', label: '수정' },
+  { key: 'copy', label: '복사' },
+];
+
+function ArrowDropdown() {
+  return (
+    <div className="flex min-h-32 items-center justify-center gap-3">
+      <Dropdown menu={{ items }} trigger="click">
+        <Button type="secondary">기본</Button>
+      </Dropdown>
+      <Dropdown arrow menu={{ items }} trigger="click">
+        <Button type="secondary">화살표</Button>
+      </Dropdown>
+    </div>
+  );
+}`),
+      },
+    },
+  },
+  render: () => (
+    <div className="flex min-h-32 items-center justify-center gap-3">
+      <Dropdown menu={{ items: basicItems }} trigger="click">
+        <Button type="secondary">기본</Button>
+      </Dropdown>
+      <Dropdown arrow menu={{ items: basicItems }} trigger="click">
+        <Button type="secondary">화살표</Button>
+      </Dropdown>
+    </div>
+  ),
+};
+
+export const MultipleSelectable: Story = {
+  parameters: {
+    ...storyDescription("components-dropdown--multiple-selectable"),
+    controls: { disable: true },
+    docs: {
+      source: {
+        code: withStoryImports(`function MultipleSelectableDropdown() {
+  const [selectedKeys, setSelectedKeys] = useState(['design', 'platform']);
+  const items = [
+    { key: 'design', label: 'Design' },
+    { key: 'platform', label: 'Platform' },
+    { key: 'growth', label: 'Growth' },
+  ];
+
+  return (
+    <div className="flex min-h-32 items-center justify-center">
+      <Dropdown
+        menu={{
+          items,
+          selectable: true,
+          multiple: true,
+          selectedKeys,
+          onSelect: ({ selectedKeys }) => setSelectedKeys(selectedKeys),
+        }}
+        trigger="click"
+      >
+        <Button type="secondary">팀 선택 ({selectedKeys.length})</Button>
+      </Dropdown>
+    </div>
+  );
+}`),
+      },
+    },
+  },
+  render: () => <MultipleSelectableDropdown />,
+};
+
+export const Disabled: Story = {
+  parameters: {
+    ...storyDescription("components-dropdown--disabled"),
+    controls: { disable: true },
+    docs: {
+      source: {
+        code: withStoryImports(`const items = [
+  { key: 'edit', label: '수정' },
+  { key: 'copy', label: '복사' },
+];
+
+function DisabledDropdown() {
+  return (
+    <div className="flex min-h-32 items-center justify-center gap-3">
+      <Dropdown menu={{ items }} trigger="click">
+        <Button type="secondary">사용 가능</Button>
+      </Dropdown>
+      <Dropdown disabled menu={{ items }} trigger="click">
+        <Button type="secondary">비활성</Button>
+      </Dropdown>
+    </div>
+  );
+}`),
+      },
+    },
+  },
+  render: () => (
+    <div className="flex min-h-32 items-center justify-center gap-3">
+      <Dropdown menu={{ items: basicItems }} trigger="click">
+        <Button type="secondary">사용 가능</Button>
+      </Dropdown>
+      <Dropdown disabled menu={{ items: basicItems }} trigger="click">
+        <Button type="secondary">비활성</Button>
+      </Dropdown>
+    </div>
+  ),
 };
 
 export const Controlled: Story = {
@@ -345,7 +535,6 @@ export const Controlled: Story = {
 };
 
 function SelectableDropdown() {
-  const [selectedKeys, setSelectedKeys] = useState(["design"]);
   const items = [
     { key: "design", label: "Design" },
     { key: "platform", label: "Platform" },
@@ -358,12 +547,53 @@ function SelectableDropdown() {
         menu={{
           items,
           selectable: true,
+          defaultSelectedKeys: ["design"],
+        }}
+        trigger="click"
+      >
+        <Button type="secondary">팀 선택</Button>
+      </Dropdown>
+    </div>
+  );
+}
+
+function ItemClickDropdown() {
+  const [action, setAction] = useState("작업 선택");
+  const items = [
+    { key: "edit", label: "수정", onClick: () => setAction("수정 선택됨") },
+    { key: "copy", label: "복사", onClick: () => setAction("복사 선택됨") },
+  ];
+
+  return (
+    <div className="flex min-h-32 items-center justify-center">
+      <Dropdown menu={{ items }} trigger="click">
+        <Button type="secondary">{action}</Button>
+      </Dropdown>
+    </div>
+  );
+}
+
+function MultipleSelectableDropdown() {
+  const [selectedKeys, setSelectedKeys] = useState(["design", "platform"]);
+  const items = [
+    { key: "design", label: "Design" },
+    { key: "platform", label: "Platform" },
+    { key: "growth", label: "Growth" },
+  ];
+
+  return (
+    <div className="flex min-h-32 items-center justify-center">
+      <Dropdown
+        menu={{
+          items,
+          selectable: true,
+          multiple: true,
           selectedKeys,
           onSelect: ({ selectedKeys: nextSelectedKeys }) => setSelectedKeys(nextSelectedKeys),
         }}
         trigger="click"
       >
-        <Button type="secondary">팀 선택</Button>
+        <Button type="secondary">팀 선택 ({selectedKeys.length})</Button>
       </Dropdown>
     </div>
   );

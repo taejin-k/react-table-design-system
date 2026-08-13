@@ -98,6 +98,21 @@ export const FixedColumns: Story = {
   },
 };
 
+export const StickyScrollbar: Story = {
+  name: "Sticky Scrollbar",
+  parameters: {
+    ...storyDescription("components-table-api-compatibility--sticky-scrollbar"),
+    tableColumnsComment: "가로 스크롤을 확인할 수 있도록 컬럼 너비를 지정해요.",
+    tableScrollXComment: "컬럼 너비와 콘텐츠에 필요한 만큼 가로 스크롤 영역을 만들어요.",
+  },
+  args: {
+    dataSource: largeData.slice(0, 20),
+    columns: fixedColumns,
+    stickyScrollBar: true,
+    scroll: { x: "max-content" },
+  },
+};
+
 export const Loading: Story = {
   parameters: storyDescription("components-table-api-compatibility--loading"),
   args: { columns, loading: { tip: "구성원을 불러오는 중" } },

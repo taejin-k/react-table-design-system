@@ -203,6 +203,10 @@ export type TableLoadingConfig = {
   style?: CSSProperties;
 };
 
+export type TableStickyScrollBarConfig = {
+  offsetScroll?: number;
+};
+
 export type RowDragInfo = {
   activeKey: Key;
   overKey: Key;
@@ -248,6 +252,7 @@ export type TableProps<T extends object> = Omit<
   rowClassName?: (record: T, index: number, indent: number) => string;
   rowHoverable?: boolean;
   virtual?: boolean;
+  stickyScrollBar?: boolean | TableStickyScrollBarConfig;
   scroll?: { x?: string | number | true; y?: string | number; scrollToFirstRowOnChange?: boolean };
   sortDirections?: SortOrder[];
   className?: string;

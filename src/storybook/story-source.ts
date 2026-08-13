@@ -6,6 +6,7 @@ const componentExports = [
   "Checkbox",
   "Chip",
   "Dropdown",
+  "DatePicker",
   "ErrorText",
   "Icon",
   "Input",
@@ -13,7 +14,10 @@ const componentExports = [
   "Label",
   "Popover",
   "Radio",
+  "Select",
   "Table",
+  "TextArea",
+  "TimePicker",
   "Tooltip",
   "Toggle",
 ] as const;

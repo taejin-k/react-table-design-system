@@ -14,6 +14,7 @@ import {
   useState,
   type CSSProperties,
   type KeyboardEvent as ReactKeyboardEvent,
+  type PointerEvent as ReactPointerEvent,
   type ReactElement,
   type ReactNode,
   type UIEvent as ReactUIEvent,
@@ -64,8 +65,48 @@ import type {
 
 type SortState<T> = { column: ColumnType<T>; key: string; order: SortOrder; priority: number };
 type FlatRow<T> = { record: T; depth: number; parent?: Key };
+type VerticalScrollbarState = {
+  visible: boolean;
+  top: number;
+  height: number;
+  viewportHeight: number;
+};
+type HorizontalScrollbarState = {
+  visible: boolean;
+  left: number;
+  width: number;
+  viewportWidth: number;
+};
+type StickyScrollbarState = {
+  visible: boolean;
+  left: number;
+  top: number;
+  width: number;
+  thumbLeft: number;
+  thumbWidth: number;
+};
 const EMPTY_DATA_SOURCE: never[] = [];
 const EMPTY_COLUMNS: never[] = [];
+const HIDDEN_VERTICAL_SCROLLBAR: VerticalScrollbarState = {
+  visible: false,
+  top: 0,
+  height: 0,
+  viewportHeight: 0,
+};
+const HIDDEN_HORIZONTAL_SCROLLBAR: HorizontalScrollbarState = {
+  visible: false,
+  left: 0,
+  width: 0,
+  viewportWidth: 0,
+};
+const HIDDEN_STICKY_SCROLLBAR: StickyScrollbarState = {
+  visible: false,
+  left: 0,
+  top: 0,
+  width: 0,
+  thumbLeft: 0,
+  thumbWidth: 0,
+};
 
 // ---- 스타일 상수 (wizard-design cva/Tailwind 컨벤션, GROO 색상) ----
 
@@ -177,6 +218,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
     rowClassName,
     rowHoverable = true,
     virtual = false,
+    stickyScrollBar = false,
     scroll,
     sortDirections = ["ascend", "descend"],
     className = "",
@@ -200,6 +242,40 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
   const columnDragConfig = typeof columnDrag === "object" ? columnDrag : undefined;
   const [dragDataSource, setDragDataSource] = useState<T[]>(sourceDataSource);
   const [verticalScrollbarWidth, setVerticalScrollbarWidth] = useState(0);
+  const [overlayScrollbarSupported, setOverlayScrollbarSupported] = useState(false);
+  const [verticalScrollbar, setVerticalScrollbar] =
+    useState<VerticalScrollbarState>(HIDDEN_VERTICAL_SCROLLBAR);
+  const [horizontalScrollbar, setHorizontalScrollbar] = useState<HorizontalScrollbarState>(
+    HIDDEN_HORIZONTAL_SCROLLBAR,
+  );
+  const [stickyScrollbar, setStickyScrollbar] =
+    useState<StickyScrollbarState>(HIDDEN_STICKY_SCROLLBAR);
+  const scrollbarDragRef = useRef<{
+    pointerId: number;
+    startY: number;
+    startScrollTop: number;
+  } | null>(null);
+  const horizontalScrollbarDragRef = useRef<{
+    pointerId: number;
+    startX: number;
+    startScrollLeft: number;
+  } | null>(null);
+  const stickyScrollbarDragRef = useRef<{
+    pointerId: number;
+    startX: number;
+    startScrollLeft: number;
+  } | null>(null);
+  const stickyScrollBarEnabled = Boolean(stickyScrollBar);
+  const stickyOffsetScroll =
+    typeof stickyScrollBar === "object" ? (stickyScrollBar.offsetScroll ?? 0) : 0;
+
+  useEffect(() => {
+    setOverlayScrollbarSupported(
+      typeof CSS !== "undefined" &&
+        typeof CSS.supports === "function" &&
+        CSS.supports("selector(::-webkit-scrollbar)"),
+    );
+  }, []);
 
   useEffect(() => {
     if (rowDragEnabled) setDragDataSource(sourceDataSource);
@@ -1425,17 +1501,137 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
       : (locale.emptyText ?? <DefaultEmpty />);
   const loadingConfig = typeof loading === "object" ? loading : undefined;
   const wrapperMaxHeight = scroll?.y;
+  const measureVerticalScrollbar = useCallback(
+    (node: HTMLDivElement | null) => {
+      if (!node || !scroll?.y || !overlayScrollbarSupported) {
+        setVerticalScrollbar((current) => (current.visible ? HIDDEN_VERTICAL_SCROLLBAR : current));
+        return;
+      }
+
+      const viewportHeight = node.clientHeight;
+      const contentHeight = node.scrollHeight;
+      const maxScrollTop = Math.max(0, contentHeight - viewportHeight);
+      if (maxScrollTop <= 1 || viewportHeight <= 0) {
+        setVerticalScrollbar((current) => (current.visible ? HIDDEN_VERTICAL_SCROLLBAR : current));
+        return;
+      }
+
+      const height = Math.max(32, (viewportHeight * viewportHeight) / contentHeight);
+      const maxThumbTop = Math.max(0, viewportHeight - height);
+      const top = maxScrollTop ? (node.scrollTop / maxScrollTop) * maxThumbTop : 0;
+      const next = { visible: true, top, height, viewportHeight };
+      setVerticalScrollbar((current) =>
+        current.visible === next.visible &&
+        Math.abs(current.top - next.top) < 0.5 &&
+        Math.abs(current.height - next.height) < 0.5 &&
+        current.viewportHeight === next.viewportHeight
+          ? current
+          : next,
+      );
+    },
+    [overlayScrollbarSupported, scroll?.y],
+  );
+
+  const measureHorizontalScrollbar = useCallback(
+    (node: HTMLDivElement | null) => {
+      if (!node || !overlayScrollbarSupported) {
+        setHorizontalScrollbar((current) =>
+          current.visible ? HIDDEN_HORIZONTAL_SCROLLBAR : current,
+        );
+        return;
+      }
+
+      const viewportWidth = node.clientWidth;
+      const contentWidth = node.scrollWidth;
+      const maxScrollLeft = Math.max(0, contentWidth - viewportWidth);
+      if (maxScrollLeft <= 1 || viewportWidth <= 0) {
+        setHorizontalScrollbar((current) =>
+          current.visible ? HIDDEN_HORIZONTAL_SCROLLBAR : current,
+        );
+        return;
+      }
+
+      const width = Math.min(
+        viewportWidth,
+        Math.max(32, (viewportWidth * viewportWidth) / contentWidth),
+      );
+      const maxThumbLeft = Math.max(0, viewportWidth - width);
+      const left = maxScrollLeft ? (node.scrollLeft / maxScrollLeft) * maxThumbLeft : 0;
+      const next = { visible: true, left, width, viewportWidth };
+      setHorizontalScrollbar((current) =>
+        current.visible === next.visible &&
+        Math.abs(current.left - next.left) < 0.5 &&
+        Math.abs(current.width - next.width) < 0.5 &&
+        current.viewportWidth === next.viewportWidth
+          ? current
+          : next,
+      );
+    },
+    [overlayScrollbarSupported],
+  );
+
+  const measureStickyScrollbar = useCallback(
+    (node: HTMLDivElement | null) => {
+      if (!node || !stickyScrollBarEnabled || typeof window === "undefined") {
+        setStickyScrollbar((current) =>
+          current.visible ? { ...current, visible: false } : current,
+        );
+        return;
+      }
+
+      const maxScrollLeft = Math.max(0, node.scrollWidth - node.clientWidth);
+      const bounds = node.getBoundingClientRect();
+      const viewportBottom = window.innerHeight - Math.max(0, stickyOffsetScroll);
+      const stickyTop = viewportBottom - 14;
+      const left = Math.max(0, bounds.left);
+      const hiddenLeft = Math.max(0, -bounds.left);
+      const width = Math.max(0, Math.min(node.clientWidth - hiddenLeft, window.innerWidth - left));
+      const visible =
+        maxScrollLeft > 1 && width > 0 && bounds.top < stickyTop && bounds.bottom > stickyTop;
+
+      if (!visible) {
+        setStickyScrollbar((current) =>
+          current.visible ? { ...current, visible: false } : current,
+        );
+        return;
+      }
+
+      const top = stickyTop;
+      const thumbWidth = Math.min(
+        width,
+        Math.max(32, (width * node.clientWidth) / node.scrollWidth),
+      );
+      const maxThumbLeft = Math.max(0, width - thumbWidth);
+      const thumbLeft = maxScrollLeft ? (node.scrollLeft / maxScrollLeft) * maxThumbLeft : 0;
+      const next = { visible: true, left, top, width, thumbLeft, thumbWidth };
+      setStickyScrollbar((current) =>
+        current.visible === next.visible &&
+        Math.abs(current.left - next.left) < 0.5 &&
+        Math.abs(current.top - next.top) < 0.5 &&
+        Math.abs(current.width - next.width) < 0.5 &&
+        Math.abs(current.thumbLeft - next.thumbLeft) < 0.5 &&
+        Math.abs(current.thumbWidth - next.thumbWidth) < 0.5
+          ? current
+          : next,
+      );
+    },
+    [stickyOffsetScroll, stickyScrollBarEnabled],
+  );
 
   useLayoutEffect(() => {
     const node = scrollRef.current;
     if (!node) {
       setScrollBoundary({ left: false, right: false });
       setVerticalScrollbarWidth(0);
+      setHorizontalScrollbar(HIDDEN_HORIZONTAL_SCROLLBAR);
       return;
     }
     const measure = () => {
       measureScrollBoundary(node);
       setVerticalScrollbarWidth(scroll?.y ? node.offsetWidth - node.clientWidth : 0);
+      measureVerticalScrollbar(node);
+      measureHorizontalScrollbar(node);
+      measureStickyScrollbar(node);
     };
     measure();
     if (typeof ResizeObserver === "undefined") return;
@@ -1444,7 +1640,32 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
     const table = node.querySelector("table");
     if (table) observer.observe(table);
     return () => observer.disconnect();
-  }, [leafColumns, measureScrollBoundary, pageData.length, scroll?.x, scroll?.y]);
+  }, [
+    leafColumns,
+    measureHorizontalScrollbar,
+    measureScrollBoundary,
+    measureStickyScrollbar,
+    measureVerticalScrollbar,
+    pageData.length,
+    scroll?.x,
+    scroll?.y,
+  ]);
+
+  useLayoutEffect(() => {
+    if (!stickyScrollBarEnabled) {
+      setStickyScrollbar(HIDDEN_STICKY_SCROLLBAR);
+      return;
+    }
+
+    const measure = () => measureStickyScrollbar(scrollRef.current);
+    measure();
+    window.addEventListener("scroll", measure, { capture: true, passive: true });
+    window.addEventListener("resize", measure, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", measure, true);
+      window.removeEventListener("resize", measure);
+    };
+  }, [measureStickyScrollbar, stickyScrollBarEnabled]);
 
   const hasHorizontalOverflow = scrollBoundary.left || scrollBoundary.right;
   const tableStyle: CSSProperties = {
@@ -1455,6 +1676,13 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
         : scroll?.x === "max-content"
           ? "max-content"
           : minimumFixedTableWidth || undefined,
+  };
+  const verticallyScrolledTableStyle: CSSProperties = {
+    ...tableStyle,
+    width:
+      overlayScrollbarSupported && verticalScrollbarWidth
+        ? `calc(100% + ${verticalScrollbarWidth}px)`
+        : undefined,
   };
   const renderColumnGroup = () => (
     <colgroup>
@@ -1547,8 +1775,202 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
       headerScrollRef.current.scrollLeft = event.currentTarget.scrollLeft;
     if (virtual) setScrollTop(event.currentTarget.scrollTop);
     measureScrollBoundary(event.currentTarget);
+    measureVerticalScrollbar(event.currentTarget);
+    measureHorizontalScrollbar(event.currentTarget);
+    measureStickyScrollbar(event.currentTarget);
     onScroll?.(event);
   };
+  const scrollFromOverlayPosition = (top: number) => {
+    const node = scrollRef.current;
+    if (!node || !verticalScrollbar.visible) return;
+    const maxThumbTop = Math.max(0, node.clientHeight - verticalScrollbar.height);
+    const maxScrollTop = Math.max(0, node.scrollHeight - node.clientHeight);
+    node.scrollTop = maxThumbTop
+      ? (Math.min(Math.max(top, 0), maxThumbTop) / maxThumbTop) * maxScrollTop
+      : 0;
+  };
+  const handleScrollbarTrackPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (event.target !== event.currentTarget) return;
+    const bounds = event.currentTarget.getBoundingClientRect();
+    scrollFromOverlayPosition(event.clientY - bounds.top - verticalScrollbar.height / 2);
+  };
+  const handleScrollbarThumbPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const node = scrollRef.current;
+    if (!node) return;
+    event.stopPropagation();
+    event.currentTarget.setPointerCapture(event.pointerId);
+    scrollbarDragRef.current = {
+      pointerId: event.pointerId,
+      startY: event.clientY,
+      startScrollTop: node.scrollTop,
+    };
+  };
+  const handleScrollbarThumbPointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const node = scrollRef.current;
+    const drag = scrollbarDragRef.current;
+    if (!node || !drag || drag.pointerId !== event.pointerId) return;
+    const maxThumbTop = Math.max(0, node.clientHeight - verticalScrollbar.height);
+    const maxScrollTop = Math.max(0, node.scrollHeight - node.clientHeight);
+    if (!maxThumbTop || !maxScrollTop) return;
+    node.scrollTop =
+      drag.startScrollTop + ((event.clientY - drag.startY) / maxThumbTop) * maxScrollTop;
+  };
+  const handleScrollbarThumbPointerEnd = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (scrollbarDragRef.current?.pointerId !== event.pointerId) return;
+    scrollbarDragRef.current = null;
+    if (event.currentTarget.hasPointerCapture(event.pointerId))
+      event.currentTarget.releasePointerCapture(event.pointerId);
+  };
+  const scrollFromHorizontalPosition = (left: number) => {
+    const node = scrollRef.current;
+    if (!node || !horizontalScrollbar.visible) return;
+    const maxThumbLeft = Math.max(0, node.clientWidth - horizontalScrollbar.width);
+    const maxScrollLeft = Math.max(0, node.scrollWidth - node.clientWidth);
+    node.scrollLeft = maxThumbLeft
+      ? (Math.min(Math.max(left, 0), maxThumbLeft) / maxThumbLeft) * maxScrollLeft
+      : 0;
+    if (headerScrollRef.current) headerScrollRef.current.scrollLeft = node.scrollLeft;
+    measureScrollBoundary(node);
+    measureHorizontalScrollbar(node);
+    measureStickyScrollbar(node);
+  };
+  const handleHorizontalTrackPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (event.target !== event.currentTarget) return;
+    const bounds = event.currentTarget.getBoundingClientRect();
+    scrollFromHorizontalPosition(event.clientX - bounds.left - horizontalScrollbar.width / 2);
+  };
+  const handleHorizontalThumbPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const node = scrollRef.current;
+    if (!node) return;
+    event.preventDefault();
+    event.stopPropagation();
+    event.currentTarget.setPointerCapture(event.pointerId);
+    horizontalScrollbarDragRef.current = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startScrollLeft: node.scrollLeft,
+    };
+  };
+  const handleHorizontalThumbPointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const node = scrollRef.current;
+    const drag = horizontalScrollbarDragRef.current;
+    if (!node || !drag || drag.pointerId !== event.pointerId) return;
+    const maxThumbLeft = Math.max(0, node.clientWidth - horizontalScrollbar.width);
+    const maxScrollLeft = Math.max(0, node.scrollWidth - node.clientWidth);
+    if (!maxThumbLeft || !maxScrollLeft) return;
+    node.scrollLeft =
+      drag.startScrollLeft + ((event.clientX - drag.startX) / maxThumbLeft) * maxScrollLeft;
+    if (headerScrollRef.current) headerScrollRef.current.scrollLeft = node.scrollLeft;
+    measureScrollBoundary(node);
+    measureHorizontalScrollbar(node);
+    measureStickyScrollbar(node);
+  };
+  const handleHorizontalThumbPointerEnd = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (horizontalScrollbarDragRef.current?.pointerId !== event.pointerId) return;
+    horizontalScrollbarDragRef.current = null;
+    if (event.currentTarget.hasPointerCapture(event.pointerId))
+      event.currentTarget.releasePointerCapture(event.pointerId);
+  };
+  const scrollFromStickyPosition = (left: number) => {
+    const node = scrollRef.current;
+    if (!node || !stickyScrollbar.visible) return;
+    const maxThumbLeft = Math.max(0, stickyScrollbar.width - stickyScrollbar.thumbWidth);
+    const maxScrollLeft = Math.max(0, node.scrollWidth - node.clientWidth);
+    node.scrollLeft = maxThumbLeft
+      ? (Math.min(Math.max(left, 0), maxThumbLeft) / maxThumbLeft) * maxScrollLeft
+      : 0;
+    if (headerScrollRef.current) headerScrollRef.current.scrollLeft = node.scrollLeft;
+    measureScrollBoundary(node);
+    measureStickyScrollbar(node);
+  };
+  const handleStickyTrackPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (event.target !== event.currentTarget) return;
+    const bounds = event.currentTarget.getBoundingClientRect();
+    scrollFromStickyPosition(event.clientX - bounds.left - stickyScrollbar.thumbWidth / 2);
+  };
+  const handleStickyThumbPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const node = scrollRef.current;
+    if (!node) return;
+    event.preventDefault();
+    event.stopPropagation();
+    event.currentTarget.setPointerCapture(event.pointerId);
+    stickyScrollbarDragRef.current = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startScrollLeft: node.scrollLeft,
+    };
+  };
+  const handleStickyThumbPointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const node = scrollRef.current;
+    const drag = stickyScrollbarDragRef.current;
+    if (!node || !drag || drag.pointerId !== event.pointerId) return;
+    const maxThumbLeft = Math.max(0, stickyScrollbar.width - stickyScrollbar.thumbWidth);
+    const maxScrollLeft = Math.max(0, node.scrollWidth - node.clientWidth);
+    if (!maxThumbLeft || !maxScrollLeft) return;
+    node.scrollLeft =
+      drag.startScrollLeft + ((event.clientX - drag.startX) / maxThumbLeft) * maxScrollLeft;
+    if (headerScrollRef.current) headerScrollRef.current.scrollLeft = node.scrollLeft;
+    measureScrollBoundary(node);
+    measureStickyScrollbar(node);
+  };
+  const handleStickyThumbPointerEnd = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (stickyScrollbarDragRef.current?.pointerId !== event.pointerId) return;
+    stickyScrollbarDragRef.current = null;
+    if (event.currentTarget.hasPointerCapture(event.pointerId))
+      event.currentTarget.releasePointerCapture(event.pointerId);
+  };
+  const horizontalScrollbarElement = horizontalScrollbar.visible ? (
+    <div
+      data-table-horizontal-scrollbar-track
+      className="relative z-20 h-2 cursor-pointer touch-none bg-transparent"
+      style={{ width: horizontalScrollbar.viewportWidth }}
+      onPointerDown={handleHorizontalTrackPointerDown}
+    >
+      <div
+        data-table-horizontal-scrollbar-thumb
+        className="absolute inset-y-0 h-2 cursor-grab touch-none rounded-full border border-transparent bg-[#a8a8a8] bg-clip-padding transition-colors hover:bg-[#8f8f8f] active:cursor-grabbing"
+        style={{
+          width: horizontalScrollbar.width,
+          transform: `translateX(${horizontalScrollbar.left}px)`,
+        }}
+        onPointerDown={handleHorizontalThumbPointerDown}
+        onPointerMove={handleHorizontalThumbPointerMove}
+        onPointerUp={handleHorizontalThumbPointerEnd}
+        onPointerCancel={handleHorizontalThumbPointerEnd}
+      />
+    </div>
+  ) : null;
+  const stickyScrollbarElement =
+    stickyScrollBarEnabled && typeof document !== "undefined"
+      ? createPortal(
+          <div
+            data-table-sticky-scrollbar
+            className="fixed z-[1060] h-2 cursor-pointer touch-none bg-transparent"
+            style={{
+              left: stickyScrollbar.left,
+              top: stickyScrollbar.top,
+              width: stickyScrollbar.width,
+              opacity: stickyScrollbar.visible ? 1 : 0,
+              pointerEvents: stickyScrollbar.visible ? "auto" : "none",
+            }}
+            onPointerDown={handleStickyTrackPointerDown}
+          >
+            <div
+              data-table-sticky-scrollbar-thumb
+              className="absolute inset-y-0 h-2 cursor-grab touch-none rounded-full border border-transparent bg-[#a8a8a8] bg-clip-padding transition-colors hover:bg-[#8f8f8f] active:cursor-grabbing"
+              style={{
+                width: stickyScrollbar.thumbWidth,
+                transform: `translateX(${stickyScrollbar.thumbLeft}px)`,
+              }}
+              onPointerDown={handleStickyThumbPointerDown}
+              onPointerMove={handleStickyThumbPointerMove}
+              onPointerUp={handleStickyThumbPointerEnd}
+              onPointerCancel={handleStickyThumbPointerEnd}
+            />
+          </div>,
+          document.body,
+        )
+      : null;
 
   return (
     <div
@@ -1581,24 +2003,76 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
                       "w-full border-separate border-spacing-0",
                       bordered && borderedGridClass,
                     )}
-                    style={tableStyle}
+                    style={verticallyScrolledTableStyle}
                   >
                     {renderColumnGroup()}
                     {tableHeader}
                   </table>
                 </div>
               )}
+              <div className="relative rounded-b-[inherit]">
+                <div
+                  ref={scrollRef}
+                  data-table-scroll-container
+                  data-table-overlay-scrollbar={overlayScrollbarSupported ? "" : undefined}
+                  className={twMerge(
+                    "relative w-full overflow-auto rounded-b-[inherit] bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0062df]",
+                    !showHeader && "rounded-t-[inherit]",
+                    !scroll?.x && "overflow-x-hidden",
+                  )}
+                  role="region"
+                  aria-label="테이블 스크롤 영역"
+                  tabIndex={0}
+                  style={{ maxHeight: wrapperMaxHeight }}
+                  onKeyDown={handleScrollKeyDown}
+                  onScroll={handleTableScroll}
+                >
+                  <table
+                    className={twMerge(
+                      "w-full border-separate border-spacing-0",
+                      bordered && borderedGridClass,
+                    )}
+                    style={verticallyScrolledTableStyle}
+                  >
+                    {renderColumnGroup()}
+                    {tableBody}
+                  </table>
+                  {loadingElement}
+                </div>
+                {horizontalScrollbarElement}
+                {verticalScrollbar.visible && (
+                  <div
+                    data-table-overlay-scrollbar-track
+                    className="absolute top-0 right-0 z-20 w-2 cursor-pointer touch-none"
+                    style={{ height: verticalScrollbar.viewportHeight }}
+                    onPointerDown={handleScrollbarTrackPointerDown}
+                  >
+                    <div
+                      data-table-overlay-scrollbar-thumb
+                      className="absolute right-px w-1.5 cursor-grab touch-none rounded-full bg-[#a8a8a8] hover:bg-[#8f8f8f] active:cursor-grabbing"
+                      style={{
+                        height: verticalScrollbar.height,
+                        transform: `translateY(${verticalScrollbar.top}px)`,
+                      }}
+                      onPointerDown={handleScrollbarThumbPointerDown}
+                      onPointerMove={handleScrollbarThumbPointerMove}
+                      onPointerUp={handleScrollbarThumbPointerEnd}
+                      onPointerCancel={handleScrollbarThumbPointerEnd}
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="relative rounded-[inherit]">
               <div
                 ref={scrollRef}
                 data-table-scroll-container
-                className={twMerge(
-                  "relative w-full overflow-auto rounded-b-[inherit] bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0062df]",
-                  !showHeader && "rounded-t-[inherit]",
-                )}
-                role="region"
-                aria-label="테이블 스크롤 영역"
-                tabIndex={0}
-                style={{ maxHeight: wrapperMaxHeight }}
+                data-table-overlay-scrollbar={overlayScrollbarSupported ? "" : undefined}
+                className="relative w-full overflow-x-auto overflow-y-hidden rounded-[inherit] bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0062df]"
+                role={scroll?.x || hasHorizontalOverflow ? "region" : undefined}
+                aria-label={scroll?.x || hasHorizontalOverflow ? "테이블 스크롤 영역" : undefined}
+                tabIndex={scroll?.x || hasHorizontalOverflow ? 0 : undefined}
                 onKeyDown={handleScrollKeyDown}
                 onScroll={handleTableScroll}
               >
@@ -1610,38 +2084,17 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
                   style={tableStyle}
                 >
                   {renderColumnGroup()}
+                  {tableHeader}
                   {tableBody}
                 </table>
                 {loadingElement}
               </div>
-            </div>
-          ) : (
-            <div
-              ref={scrollRef}
-              data-table-scroll-container
-              className="relative w-full overflow-x-auto overflow-y-hidden rounded-[inherit] bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0062df]"
-              role={scroll?.x || hasHorizontalOverflow ? "region" : undefined}
-              aria-label={scroll?.x || hasHorizontalOverflow ? "테이블 스크롤 영역" : undefined}
-              tabIndex={scroll?.x || hasHorizontalOverflow ? 0 : undefined}
-              onKeyDown={handleScrollKeyDown}
-              onScroll={handleTableScroll}
-            >
-              <table
-                className={twMerge(
-                  "w-full border-separate border-spacing-0",
-                  bordered && borderedGridClass,
-                )}
-                style={tableStyle}
-              >
-                {renderColumnGroup()}
-                {tableHeader}
-                {tableBody}
-              </table>
-              {loadingElement}
+              {horizontalScrollbarElement}
             </div>
           )}
         </TableDragProvider>
       </div>
+      {stickyScrollbarElement}
       {bottomPagination}
     </div>
   );

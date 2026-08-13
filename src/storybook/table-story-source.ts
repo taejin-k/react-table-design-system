@@ -30,6 +30,7 @@ const tablePropOrder = [
   "tableLayout",
   "rowHoverable",
   "virtual",
+  "stickyScrollBar",
   "scroll",
   "sortDirections",
   "rootClassName",

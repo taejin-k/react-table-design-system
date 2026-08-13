@@ -29,4 +29,5 @@ export type {
   TableLocale,
   TableProps,
   TableRef,
+  TableStickyScrollBarConfig,
 } from "./Table.types";

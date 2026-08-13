@@ -28,6 +28,7 @@ interface UseFloatingLayerOptions {
   autoAdjustOverflow?: boolean;
   mouseEnterDelay?: number;
   mouseLeaveDelay?: number;
+  targetGap?: number;
   closeOnScroll?: boolean;
   onOpenChange?: (open: boolean, source: FloatingOpenSource) => void;
 }
@@ -42,6 +43,7 @@ export function useFloatingLayer({
   autoAdjustOverflow = true,
   mouseEnterDelay = 0.1,
   mouseLeaveDelay = 0.1,
+  targetGap,
   closeOnScroll = true,
   onOpenChange,
 }: UseFloatingLayerOptions) {
@@ -93,10 +95,10 @@ export function useFloatingLayer({
         triggerRef.current.getBoundingClientRect(),
         popupRef.current.getBoundingClientRect(),
         placement,
-        { autoAdjustOverflow },
+        { autoAdjustOverflow, targetGap },
       ),
     );
-  }, [autoAdjustOverflow, placement]);
+  }, [autoAdjustOverflow, placement, targetGap]);
 
   useLayoutEffect(() => {
     if (!isOpen) {
@@ -105,7 +107,8 @@ export function useFloatingLayer({
     }
 
     updatePosition();
-    const handleScroll = () => {
+    const handleScroll = (event: Event) => {
+      if (event.target instanceof Node && popupRef.current?.contains(event.target)) return;
       if (!closeOnScroll) return updatePosition();
       clearTimers();
       changeOpen(false, "scroll");

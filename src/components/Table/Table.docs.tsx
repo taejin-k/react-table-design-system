@@ -30,6 +30,7 @@ const tableApi = `
 | \`tableLayout\` | 브라우저의 표 레이아웃 계산 방식을 설정해요. | \`auto \\| fixed\` | \`fixed\` |
 | \`rowHoverable\` | 행에 마우스를 올렸을 때 배경을 표시해요. | \`boolean\` | \`true\` |
 | \`virtual\` | 많은 행을 가상 스크롤로 렌더링해요. | \`boolean\` | \`false\` |
+| \`stickyScrollBar\` | 페이지를 내려도 가로 스크롤바가 화면 아래를 따라오게 해요. | \`boolean \\| { offsetScroll? }\` | \`false\` |
 | \`scroll\` | 가로·세로 스크롤 크기와 이동 동작을 설정해요. | \`{ x?, y?, scrollToFirstRowOnChange? }\` | - |
 | \`sortDirections\` | 표 전체의 정렬 순환 순서를 설정해요. | \`SortOrder[]\` | \`[ascend, descend, null]\` |
 | \`className\` | 외부에서 Tailwind 클래스를 추가해요. | \`string\` | - |
@@ -183,7 +184,15 @@ const storyGroups = [
   {
     id: "components-table-api-compatibility",
     module: apiStories,
-    stories: ["GroupedHeaders", "Headerless", "FixedHeader", "FixedColumns", "Loading", "Empty"],
+    stories: [
+      "GroupedHeaders",
+      "Headerless",
+      "FixedHeader",
+      "FixedColumns",
+      "StickyScrollbar",
+      "Loading",
+      "Empty",
+    ],
   },
   {
     id: "components-table-layout",

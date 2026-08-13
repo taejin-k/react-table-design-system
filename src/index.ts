@@ -12,6 +12,34 @@ export { ErrorText } from "./components/ErrorText";
 export type { ErrorTextProps } from "./components/ErrorText";
 export { Input } from "./components/Input";
 export type { InputProps, InputSize, InputVariant } from "./components/Input";
+export { TextArea } from "./components/TextArea";
+export type { TextAreaAutoSize, TextAreaProps } from "./components/TextArea";
+export { Select } from "./components/Select";
+export type {
+  SelectMode,
+  SelectOption,
+  SelectPlacement,
+  SelectProps,
+  SelectValue,
+} from "./components/Select";
+export { DatePicker } from "./components/DatePicker";
+export type {
+  DatePickerShowTime,
+  DatePickerMode,
+  DatePickerPlacement,
+  DatePickerProps,
+  DatePickerValue,
+  DateRangePickerProps,
+} from "./components/DatePicker";
+export { TimePicker } from "./components/TimePicker";
+export type {
+  DisabledTime,
+  TimePickerCellInfo,
+  TimePickerPlacement,
+  TimePickerProps,
+  TimePickerValue,
+  TimeRangePickerProps,
+} from "./components/TimePicker";
 export { Checkbox } from "./components/Checkbox";
 export type { CheckboxProps } from "./components/Checkbox";
 export { Radio } from "./components/Radio";
@@ -68,5 +96,6 @@ export type {
   TableLocale,
   TableProps,
   TableRef,
+  TableStickyScrollBarConfig,
   TableRowCheckboxProps,
 } from "./components/Table";

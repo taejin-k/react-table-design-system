@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { Table } from "./Table";
 import type { ColumnsType } from "./Table.types";
 
@@ -11,6 +11,8 @@ const rows: Row[] = [
   { key: "2", name: "이서연", team: "Platform" },
   { key: "3", name: "박지호", team: "Design" },
 ];
+
+afterEach(() => vi.unstubAllGlobals());
 
 describe("Table regressions", () => {
   it("데이터가 없으면 기본 일러스트레이션과 안내 문구를 표시한다", () => {
@@ -311,6 +313,130 @@ describe("Table regressions", () => {
     fireEvent.scroll(scrollRegion);
 
     expect(headerRegion?.scrollLeft).toBe(80);
+  });
+
+  it("renders an arrowless custom horizontal scrollbar and synchronizes its thumb", () => {
+    vi.stubGlobal("CSS", { supports: () => true });
+    const { container } = render(
+      <Table
+        columns={[
+          { title: "이름", dataIndex: "name", width: 300 },
+          { title: "팀", dataIndex: "team", width: 300 },
+        ]}
+        dataSource={rows}
+        pagination={false}
+        scroll={{ x: 600 }}
+      />,
+    );
+
+    const scrollRegion = container.querySelector<HTMLElement>("[data-table-scroll-container]");
+    expect(scrollRegion).not.toBeNull();
+    if (!scrollRegion) return;
+
+    Object.defineProperties(scrollRegion, {
+      clientWidth: { configurable: true, value: 400 },
+      scrollWidth: { configurable: true, value: 800 },
+      scrollLeft: { configurable: true, writable: true, value: 80 },
+    });
+    fireEvent.scroll(scrollRegion);
+
+    const track = container.querySelector<HTMLElement>("[data-table-horizontal-scrollbar-track]");
+    expect(track).toHaveStyle({ width: "400px" });
+    expect(container.querySelector("[data-table-horizontal-scrollbar-thumb]")).toHaveStyle({
+      width: "200px",
+      transform: "translateX(40px)",
+    });
+
+    if (!track) return;
+    vi.spyOn(track, "getBoundingClientRect").mockReturnValue({
+      bottom: 8,
+      height: 8,
+      left: 0,
+      right: 400,
+      top: 0,
+      width: 400,
+      x: 0,
+      y: 0,
+      toJSON: () => ({}),
+    });
+    scrollRegion.scrollLeft = 0;
+    fireEvent.pointerDown(track, { clientX: 390, pointerId: 1 });
+    expect(scrollRegion.scrollLeft).toBe(400);
+    expect(container.querySelector("[data-table-horizontal-scrollbar-thumb]")).toHaveStyle({
+      transform: "translateX(200px)",
+    });
+  });
+
+  it("shows and synchronizes the sticky horizontal scrollbar while the table bottom is offscreen", () => {
+    vi.stubGlobal("CSS", { supports: () => true });
+    const { container } = render(
+      <Table
+        columns={[
+          { title: "이름", dataIndex: "name", width: 300 },
+          { title: "팀", dataIndex: "team", width: 300 },
+        ]}
+        dataSource={rows}
+        pagination={false}
+        stickyScrollBar
+        scroll={{ x: 600 }}
+      />,
+    );
+
+    const scrollRegion = container.querySelector<HTMLElement>("[data-table-scroll-container]");
+    expect(scrollRegion).not.toBeNull();
+    if (!scrollRegion) return;
+
+    Object.defineProperties(scrollRegion, {
+      clientWidth: { configurable: true, value: 400 },
+      scrollWidth: { configurable: true, value: 800 },
+      scrollLeft: { configurable: true, writable: true, value: 0 },
+    });
+    let bottom = 1200;
+    vi.spyOn(scrollRegion, "getBoundingClientRect").mockImplementation(
+      () =>
+        ({
+          bottom,
+          height: bottom - 100,
+          left: 40,
+          right: 440,
+          top: 100,
+          width: 400,
+          x: 40,
+          y: 100,
+          toJSON: () => ({}),
+        }) as DOMRect,
+    );
+
+    fireEvent.scroll(scrollRegion);
+    fireEvent.scroll(window);
+    const stickyTrack = document.body.querySelector<HTMLElement>("[data-table-sticky-scrollbar]");
+    expect(stickyTrack).toHaveStyle({
+      left: "40px",
+      opacity: "1",
+      top: `${window.innerHeight - 14}px`,
+      width: "400px",
+    });
+    expect(container.querySelector("[data-table-horizontal-scrollbar-track]")).toBeInTheDocument();
+
+    scrollRegion.scrollLeft = 100;
+    fireEvent.scroll(scrollRegion);
+    expect(
+      document.body.querySelector<HTMLElement>("[data-table-sticky-scrollbar-thumb]"),
+    ).toHaveStyle({ transform: "translateX(50px)", width: "200px" });
+
+    bottom = window.innerHeight - 14;
+    fireEvent.scroll(window);
+    expect(document.body.querySelector<HTMLElement>("[data-table-sticky-scrollbar]")).toHaveStyle({
+      opacity: "0",
+      pointerEvents: "none",
+    });
+
+    bottom = -100;
+    fireEvent.scroll(window);
+    expect(document.body.querySelector<HTMLElement>("[data-table-sticky-scrollbar]")).toHaveStyle({
+      opacity: "0",
+      pointerEvents: "none",
+    });
   });
 
   it("adds internal vertical cell borders in bordered mode", () => {
