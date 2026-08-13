@@ -11,8 +11,9 @@ const memberOptions: SelectOption[] = [
   { label: "김민준", value: "kim" },
   { label: "이서연", value: "lee" },
   { label: "박지호", value: "park" },
-  { label: "선택할 수 없음", value: "disabled", disabled: true },
 ];
+
+const sizeMemberOptions = memberOptions.slice(0, 2);
 
 const groupedOptions: SelectOption[] = [
   {
@@ -220,9 +221,9 @@ export const Sizes: Story = {
   },
   render: () => (
     <div className="grid max-w-sm gap-3">
-      <Select options={memberOptions} size="lg" />
-      <Select options={memberOptions} />
-      <Select options={memberOptions} size="sm" />
+      <Select options={sizeMemberOptions} size="lg" />
+      <Select options={sizeMemberOptions} />
+      <Select options={sizeMemberOptions} size="sm" />
     </div>
   ),
 };
@@ -248,10 +249,10 @@ export const States: Story = {
   },
   render: () => (
     <div className="grid max-w-sm gap-3">
-      <Select options={memberOptions} placeholder="기본" />
-      <Select options={memberOptions} variant="filled" placeholder="채움" />
-      <Select options={memberOptions} status="warning" placeholder="경고" />
-      <Select options={memberOptions} disabled defaultValue="kim" />
+      <Select options={sizeMemberOptions} placeholder="기본" />
+      <Select options={sizeMemberOptions} variant="filled" placeholder="채움" />
+      <Select options={sizeMemberOptions} status="warning" placeholder="경고" />
+      <Select options={sizeMemberOptions} disabled defaultValue="kim" />
     </div>
   ),
 };
@@ -266,24 +267,26 @@ export const LabelAndError: Story = {
   { label: '이서연', value: 'lee' },
 ];
 
-<Select
-  className="max-w-sm"
-  options={memberOptions}
-  label="담당자"
-  required
-  errorText="담당자를 선택해 주세요."
-/>`),
+<div className="max-w-sm">
+  <Select
+    options={memberOptions}
+    label="담당자"
+    required
+    errorText="담당자를 선택해 주세요."
+  />
+</div>`),
       },
     },
   },
   render: () => (
-    <Select
-      className="max-w-sm"
-      options={memberOptions}
-      label="담당자"
-      required
-      errorText="담당자를 선택해 주세요."
-    />
+    <div className="max-w-sm">
+      <Select
+        options={sizeMemberOptions}
+        label="담당자"
+        required
+        errorText="담당자를 선택해 주세요."
+      />
+    </div>
   ),
 };
 
@@ -299,11 +302,17 @@ export const Basic: Story = {
   { label: '박지호', value: 'park' },
 ];
 
-<Select className="max-w-sm" options={memberOptions} placeholder="구성원을 선택하세요" />`),
+<div className="max-w-sm">
+  <Select options={memberOptions} placeholder="구성원을 선택하세요" />
+</div>`),
       },
     },
   },
-  render: (args) => <Select {...args} className="max-w-sm" />,
+  render: (args) => (
+    <div className="max-w-sm">
+      <Select {...args} />
+    </div>
+  ),
 };
 
 export const MultipleAndSearch: Story = {
@@ -577,7 +586,7 @@ export const LoadingAndEmpty: Story = {
       source: {
         code: withStoryImports(`<div className="grid max-w-sm gap-3">
   <Select options={memberOptions} loading />
-  <Select options={[]} notFoundContent="검색 결과가 없어요" open />
+  <Select options={[]} notFoundContent="검색 결과가 없어요" />
 </div>`),
       },
     },
@@ -585,7 +594,7 @@ export const LoadingAndEmpty: Story = {
   render: () => (
     <div className="grid max-w-sm gap-3">
       <Select options={memberOptions} loading />
-      <Select options={[]} notFoundContent="검색 결과가 없어요" open />
+      <Select options={[]} notFoundContent="검색 결과가 없어요" />
     </div>
   ),
 };
