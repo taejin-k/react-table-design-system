@@ -60,6 +60,60 @@ export type {
 } from "./components/Dropdown";
 export { Popover } from "./components/Popover";
 export type { PopoverPlacement, PopoverProps, PopoverTrigger } from "./components/Popover";
+export { Flex } from "./components/Flex";
+export type { FlexGap, FlexOrientation, FlexProps } from "./components/Flex";
+export { Segmented } from "./components/Segmented";
+export type {
+  SegmentedItemType,
+  SegmentedOption,
+  SegmentedOrientation,
+  SegmentedProps,
+  SegmentedSize,
+  SegmentedValue,
+} from "./components/Segmented";
+export { Modal } from "./components/Modal";
+export type {
+  ModalClosable,
+  ModalComponent,
+  ModalFuncConfig,
+  ModalFuncResult,
+  ModalMask,
+  ModalProps,
+  ModalSemanticName,
+  ModalStaticFunctions,
+  ModalWidth,
+} from "./components/Modal";
+export { Drawer } from "./components/Drawer";
+export type {
+  DrawerClosable,
+  DrawerMask,
+  DrawerPlacement,
+  DrawerProps,
+  DrawerResizableConfig,
+  DrawerSemanticName,
+  DrawerSize,
+} from "./components/Drawer";
+export { message } from "./components/Message";
+export type {
+  MessageApi,
+  MessageArgsProps,
+  MessageGlobalConfig,
+  MessageInstance,
+  MessageKey,
+  MessageSemanticName,
+  MessageType,
+  MessageTypeName,
+} from "./components/Message";
+export { notification } from "./components/Notification";
+export type {
+  NotificationApi,
+  NotificationArgsProps,
+  NotificationGlobalConfig,
+  NotificationInstance,
+  NotificationPlacement,
+  NotificationSemanticName,
+  NotificationType,
+} from "./components/Notification";
 export { Illustrations } from "./components/Illustrations";
 export type {
   IllustrationSize,

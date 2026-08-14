@@ -6,23 +6,30 @@ const componentExports = [
   "Checkbox",
   "Chip",
   "Dropdown",
+  "Drawer",
   "DatePicker",
   "ErrorText",
   "Icon",
   "Input",
   "Illustrations",
   "Label",
+  "Flex",
+  "Modal",
   "Popover",
   "Radio",
   "Select",
+  "Segmented",
   "Table",
   "TextArea",
   "TimePicker",
   "Tooltip",
   "Toggle",
+  "message",
+  "notification",
 ] as const;
 
 const reactExports = ["useCallback", "useEffect", "useMemo", "useRef", "useState"] as const;
+const componentTypeExports = ["DrawerPlacement"] as const;
 const dndCoreExports = [
   "closestCenter",
   "DndContext",
@@ -58,6 +65,7 @@ export function withStoryImports(source: string) {
   const imports = [
     importLine(example, reactExports, "react"),
     importLine(example, componentExports, packageName),
+    typeImportLine(example, componentTypeExports, packageName),
     importLine(example, dndCoreExports, "@dnd-kit/core"),
     importLine(example, dndSortableExports, "@dnd-kit/sortable"),
     used(example, "CSS") && !imported(example, "CSS")
@@ -66,6 +74,11 @@ export function withStoryImports(source: string) {
   ].filter(Boolean);
 
   return imports.length ? `${imports.join("\n")}\n\n${example}` : example;
+}
+
+function typeImportLine(source: string, names: readonly string[], from: string) {
+  const imports = names.filter((name) => used(source, name) && !imported(source, name));
+  return imports.length ? `import type { ${imports.join(", ")} } from '${from}';` : "";
 }
 
 export function formatTooltipStorySource(source: string) {

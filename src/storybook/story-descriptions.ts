@@ -124,6 +124,41 @@ export const storyDescriptions: Record<string, string> = {
   "components-popover--actions": "카드 안에 설명과 실행 버튼을 함께 배치할 수 있어요.",
   "components-popover--controlled": "open과 onOpenChange로 카드 표시 상태를 직접 관리할 수 있어요.",
 
+  "components-flex--basic": "가로와 세로 방향으로 요소를 간결하게 배치해요.",
+  "components-flex--alignment": "주축과 교차축 정렬을 조합해요.",
+  "components-flex--gap-wrap": "요소 사이 간격과 줄바꿈을 설정해요.",
+  "components-flex--component": "렌더링할 HTML 요소를 변경해요.",
+
+  "components-segmented--basic": "여러 선택지 중 하나를 빠르게 전환해요.",
+  "components-segmented--sizes-shapes": "세 가지 크기와 두 가지 모양을 비교해요.",
+  "components-segmented--orientation-block": "세로 방향과 부모 너비를 채우는 형태를 사용해요.",
+  "components-segmented--icons-tooltip": "아이콘과 항목별 Tooltip을 함께 표시해요.",
+  "components-segmented--controlled": "value와 onChange로 선택 상태를 관리해요.",
+
+  "components-modal--basic": "버튼으로 Modal을 열고 확인하거나 취소해요.",
+  "components-modal--async": "비동기 작업이 끝날 때까지 확인 버튼을 로딩 상태로 표시해요.",
+  "components-modal--footer-loading": "footer를 구성하거나 본문 로딩 상태를 표시해요.",
+  "components-modal--static-methods": "정적 메서드로 안내와 확인 Modal을 열어요.",
+  "components-modal--hook": "useModal과 contextHolder로 현재 Context를 유지해요.",
+  "components-modal--position-width": "중앙 배치와 너비를 설정해요.",
+
+  "components-drawer--basic": "화면 가장자리에서 Drawer를 열고 닫아요.",
+  "components-drawer--placements": "네 방향에서 Drawer를 열어요.",
+  "components-drawer--size-resizable": "크기를 선택하거나 가장자리를 드래그해 조절해요.",
+  "components-drawer--extra-footer-loading": "제목 옆 작업, footer와 로딩 상태를 구성해요.",
+  "components-drawer--nested": "중첩 Drawer를 열면 부모 패널을 밀어내요.",
+
+  "components-message--types": "상태에 맞는 다섯 가지 전역 메시지를 표시해요.",
+  "components-message--hook": "useMessage와 contextHolder로 현재 Context를 유지해요.",
+  "components-message--duration-update": "지속 시간을 설정하고 같은 key의 내용을 갱신해요.",
+  "components-message--promise-stack": "닫힘을 기다리거나 여러 메시지를 스택으로 표시해요.",
+
+  "components-notification--types-actions": "상태별 알림에 제목, 설명과 작업 버튼을 표시해요.",
+  "components-notification--placements": "화면 여섯 위치에 알림을 표시해요.",
+  "components-notification--progress-stack": "남은 시간을 표시하고 여러 알림을 스택으로 쌓아요.",
+  "components-notification--update": "같은 key의 알림 내용을 갱신해요.",
+  "components-notification--hook": "useNotification과 contextHolder로 현재 Context를 유지해요.",
+
   "components-illustrations--types": "상태와 안내 목적에 맞는 열두 가지 이미지를 선택할 수 있어요",
   "components-illustrations--sizes": "화면에 맞게 세 가지 이미지 크기를 선택할 수 있어요",
 
