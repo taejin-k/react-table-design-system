@@ -21,6 +21,12 @@ Tailwind CSS 기반 디자인 시스템입니다.
   - [Breadcrumb](#breadcrumb)
   - [Illustrations](#illustrations)
   - [Table](#table)
+  - [Flex](#flex)
+  - [Segmented](#segmented)
+  - [Modal](#modal)
+  - [Drawer](#drawer)
+  - [Message](#message)
+  - [Notification](#notification)
 - [Storybook](#storybook)
 - [배포 (메인테이너용)](#배포-메인테이너용)
 
@@ -284,6 +290,167 @@ Ant Design과 익숙한 핵심 API 사용 패턴을 제공하는 독립 Table입
 ```
 
 체크박스/라디오 행 선택 UI는 Table 내부에 인라인으로 구현되어 있으며 별도로 export하지 않습니다(다른 컴포넌트로 자유롭게 교체 가능하도록). `@dnd-kit/core`/`@dnd-kit/sortable`로 행·열 드래그 정렬을 조합하는 예시는 Storybook의 `Drag Row Sorting`/`Drag Column Sorting` 스토리를 참조합니다. 전체 prop과 세부 기능별 예시(API Compatibility/Expandable/Layout/Pagination/Selection/Sorting & Filtering)는 Storybook 참조.
+
+### Flex
+
+가로·세로 방향, 정렬, 줄바꿈과 간격을 설정해 여러 요소를 배치합니다.
+
+```tsx
+import { Button, Flex } from "@taejin-k/wizard-design";
+
+<Flex align="center" gap="small" justify="space-between" wrap>
+  <Button>취소</Button>
+  <Button type="primary">저장</Button>
+</Flex>;
+```
+
+`gap`은 `small`, `medium`, `large` 토큰뿐 아니라 숫자와 CSS 문자열도 받을 수 있습니다. `vertical` 또는 `orientation="vertical"`로 세로 배치를 만들고, `component`로 최상위 HTML 요소를 변경할 수 있습니다.
+
+### Segmented
+
+여러 선택지 중 하나를 빠르게 전환합니다. 문자열·숫자 배열 또는 아이콘, 비활성화, Tooltip을 포함한 객체 배열을 전달할 수 있습니다.
+
+```tsx
+import { useState } from "react";
+import { Segmented } from "@taejin-k/wizard-design";
+
+function PeriodSegmented() {
+  const [period, setPeriod] = useState<string | number>("주간");
+
+  return <Segmented options={["일간", "주간", "월간"]} value={period} onChange={setPeriod} />;
+}
+```
+
+`size`, `shape`, `block`, `disabled`, `vertical`을 지원하며 각 객체 옵션에는 `label`, `icon`, `disabled`, `tooltip`을 설정할 수 있습니다.
+
+### Modal
+
+기본 Modal은 `open` 상태를 외부에서 관리합니다.
+
+```tsx
+import { useState } from "react";
+import { Button, Modal } from "@taejin-k/wizard-design";
+
+function BasicModal() {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <>
+      <Button onClick={() => setOpen(true)}>열기</Button>
+      <Modal
+        open={open}
+        title="구성원 삭제"
+        onCancel={() => setOpen(false)}
+        onOk={() => setOpen(false)}
+      >
+        선택한 구성원을 삭제할까요?
+      </Modal>
+    </>
+  );
+}
+```
+
+간단한 확인창은 정적 메서드로 열 수 있습니다.
+
+```tsx
+Modal.confirm({
+  title: "구성원 삭제",
+  content: "삭제한 구성원은 복구할 수 없어요.",
+  onOk: async () => {
+    await fetch("/api/members/1", { method: "DELETE" });
+  },
+});
+```
+
+Context 안에서 Modal을 열어야 한다면 `useModal`이 반환하는 `contextHolder`를 함께 렌더링합니다.
+
+```tsx
+function ContextModal() {
+  const [modal, contextHolder] = Modal.useModal();
+
+  return (
+    <>
+      {contextHolder}
+      <Button onClick={() => modal.success({ title: "저장했어요." })}>저장</Button>
+    </>
+  );
+}
+```
+
+`Modal.info`, `Modal.success`, `Modal.error`, `Modal.warning`, `Modal.confirm`, `Modal.destroyAll`을 제공하며 반환값의 `update`, `destroy`와 `await`도 지원합니다.
+
+### Drawer
+
+화면 가장자리에서 패널을 엽니다.
+
+```tsx
+import { useState } from "react";
+import { Button, Drawer } from "@taejin-k/wizard-design";
+
+function BasicDrawer() {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <>
+      <Button onClick={() => setOpen(true)}>상세 보기</Button>
+      <Drawer open={open} title="구성원 상세" onClose={() => setOpen(false)}>
+        구성원 정보를 표시합니다.
+      </Drawer>
+    </>
+  );
+}
+```
+
+`placement`, `size`, `width`, `height`, `extra`, `footer`, `loading`, `push`, `resizable`, `mask`, `getContainer`를 지원합니다.
+
+### Message
+
+작업 결과나 짧은 안내를 화면 위에 표시합니다.
+
+```tsx
+import { Button, message } from "@taejin-k/wizard-design";
+
+<Button onClick={() => message.success("저장했어요.")}>저장</Button>;
+```
+
+Provider의 Context가 필요한 경우 Hook API를 사용합니다.
+
+```tsx
+function ContextMessage() {
+  const [messageApi, contextHolder] = message.useMessage();
+
+  return (
+    <>
+      {contextHolder}
+      <Button onClick={() => messageApi.info("새 소식이 있어요.")}>알림</Button>
+    </>
+  );
+}
+```
+
+`message.success`, `message.error`, `message.info`, `message.warning`, `message.loading`, `message.open`, `message.destroy`, `message.config`를 제공합니다. 각 호출이 반환하는 함수로 직접 닫거나 닫힘을 `await`할 수 있습니다.
+
+### Notification
+
+제목, 상세 내용과 작업 버튼을 포함한 알림을 화면 모서리에 표시합니다.
+
+```tsx
+import { Button, notification } from "@taejin-k/wizard-design";
+
+<Button
+  onClick={() =>
+    notification.success({
+      title: "저장 완료",
+      description: "변경사항을 저장했어요.",
+      placement: "topRight",
+    })
+  }
+>
+  저장
+</Button>;
+```
+
+Context가 필요한 경우 `notification.useNotification()`이 반환하는 `contextHolder`를 렌더링합니다. `notification.open`, 상태별 메서드, `destroy`, `config`를 지원하며 `actions`, `duration`, `showProgress`, `pauseOnHover`, `placement`, `closable`을 설정할 수 있습니다.
 
 <br />
 
