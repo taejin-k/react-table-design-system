@@ -52,6 +52,19 @@ arrayMove([], 0, 0);`);
 
     expect(source).toContain("const items = [{ title: '홈' }];\n\nfunction BreadcrumbExample()");
   });
+
+  it("does not treat a message prop as the global message API", () => {
+    const source = withStoryImports('<ErrorMessage message="입력값을 확인해 주세요." />');
+
+    expect(source).toContain("import { ErrorMessage } from '@taejin-k/wizard-design';");
+    expect(source).not.toContain("ErrorMessage, message");
+  });
+
+  it("imports lowercase APIs when their methods are called", () => {
+    const source = withStoryImports("message.success('저장했어요.');");
+
+    expect(source).toContain("import { message } from '@taejin-k/wizard-design';");
+  });
 });
 
 describe("formatTooltipStorySource", () => {
@@ -65,7 +78,7 @@ describe("formatTooltipStorySource", () => {
   title="도움말"
   trigger="hover"
 >
-  <Button type="secondary">대상</Button>
+  <Button variant="secondary">대상</Button>
 </Tooltip>`);
 
     expect(source).toContain("import { Button, Tooltip } from '@taejin-k/wizard-design';");

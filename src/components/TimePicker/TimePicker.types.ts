@@ -4,7 +4,6 @@ import type { InputSize } from "../Input";
 export type TimePickerValue = string;
 export type TimePickerPlacement = "bottomLeft" | "bottomRight" | "topLeft" | "topRight";
 export type TimePickerVariant = "default" | "outlined" | "filled" | "borderless" | "underlined";
-export type TimePickerStatus = "error" | "warning";
 
 export interface DisabledTime {
   disabledHours?: () => number[];
@@ -25,11 +24,12 @@ export interface TimePickerProps {
   format?: string;
   size?: InputSize;
   variant?: TimePickerVariant;
-  status?: TimePickerStatus;
   label?: ReactNode;
-  errorText?: ReactNode;
+  errorMessage?: ReactNode;
   required?: boolean;
   disabled?: boolean;
+  readOnly?: boolean;
+  width?: number | string;
   allowClear?: boolean | { clearIcon?: ReactNode };
   use12Hours?: boolean;
   showSecond?: boolean;

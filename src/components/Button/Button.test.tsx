@@ -20,6 +20,12 @@ describe("Button", () => {
     expect(ref.current).toBe(button);
   });
 
+  it("supports the native button type prop", () => {
+    render(<Button type="submit">저장</Button>);
+
+    expect(screen.getByRole("button", { name: "저장" })).toHaveAttribute("type", "submit");
+  });
+
   it("runs its click handler unless disabled", async () => {
     const user = userEvent.setup();
     const onClick = vi.fn();
@@ -35,6 +41,16 @@ describe("Button", () => {
     );
     await user.click(screen.getByRole("button", { name: "실행" }));
     expect(onClick).toHaveBeenCalledOnce();
+  });
+
+  it("uses the tertiary background when a ghost button is hovered", () => {
+    render(<Button variant="ghost">Ghost</Button>);
+
+    expect(screen.getByRole("button", { name: "Ghost" })).toHaveClass(
+      "bg-white",
+      "hover:bg-[#f5f5f5]",
+      "ring-transparent",
+    );
   });
 
   it("keeps icon interaction owned by the button", async () => {
@@ -55,5 +71,47 @@ describe("Button", () => {
     await user.click(screen.getByTestId("icon"));
     expect(buttonClick).toHaveBeenCalledOnce();
     expect(iconClick).not.toHaveBeenCalled();
+  });
+
+  it("keeps icon-only buttons square while loading", () => {
+    render(<Button aria-label="추가" iconOnly loading prefixIcon={<span />} />);
+
+    const button = screen.getByRole("button", { name: "추가" });
+    expect(button).toHaveClass("h-[30px]", "w-[30px]", "px-0");
+    expect(button.style.width).toBe("");
+  });
+
+  it("replaces the expected icon slot while loading and blocks clicks", async () => {
+    const user = userEvent.setup();
+    const onClick = vi.fn();
+    const { rerender } = render(
+      <Button
+        loading
+        prefixIcon={<span data-testid="prefix" />}
+        suffixIcon={<span data-testid="suffix" />}
+        onClick={onClick}
+      >
+        저장
+      </Button>,
+    );
+
+    const button = screen.getByRole("button", { name: "저장" });
+    expect(button).toHaveClass("cursor-default", "opacity-70", "hover:bg-[#0062df]");
+    expect(screen.getByTestId("prefix")).toBeInTheDocument();
+    expect(screen.queryByTestId("suffix")).not.toBeInTheDocument();
+    expect(button.querySelector("svg")).toHaveClass("animate-spin");
+
+    await user.click(button);
+    expect(onClick).not.toHaveBeenCalled();
+
+    rerender(
+      <Button loading prefixIcon={<span data-testid="prefix" />}>
+        저장
+      </Button>,
+    );
+    expect(screen.queryByTestId("prefix")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "저장" }).querySelector("svg")).toHaveClass(
+      "animate-spin",
+    );
   });
 });

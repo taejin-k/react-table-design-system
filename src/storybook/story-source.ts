@@ -4,11 +4,11 @@ const componentExports = [
   "Breadcrumb",
   "Button",
   "Checkbox",
-  "Chip",
+  "Tag",
   "Dropdown",
   "Drawer",
   "DatePicker",
-  "ErrorText",
+  "ErrorMessage",
   "Icon",
   "Input",
   "Illustrations",
@@ -24,12 +24,11 @@ const componentExports = [
   "TimePicker",
   "Tooltip",
   "Toggle",
-  "message",
-  "notification",
 ] as const;
+const apiExports = ["message", "notification"] as const;
 
 const reactExports = ["useCallback", "useEffect", "useMemo", "useRef", "useState"] as const;
-const componentTypeExports = ["DrawerPlacement"] as const;
+const componentTypeExports = ["DrawerPlacement", "SelectLabeledValue"] as const;
 const dndCoreExports = [
   "closestCenter",
   "DndContext",
@@ -60,11 +59,19 @@ function importLine(source: string, names: readonly string[], from: string) {
   return imports.length ? `import { ${imports.join(", ")} } from '${from}';` : "";
 }
 
+function apiImportLine(source: string, names: readonly string[], from: string) {
+  const imports = names.filter(
+    (name) => new RegExp(`\\b${name}\\s*\\.`).test(source) && !imported(source, name),
+  );
+  return imports.length ? `import { ${imports.join(", ")} } from '${from}';` : "";
+}
+
 export function withStoryImports(source: string) {
   const example = wrapBareJsx(source);
   const imports = [
     importLine(example, reactExports, "react"),
     importLine(example, componentExports, packageName),
+    apiImportLine(example, apiExports, packageName),
     typeImportLine(example, componentTypeExports, packageName),
     importLine(example, dndCoreExports, "@dnd-kit/core"),
     importLine(example, dndSortableExports, "@dnd-kit/sortable"),

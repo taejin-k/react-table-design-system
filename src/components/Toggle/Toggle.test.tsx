@@ -31,4 +31,25 @@ describe("Toggle", () => {
     await user.click(screen.getByRole("switch", { name: "알림" }));
     expect(onChange).not.toHaveBeenCalled();
   });
+
+  it("shows a size-matched loading icon and blocks interactions while loading", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    const onClick = vi.fn();
+    const { container } = render(
+      <Toggle checked loading onChange={onChange} onClick={onClick} size="lg" />,
+    );
+
+    const toggle = screen.getByRole("switch");
+    const loadingIcon = container.querySelector("svg");
+    expect(toggle).toHaveClass("cursor-default", "bg-[#6ea0fa]");
+    expect(loadingIcon).toHaveAttribute("width", "20");
+    expect(loadingIcon).toHaveAttribute("height", "20");
+    expect(loadingIcon).toHaveClass("animate-spin");
+    expect(loadingIcon?.querySelector("path")).toHaveAttribute("fill", "#6ea0fa");
+
+    await user.click(toggle);
+    expect(onClick).not.toHaveBeenCalled();
+    expect(onChange).not.toHaveBeenCalled();
+  });
 });

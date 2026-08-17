@@ -28,6 +28,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { twMerge } from "tailwind-merge";
+import { Button } from "../Button/Button";
 import { Icon } from "../Icon/Icon";
 
 type TableDragProviderProps = {
@@ -220,15 +221,16 @@ export function RowDragHandle() {
   if (!context) return null;
 
   return (
-    <button
+    <Button
       ref={context.setActivatorNodeRef}
-      type="button"
+      variant="ghost"
+      size="sm"
+      iconOnly
+      prefixIcon={<Icon icon="drag-handle" color="#999" className="select-none" />}
       {...context.attributes}
       {...context.listeners}
       className="inline-grid size-7 cursor-grab place-items-center rounded border-0 bg-transparent p-0 active:cursor-grabbing"
       onClick={(event) => event.stopPropagation()}
-    >
-      <Icon icon="drag-handle" color="#999" className="select-none" />
-    </button>
+    />
   );
 }

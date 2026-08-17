@@ -1,13 +1,15 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { ErrorText } from "./ErrorText";
+import { ErrorMessage } from "./ErrorMessage";
 
-describe("ErrorText", () => {
+describe("ErrorMessage", () => {
   it("renders an alert and applies className to the root", () => {
     const { container } = render(
-      <ErrorText id="field-error" className="custom-error">
-        입력값을 확인해 주세요.
-      </ErrorText>,
+      <ErrorMessage
+        id="field-error"
+        className="custom-error"
+        errorMessage="입력값을 확인해 주세요."
+      />,
     );
 
     expect(container.firstElementChild).toHaveClass("custom-error");

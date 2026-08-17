@@ -1,117 +1,209 @@
 /** Canvas와 Docs에서 각 Story가 무엇을 검증하는지 바로 알 수 있도록 제공하는 설명이다. */
 export const storyDescriptions: Record<string, string> = {
-  "components-button--types": "작업의 중요도에 맞게 다섯 가지 버튼 타입을 선택할 수 있어요.",
+  "components-button--variants":
+    "다섯 가지 버튼 종류를 비교해요. ghost는 hover하면 tertiary 배경으로 바뀌어요.",
   "components-button--sizes": "화면과 작업 환경에 맞게 세 가지 버튼 크기를 선택할 수 있어요.",
   "components-button--states": "기본, 그림자, 비활성, 전체 너비 상태를 사용할 수 있어요.",
   "components-button--icons": "버튼 이름의 앞뒤에 아이콘을 배치하거나 아이콘만 표시할 수 있어요.",
+  "components-button--loading": "버튼을 클릭하면 기존 아이콘 자리에 로딩을 표시해요.",
 
-  "components-checkbox--states": "기본, 오류, 비활성 상태를 선택할 수 있어요.",
-  "components-checkbox--label": "레이블을 추가하거나 뺄 수 있어요.",
-  "components-radio--states": "기본, 오류, 비활성 상태를 선택할 수 있어요.",
-  "components-radio--label": "레이블을 추가하거나 뺄 수 있어요.",
-  "components-radio--group": "같은 그룹에서 하나의 항목을 선택할 수 있어요.",
+  "components-checkbox--states":
+    "기본, 오류, 비활성 상태의 모양과 선택 가능 여부를 비교할 수 있어요.",
+  "components-checkbox--label":
+    "체크박스 오른쪽에 레이블을 표시하거나 레이블 없이 사용할 수 있어요.",
+  "components-radio--states": "기본, 오류, 비활성 상태의 모양과 선택 가능 여부를 비교할 수 있어요.",
+  "components-radio--label": "라디오 오른쪽에 레이블을 표시하거나 레이블 없이 사용할 수 있어요.",
+  "components-radio--group":
+    "같은 name을 가진 라디오를 하나의 그룹으로 묶어 한 항목만 선택할 수 있어요.",
 
-  "components-toggle--sizes": "세 가지 Toggle 크기를 선택할 수 있어요.",
-  "components-toggle--states": "켜짐과 비활성 상태를 선택할 수 있어요.",
+  "components-toggle--sizes": "화면과 작업 환경에 맞게 세 가지 Toggle 크기를 선택할 수 있어요.",
+  "components-toggle--states": "꺼짐, 켜짐과 비활성 상태의 모양과 동작을 비교할 수 있어요.",
+  "components-toggle--loading":
+    "Toggle을 클릭하면 thumb 안에 로딩을 표시하고 작업이 끝난 뒤 상태를 바꿔요.",
 
-  "components-input--sizes": "세 가지 Input 크기를 선택할 수 있어요.",
-  "components-input--states": "기본, 채움, 비활성 상태를 선택할 수 있어요.",
-  "components-input--label-and-error": "레이블, 필수 표시와 오류 문구를 추가할 수 있어요.",
+  "components-input--sizes": "화면과 입력 환경에 맞게 세 가지 Input 크기를 선택할 수 있어요.",
+  "components-input--widths": "기본 전체 너비와 px 단위 가로 길이를 설정할 수 있어요.",
+  "components-input--variants": "기본, 채움, 테두리 없음과 밑줄 표현 방식을 선택할 수 있어요.",
+  "components-input--states":
+    "기본, 읽기 전용과 비활성 상태의 모양과 입력 가능 여부를 비교할 수 있어요.",
+  "components-input--allowed-characters": "한글, 영어 또는 숫자만 입력하도록 제한할 수 있어요.",
+  "components-input--password":
+    "입력값을 비밀번호로 가리고 눈 아이콘을 눌러 표시 상태를 전환할 수 있어요.",
   "components-input--icons-and-count":
     "아이콘과 지우기 버튼을 추가하고 글자 수를 현재 값 또는 현재/최대 값으로 표시할 수 있어요.",
+  "components-input--static-error":
+    "errorMessage를 전달해 입력창 아래에 고정 오류 문구와 오류 상태를 표시해요.",
+  "components-input--client-error":
+    "레이블과 필수 표시를 추가하고 입력값을 클라이언트에서 검증해요.",
+  "components-input--server-error":
+    "비동기 validate로 서버 응답을 확인하고 반환된 오류 문구를 입력창 아래에 표시해요.",
 
-  "components-textarea--sizes": "세 가지 TextArea 크기를 선택할 수 있어요.",
-  "components-textarea--states": "기본, 채움, 읽기 전용, 비활성 상태를 비교해요.",
-  "components-textarea--label-and-error": "레이블, 필수 표시와 오류 문구를 추가할 수 있어요.",
-  "components-textarea--basic": "여러 줄의 내용을 입력할 수 있어요.",
-  "components-textarea--auto-size": "입력 내용에 맞춰 최소·최대 행 사이에서 높이를 조절해요.",
-  "components-textarea--clear": "지우기 버튼으로 입력 내용을 한 번에 비울 수 있어요.",
-  "components-textarea--count": "현재 글자 수와 최대 글자 수를 표시할 수 있어요.",
-  "components-textarea--custom-count": "글자 계산과 초과 처리 방식을 직접 설정할 수 있어요.",
-  "components-textarea--controlled": "value와 onChange로 입력값을 외부에서 관리해요.",
-  "components-textarea--blur-validation": "포커스가 빠질 때 입력값을 검증하고 오류를 표시해요.",
+  "components-textarea--sizes": "입력할 내용의 양에 맞게 세 가지 TextArea 크기를 선택할 수 있어요.",
+  "components-textarea--widths": "기본 전체 너비와 px 단위 가로 길이를 설정할 수 있어요.",
+  "components-textarea--variants": "기본 배경과 채움 배경의 테두리·배경 표현을 비교할 수 있어요.",
+  "components-textarea--states":
+    "기본, 읽기 전용과 비활성 상태의 모양과 입력 가능 여부를 비교할 수 있어요.",
+  "components-textarea--allowed-characters": "한글, 영어 또는 숫자만 입력하도록 제한할 수 있어요.",
+  "components-textarea--static-error":
+    "errorMessage를 전달해 입력 영역 아래에 고정 오류 문구와 오류 상태를 표시해요.",
+  "components-textarea--auto-size":
+    "입력 내용에 따라 높이를 자동으로 늘리거나 최소·최대 행 사이로 제한해요.",
+  "components-textarea--resize":
+    "resize 설정에 따라 우측 하단 핸들로 입력 영역의 높이를 직접 조절할 수 있어요.",
+  "components-textarea--count":
+    "입력 영역 아래에 현재 글자 수만 표시하거나 최대 글자 수를 함께 표시할 수 있어요.",
+  "components-textarea--client-error": "동기 validate로 입력값을 검사하고 오류를 표시해요.",
+  "components-textarea--server-error":
+    "비동기 validate로 서버 응답을 확인하고 반환된 오류 문구를 입력 영역 아래에 표시해요.",
 
-  "components-select--sizes": "세 가지 Select 크기를 선택할 수 있어요.",
-  "components-select--states": "기본, 채움, 경고, 비활성 상태를 비교해요.",
-  "components-select--label-and-error": "레이블, 필수 표시와 오류 문구를 추가할 수 있어요.",
-  "components-select--basic": "목록에서 하나의 값을 선택할 수 있어요.",
+  "components-select--sizes": "화면과 선택 환경에 맞게 세 가지 Select 크기를 선택할 수 있어요.",
+  "components-select--widths": "기본 전체 너비와 px 단위 가로 길이를 설정할 수 있어요.",
+  "components-select--variants": "기본 배경과 채움 배경의 테두리·배경 표현을 비교할 수 있어요.",
+  "components-select--states":
+    "기본, 읽기 전용과 비활성 상태의 모양과 선택 가능 여부를 비교할 수 있어요.",
+  "components-select--multiple":
+    "등록된 항목 중 여러 값을 선택하고 선택값을 Tag로 확인하거나 해제할 수 있어요.",
+  "components-select--tags":
+    "등록된 항목을 선택하거나 새로운 값을 직접 입력해 Tag로 추가할 수 있어요.",
+  "components-select--tag-render": "tagRender로 선택된 Tag의 색상과 내용을 직접 구성할 수 있어요.",
+  "components-select--option-colors":
+    "SelectOption의 color로 선택된 기본 Tag의 색상을 설정할 수 있어요.",
+  "components-select--label-and-error":
+    "Select 위에 레이블과 필수 표시를 추가하고 아래에 오류 문구를 표시할 수 있어요.",
   "components-select--multiple-and-search":
     "그룹 항목을 검색하고 여러 값을 선택하거나 해제할 수 있어요.",
-  "components-select--search": "입력한 검색어와 일치하는 항목만 보여줘요.",
-  "components-select--custom-search-and-sort": "검색 조건과 결과 정렬 방법을 설정해요.",
-  "components-select--tags-and-token-separators": "새 태그를 입력하고 구분자로 여러 값을 추가해요.",
-  "components-select--selection-limits": "선택 수와 화면에 표시할 태그 수를 제한해요.",
-  "components-select--label-in-value": "선택값과 화면 레이블을 객체로 함께 관리해요.",
+  "components-select--search":
+    "Select에 검색어를 입력해 일치하는 항목만 드롭다운에 표시할 수 있어요.",
+  "components-select--filter-option":
+    "filterOption으로 검색어와 항목이 일치하는 조건을 직접 설정할 수 있어요.",
+  "components-select--option-label-prop":
+    "목록 레이블과 선택 영역에 표시할 항목 속성을 다르게 설정할 수 있어요.",
+  "components-select--options-sort":
+    "optionsSort로 드롭다운 항목을 원하는 기준과 순서로 정렬할 수 있어요.",
+  "components-select--tags-separators":
+    "직접 입력한 값을 쉼표 같은 구분자로 나눠 여러 Tag로 한 번에 추가할 수 있어요.",
+  "components-select--selection-limits":
+    "선택할 수 있는 최대 항목 수와 입력창에 표시할 최대 Tag 수를 각각 제한할 수 있어요.",
+  "components-select--label-in-value":
+    "labelInValue를 사용해 선택값과 화면 레이블을 하나의 객체로 함께 받을 수 있어요.",
   "components-select--custom-rendering": "항목, 선택 레이블과 목록 아래 영역을 직접 구성해요.",
-  "components-select--popup-width-and-placement": "목록의 너비와 표시 위치를 설정해요.",
-  "components-select--loading-and-empty": "로딩 상태와 검색 결과가 없는 상태를 안내해요.",
-  "components-select--controlled-open-and-search": "목록 표시와 검색어를 외부 상태로 관리해요.",
-  "components-select--virtual-list": "많은 항목을 가상 목록으로 부드럽게 표시해요.",
-  "components-select--field-names": "기존 데이터의 필드명을 Select 구조에 연결해요.",
-  "components-select--custom-icons": "선택 영역과 태그, 항목의 아이콘을 변경해요.",
+  "components-select--popup-width-and-placement":
+    "Select를 기준으로 드롭다운의 너비와 위·아래 표시 위치를 설정할 수 있어요.",
+  "components-select--loading-and-empty":
+    "항목을 불러오는 동안 로딩을 표시하고 결과가 없을 때 안내 문구를 보여줘요.",
+  "components-select--controlled-open-and-search":
+    "open과 searchValue로 드롭다운 표시 상태와 검색어를 외부에서 함께 관리해요.",
+  "components-select--virtual-list":
+    "많은 항목 중 화면에 보이는 영역만 가상 렌더링해 목록을 부드럽게 탐색할 수 있어요.",
+  "components-datepicker--sizes":
+    "화면과 날짜 선택 환경에 맞게 세 가지 DatePicker 크기를 선택할 수 있어요.",
+  "components-datepicker--widths": "기본 전체 너비와 px 단위 가로 길이를 설정할 수 있어요.",
+  "components-datepicker--states":
+    "기본, 읽기 전용과 비활성 상태의 모양과 선택 가능 여부를 비교할 수 있어요.",
+  "components-datepicker--variants":
+    "DatePicker의 배경과 테두리 표현 방식을 나란히 비교할 수 있어요.",
+  "components-datepicker--static-error":
+    "DatePicker 위에 레이블과 필수 표시를 추가하고 아래에 고정 오류 문구를 표시해요.",
+  "components-datepicker--basic": "달력에서 날짜를 선택하고 선택값을 확인하거나 지울 수 있어요.",
+  "components-datepicker--picker-types":
+    "날짜, 주, 월, 분기와 연도 중 필요한 선택 단위를 사용할 수 있어요.",
+  "components-datepicker--range": "하나의 달력에서 시작일과 종료일을 순서대로 선택할 수 있어요.",
+  "components-datepicker--disabled-date":
+    "disabledDate 조건에 맞는 날짜를 비활성화해 선택할 수 없게 해요.",
+  "components-datepicker--format": "선택한 날짜를 원하는 문자열 형식으로 변환해 표시할 수 있어요.",
+  "components-datepicker--min-max-date":
+    "선택 가능한 최소 날짜와 최대 날짜를 지정해 달력의 범위를 제한할 수 있어요.",
+  "components-datepicker--presets":
+    "자주 사용하는 날짜를 미리 등록해 달력에서 빠르게 선택할 수 있어요.",
+  "components-datepicker--multiple":
+    "하나의 달력에서 여러 날짜를 선택하고 선택한 날짜를 입력 영역에서 확인할 수 있어요.",
+  "components-datepicker--show-time-and-confirm":
+    "날짜와 시간을 한 패널에서 선택하고 확인 버튼을 눌러 값을 반영할 수 있어요.",
+  "components-datepicker--week-number":
+    "달력 왼쪽에 각 주를 구분하는 주차 번호를 함께 표시할 수 있어요.",
+  "components-datepicker--custom-cell":
+    "cellRender로 날짜 셀의 내용과 상태 표현을 목적에 맞게 구성할 수 있어요.",
+  "components-datepicker--extra-footer":
+    "달력 패널 아래에 안내 문구나 추가 작업 영역을 표시할 수 있어요.",
+  "components-datepicker--range-presets":
+    "자주 사용하는 시작일과 종료일 조합을 미리 등록해 빠르게 선택할 수 있어요.",
+  "components-datepicker--controlled-panel":
+    "pickerValue와 onPanelChange로 달력 패널의 기준 날짜를 외부에서 관리해요.",
+  "components-datepicker--placements":
+    "입력창을 기준으로 달력 패널이 열릴 네 가지 위치를 선택할 수 있어요.",
 
-  "components-datepicker--sizes": "세 가지 DatePicker 크기를 선택할 수 있어요.",
-  "components-datepicker--states": "기본, 채움, 경고, 비활성 상태를 비교해요.",
-  "components-datepicker--label-and-error": "레이블, 필수 표시와 오류 문구를 추가할 수 있어요.",
-  "components-datepicker--basic": "달력에서 날짜를 선택하거나 선택값을 지울 수 있어요.",
-  "components-datepicker--picker-types": "날짜, 월, 연도 중 필요한 단위로 선택할 수 있어요.",
-  "components-datepicker--range": "시작일과 종료일을 순서대로 선택할 수 있어요.",
-  "components-datepicker--disabled-date": "조건에 맞는 날짜를 선택할 수 없게 설정해요.",
-  "components-datepicker--format": "선택한 날짜를 원하는 문자열 형식으로 표시해요.",
-  "components-datepicker--min-max-date": "선택할 수 있는 최소 날짜와 최대 날짜를 제한해요.",
-  "components-datepicker--presets": "자주 사용하는 날짜를 빠르게 선택해요.",
-  "components-datepicker--multiple": "하나의 달력에서 여러 날짜를 선택해요.",
-  "components-datepicker--show-time-and-confirm": "날짜와 시간을 선택하고 확인할 때 값을 반영해요.",
-  "components-datepicker--week-number": "달력 왼쪽에 주차 번호를 표시해요.",
-  "components-datepicker--custom-cell": "날짜 셀의 내용을 목적에 맞게 구성해요.",
-  "components-datepicker--extra-footer": "달력 아래에 추가 안내나 작업을 표시해요.",
-  "components-datepicker--range-presets": "자주 사용하는 날짜 범위를 빠르게 선택해요.",
-  "components-datepicker--controlled-panel": "달력 패널의 기준 날짜를 외부에서 관리해요.",
-  "components-datepicker--placements": "달력을 대상의 네 방향에 배치할 수 있어요.",
+  "components-timepicker--sizes":
+    "화면과 시간 선택 환경에 맞게 세 가지 TimePicker 크기를 선택할 수 있어요.",
+  "components-timepicker--widths": "기본 전체 너비와 px 단위 가로 길이를 설정할 수 있어요.",
+  "components-timepicker--states":
+    "기본, 읽기 전용과 비활성 상태의 모양과 선택 가능 여부를 비교할 수 있어요.",
+  "components-timepicker--variants":
+    "TimePicker의 배경과 테두리 표현 방식을 나란히 비교할 수 있어요.",
+  "components-timepicker--static-error":
+    "TimePicker 위에 레이블과 필수 표시를 추가하고 아래에 고정 오류 문구를 표시해요.",
+  "components-timepicker--basic":
+    "목록에서 시·분·초를 선택하고 선택값을 확인하거나 지울 수 있어요.",
+  "components-timepicker--format-and-steps":
+    "12시간제, 시간 간격과 확인 버튼을 조합해 선택 방식을 설정할 수 있어요.",
+  "components-timepicker--range":
+    "하나의 패널에서 시작 시간과 종료 시간을 순서대로 선택할 수 있어요.",
+  "components-timepicker--disabled-time":
+    "disabledTime 조건에 맞는 시·분·초를 비활성화해 선택할 수 없게 해요.",
+  "components-timepicker--hide-disabled-options":
+    "비활성 시간 항목을 목록에 표시하거나 완전히 숨길 수 있어요.",
+  "components-timepicker--show-now-and-footer":
+    "현재 시간 선택 버튼과 시간 패널 아래의 추가 콘텐츠를 구성할 수 있어요.",
+  "components-timepicker--custom-cell":
+    "cellRender로 시간 항목의 내용과 상태 표현을 목적에 맞게 구성할 수 있어요.",
+  "components-timepicker--preview-on-hover":
+    "시간 항목에 마우스를 올려 확정 전의 선택값을 입력창에서 미리 확인할 수 있어요.",
+  "components-timepicker--change-on-scroll":
+    "시간 목록을 스크롤하는 즉시 선택값이 함께 변경되도록 설정할 수 있어요.",
+  "components-timepicker--prefix-and-suffix":
+    "선택 영역 앞뒤에 아이콘이나 추가 콘텐츠를 표시할 수 있어요.",
+  "components-timepicker--controlled":
+    "value와 onChange로 선택 시간을 외부 상태에서 직접 관리할 수 있어요.",
+  "components-timepicker--placements":
+    "입력창을 기준으로 시간 패널이 열릴 네 가지 위치를 선택할 수 있어요.",
 
-  "components-timepicker--sizes": "세 가지 TimePicker 크기를 선택할 수 있어요.",
-  "components-timepicker--states": "기본, 채움, 경고, 비활성 상태를 비교해요.",
-  "components-timepicker--label-and-error": "레이블, 필수 표시와 오류 문구를 추가할 수 있어요.",
-  "components-timepicker--basic": "목록에서 시·분·초를 선택하거나 선택값을 지울 수 있어요.",
-  "components-timepicker--format-and-steps": "12시간제, 분 간격과 확인 버튼을 조합할 수 있어요.",
-  "components-timepicker--range": "시작 시간과 종료 시간을 선택할 수 있어요.",
-  "components-timepicker--disabled-time": "조건에 맞는 시·분·초를 선택할 수 없게 설정해요.",
-  "components-timepicker--hide-disabled-options": "선택할 수 없는 시간 항목을 목록에서 숨겨요.",
-  "components-timepicker--show-now-and-footer": "현재 시간 버튼과 목록 아래 내용을 설정해요.",
-  "components-timepicker--custom-cell": "시간 항목의 표시 내용을 직접 구성해요.",
-  "components-timepicker--preview-on-hover": "항목에 마우스를 올리면 선택 전 시간을 미리 보여줘요.",
-  "components-timepicker--change-on-scroll": "시간 목록을 스크롤하며 값을 변경해요.",
-  "components-timepicker--prefix-and-suffix": "선택 영역 앞뒤에 추가 내용을 표시해요.",
-  "components-timepicker--controlled": "value와 onChange로 선택 시간을 외부에서 관리해요.",
-  "components-timepicker--placements": "시간 목록을 대상의 네 방향에 배치할 수 있어요.",
-
-  "components-icon--icons": "사용할 아이콘을 선택할 수 있어요.",
-  "components-icon--size-and-color": "아이콘의 크기와 색상을 변경할 수 있어요.",
-  "components-icon--clickable": "아이콘에 클릭 동작을 추가할 수 있어요.",
-  "components-chip--variants": "세 가지 표현 방식을 선택할 수 있어요.",
-  "components-chip--colors": "일곱 가지 Chip 색상을 선택할 수 있어요.",
-  "components-chip--icons": "Chip의 앞뒤에 아이콘을 추가할 수 있어요.",
-  "components-label--sizes": "세 가지 Label 크기를 선택할 수 있어요.",
-  "components-label--required": "필수 표시를 추가하거나 뺄 수 있어요.",
-  "components-errortext--message": "오류 문구를 추가하거나 뺄 수 있어요.",
+  "components-icon--icons": "제공하는 아이콘 종류와 기본 모양을 한눈에 확인할 수 있어요.",
+  "components-icon--size-and-color": "사용 환경에 맞게 아이콘의 크기와 색상을 변경할 수 있어요.",
+  "components-icon--clickable": "아이콘에 클릭 동작과 hover 피드백을 추가할 수 있어요.",
+  "components-icon--loading":
+    "아이콘을 클릭하면 기존 크기와 색상을 유지한 채 로딩 상태로 전환해요.",
+  "components-icon--disabled": "아이콘의 클릭과 hover 동작을 비활성화할 수 있어요.",
+  "components-tag--variants": "네 가지 표현 방식과 색상 조합을 비교할 수 있어요.",
+  "components-tag--colors": "콘텐츠의 상태와 분류에 맞게 일곱 가지 Tag 색상을 선택할 수 있어요.",
+  "components-tag--icons": "Tag의 앞뒤에 아이콘을 배치하고 클릭 동작을 연결할 수 있어요.",
+  "components-label--sizes": "연결할 입력 컴포넌트에 맞게 세 가지 Label 크기를 선택할 수 있어요.",
+  "components-label--required": "레이블 옆에 필수 입력을 나타내는 표시를 추가하거나 뺄 수 있어요.",
+  "components-errormessage--message":
+    "입력 컴포넌트 아래에 표시할 오류 문구를 전달하거나 숨길 수 있어요.",
 
   "components-breadcrumb--items": "상위 경로부터 현재 위치까지 각 항목을 순서대로 보여줘요.",
   "components-breadcrumb--with-icons": "각 항목에 아이콘을 더해 경로를 쉽게 구분할 수 있어요.",
+  "components-breadcrumb--single-icon":
+    "경로 이름 없이 아이콘만 사용해 간결한 이동 경로를 구성할 수 있어요.",
   "components-breadcrumb--item-colors": "각 항목의 글자와 아이콘에 원하는 색상을 적용할 수 있어요.",
 
-  "components-tooltip--basic": "요소에 마우스를 올리면 짧은 설명을 표시해요.",
+  "components-tooltip--basic": "대상 요소에 마우스를 올리면 가까운 위치에 짧은 설명을 표시해요.",
   "components-tooltip--placements": "대상을 기준으로 열두 가지 위치에 설명을 배치할 수 있어요.",
-  "components-tooltip--triggers": "hover, focus, click 중 표시 동작을 선택할 수 있어요.",
+  "components-tooltip--triggers":
+    "hover, focus, click, contextMenu 중 하나를 선택하거나 여러 동작을 함께 사용할 수 있어요.",
   "components-tooltip--appearance": "배경 색상과 화살표 표시 여부를 변경할 수 있어요.",
+  "components-popover--appearance": "배경 색상과 화살표 표시 여부를 변경할 수 있어요.",
   "components-tooltip--controlled": "open과 onOpenChange로 표시 상태를 직접 관리할 수 있어요.",
 
-  "components-dropdown--basic": "대상에 마우스를 올리면 작업 메뉴를 표시해요.",
-  "components-dropdown--triggers": "hover, focus, click 중 메뉴를 표시할 동작을 선택할 수 있어요.",
+  "components-dropdown--basic":
+    "대상에 마우스를 올리면 선택하거나 실행할 수 있는 작업 메뉴를 표시해요.",
+  "components-dropdown--triggers":
+    "hover, focus, click, contextMenu 중 메뉴를 표시할 동작을 하나 이상 선택할 수 있어요.",
   "components-dropdown--placements": "대상을 기준으로 열두 가지 위치에 메뉴를 배치할 수 있어요.",
   "components-dropdown--menu-items":
     "그룹, 아이콘, 구분선, 비활성, 위험 작업과 하위 메뉴를 구성할 수 있어요.",
   "components-dropdown--selectable": "메뉴가 처음 열릴 때 선택할 항목을 지정할 수 있어요.",
-  "components-dropdown--multiple-selectable": "여러 메뉴 항목을 선택하고 선택 상태를 관리해요.",
+  "components-dropdown--multiple-selectable":
+    "여러 메뉴 항목을 동시에 선택하고 선택된 값과 표시 상태를 관리할 수 있어요.",
   "components-dropdown--item-click": "항목마다 서로 다른 클릭 동작을 연결할 수 있어요.",
   "components-dropdown--arrow": "메뉴와 대상을 연결하는 화살표를 표시할 수 있어요.",
   "components-dropdown--disabled": "필요할 때 Dropdown 전체를 비활성화할 수 있어요.",
@@ -120,52 +212,78 @@ export const storyDescriptions: Record<string, string> = {
 
   "components-popover--basic": "요소에 마우스를 올리면 제목과 추가 내용을 표시해요.",
   "components-popover--placements": "대상을 기준으로 열두 가지 위치에 카드를 배치할 수 있어요.",
-  "components-popover--triggers": "hover, focus, click 중 표시 동작을 선택할 수 있어요.",
+  "components-popover--triggers": "hover, focus, click, contextMenu 중 표시 동작을 설정해요.",
   "components-popover--actions": "카드 안에 설명과 실행 버튼을 함께 배치할 수 있어요.",
   "components-popover--controlled": "open과 onOpenChange로 카드 표시 상태를 직접 관리할 수 있어요.",
 
-  "components-flex--basic": "가로와 세로 방향으로 요소를 간결하게 배치해요.",
-  "components-flex--alignment": "주축과 교차축 정렬을 조합해요.",
-  "components-flex--gap-wrap": "요소 사이 간격과 줄바꿈을 설정해요.",
-  "components-flex--component": "렌더링할 HTML 요소를 변경해요.",
+  "components-flex--vertical":
+    "vertical 설정에 따라 요소를 가로 또는 세로 방향으로 배치할 수 있어요.",
+  "components-flex--wrap": "공간이 부족할 때 요소를 한 줄로 유지하거나 다음 줄로 배치할 수 있어요.",
+  "components-flex--justify":
+    "주축의 시작, 가운데, 끝과 요소 사이 간격을 기준으로 정렬할 수 있어요.",
+  "components-flex--align":
+    "교차축의 시작, 가운데, 끝과 기준선을 중심으로 요소를 정렬할 수 있어요.",
+  "components-flex--flex": "각 요소가 남은 공간을 차지할 비율과 고정 너비를 함께 설정할 수 있어요.",
+  "components-flex--gap": "요소 사이의 가로·세로 간격을 px 단위 숫자로 설정할 수 있어요.",
+  "components-flex--component":
+    "레이아웃은 유지하면서 최상위에 렌더링할 HTML 요소를 변경할 수 있어요.",
 
-  "components-segmented--basic": "여러 선택지 중 하나를 빠르게 전환해요.",
-  "components-segmented--sizes-shapes": "세 가지 크기와 두 가지 모양을 비교해요.",
-  "components-segmented--orientation-block": "세로 방향과 부모 너비를 채우는 형태를 사용해요.",
-  "components-segmented--icons-tooltip": "아이콘과 항목별 Tooltip을 함께 표시해요.",
-  "components-segmented--controlled": "value와 onChange로 선택 상태를 관리해요.",
+  "components-segmented--basic":
+    "연관된 여러 선택지 중 하나를 선택하고 슬라이딩 표시로 빠르게 전환할 수 있어요.",
+  "components-segmented--sizes-shapes":
+    "화면 밀도에 맞는 세 가지 크기와 기본·둥근 모양을 비교할 수 있어요.",
+  "components-segmented--vertical-full-width":
+    "항목을 세로로 배치하거나 부모의 가로 길이를 모두 채우도록 설정할 수 있어요.",
+  "components-segmented--icons-tooltip":
+    "선택 항목에 아이콘을 표시하고 필요한 경우 Tooltip 설명을 함께 제공할 수 있어요.",
+  "components-segmented--controlled":
+    "value와 onChange를 사용해 현재 선택값을 외부 상태에서 직접 관리할 수 있어요.",
 
-  "components-modal--basic": "버튼으로 Modal을 열고 확인하거나 취소해요.",
+  "components-modal--basic":
+    "버튼으로 Modal을 열고 본문을 확인한 뒤 작업을 실행하거나 취소할 수 있어요.",
   "components-modal--async": "비동기 작업이 끝날 때까지 확인 버튼을 로딩 상태로 표시해요.",
   "components-modal--footer-loading": "footer를 구성하거나 본문 로딩 상태를 표시해요.",
-  "components-modal--static-methods": "정적 메서드로 안내와 확인 Modal을 열어요.",
+  "components-modal--static-methods":
+    "정적 메서드를 호출해 안내, 성공, 오류와 확인 용도의 Modal을 바로 열 수 있어요.",
   "components-modal--hook": "useModal과 contextHolder로 현재 Context를 유지해요.",
-  "components-modal--position-width": "중앙 배치와 너비를 설정해요.",
+  "components-modal--position-width":
+    "Modal의 화면 내 세로 위치와 px·문자열 단위 가로 길이를 설정할 수 있어요.",
 
-  "components-drawer--basic": "화면 가장자리에서 Drawer를 열고 닫아요.",
-  "components-drawer--placements": "네 방향에서 Drawer를 열어요.",
-  "components-drawer--size-resizable": "크기를 선택하거나 가장자리를 드래그해 조절해요.",
+  "components-drawer--basic":
+    "버튼을 눌러 화면 가장자리에서 Drawer를 열고 내부 작업 후 닫을 수 있어요.",
+  "components-drawer--placements":
+    "화면의 위, 오른쪽, 아래와 왼쪽 중 원하는 방향에서 Drawer를 열 수 있어요.",
+  "components-drawer--size-resizable":
+    "정해진 크기를 선택하거나 Drawer 가장자리를 드래그해 너비와 높이를 조절할 수 있어요.",
   "components-drawer--extra-footer-loading": "제목 옆 작업, footer와 로딩 상태를 구성해요.",
-  "components-drawer--nested": "중첩 Drawer를 열면 부모 패널을 밀어내요.",
+  "components-drawer--nested":
+    "Drawer 안에서 하위 Drawer를 열면 부모 패널을 밀어내며 계층을 구분해요.",
 
-  "components-message--types": "상태에 맞는 다섯 가지 전역 메시지를 표시해요.",
+  "components-message--types":
+    "정보, 성공, 경고, 오류와 로딩 상태에 맞는 전역 메시지를 화면에 표시해요.",
   "components-message--hook": "useMessage와 contextHolder로 현재 Context를 유지해요.",
   "components-message--duration-update": "지속 시간을 설정하고 같은 key의 내용을 갱신해요.",
   "components-message--promise-stack": "닫힘을 기다리거나 여러 메시지를 스택으로 표시해요.",
 
   "components-notification--types-actions": "상태별 알림에 제목, 설명과 작업 버튼을 표시해요.",
-  "components-notification--placements": "화면 여섯 위치에 알림을 표시해요.",
+  "components-notification--placements":
+    "화면의 상단과 하단을 기준으로 여섯 가지 위치에 알림을 표시할 수 있어요.",
   "components-notification--progress-stack": "남은 시간을 표시하고 여러 알림을 스택으로 쌓아요.",
-  "components-notification--update": "같은 key의 알림 내용을 갱신해요.",
+  "components-notification--update":
+    "같은 key를 사용해 이미 열린 알림의 제목과 설명을 새 내용으로 갱신할 수 있어요.",
   "components-notification--hook": "useNotification과 contextHolder로 현재 Context를 유지해요.",
 
-  "components-illustrations--types": "상태와 안내 목적에 맞는 열두 가지 이미지를 선택할 수 있어요",
-  "components-illustrations--sizes": "화면에 맞게 세 가지 이미지 크기를 선택할 수 있어요",
+  "components-illustrations--types":
+    "빈 화면, 오류와 완료 등 상태와 안내 목적에 맞는 열두 가지 이미지를 선택할 수 있어요.",
+  "components-illustrations--sizes":
+    "표시할 영역과 정보의 중요도에 맞게 세 가지 이미지 크기를 선택할 수 있어요.",
 
   "components-table--basic": "dataSource와 columns를 전달하는 가장 기본적인 사용법이에요.",
-  "components-table--size": "size로 행 높이와 셀 여백을 조절해요.",
+  "components-table--size":
+    "화면에 표시할 데이터 밀도에 맞게 size로 행 높이와 셀 여백을 조절할 수 있어요.",
   "components-table--bordered": "모든 셀 경계를 표시하는 bordered 테이블이에요.",
-  "components-table--alignment": "컬럼별 왼쪽, 가운데, 오른쪽 정렬을 비교해요.",
+  "components-table--alignment":
+    "컬럼마다 왼쪽, 가운데와 오른쪽 정렬을 지정하고 셀의 배치를 비교할 수 있어요.",
   "components-table--ellipsis": "ellipsis로 컬럼 너비보다 긴 내용을 말줄임표로 표시해요.",
   "components-table--sorter":
     "비교 함수로 하나의 컬럼을 정렬하거나 multiple 우선순위로 여러 컬럼을 함께 정렬해요.",
@@ -175,7 +293,8 @@ export const storyDescriptions: Record<string, string> = {
   "components-table--checkbox-width": "columnWidth로 체크박스 컬럼의 가로 길이를 설정해요.",
   "components-table--checkbox-disabled": "getCheckboxProps로 특정 행의 체크박스를 비활성화해요.",
   "components-table--checkbox-fixed": "가로 스크롤 중 선택 체크박스 컬럼을 왼쪽에 고정해요.",
-  "components-table--all-checkbox-hidden": "헤더의 전체 선택 체크박스를 숨겨요.",
+  "components-table--all-checkbox-hidden":
+    "개별 행 선택은 유지하면서 헤더의 전체 선택 체크박스만 숨길 수 있어요.",
   "components-table--checkbox-default": "defaultSelectedRowKeys로 처음 선택된 행을 지정해요.",
   "components-table--radio": "하나의 행을 선택하고 onChange로 선택한 key를 관리해요.",
   "components-table--drag-row-sorting":
@@ -187,8 +306,10 @@ export const storyDescriptions: Record<string, string> = {
     "columns의 children으로 여러 단계의 그룹 헤더를 만들어요.",
   "components-table-api-compatibility--headerless":
     "showHeader=false로 열 헤더를 숨기고 데이터만 표시해요.",
-  "components-table-api-compatibility--fixed-header":
-    "scroll.y로 본문의 세로 높이를 정하고 헤더를 상단에 고정해요.",
+  "components-table-api-compatibility--fixed-table-height":
+    "scroll.y로 테이블 본문의 최대 세로 높이를 정하고, 내용이 넘치면 본문 안에서 스크롤해요.",
+  "components-table-api-compatibility--sticky-header":
+    "sticky=true로 페이지를 내려도 테이블 헤더가 화면 상단을 따라오게 해요.",
   "components-table-api-compatibility--fixed-columns":
     "이름은 왼쪽, 프로젝트는 오른쪽에 고정하고 가운데 열만 가로 스크롤해요.",
   "components-table-api-compatibility--sticky-scrollbar":
@@ -209,7 +330,7 @@ export const storyDescriptions: Record<string, string> = {
   "components-table-expandable--eligible-rows": "rowExpandable로 펼칠 수 있는 행을 제한해요.",
 
   "components-table-layout--responsive-columns":
-    "브라우저 너비에 따라 컬럼을 단계적으로 보여줘요.\nxs 0px / sm 640px / md 768px / lg 1024px / xl 1280px / xxl 1536px 이상",
+    "브라우저 너비에 따라 컬럼을 단계적으로 보여줘요.\nxs 0px / sm 640px / md 768px / lg 1024px / xl 1280px / xxl 1536px 이상이에요.",
   "components-table-layout--virtual-thousand-rows":
     "고정 높이 스크롤 영역에서 1,000개 행을 가상 렌더링해요.",
   "components-table-layout--merged-rows": "onCell의 rowSpan을 이용해 인접한 본문 셀을 병합해요.",

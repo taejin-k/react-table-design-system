@@ -1,0 +1,132 @@
+@keyframes wizard-zoom-big-fast-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes wizard-zoom-big-fast-out {
+  0% {
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+}
+
+.wizard-zoom-big-fast-enter {
+  animation: wizard-zoom-big-fast-in 0.1s cubic-bezier(0.08, 0.82, 0.17, 1) both;
+}
+
+.wizard-zoom-big-fast-leave {
+  pointer-events: none;
+  animation: wizard-zoom-big-fast-out 0.1s cubic-bezier(0.78, 0.14, 0.15, 0.86) both;
+}
+
+@keyframes wizard-slide-up-in {
+  0% {
+    opacity: 0;
+    transform: scaleY(0.8);
+    transform-origin: 0% 0%;
+  }
+  100% {
+    opacity: 1;
+    transform: scaleY(1);
+    transform-origin: 0% 0%;
+  }
+}
+
+@keyframes wizard-slide-up-out {
+  0% {
+    opacity: 1;
+    transform: scaleY(1);
+    transform-origin: 0% 0%;
+  }
+  100% {
+    opacity: 0;
+    transform: scaleY(0.8);
+    transform-origin: 0% 0%;
+  }
+}
+
+@keyframes wizard-slide-down-in {
+  0% {
+    opacity: 0;
+    transform: scaleY(0.8);
+    transform-origin: 100% 100%;
+  }
+  100% {
+    opacity: 1;
+    transform: scaleY(1);
+    transform-origin: 100% 100%;
+  }
+}
+
+@keyframes wizard-slide-down-out {
+  0% {
+    opacity: 1;
+    transform: scaleY(1);
+    transform-origin: 100% 100%;
+  }
+  100% {
+    opacity: 0;
+    transform: scaleY(0.8);
+    transform-origin: 100% 100%;
+  }
+}
+
+.wizard-slide-up-enter {
+  animation: wizard-slide-up-in 0.2s cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+
+.wizard-slide-up-prepare {
+  opacity: 0;
+  transform: scaleY(0.8);
+  transform-origin: 0% 0%;
+}
+
+.wizard-slide-up-leave {
+  pointer-events: none;
+  animation: wizard-slide-up-out 0.2s cubic-bezier(0.78, 0.14, 0.15, 0.86) both;
+}
+
+.wizard-slide-down-enter {
+  animation: wizard-slide-down-in 0.2s cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+
+.wizard-slide-down-prepare {
+  opacity: 0;
+  transform: scaleY(0.8);
+  transform-origin: 100% 100%;
+}
+
+.wizard-slide-down-leave {
+  pointer-events: none;
+  animation: wizard-slide-down-out 0.2s cubic-bezier(0.78, 0.14, 0.15, 0.86) both;
+}
+
+.wizard-slide-up-prepare,
+.wizard-slide-up-enter,
+.wizard-slide-up-leave,
+.wizard-slide-down-prepare,
+.wizard-slide-down-enter,
+.wizard-slide-down-leave {
+  backface-visibility: hidden;
+  will-change: opacity, transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wizard-zoom-big-fast-enter,
+  .wizard-zoom-big-fast-leave,
+  .wizard-slide-up-enter,
+  .wizard-slide-up-leave,
+  .wizard-slide-down-enter,
+  .wizard-slide-down-leave {
+    animation-duration: 0s;
+  }
+}

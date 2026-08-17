@@ -3,7 +3,7 @@ import type { FloatingPlacement } from "../_internal/floating-position";
 import type { FloatingTrigger } from "../_internal/use-floating-layer";
 
 export type PopoverPlacement = FloatingPlacement;
-export type PopoverTrigger = FloatingTrigger;
+export type PopoverTrigger = FloatingTrigger | "contextMenu";
 
 export interface PopoverProps {
   /** Popover를 연결할 하나의 요소예요. */

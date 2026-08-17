@@ -38,7 +38,9 @@ export const Breadcrumb = forwardRef<HTMLElement, BreadcrumbProps>(
                     {icon}
                   </span>
                 ) : null}
-                <span className="min-w-0 truncate">{title}</span>
+                {title !== undefined && title !== null ? (
+                  <span className="min-w-0 truncate">{title}</span>
+                ) : null}
               </>
             );
 

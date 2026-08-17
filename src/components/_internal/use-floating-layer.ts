@@ -14,15 +14,17 @@ import {
   type FloatingPlacement,
   type FloatingPosition,
 } from "./floating-position";
+import { MOTION_DURATION_MID, useMotionPresence } from "./motion";
 
 export type FloatingTrigger = "hover" | "focus" | "click";
+type FloatingLayerTrigger = FloatingTrigger | "contextMenu";
 export type FloatingOpenSource = "trigger" | "outside" | "escape" | "scroll" | "menu";
 
 interface UseFloatingLayerOptions {
   enabled?: boolean;
   disabled?: boolean;
   placement: FloatingPlacement;
-  trigger: FloatingTrigger | FloatingTrigger[];
+  trigger: FloatingLayerTrigger | FloatingLayerTrigger[];
   open?: boolean;
   defaultOpen?: boolean;
   autoAdjustOverflow?: boolean;
@@ -53,10 +55,16 @@ export function useFloatingLayer({
   onOpenChangeRef.current = onOpenChange;
   const openTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const contextMenuPointRef = useRef<{ x: number; y: number } | null>(null);
   const [innerOpen, setInnerOpen] = useState(defaultOpen);
   const [position, setPosition] = useState<FloatingPosition | null>(null);
   const triggers = useMemo(() => new Set(Array.isArray(trigger) ? trigger : [trigger]), [trigger]);
   const isOpen = enabled && !disabled && (open ?? innerOpen);
+  const {
+    rendered: isRendered,
+    phase: motionPhase,
+    motionVisible: isMotionVisible,
+  } = useMotionPresence(isOpen, MOTION_DURATION_MID);
 
   const clearTimers = useCallback(() => {
     if (openTimerRef.current) clearTimeout(openTimerRef.current);
@@ -90,25 +98,28 @@ export function useFloatingLayer({
 
   const updatePosition = useCallback(() => {
     if (!triggerRef.current || !popupRef.current) return;
+    const targetRect = contextMenuPointRef.current
+      ? createPointRect(contextMenuPointRef.current.x, contextMenuPointRef.current.y)
+      : triggerRef.current.getBoundingClientRect();
     setPosition(
-      calculateFloatingPosition(
-        triggerRef.current.getBoundingClientRect(),
-        popupRef.current.getBoundingClientRect(),
-        placement,
-        { autoAdjustOverflow, targetGap },
-      ),
+      calculateFloatingPosition(targetRect, popupRef.current.getBoundingClientRect(), placement, {
+        autoAdjustOverflow,
+        targetGap,
+      }),
     );
   }, [autoAdjustOverflow, placement, targetGap]);
 
   useLayoutEffect(() => {
-    if (!isOpen) {
-      setPosition(null);
-      return;
-    }
+    if (!isRendered) return;
 
     updatePosition();
+    if (!isOpen) return;
     const handleScroll = (event: Event) => {
-      if (event.target instanceof Node && popupRef.current?.contains(event.target)) return;
+      if (
+        event.target instanceof Node &&
+        (triggerRef.current?.contains(event.target) || popupRef.current?.contains(event.target))
+      )
+        return;
       if (!closeOnScroll) return updatePosition();
       clearTimers();
       changeOpen(false, "scroll");
@@ -125,7 +136,11 @@ export function useFloatingLayer({
       window.removeEventListener("scroll", handleScroll, true);
       resizeObserver?.disconnect();
     };
-  }, [changeOpen, clearTimers, closeOnScroll, isOpen, updatePosition]);
+  }, [changeOpen, clearTimers, closeOnScroll, isOpen, isRendered, updatePosition]);
+
+  useEffect(() => {
+    if (!isRendered) setPosition(null);
+  }, [isRendered]);
 
   useEffect(() => clearTimers, [clearTimers]);
 
@@ -160,14 +175,27 @@ export function useFloatingLayer({
     }) satisfies FocusEventHandler<HTMLSpanElement>,
     onClick: (() => {
       if (!triggers.has("click")) return;
+      contextMenuPointRef.current = null;
       clearTimers();
       changeOpen(!isOpen);
     }) satisfies MouseEventHandler<HTMLSpanElement>,
+    onContextMenu: ((event) => {
+      if (!triggers.has("contextMenu")) return;
+      event.preventDefault();
+      contextMenuPointRef.current = { x: event.clientX, y: event.clientY };
+      clearTimers();
+      if (isOpen) updatePosition();
+      else changeOpen(true);
+    }) satisfies MouseEventHandler<HTMLSpanElement>,
     onFocus: (() => {
-      if (triggers.has("focus")) scheduleOpen();
+      if (!triggers.has("focus")) return;
+      contextMenuPointRef.current = null;
+      scheduleOpen();
     }) satisfies FocusEventHandler<HTMLSpanElement>,
     onPointerEnter: (() => {
-      if (triggers.has("hover")) scheduleOpen();
+      if (!triggers.has("hover")) return;
+      contextMenuPointRef.current = null;
+      scheduleOpen();
     }) satisfies PointerEventHandler<HTMLSpanElement>,
     onPointerLeave: (() => {
       if (triggers.has("hover")) scheduleClose();
@@ -190,9 +218,26 @@ export function useFloatingLayer({
     triggerProps,
     popupProps,
     isOpen,
+    isRendered,
+    isMotionVisible,
+    motionPhase,
     position,
     changeOpen,
     clearTimers,
     updatePosition,
+  };
+}
+
+function createPointRect(x: number, y: number): DOMRect {
+  return {
+    x,
+    y,
+    width: 0,
+    height: 0,
+    top: y,
+    right: x,
+    bottom: y,
+    left: x,
+    toJSON: () => ({ x, y, width: 0, height: 0, top: y, right: x, bottom: y, left: x }),
   };
 }

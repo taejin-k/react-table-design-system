@@ -2,6 +2,7 @@ import { useState } from "react";
 import { createPortal } from "react-dom";
 import { twMerge } from "tailwind-merge";
 import { Icon } from "../Icon";
+import { getPopupMotionStyle } from "../_internal/motion";
 import { useFloatingLayer } from "../_internal/use-floating-layer";
 import type { DropdownClickInfo, DropdownItem, DropdownProps } from "./Dropdown.types";
 
@@ -21,8 +22,8 @@ export function Dropdown({
   className,
   onOpenChange,
 }: DropdownProps) {
-  const [innerSelectedKeys, setInnerSelectedKeys] = useState(menu.defaultSelectedKeys ?? []);
-  const selectedKeys = menu.selectedKeys ?? innerSelectedKeys;
+  const [innerSelectedValues, setInnerSelectedValues] = useState(menu.defaultSelectedValues ?? []);
+  const selectedValues = menu.selectedValues ?? innerSelectedValues;
   const floating = useFloatingLayer({
     disabled,
     placement,
@@ -32,30 +33,28 @@ export function Dropdown({
     autoAdjustOverflow,
     mouseEnterDelay,
     mouseLeaveDelay,
-    onOpenChange: (nextOpen, source) =>
-      onOpenChange?.(nextOpen, { source: source === "menu" ? "menu" : "trigger" }),
+    onOpenChange: (nextOpen) => onOpenChange?.(nextOpen),
   });
-
   const handleItemClick = (
     item: DropdownItem,
-    keyPath: string[],
+    valuePath: string[],
     domEvent: React.MouseEvent<HTMLElement>,
   ) => {
     if (item.disabled || item.type === "divider" || item.type === "group" || item.children?.length)
       return;
 
-    const info: DropdownClickInfo = { key: item.key, keyPath, domEvent };
+    const info: DropdownClickInfo = { value: item.value, valuePath, domEvent };
     item.onClick?.(info);
     menu.onClick?.(info);
 
     if (menu.selectable) {
-      const nextSelectedKeys = menu.multiple
-        ? selectedKeys.includes(item.key)
-          ? selectedKeys.filter((key) => key !== item.key)
-          : [...selectedKeys, item.key]
-        : [item.key];
-      if (menu.selectedKeys === undefined) setInnerSelectedKeys(nextSelectedKeys);
-      menu.onSelect?.({ key: item.key, selectedKeys: nextSelectedKeys });
+      const nextSelectedValues = menu.multiple
+        ? selectedValues.includes(item.value)
+          ? selectedValues.filter((value) => value !== item.value)
+          : [...selectedValues, item.value]
+        : [item.value];
+      if (menu.selectedValues === undefined) setInnerSelectedValues(nextSelectedValues);
+      menu.onSelect?.({ value: item.value, selectedValues: nextSelectedValues });
     }
 
     if (!(menu.selectable && menu.multiple)) floating.changeOpen(false, "menu");
@@ -74,13 +73,16 @@ export function Dropdown({
       >
         {children}
       </span>
-      {floating.isOpen && typeof document !== "undefined"
+      {floating.isRendered && typeof document !== "undefined"
         ? createPortal(
             <div
               ref={floating.popupRef}
               data-dropdown
               data-placement={floating.position?.placement ?? placement}
-              className="fixed min-w-32 font-pretendard text-sm text-[#111]"
+              className={twMerge(
+                "fixed min-w-32 font-pretendard text-sm text-[#111]",
+                !floating.isMotionVisible && "pointer-events-none",
+              )}
               style={{
                 left: floating.position?.left ?? 0,
                 top: floating.position?.top ?? 0,
@@ -89,21 +91,30 @@ export function Dropdown({
               }}
               {...floating.popupProps}
             >
-              <div className="relative rounded-lg bg-white p-1 shadow-[0_6px_16px_rgba(0,0,0,0.06),0_3px_6px_-4px_rgba(0,0,0,0.08),0_9px_28px_8px_rgba(0,0,0,0.03)]">
-                <MenuItems
-                  items={menu.items}
-                  selectedKeys={selectedKeys}
-                  selectable={menu.selectable}
-                  onItemClick={handleItemClick}
-                />
+              <div
+                data-dropdown-motion
+                className="relative motion-reduce:transition-none"
+                style={getPopupMotionStyle(
+                  floating.position?.placement ?? placement,
+                  floating.isMotionVisible && Boolean(floating.position),
+                )}
+              >
+                <div className="relative rounded-lg bg-white p-1 shadow-[0_6px_16px_rgba(0,0,0,0.08),0_3px_6px_-4px_rgba(0,0,0,0.12),0_9px_28px_8px_rgba(0,0,0,0.05)]">
+                  <MenuItems
+                    items={menu.items}
+                    selectedValues={selectedValues}
+                    selectable={menu.selectable}
+                    onItemClick={handleItemClick}
+                  />
+                </div>
+                {arrow ? (
+                  <span
+                    data-dropdown-arrow
+                    className="absolute size-2 rotate-45 bg-white"
+                    style={floating.position?.arrowStyle}
+                  />
+                ) : null}
               </div>
-              {arrow ? (
-                <span
-                  data-dropdown-arrow
-                  className="absolute size-2 rotate-45 bg-white"
-                  style={floating.position?.arrowStyle}
-                />
-              ) : null}
             </div>,
             document.body,
           )
@@ -114,38 +125,44 @@ export function Dropdown({
 
 interface MenuItemsProps {
   items: DropdownItem[];
-  selectedKeys: string[];
+  selectedValues: string[];
   selectable?: boolean;
-  keyPath?: string[];
+  valuePath?: string[];
   onItemClick: (
     item: DropdownItem,
-    keyPath: string[],
+    valuePath: string[],
     event: React.MouseEvent<HTMLElement>,
   ) => void;
 }
 
-function MenuItems({ items, selectedKeys, selectable, keyPath = [], onItemClick }: MenuItemsProps) {
-  const [openSubmenuKey, setOpenSubmenuKey] = useState<string | null>(null);
+function MenuItems({
+  items,
+  selectedValues,
+  selectable,
+  valuePath = [],
+  onItemClick,
+}: MenuItemsProps) {
+  const [openSubmenuValue, setOpenSubmenuValue] = useState<string | null>(null);
 
   return (
     <div className="grid gap-0.5">
       {items.map((item) => {
-        const nextKeyPath = [item.key, ...keyPath];
+        const nextValuePath = [item.value, ...valuePath];
         if (item.type === "divider")
-          return <div key={item.key} className="my-1 h-px bg-[#f0f0f0]" />;
+          return <div key={item.value} className="my-1 h-px bg-[#f0f0f0]" />;
 
         if (item.type === "group") {
           return (
-            <div key={item.key}>
+            <div key={item.value}>
               {item.label ? (
                 <div className="px-3 py-1 text-xs leading-5 text-[#999]">{item.label}</div>
               ) : null}
               {item.children?.length ? (
                 <MenuItems
                   items={item.children}
-                  selectedKeys={selectedKeys}
+                  selectedValues={selectedValues}
                   selectable={selectable}
-                  keyPath={nextKeyPath}
+                  valuePath={nextValuePath}
                   onItemClick={onItemClick}
                 />
               ) : null}
@@ -153,7 +170,7 @@ function MenuItems({ items, selectedKeys, selectable, keyPath = [], onItemClick 
           );
         }
 
-        const selected = selectable && selectedKeys.includes(item.key);
+        const selected = selectable && selectedValues.includes(item.value);
         const content = (
           <button
             type="button"
@@ -166,10 +183,10 @@ function MenuItems({ items, selectedKeys, selectable, keyPath = [], onItemClick 
             )}
             onClick={(event) => {
               if (item.children?.length) {
-                setOpenSubmenuKey((current) => (current === item.key ? null : item.key));
+                setOpenSubmenuValue((current) => (current === item.value ? null : item.value));
                 return;
               }
-              onItemClick(item, nextKeyPath, event);
+              onItemClick(item, nextValuePath, event);
             }}
           >
             {item.icon ? <span className="inline-flex shrink-0">{item.icon}</span> : null}
@@ -179,22 +196,22 @@ function MenuItems({ items, selectedKeys, selectable, keyPath = [], onItemClick 
           </button>
         );
 
-        if (!item.children?.length) return <div key={item.key}>{content}</div>;
+        if (!item.children?.length) return <div key={item.value}>{content}</div>;
 
         return (
-          <div key={item.key} className="group/submenu relative">
+          <div key={item.value} className="group/submenu relative">
             {content}
             <div
               className={twMerge(
-                "invisible absolute top-0 left-full z-10 ml-1 min-w-32 rounded-lg bg-white p-1 opacity-0 shadow-[0_6px_16px_rgba(0,0,0,0.06),0_3px_6px_-4px_rgba(0,0,0,0.08),0_9px_28px_8px_rgba(0,0,0,0.03)] transition-opacity group-hover/submenu:visible group-hover/submenu:opacity-100",
-                openSubmenuKey === item.key && "visible opacity-100",
+                "invisible absolute top-0 left-full z-10 ml-2 min-w-32 rounded-lg bg-white p-1 opacity-0 shadow-[0_6px_16px_rgba(0,0,0,0.08),0_3px_6px_-4px_rgba(0,0,0,0.12),0_9px_28px_8px_rgba(0,0,0,0.05)] transition-opacity group-hover/submenu:visible group-hover/submenu:opacity-100 before:absolute before:top-0 before:right-full before:h-full before:w-2 before:content-['']",
+                openSubmenuValue === item.value && "visible opacity-100",
               )}
             >
               <MenuItems
                 items={item.children}
-                selectedKeys={selectedKeys}
+                selectedValues={selectedValues}
                 selectable={selectable}
-                keyPath={nextKeyPath}
+                valuePath={nextValuePath}
                 onItemClick={onItemClick}
               />
             </div>

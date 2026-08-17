@@ -34,6 +34,50 @@
     height: 0;
   }
 
+  [data-textarea-scroll-container] {
+    scrollbar-color: #a8a8a8 transparent;
+    scrollbar-width: thin;
+  }
+
+  [data-textarea-scroll-container]::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  [data-textarea-scroll-container]::-webkit-scrollbar-track,
+  [data-textarea-scroll-container]::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+
+  [data-textarea-scroll-container]::-webkit-scrollbar-track {
+    margin-block: 4px 14px;
+  }
+
+  [data-textarea-scroll-container]::-webkit-scrollbar-thumb {
+    min-height: 32px;
+    border: 2px solid transparent;
+    border-radius: 9999px;
+    background: #a8a8a8;
+    background-clip: padding-box;
+  }
+
+  [data-textarea-scroll-container]::-webkit-scrollbar-thumb:hover {
+    background: #8f8f8f;
+    background-clip: padding-box;
+  }
+
+  [data-textarea-scroll-container]::-webkit-scrollbar-button {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+
+  [data-textarea-scroll-container]::-webkit-resizer {
+    border: 0;
+    background: transparent
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none'%3E%3Cpath d='M11 2L2 11M11 7L7 11' stroke='%238f8f8f' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E")
+      right 1px bottom 1px / 12px 12px no-repeat;
+  }
+
   [data-table-scroll-container][data-table-overlay-scrollbar] {
     scrollbar-color: auto;
     scrollbar-width: auto;

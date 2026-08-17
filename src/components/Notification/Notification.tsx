@@ -11,6 +11,11 @@ import { createRoot, type Root } from "react-dom/client";
 import { createPortal } from "react-dom";
 import { twMerge } from "tailwind-merge";
 import { Icon } from "../Icon";
+import {
+  MOTION_DURATION_MID,
+  MOTION_EASE_IN_OUT_CIRC,
+  MOTION_EASE_OUT_CIRC,
+} from "../_internal/motion";
 import type {
   NotificationApi,
   NotificationArgsProps,
@@ -22,6 +27,7 @@ import type {
 
 interface NotificationItem extends NotificationArgsProps {
   key: string;
+  closing?: boolean;
 }
 
 const globalConfig: NotificationGlobalConfig = {
@@ -39,16 +45,38 @@ function useNotificationHolder(
 ): [NotificationInstance, ReactNode] {
   const resolvedConfig = { ...globalConfig, ...config };
   const [items, setItems] = useState<NotificationItem[]>([]);
+  const onCloseCallbacks = useRef(new Map<string, (() => void) | undefined>());
+  const closeTimers = useRef(new Map<string, number>());
   const close = useCallback((key?: string) => {
-    setItems((current) => {
-      const removed = key === undefined ? current : current.filter((item) => item.key === key);
-      removed.forEach((item) => item.onClose?.());
-      return key === undefined ? [] : current.filter((item) => item.key !== key);
+    const targetKeys = key === undefined ? Array.from(onCloseCallbacks.current.keys()) : [key];
+    setItems((current) =>
+      current.map((item) =>
+        targetKeys.includes(item.key) && !item.closing ? { ...item, closing: true } : item,
+      ),
+    );
+    targetKeys.forEach((targetKey) => {
+      if (closeTimers.current.has(targetKey)) return;
+      closeTimers.current.set(
+        targetKey,
+        window.setTimeout(() => {
+          onCloseCallbacks.current.get(targetKey)?.();
+          onCloseCallbacks.current.delete(targetKey);
+          setItems((latest) => latest.filter((item) => item.key !== targetKey));
+          closeTimers.current.delete(targetKey);
+        }, MOTION_DURATION_MID),
+      );
     });
   }, []);
+  useEffect(() => () => closeTimers.current.forEach((timer) => window.clearTimeout(timer)), []);
   const open = useCallback(
     (input: NotificationArgsProps) => {
       const key = input.key ?? `notification-${Date.now()}-${Math.random()}`;
+      const closeTimer = closeTimers.current.get(key);
+      if (closeTimer !== undefined) {
+        window.clearTimeout(closeTimer);
+        closeTimers.current.delete(key);
+      }
+      onCloseCallbacks.current.set(key, input.onClose);
       setItems((current) => {
         const item = {
           ...input,
@@ -162,16 +190,22 @@ function NotificationCard({
   onClose: () => void;
 }) {
   const timer = useRef<number | undefined>(undefined);
+  const [entered, setEntered] = useState(false);
   const [paused, setPaused] = useState(false);
   const startTimer = useCallback(() => {
     window.clearTimeout(timer.current);
+    if (item.closing) return;
     if (item.duration !== false && item.duration && item.duration > 0)
       timer.current = window.setTimeout(onClose, item.duration * 1000);
-  }, [item.duration, onClose]);
+  }, [item.closing, item.duration, onClose]);
   useEffect(() => {
     startTimer();
     return () => window.clearTimeout(timer.current);
   }, [startTimer]);
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => setEntered(true));
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
   const closable = item.closable !== false;
   const closeDisabled = typeof item.closable === "object" && item.closable.disabled;
   const closeIcon = typeof item.closable === "object" ? item.closable.closeIcon : undefined;
@@ -181,14 +215,21 @@ function NotificationCard({
       {...item.props}
       role={item.role ?? "alert"}
       className={twMerge(
-        "pointer-events-auto relative w-full overflow-hidden rounded-lg bg-white p-4 text-sm text-[#111] shadow-[0_8px_24px_rgba(0,0,0,0.14)] transition-[transform,opacity]",
+        "pointer-events-auto relative w-full overflow-hidden rounded-lg bg-white p-4 text-sm text-[#111] shadow-[0_8px_24px_rgba(0,0,0,0.14)] transition-[transform,opacity] duration-200 motion-reduce:transition-none",
+        item.closing && "pointer-events-none",
         item.classNames?.root,
         item.className,
       )}
       style={{
-        transform: stacked
-          ? `translateY(${(count - index - 1) * -5}px) scale(${1 - (count - index - 1) * 0.03})`
-          : undefined,
+        opacity: entered && !item.closing ? 1 : 0,
+        transform:
+          entered && !item.closing
+            ? stacked
+              ? `translateY(${(count - index - 1) * -5}px) scale(${1 - (count - index - 1) * 0.03})`
+              : "translate(0)"
+            : notificationHiddenTransform(item.placement ?? "topRight"),
+        transitionTimingFunction:
+          entered && !item.closing ? MOTION_EASE_OUT_CIRC : MOTION_EASE_IN_OUT_CIRC,
         ...item.style,
         ...item.styles?.root,
       }}
@@ -280,6 +321,12 @@ function NotificationIcon({ type }: { type: NotificationType }) {
   if (type === "error") return <Icon icon="close-circle" color="#ff4d4f" size={20} />;
   if (type === "warning") return <Icon icon="warning" color="#faad14" size={20} />;
   return <Icon icon="info" color="#0062df" size={20} />;
+}
+
+function notificationHiddenTransform(placement: NotificationPlacement) {
+  if (placement.endsWith("Left")) return "translateX(-100%)";
+  if (placement.endsWith("Right")) return "translateX(100%)";
+  return placement === "bottom" ? "translateY(100%)" : "translateY(-100%)";
 }
 
 let root: Root | null = null;

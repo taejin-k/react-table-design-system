@@ -64,14 +64,14 @@ export const ScrollFade = forwardRef<HTMLDivElement, ScrollFadeProps>(
         </div>
         <div
           className={twMerge(
-            "pointer-events-none absolute inset-x-0 top-0 bg-gradient-to-b from-white to-transparent transition-opacity",
+            "pointer-events-none absolute inset-x-0 top-0 bg-gradient-to-b from-white to-transparent transition-opacity duration-200 ease-in-out motion-reduce:transition-none",
             edge.top ? "opacity-100" : "opacity-0",
           )}
           style={{ height: fadeSize }}
         />
         <div
           className={twMerge(
-            "pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-white to-transparent transition-opacity",
+            "pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-white to-transparent transition-opacity duration-200 ease-in-out motion-reduce:transition-none",
             edge.bottom ? "opacity-100" : "opacity-0",
           )}
           style={{ height: fadeSize }}

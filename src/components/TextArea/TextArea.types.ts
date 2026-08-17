@@ -1,34 +1,30 @@
 import type { ReactNode, TextareaHTMLAttributes } from "react";
-import type { InputSize, InputVariant } from "../Input";
+import type { InputSize } from "../Input";
+import type { AllowedCharacterType } from "../_internal/filterAllowedCharacters";
+
+export type TextAreaVariant = "default" | "filled";
 
 export interface TextAreaAutoSize {
   minRows?: number;
   maxRows?: number;
 }
 
-export interface TextAreaCountConfig {
-  max?: number;
-  strategy?: (value: string) => number;
-  show?: boolean | ((info: { value: string; count: number; maxLength?: number }) => ReactNode);
-  exceedFormatter?: (value: string, config: { max: number }) => string;
-}
-
 export interface TextAreaProps extends Omit<
   TextareaHTMLAttributes<HTMLTextAreaElement>,
-  "className" | "onBlur" | "onChange" | "onError" | "size" | "value"
+  "className" | "onChange" | "onError" | "size" | "value" | "width"
 > {
   value?: string;
+  width?: number;
   size?: InputSize;
-  variant?: InputVariant;
+  variant?: TextAreaVariant;
   label?: ReactNode;
-  errorText?: ReactNode;
+  errorMessage?: ReactNode;
   autoSize?: boolean | TextAreaAutoSize;
-  allowClear?: boolean;
+  allowOnly?: AllowedCharacterType;
+  resize?: boolean;
   showCount?: boolean;
-  count?: TextAreaCountConfig;
   className?: string;
-  onBlur?: () => void;
+  validate?: (value: string) => string | Promise<string>;
   onChange?: (value: string) => void;
-  onError?: (error: string) => void;
   onEnter?: () => void;
 }

@@ -1,61 +1,95 @@
-import { cloneElement, forwardRef, isValidElement, type ReactNode } from "react";
+import { cloneElement, forwardRef, isValidElement, type ReactElement } from "react";
 import { cva } from "class-variance-authority";
 import { twMerge } from "tailwind-merge";
+import { Icon } from "../Icon";
 import type { ButtonProps } from "./Button.types";
 
-/** null/undefined/빈 배열이면 false. 배열이 아니면 일반 truthy 체크. */
-function hasContent(node: ReactNode): boolean {
-  return Array.isArray(node) ? node.length > 0 : Boolean(node);
-}
-
 /** prefixIcon/suffixIcon으로 내려온 엘리먼트에 onClick이 붙어있어도 무시하도록 제거한다. */
-function stripOnClick(node: ReactNode): ReactNode {
-  if (Array.isArray(node)) return node.map(stripOnClick);
-  if (isValidElement<{ onClick?: unknown }>(node))
-    return cloneElement(node, { onClick: undefined });
-  return node;
+function stripOnClick(node: ReactElement | null | undefined): ReactElement | null | undefined {
+  if (node == null) return node;
+  if (!isValidElement<{ onClick?: unknown }>(node)) return null;
+  return cloneElement(node, { onClick: undefined });
 }
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   (
     {
-      htmlType = "button",
-      type = "primary",
+      type = "button",
+      variant = "primary",
       size = "md",
       iconOnly = false,
       shadow = false,
       fullWidth = false,
+      loading = false,
       prefixIcon: rawPrefixIcon,
       suffixIcon: rawSuffixIcon,
       className,
       children,
+      onClick,
       ...rest
     },
     ref,
   ) => {
     const prefixIcon = stripOnClick(rawPrefixIcon);
     const suffixIcon = stripOnClick(rawSuffixIcon);
-    const hasIcon = hasContent(prefixIcon) || hasContent(suffixIcon);
+    const hasIcon = Boolean(prefixIcon || suffixIcon || loading);
     const effectiveIconOnly = iconOnly && hasIcon;
-    const icon = effectiveIconOnly
-      ? hasContent(prefixIcon)
-        ? prefixIcon
-        : suffixIcon
-      : prefixIcon;
+    const loadingIcon = (
+      <span className="inline-flex size-4 shrink-0 animate-[wizard-button-loading-in_160ms_ease-out] items-center justify-center motion-reduce:animate-none">
+        <Icon icon="loading" />
+      </span>
+    );
+    const animatedLoadingSlot = (
+      <span
+        className={twMerge(
+          "inline-flex size-4 shrink-0 items-center justify-center overflow-hidden transition-[width,margin-left,opacity,transform] duration-200 ease-out motion-reduce:transition-none",
+          loading ? "ml-0 scale-100 opacity-100" : "-ml-1 w-0 scale-75 opacity-0",
+        )}
+      >
+        <Icon icon="loading" />
+      </span>
+    );
+    let displayedPrefixIcon = effectiveIconOnly ? prefixIcon || suffixIcon : prefixIcon;
+    let displayedSuffixIcon = effectiveIconOnly ? null : suffixIcon;
+
+    if (loading) {
+      if (effectiveIconOnly) displayedPrefixIcon = loadingIcon;
+      else if (suffixIcon) displayedSuffixIcon = loadingIcon;
+      else if (prefixIcon) displayedPrefixIcon = loadingIcon;
+      else displayedSuffixIcon = animatedLoadingSlot;
+    }
+    if (!loading && !effectiveIconOnly && !prefixIcon && !suffixIcon) {
+      displayedSuffixIcon = animatedLoadingSlot;
+    }
 
     return (
       <button
         ref={ref}
-        type={htmlType}
+        type={type}
         className={twMerge(
-          buttonVariants({ type, size, iconOnly: effectiveIconOnly, shadow, fullWidth }),
+          buttonVariants({
+            variant,
+            size,
+            iconOnly: effectiveIconOnly,
+            shadow,
+            fullWidth,
+            loading,
+          }),
           className,
         )}
+        onClick={(event) => {
+          if (loading) {
+            event.preventDefault();
+            event.stopPropagation();
+            return;
+          }
+          onClick?.(event);
+        }}
         {...rest}
       >
-        {icon}
+        {displayedPrefixIcon}
         {!effectiveIconOnly && children}
-        {!effectiveIconOnly && suffixIcon}
+        {displayedSuffixIcon}
       </button>
     );
   },
@@ -64,10 +98,10 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 Button.displayName = "Button";
 
 const buttonVariants = cva(
-  "inline-flex cursor-pointer items-center justify-center gap-1 rounded font-pretendard font-medium whitespace-nowrap transition-[color,background-color,box-shadow] disabled:cursor-not-allowed",
+  "inline-flex cursor-pointer items-center justify-center gap-1 rounded font-pretendard font-medium whitespace-nowrap transition-[width,opacity,color,background-color,box-shadow] duration-200 ease-out disabled:cursor-not-allowed motion-reduce:transition-none",
   {
     variants: {
-      type: {
+      variant: {
         primary:
           "bg-[#0062df] text-white ring-1 ring-transparent ring-inset hover:bg-[#227cef] disabled:bg-[#f5f5f5] disabled:text-[#999999] disabled:ring-[#dddddd]",
         secondary:
@@ -76,7 +110,7 @@ const buttonVariants = cva(
           "bg-[#f5f5f5] text-[#111111] ring-1 ring-transparent ring-inset hover:ring-[#999999] disabled:text-[#999999] disabled:ring-[#dddddd]",
         dark: "bg-[#111111] text-white ring-1 ring-transparent ring-inset hover:bg-[#303030] disabled:bg-[#f5f5f5] disabled:text-[#999999] disabled:ring-[#dddddd]",
         ghost:
-          "bg-white text-[#111111] ring-1 ring-transparent ring-inset hover:ring-[#999999] disabled:bg-[#f5f5f5] disabled:text-[#999999] disabled:ring-[#dddddd]",
+          "bg-white text-[#111111] ring-1 ring-transparent ring-inset hover:bg-[#f5f5f5] disabled:bg-[#f5f5f5] disabled:text-[#999999] disabled:ring-[#dddddd]",
       },
       size: {
         lg: "h-10 px-3.5 text-base",
@@ -95,18 +129,28 @@ const buttonVariants = cva(
         true: "w-full",
         false: "",
       },
+      loading: {
+        true: "cursor-default opacity-70",
+        false: "",
+      },
     },
     compoundVariants: [
       { iconOnly: true, size: "lg", className: "w-10 px-0" },
       { iconOnly: true, size: "md", className: "w-[30px] px-0" },
       { iconOnly: true, size: "sm", className: "w-5 px-0" },
+      { loading: true, variant: "primary", className: "hover:bg-[#0062df]" },
+      { loading: true, variant: "secondary", className: "hover:bg-white" },
+      { loading: true, variant: "tertiary", className: "hover:ring-transparent" },
+      { loading: true, variant: "dark", className: "hover:bg-[#111111]" },
+      { loading: true, variant: "ghost", className: "hover:bg-white" },
     ],
     defaultVariants: {
-      type: "primary",
+      variant: "primary",
       size: "md",
       iconOnly: false,
       shadow: false,
       fullWidth: false,
+      loading: false,
     },
   },
 );

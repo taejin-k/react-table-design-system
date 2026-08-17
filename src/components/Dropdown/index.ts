@@ -3,7 +3,6 @@ export type {
   DropdownClickInfo,
   DropdownItem,
   DropdownMenu,
-  DropdownOpenSource,
   DropdownPlacement,
   DropdownProps,
   DropdownTrigger,

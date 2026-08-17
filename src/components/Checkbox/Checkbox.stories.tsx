@@ -20,6 +20,7 @@ const meta = {
   argTypes: {
     label: { name: "레이블", control: "text" },
     checked: { name: "선택", control: "boolean" },
+    partiallyChecked: { name: "일부 선택", control: "boolean" },
     disabled: { name: "비활성", control: "boolean" },
     error: { name: "오류", control: "boolean" },
     className: { control: false, table: { disable: true } },
@@ -44,9 +45,12 @@ const meta = {
 
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
+| \`checked\` | 선택 상태를 외부에서 관리해요. | \`boolean\` | - |
+| \`defaultChecked\` | 처음 렌더링할 때 선택된 상태로 표시해요. | \`boolean\` | \`false\` |
+| \`disabled\` | 체크박스를 비활성화하고 선택 동작을 막아요. | \`boolean\` | \`false\` |
 | \`label\` | 체크박스 오른쪽에 레이블을 표시해요. | \`ReactNode\` | - |
 | \`error\` | 테두리와 체크 색상을 오류 색상으로 표시해요. | \`boolean\` | \`false\` |
-| \`indeterminate\` | 일부 항목만 선택된 중간 상태를 표시해요. | \`boolean\` | \`false\` |
+| \`partiallyChecked\` | 여러 항목 중 일부만 선택된 상태를 표시해요. | \`boolean\` | \`false\` |
 | \`className\` | 최상위 요소에 Tailwind 클래스를 추가해요. | \`string\` | - |
 | \`onChange\` | 선택 상태가 바뀔 때 실행할 함수예요. | \`ChangeEventHandler<HTMLInputElement>\` | - |
           `}</Markdown>
@@ -62,8 +66,9 @@ type Story = StoryObj<typeof meta>;
 export const States: Story = {
   parameters: {
     ...storyDescription("components-checkbox--states"),
-    controls: { disable: false },
+    controls: { disable: true },
     docs: {
+      ...storyDescription("components-checkbox--states").docs,
       source: {
         code: withStoryImports(`function CheckboxStates() {
   const [checked, setChecked] = useState(false);
@@ -84,17 +89,7 @@ export const States: Story = {
       },
     },
   },
-  render: (args, { viewMode }) =>
-    viewMode === "docs" ? (
-      <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
-        <Checkbox label="기본" />
-        <Checkbox error label="오류" />
-        <Checkbox disabled label="비활성" />
-        <Checkbox defaultChecked disabled label="비활성 · 선택" />
-      </div>
-    ) : (
-      <ControlledCheckbox {...args} />
-    ),
+  render: () => <CheckboxStatesStory />,
 };
 
 export const Label: Story = {
@@ -106,6 +101,7 @@ export const Label: Story = {
     ...storyDescription("components-checkbox--label"),
     controls: { disable: false },
     docs: {
+      ...storyDescription("components-checkbox--label").docs,
       source: {
         code: withStoryImports(`function CheckboxLabels() {
   const [withoutLabel, setWithoutLabel] = useState(false);
@@ -128,27 +124,48 @@ export const Label: Story = {
       },
     },
   },
-  render: (args) => (
-    <div className="flex items-center gap-8">
-      <ControlledCheckbox {...args} label={undefined} />
-      <ControlledCheckbox {...args} />
-    </div>
-  ),
+  render: (args) => <CheckboxLabelsStory {...args} />,
 };
 
-function ControlledCheckbox(args: CheckboxProps) {
-  const [checked, setChecked] = useState(Boolean(args.checked));
-
-  useEffect(() => setChecked(Boolean(args.checked)), [args.checked]);
+function CheckboxStatesStory() {
+  const [checked, setChecked] = useState(false);
 
   return (
-    <Checkbox
-      {...args}
-      checked={checked}
-      onChange={(event) => {
-        setChecked(event.target.checked);
-        args.onChange?.(event);
-      }}
-    />
+    <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
+      <Checkbox
+        checked={checked}
+        label="기본"
+        onChange={(event) => setChecked(event.target.checked)}
+      />
+      <Checkbox error label="오류" />
+      <Checkbox disabled label="비활성" />
+      <Checkbox defaultChecked disabled label="비활성 · 선택" />
+    </div>
+  );
+}
+
+function CheckboxLabelsStory(args: CheckboxProps) {
+  const [withoutLabel, setWithoutLabel] = useState(Boolean(args.checked));
+  const [withLabel, setWithLabel] = useState(Boolean(args.checked));
+
+  useEffect(() => {
+    setWithoutLabel(Boolean(args.checked));
+    setWithLabel(Boolean(args.checked));
+  }, [args.checked]);
+
+  return (
+    <div className="flex items-center gap-8">
+      <Checkbox
+        {...args}
+        checked={withoutLabel}
+        label={undefined}
+        onChange={(event) => setWithoutLabel(event.target.checked)}
+      />
+      <Checkbox
+        {...args}
+        checked={withLabel}
+        onChange={(event) => setWithLabel(event.target.checked)}
+      />
+    </div>
   );
 }

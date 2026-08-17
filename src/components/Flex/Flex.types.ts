@@ -1,12 +1,10 @@
 import type { ComponentType, CSSProperties, ElementType, HTMLAttributes, ReactNode } from "react";
 
-export type FlexGap = "small" | "medium" | "large" | number | string;
-export type FlexOrientation = "horizontal" | "vertical";
+export type FlexGap = number;
 
 export interface FlexProps extends Omit<HTMLAttributes<HTMLElement>, "children"> {
   children?: ReactNode;
   vertical?: boolean;
-  orientation?: FlexOrientation;
   wrap?: CSSProperties["flexWrap"] | boolean;
   justify?: CSSProperties["justifyContent"];
   align?: CSSProperties["alignItems"];

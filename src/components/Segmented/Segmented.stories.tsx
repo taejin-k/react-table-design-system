@@ -5,17 +5,44 @@ import { storyDescriptions } from "../../storybook/story-descriptions";
 import { withStoryImports } from "../../storybook/story-source";
 import { Icon } from "../Icon";
 import { Segmented } from "./Segmented";
+import type { SegmentedValue } from "./Segmented.types";
 
 const storyDescription = (id: string) => ({
   docs: { description: { story: storyDescriptions[id] } },
 });
-const options = ["일간", "주간", "월간"];
+const periodOptions = [
+  { value: "day", label: "일간" },
+  { value: "week", label: "주간" },
+  { value: "month", label: "월간" },
+];
+
+const segmentedSizes = ["lg", "md", "sm"] as const;
+const segmentedShapes = ["default", "round"] as const;
 
 const meta = {
   title: "Components/Segmented",
   component: Segmented,
   tags: ["autodocs"],
-  args: { options },
+  args: {
+    options: periodOptions,
+    disabled: false,
+    fullWidth: false,
+    shape: "default",
+    size: "md",
+    vertical: false,
+  },
+  argTypes: {
+    size: { name: "크기", control: "select", options: segmentedSizes },
+    shape: { name: "모양", control: "select", options: segmentedShapes },
+    disabled: { name: "비활성", control: "boolean" },
+    fullWidth: { name: "전체 너비", control: "boolean" },
+    vertical: { name: "세로 방향", control: "boolean" },
+    options: { control: false, table: { disable: true } },
+    value: { control: false, table: { disable: true } },
+    defaultValue: { control: false, table: { disable: true } },
+    className: { control: false, table: { disable: true } },
+    onChange: { control: false, table: { disable: true } },
+  },
   parameters: {
     controls: { disable: true },
     docs: {
@@ -37,15 +64,11 @@ const meta = {
 | \`options\` | 선택 항목을 설정해요. | \`SegmentedOption[]\` | - |
 | \`value\` | 선택 값을 외부에서 관리해요. | \`string \\| number\` | - |
 | \`defaultValue\` | 처음 선택할 값을 설정해요. | \`string \\| number\` | 첫 항목 |
-| \`block\` | 부모의 너비를 모두 채워요. | \`boolean\` | \`false\` |
+| \`fullWidth\` | 부모의 너비를 모두 채워요. | \`boolean\` | \`false\` |
 | \`disabled\` | 모든 항목을 비활성화해요. | \`boolean\` | \`false\` |
-| \`orientation\` | 가로 또는 세로 방향을 설정해요. | \`horizontal \\| vertical\` | \`horizontal\` |
 | \`vertical\` | 세로 방향으로 표시해요. | \`boolean\` | \`false\` |
-| \`size\` | 항목 크기를 설정해요. | \`large \\| medium \\| small\` | \`medium\` |
+| \`size\` | 항목 크기를 설정해요. | \`lg \\| md \\| sm\` | \`md\` |
 | \`shape\` | 외곽 모양을 설정해요. | \`default \\| round\` | \`default\` |
-| \`name\` | 내부 radio의 name을 설정해요. | \`string\` | - |
-| \`classNames\` | 각 영역의 클래스를 설정해요. | \`Record<SemanticName, string>\` | - |
-| \`styles\` | 각 영역의 스타일을 설정해요. | \`Record<SemanticName, CSSProperties>\` | - |
 | \`className\` | 최상위 요소에 Tailwind 클래스를 추가해요. | \`string\` | - |
 | \`onChange\` | 선택 값이 바뀔 때 실행해요. | \`(value) => void\` | - |
 
@@ -71,10 +94,18 @@ type Story = StoryObj<typeof meta>;
 export const Basic: Story = {
   parameters: {
     ...storyDescription("components-segmented--basic"),
+    controls: { disable: false, include: ["비활성"] },
     docs: {
+      ...storyDescription("components-segmented--basic").docs,
       source: {
         code: withStoryImports(`function BasicSegmented() {
-  return <Segmented options={['일간', '주간', '월간']} />;
+  const options = [
+    { value: 'day', label: '일간' },
+    { value: 'week', label: '주간' },
+    { value: 'month', label: '월간' },
+  ];
+
+  return <Segmented options={options} />;
 }`),
       },
     },
@@ -84,51 +115,64 @@ export const Basic: Story = {
 export const SizesAndShapes: Story = {
   parameters: {
     ...storyDescription("components-segmented--sizes-shapes"),
+    controls: { disable: false, include: ["모양"] },
     docs: {
+      ...storyDescription("components-segmented--sizes-shapes").docs,
       source: {
         code: withStoryImports(`function SegmentedSizesAndShapes() {
+  const options = [
+    { value: 'day', label: '일간' },
+    { value: 'week', label: '주간' },
+    { value: 'month', label: '월간' },
+  ];
+
   return (
     <div className="grid gap-3">
-      <Segmented options={['일간', '주간', '월간']} size="large" />
-      <Segmented options={['일간', '주간', '월간']} />
-      <Segmented options={['일간', '주간', '월간']} size="small" shape="round" />
-      <Segmented options={['일간', '주간', '월간']} disabled />
+      <Segmented options={options} size="lg" />
+      <Segmented options={options} size="md" />
+      <Segmented options={options} size="sm" />
     </div>
   );
 }`),
       },
     },
   },
-  render: () => (
+  render: ({ shape }) => (
     <div className="grid justify-items-start gap-3">
-      <Segmented options={options} size="large" />
-      <Segmented options={options} />
-      <Segmented options={options} size="small" shape="round" />
-      <Segmented options={options} disabled />
+      <Segmented options={periodOptions} shape={shape} size="lg" />
+      <Segmented options={periodOptions} shape={shape} size="md" />
+      <Segmented options={periodOptions} shape={shape} size="sm" />
     </div>
   ),
 };
 
-export const OrientationAndBlock: Story = {
+export const VerticalAndFullWidth: Story = {
+  args: { fullWidth: true },
   parameters: {
-    ...storyDescription("components-segmented--orientation-block"),
+    ...storyDescription("components-segmented--vertical-full-width"),
+    controls: { disable: false, include: ["세로 방향", "전체 너비"] },
     docs: {
+      ...storyDescription("components-segmented--vertical-full-width").docs,
       source: {
-        code: withStoryImports(`function SegmentedOrientationAndBlock() {
+        code: withStoryImports(`function SegmentedVerticalAndFullWidth() {
+  const options = [
+    { value: 'day', label: '일간' },
+    { value: 'week', label: '주간' },
+    { value: 'month', label: '월간' },
+  ];
+
   return (
-    <div className="grid max-w-md gap-4">
-      <Segmented block options={['일간', '주간', '월간']} />
-      <Segmented orientation="vertical" options={['목록', '보드', '캘린더']} />
+    <div className="max-w-md">
+      <Segmented fullWidth options={options} />
     </div>
   );
 }`),
       },
     },
   },
-  render: () => (
-    <div className="grid max-w-md gap-4">
-      <Segmented block options={options} />
-      <Segmented orientation="vertical" options={["목록", "보드", "캘린더"]} />
+  render: (args) => (
+    <div className="max-w-md">
+      <Segmented {...args} options={periodOptions} />
     </div>
   ),
 };
@@ -137,6 +181,7 @@ export const IconsAndTooltip: Story = {
   parameters: {
     ...storyDescription("components-segmented--icons-tooltip"),
     docs: {
+      ...storyDescription("components-segmented--icons-tooltip").docs,
       source: {
         code: withStoryImports(`const viewOptions = [
   { value: 'list', label: '목록', icon: <Icon icon="menu" />, tooltip: '목록으로 보기' },
@@ -167,21 +212,30 @@ function SegmentedIcons() {
 };
 
 export const Controlled: Story = {
+  tags: ["!dev"],
   parameters: {
     ...storyDescription("components-segmented--controlled"),
     docs: {
+      ...storyDescription("components-segmented--controlled").docs,
       source: {
         code: withStoryImports(`function ControlledSegmented() {
-  const [value, setValue] = useState('주간');
-  return <Segmented options={['일간', '주간', '월간']} value={value} onChange={(next) => setValue(String(next))} />;
+  const [value, setValue] = useState<string | number>('week');
+  const options = [
+    { value: 'day', label: '일간' },
+    { value: 'week', label: '주간' },
+    { value: 'month', label: '월간' },
+  ];
+
+  return <Segmented options={options} value={value} onChange={setValue} />;
 }`),
       },
     },
   },
-  render: () => <ControlledExample />,
+  render: () => <ControlledSegmented />,
 };
 
-function ControlledExample() {
-  const [value, setValue] = useState("주간");
-  return <Segmented options={options} value={value} onChange={(next) => setValue(String(next))} />;
+function ControlledSegmented() {
+  const [value, setValue] = useState<SegmentedValue>("week");
+
+  return <Segmented options={periodOptions} value={value} onChange={setValue} />;
 }

@@ -45,8 +45,8 @@ describe("Checkbox", () => {
     expect(ref.current).toBe(checkbox);
   });
 
-  it("displays the indeterminate state", () => {
-    render(<Checkbox aria-label="부분 선택" indeterminate />);
+  it("displays the partially checked state", () => {
+    render(<Checkbox aria-label="부분 선택" partiallyChecked />);
 
     expect(screen.getByRole("checkbox", { name: "부분 선택" })).toBePartiallyChecked();
   });

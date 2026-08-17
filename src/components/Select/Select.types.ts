@@ -1,11 +1,11 @@
 import type { FocusEvent, KeyboardEvent, ReactNode, UIEvent } from "react";
 import type { InputSize } from "../Input";
+import type { TagColor } from "../Tag";
 
 export type SelectValue = string | number;
 export type SelectMode = "multiple" | "tags";
 export type SelectPlacement = "bottomLeft" | "bottomRight" | "topLeft" | "topRight";
-export type SelectVariant = "default" | "outlined" | "filled" | "borderless" | "underlined";
-export type SelectStatus = "error" | "warning";
+export type SelectVariant = "default" | "filled";
 
 export interface SelectLabeledValue {
   value: SelectValue;
@@ -15,38 +15,16 @@ export interface SelectLabeledValue {
 export interface SelectOption {
   label?: ReactNode;
   value?: SelectValue;
+  color?: TagColor;
   disabled?: boolean;
   options?: SelectOption[];
-  title?: string;
-  className?: string;
   [key: string]: unknown;
-}
-
-export interface SelectFieldNames {
-  label?: string;
-  value?: string;
-  options?: string;
-  groupLabel?: string;
-}
-
-export interface SelectSearchConfig {
-  autoClearSearchValue?: boolean;
-  filterOption?: boolean | ((inputValue: string, option: SelectOption) => boolean);
-  filterSort?: (
-    optionA: SelectOption,
-    optionB: SelectOption,
-    info: { searchValue: string },
-  ) => number;
-  optionFilterProp?: string | string[];
-  optionLabelProp?: string;
-  searchValue?: string;
-  searchIcon?: ReactNode;
-  onSearch?: (value: string) => void;
 }
 
 export interface SelectTagRenderProps {
   label: ReactNode;
   value: SelectValue;
+  color?: TagColor;
   closable: boolean;
   onClose: () => void;
 }
@@ -64,38 +42,37 @@ export interface SelectProps {
   placeholder?: ReactNode;
   size?: InputSize;
   variant?: SelectVariant;
-  status?: SelectStatus;
+  width?: number;
   label?: ReactNode;
-  errorText?: ReactNode;
+  errorMessage?: ReactNode;
   required?: boolean;
+  readOnly?: boolean;
   disabled?: boolean;
-  allowClear?: boolean | { clearIcon?: ReactNode };
-  showSearch?: boolean | SelectSearchConfig;
+  allowClear?: boolean;
+  showSearch?: boolean;
   searchValue?: string;
-  autoClearSearchValue?: boolean;
-  defaultActiveFirstOption?: boolean;
   filterOption?: boolean | ((inputValue: string, option: SelectOption) => boolean);
-  filterSort?: SelectSearchConfig["filterSort"];
+  optionsSort?: (
+    optionA: SelectOption,
+    optionB: SelectOption,
+    info: { searchValue: string },
+  ) => number;
   optionFilterProp?: string | string[];
   optionLabelProp?: string;
   open?: boolean;
   defaultOpen?: boolean;
   placement?: SelectPlacement;
   notFoundContent?: ReactNode;
-  fieldNames?: SelectFieldNames;
   labelInValue?: boolean;
   listHeight?: number;
   loading?: boolean;
-  maxCount?: number;
-  maxTagCount?: number | "responsive";
-  maxTagPlaceholder?: ReactNode | ((omittedValues: SelectLabeledValue[]) => ReactNode);
+  maxSelectedCount?: number;
+  maxVisibleTagCount?: number | "responsive";
+  hiddenTagsPlaceholder?: ReactNode | ((omittedValues: SelectLabeledValue[]) => ReactNode);
   maxTagTextLength?: number;
+  closable?: boolean;
   popupMatchSelectWidth?: boolean | number;
-  prefix?: ReactNode;
-  suffixIcon?: ReactNode;
-  removeIcon?: ReactNode;
-  menuItemSelectedIcon?: ReactNode;
-  tokenSeparators?: string[] | ((input: string) => string[]);
+  tagSeparators?: string[] | ((input: string) => string[]);
   virtual?: boolean;
   optionRender?: (option: SelectOption, info: { index: number }) => ReactNode;
   popupRender?: (originNode: ReactNode) => ReactNode;
@@ -103,7 +80,7 @@ export interface SelectProps {
   labelRender?: (props: SelectLabeledValue) => ReactNode;
   className?: string;
   onChange?: (
-    value: SelectValue | SelectValue[] | SelectLabeledValue | SelectLabeledValue[],
+    value: SelectValue | SelectValue[] | SelectLabeledValue | SelectLabeledValue[] | undefined,
     option: SelectOption | SelectOption[] | undefined,
   ) => void;
   onSearch?: (value: string) => void;
@@ -111,8 +88,10 @@ export interface SelectProps {
   onDeselect?: (value: SelectValue | SelectLabeledValue, option: SelectOption) => void;
   onClear?: () => void;
   onOpenChange?: (open: boolean) => void;
-  onFocus?: (event: FocusEvent<HTMLButtonElement>) => void;
-  onBlur?: (event: FocusEvent<HTMLButtonElement>) => void;
-  onInputKeyDown?: (event: KeyboardEvent<HTMLButtonElement | HTMLInputElement>) => void;
+  onFocus?: (event: FocusEvent<HTMLButtonElement | HTMLInputElement | HTMLDivElement>) => void;
+  onBlur?: (event: FocusEvent<HTMLButtonElement | HTMLInputElement | HTMLDivElement>) => void;
+  onInputKeyDown?: (
+    event: KeyboardEvent<HTMLButtonElement | HTMLInputElement | HTMLDivElement>,
+  ) => void;
   onPopupScroll?: (event: UIEvent<HTMLDivElement>) => void;
 }

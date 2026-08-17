@@ -1,5 +1,6 @@
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Select } from "./Select";
 
@@ -26,6 +27,26 @@ beforeEach(() => {
 afterEach(() => vi.restoreAllMocks());
 
 describe("Select", () => {
+  it("fills the parent by default and applies a custom width to the root", () => {
+    const { container, rerender } = render(<Select options={options} />);
+
+    expect(container.firstElementChild).toHaveClass("w-full");
+
+    rerender(<Select options={options} width={320} />);
+    expect(container.firstElementChild).toHaveStyle({ width: "320px" });
+
+    rerender(<Select options={options} width={240} />);
+    expect(container.firstElementChild).toHaveStyle({ width: "240px" });
+  });
+
+  it("uses the filled background without retaining the white background class", () => {
+    render(<Select options={options} variant="filled" />);
+
+    const trigger = screen.getByRole("button", { name: "선택하세요" });
+    expect(trigger).toHaveClass("bg-[#f5f5f5]");
+    expect(trigger).not.toHaveClass("bg-white");
+  });
+
   it("selects one option and closes the list", async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
@@ -39,12 +60,73 @@ describe("Select", () => {
     expect(screen.getByRole("button", { name: "Design" })).toBeInTheDocument();
   });
 
+  it("keeps the popup mounted with the dropdown leave motion after selecting an option", () => {
+    render(<Select options={options} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "선택하세요" }));
+    fireEvent.click(screen.getByRole("button", { name: "Design" }));
+
+    expect(document.querySelector("[data-select-popup]")).toBeInTheDocument();
+    expect(document.querySelector("[data-select-motion]")).toHaveStyle({
+      opacity: "0",
+      transform: "scaleY(0.8)",
+      transitionDuration: "200ms",
+    });
+  });
+
+  it("uses the requested placement for the first dropdown motion frame", () => {
+    render(<Select options={options} placement="bottomLeft" defaultOpen />);
+
+    expect(document.querySelector("[data-select-motion]")).toHaveStyle({
+      opacity: "0",
+      transform: "scaleY(0.8)",
+      transformOrigin: "center top",
+      transitionDuration: "200ms",
+    });
+  });
+
+  it("closes with the leave motion when an outer scroll container scrolls", () => {
+    const onOpenChange = vi.fn();
+    render(<Select options={options} defaultOpen onOpenChange={onOpenChange} />);
+
+    fireEvent.scroll(window);
+
+    expect(onOpenChange).toHaveBeenLastCalledWith(false);
+    expect(document.querySelector("[data-select-motion]")).toHaveStyle({ opacity: "0" });
+  });
+
+  it("stays open while its own option list scrolls", () => {
+    const onOpenChange = vi.fn();
+    render(<Select options={options} defaultOpen onOpenChange={onOpenChange} />);
+
+    const popup = document.querySelector("[data-select-popup]") as HTMLElement;
+    const optionList = popup.querySelector("[data-scroll-fade]") ?? popup.firstElementChild;
+    fireEvent.scroll(optionList as Element);
+
+    expect(onOpenChange).not.toHaveBeenCalledWith(false);
+    expect(popup).toBeInTheDocument();
+  });
+
+  it("uses the selected color only for selected options", async () => {
+    const user = userEvent.setup();
+    render(<Select options={options} defaultValue="platform" />);
+
+    await user.click(screen.getByRole("button", { name: "Platform" }));
+
+    const popup = document.querySelector("[data-select-popup]") as HTMLElement;
+    const designOption = within(popup).getByRole("button", { name: "Design" });
+    const platformOption = within(popup).getByRole("button", { name: "Platform" });
+
+    expect(designOption).not.toHaveClass("bg-[#e6f4ff]");
+    expect(platformOption).toHaveClass("bg-[#e6f4ff]", "text-[#0062df]");
+  });
+
   it("searches and selects multiple options", async () => {
     const user = userEvent.setup();
-    render(<Select mode="multiple" options={options} />);
+    render(<Select mode="multiple" options={options} showSearch />);
 
-    await user.click(screen.getByRole("button", { name: "선택하세요" }));
-    await user.type(screen.getByPlaceholderText("검색하세요"), "plat");
+    const search = screen.getByRole("combobox");
+    await user.type(search, "plat");
 
     const popup = document.querySelector("[data-select-popup]");
     expect(popup).not.toBeNull();
@@ -54,11 +136,370 @@ describe("Select", () => {
     expect(document.querySelector("[data-select-popup]")).toBeInTheDocument();
   });
 
+  it.each(["multiple", "tags"] as const)(
+    "shows the placeholder only while %s mode has no selected tags",
+    (mode) => {
+      const { rerender } = render(
+        <Select mode={mode} options={options} placeholder="구성원을 선택하세요" value={[]} />,
+      );
+
+      if (mode === "tags") {
+        expect(screen.getByPlaceholderText("구성원을 선택하세요")).toBeInTheDocument();
+      } else {
+        expect(screen.getByText("구성원을 선택하세요")).toBeInTheDocument();
+      }
+
+      rerender(
+        <Select
+          mode={mode}
+          options={options}
+          placeholder="구성원을 선택하세요"
+          value={["design"]}
+        />,
+      );
+
+      expect(screen.queryByText("구성원을 선택하세요")).toBeNull();
+    },
+  );
+
+  it("keeps responsive tags on a single row", () => {
+    render(
+      <Select
+        mode="tags"
+        options={options}
+        defaultValue={["design", "platform"]}
+        maxVisibleTagCount="responsive"
+      />,
+    );
+
+    const search = screen.getByRole("combobox");
+    const tagContainer = search.parentElement;
+    const trigger = tagContainer?.parentElement;
+
+    expect(tagContainer).toHaveClass("flex-nowrap", "overflow-hidden");
+    expect(trigger).toHaveClass("overflow-hidden");
+  });
+
+  it("contains a responsive tag search without expanding the select width", () => {
+    const { container } = render(
+      <Select
+        mode="tags"
+        options={options}
+        defaultValue={["design", "platform"]}
+        maxVisibleTagCount="responsive"
+      />,
+    );
+
+    const search = screen.getByRole("combobox");
+
+    expect(container.firstElementChild).toHaveClass("min-w-0", "w-full", "max-w-full");
+    expect(search).toHaveClass("w-0", "max-w-full", "flex-1");
+
+    fireEvent.change(search, {
+      target: { value: "부모 너비보다 길어져도 Select를 늘리지 않는 태그 입력값" },
+    });
+
+    expect(search).toHaveValue("부모 너비보다 길어져도 Select를 늘리지 않는 태그 입력값");
+  });
+
+  it.each([
+    ["lg", "h-8"],
+    ["md", "h-[22px]"],
+    ["sm", "h-4"],
+  ] as const)("matches the %s search row height to the selected tag height", (size, height) => {
+    render(
+      <Select mode="tags" size={size} options={options} defaultValue={["design", "platform"]} />,
+    );
+
+    const search = screen.getByRole("combobox");
+    const selectedTag = document.querySelector("[data-select-tag]");
+
+    expect(search).toHaveClass(height);
+    expect(selectedTag).toHaveClass(height);
+  });
+
+  it("selects the active matching option with Enter in tags mode", async () => {
+    const user = userEvent.setup();
+    render(<Select mode="tags" options={[{ label: "김민준", value: "kim" }]} />);
+
+    const search = screen.getByRole("combobox");
+    await user.type(search, "김민{Enter}");
+
+    expect(screen.getAllByText("김민준")).toHaveLength(2);
+    expect(search).toHaveValue("");
+  });
+
+  it("shows the empty message when a tags search has no matching option", async () => {
+    const user = userEvent.setup();
+    render(
+      <Select
+        mode="tags"
+        options={[{ label: "김민준", value: "kim" }]}
+        notFoundContent="검색 결과가 없습니다"
+      />,
+    );
+
+    await user.type(screen.getByRole("combobox"), "없는 구성원");
+
+    expect(screen.getByText("검색 결과가 없습니다")).toBeInTheDocument();
+  });
+
+  it("keeps a newly created tag in the option list", async () => {
+    const user = userEvent.setup();
+    render(<Select mode="tags" options={[]} />);
+
+    const search = screen.getByRole("combobox");
+    await user.type(search, "새 구성원{Enter}");
+
+    const popup = document.querySelector("[data-select-popup]");
+    expect(popup).not.toBeNull();
+    await waitFor(() =>
+      expect(within(popup as HTMLElement).getByRole("button", { name: "새 구성원" })).toBeVisible(),
+    );
+  });
+
+  it("commits each Korean composition without carrying it into the next input", async () => {
+    render(
+      <Select
+        mode="tags"
+        options={[
+          { label: "김민준", value: "kim" },
+          { label: "이서연", value: "lee" },
+        ]}
+      />,
+    );
+
+    const search = screen.getByRole("combobox");
+    fireEvent.compositionStart(search);
+    fireEvent.change(search, { target: { value: "김민" } });
+    fireEvent.keyDown(search, { key: "Enter", keyCode: 229, isComposing: true });
+    fireEvent.compositionEnd(search, { data: "김민" });
+
+    await waitFor(() => {
+      expect(screen.getAllByText("김민준")).toHaveLength(2);
+      expect(search).toHaveValue("");
+    });
+
+    fireEvent.compositionStart(search);
+    fireEvent.change(search, { target: { value: "이서" } });
+    fireEvent.keyDown(search, { key: "Enter", keyCode: 229, isComposing: true });
+    fireEvent.compositionEnd(search, { data: "이서" });
+
+    await waitFor(() => {
+      expect(screen.getAllByText("이서연")).toHaveLength(2);
+      expect(search).toHaveValue("");
+    });
+    expect(screen.getAllByText("김민준")).toHaveLength(2);
+  });
+
+  it("keeps tag padding separate from the same-line search input", () => {
+    const { rerender } = render(<Select mode="multiple" options={options} />);
+
+    expect(screen.getByRole("combobox").closest("div")).not.toHaveClass("pl-[3px]");
+    expect(screen.getByRole("combobox")).not.toHaveClass("pl-[7px]");
+
+    rerender(<Select mode="multiple" options={options} value={["design"]} />);
+
+    expect(screen.getByRole("combobox").closest("div")).toHaveClass("pl-[3px]");
+    expect(screen.getByRole("combobox")).not.toHaveClass("pl-[7px]");
+
+    rerender(<Select mode="multiple" options={options} size="sm" value={["design"]} />);
+
+    expect(screen.getByRole("combobox").closest("div")).toHaveClass("pl-px");
+    expect(screen.getByRole("combobox")).not.toHaveClass("pl-[9px]");
+  });
+
+  it("restores the normal text inset when the search input wraps below tags", () => {
+    const { rerender } = render(
+      <Select mode="multiple" options={options} value={["design"]} searchValue="" showSearch />,
+    );
+
+    const tag = document.querySelector<HTMLElement>("[data-select-tag]");
+    const search = screen.getByRole("combobox");
+    expect(tag).not.toBeNull();
+
+    Object.defineProperties(tag!, {
+      offsetHeight: { configurable: true, value: 22 },
+      offsetTop: { configurable: true, value: 0 },
+    });
+    Object.defineProperty(search, "offsetTop", { configurable: true, value: 27 });
+
+    rerender(
+      <Select mode="multiple" options={options} value={["design"]} searchValue="검색" showSearch />,
+    );
+
+    expect(search).toHaveClass("pl-[7px]");
+  });
+
+  it("does not add input padding when a tag precedes it on the second row", () => {
+    const { rerender } = render(
+      <Select mode="multiple" options={options} value={["design", "platform"]} searchValue="" />,
+    );
+
+    const tags = document.querySelectorAll<HTMLElement>("[data-select-tag]");
+    const lastTag = tags[tags.length - 1];
+    const search = screen.getByRole("combobox");
+
+    Object.defineProperties(lastTag, {
+      offsetHeight: { configurable: true, value: 22 },
+      offsetTop: { configurable: true, value: 27 },
+    });
+    Object.defineProperty(search, "offsetTop", { configurable: true, value: 27 });
+
+    rerender(
+      <Select
+        mode="multiple"
+        options={options}
+        value={["design", "platform"]}
+        searchValue="검색"
+      />,
+    );
+
+    expect(search).not.toHaveClass("pl-[7px]");
+  });
+
+  it("keeps a long tag search value when the input scrolls", () => {
+    render(<Select mode="tags" options={options} defaultValue={["design"]} />);
+
+    const search = screen.getByRole("combobox");
+    fireEvent.change(search, {
+      target: { value: "Select 너비보다 길어져도 유지되는 새로운 태그 입력값" },
+    });
+    fireEvent.scroll(search);
+
+    expect(search).toHaveValue("Select 너비보다 길어져도 유지되는 새로운 태그 입력값");
+    expect(document.querySelector("[data-select-popup]")).toBeInTheDocument();
+  });
+
+  it("keeps a group label when filtering removes its first option", () => {
+    render(
+      <Select
+        showSearch
+        options={[
+          {
+            label: "제품 조직",
+            options: [
+              { label: "Design", value: "design" },
+              { label: "Product", value: "product" },
+            ],
+          },
+        ]}
+      />,
+    );
+
+    fireEvent.change(screen.getByRole("combobox"), { target: { value: "pro" } });
+
+    expect(screen.getByText("제품 조직")).toBeInTheDocument();
+    expect(screen.getByText("Product")).toBeInTheDocument();
+    expect(screen.queryByText("Design")).not.toBeInTheDocument();
+  });
+
+  it("shows a pointer cursor on a removable tag icon", () => {
+    render(<Select mode="multiple" options={options} defaultValue={["design"]} />);
+
+    expect(
+      within(screen.getByText("Design").parentElement as HTMLElement).getByRole("button"),
+    ).toHaveClass("cursor-pointer", "hover:opacity-75");
+  });
+
+  it("hides removable tag icons when closable is false", () => {
+    render(<Select closable={false} mode="multiple" options={options} defaultValue={["design"]} />);
+
+    expect(screen.getByText("Design").querySelector("svg")).not.toBeInTheDocument();
+  });
+
+  it("disables search by default in multiple mode", async () => {
+    const user = userEvent.setup();
+    render(<Select mode="multiple" options={options} defaultValue={["design", "platform"]} />);
+
+    expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
+    expect(screen.getByText("Design")).toBeInTheDocument();
+    expect(screen.getByText("Platform")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("combobox"));
+    expect(document.querySelector("[data-select-popup]")).toBeInTheDocument();
+  });
+
+  it("enables search by default in tags mode", () => {
+    render(<Select mode="tags" options={options} />);
+
+    expect(screen.getByRole("combobox").tagName).toBe("INPUT");
+  });
+
+  it("removes the last tag with Backspace when the search input is empty", () => {
+    const onChange = vi.fn();
+    const onDeselect = vi.fn();
+    render(
+      <Select
+        mode="multiple"
+        options={options}
+        defaultValue={["design", "platform"]}
+        onChange={onChange}
+        onDeselect={onDeselect}
+      />,
+    );
+
+    const search = screen.getByRole("combobox");
+    fireEvent.keyDown(search, { key: "Backspace" });
+
+    expect(screen.getByText("Design")).toBeInTheDocument();
+    expect(screen.queryByText("Platform")).not.toBeInTheDocument();
+    expect(onChange).toHaveBeenCalledWith(["design"], [options[0]]);
+    expect(onDeselect).toHaveBeenCalledWith("platform", options[1]);
+  });
+
   it("does not open when disabled", async () => {
     const user = userEvent.setup();
     render(<Select options={options} disabled />);
     await user.click(screen.getByRole("button", { name: "선택하세요" }));
     expect(document.querySelector("[data-select-popup]")).not.toBeInTheDocument();
+  });
+
+  it("blocks opening and value changes while loading", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(
+      <Select options={options} loading allowClear defaultValue="design" onChange={onChange} />,
+    );
+
+    const trigger = screen.getByRole("button", { name: "Design" });
+    expect(trigger).toBeDisabled();
+
+    await user.click(trigger);
+
+    expect(document.querySelector("[data-select-popup]")).not.toBeInTheDocument();
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it("blocks search input while loading", async () => {
+    const user = userEvent.setup();
+    const onSearch = vi.fn();
+    render(<Select options={options} loading showSearch onSearch={onSearch} />);
+
+    const search = screen.getByRole("combobox");
+    expect(search).toBeDisabled();
+
+    await user.type(search, "Design");
+
+    expect(search).toHaveValue("");
+    expect(document.querySelector("[data-select-popup]")).not.toBeInTheDocument();
+    expect(onSearch).not.toHaveBeenCalled();
+  });
+
+  it("keeps its value visible without opening while read only", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(<Select options={options} readOnly defaultValue="design" onChange={onChange} />);
+
+    const trigger = screen.getByRole("button", { name: "Design" });
+    expect(trigger).not.toBeDisabled();
+    expect(trigger).toHaveAttribute("aria-readonly", "true");
+    expect(trigger).toHaveClass("focus:border-[#0062df]", "focus:outline-none");
+
+    await user.click(trigger);
+
+    expect(document.querySelector("[data-select-popup]")).not.toBeInTheDocument();
+    expect(onChange).not.toHaveBeenCalled();
   });
 
   it("measures the trigger width when initially controlled open", () => {
@@ -71,17 +512,210 @@ describe("Select", () => {
     });
   });
 
-  it("creates tags with token separators and respects maxCount", async () => {
+  it("creates tags with tag separators and respects maxSelectedCount", async () => {
     const user = userEvent.setup();
-    render(<Select mode="tags" options={[]} tokenSeparators={[","]} maxCount={2} />);
+    render(<Select mode="tags" options={[]} tagSeparators={[","]} maxSelectedCount={2} />);
 
-    await user.click(screen.getByRole("button", { name: "선택하세요" }));
-    const search = screen.getByPlaceholderText("검색하세요");
+    const search = screen.getByRole("combobox");
     await user.type(search, "Design,Platform,Growth,");
 
-    expect(screen.getByText("Design")).toBeInTheDocument();
-    expect(screen.getByText("Platform")).toBeInTheDocument();
+    expect(screen.getAllByText("Design")).toHaveLength(2);
+    expect(screen.getAllByText("Platform")).toHaveLength(2);
     expect(screen.queryByText("Growth")).not.toBeInTheDocument();
+  });
+
+  it("treats a multi-character tag separator as one separator", async () => {
+    const user = userEvent.setup();
+    render(<Select mode="tags" options={[]} tagSeparators={["::"]} />);
+
+    const search = screen.getByRole("combobox");
+    await user.type(search, "Design:Platform::");
+
+    expect(screen.getAllByText("Design:Platform")).toHaveLength(2);
+    expect(screen.queryByText("Design")).not.toBeInTheDocument();
+    expect(screen.queryByText("Platform")).not.toBeInTheDocument();
+  });
+
+  it("uses optionLabelProp for the selected label", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    const labeledOptions = [
+      { label: "Design organization", shortLabel: "Design", value: "design" },
+    ];
+    render(
+      <Select
+        options={labeledOptions}
+        showSearch
+        optionLabelProp="shortLabel"
+        labelInValue
+        onChange={onChange}
+      />,
+    );
+
+    await user.click(screen.getByRole("combobox"));
+    await user.click(screen.getByRole("button", { name: "Design organization" }));
+
+    expect(screen.getByRole("combobox")).toHaveAttribute("placeholder", "Design");
+    expect(onChange).toHaveBeenCalledWith({ value: "design", label: "Design" }, labeledOptions[0]);
+  });
+
+  it("uses filterOption to customize search matching", async () => {
+    const user = userEvent.setup();
+    const searchableOptions = [
+      {
+        label: "김민준 · Design",
+        value: "kim",
+      },
+      {
+        label: "이서연 · Platform",
+        value: "lee",
+      },
+    ];
+
+    render(
+      <Select
+        options={searchableOptions}
+        showSearch
+        filterOption={(inputValue, option) =>
+          String(option.label ?? "")
+            .toLowerCase()
+            .includes(inputValue.toLowerCase())
+        }
+      />,
+    );
+
+    await user.type(screen.getByRole("combobox"), "Platform");
+
+    const popup = document.querySelector("[data-select-popup]") as HTMLElement;
+    expect(within(popup).getByRole("button", { name: "이서연 · Platform" })).toBeInTheDocument();
+    expect(within(popup).queryByRole("button", { name: "김민준 · Design" })).toBeNull();
+  });
+
+  it("uses the option color for the default tag and the Icon hover for its close action", async () => {
+    const user = userEvent.setup();
+    render(
+      <Select
+        mode="multiple"
+        options={[{ label: "활성", value: "active", color: "green" }]}
+        defaultValue={["active"]}
+      />,
+    );
+
+    const tag = document.querySelector<HTMLElement>("[data-select-tag]");
+    expect(tag).not.toBeNull();
+    expect(tag).toHaveClass("bg-[#eff5ee]", "text-[#1c8616]");
+
+    const closeIcon = within(tag as HTMLElement).getByRole("button");
+    expect(closeIcon).toHaveClass("cursor-pointer", "hover:opacity-75");
+    expect(closeIcon.querySelector("path")).toHaveAttribute("fill", "currentColor");
+
+    await user.click(closeIcon);
+    expect(document.querySelector("[data-select-tag]")).toBeNull();
+  });
+
+  it("selects the first option on Enter when search opens", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(<Select options={options} showSearch onChange={onChange} />);
+
+    const search = screen.getByRole("combobox");
+    await user.click(search);
+    await user.keyboard("{Enter}");
+
+    expect(onChange).toHaveBeenCalledWith(options[0].value, options[0]);
+  });
+
+  it("skips disabled options during keyboard navigation", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(
+      <Select
+        showSearch
+        options={[
+          { label: "Disabled first", value: "disabled", disabled: true },
+          { label: "Enabled second", value: "enabled" },
+        ]}
+        onChange={onChange}
+      />,
+    );
+
+    const search = screen.getByRole("combobox");
+    await user.click(search);
+    await user.keyboard("{Enter}");
+
+    expect(onChange).toHaveBeenCalledWith("enabled", {
+      label: "Enabled second",
+      value: "enabled",
+    });
+  });
+
+  it("opens with ArrowUp and selects the first enabled option", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(<Select options={options} onChange={onChange} />);
+
+    const trigger = screen.getByRole("button", { name: "선택하세요" });
+    trigger.focus();
+    await user.keyboard("{ArrowUp}{Enter}");
+
+    expect(onChange).toHaveBeenCalledWith("design", options[0]);
+  });
+
+  it("returns undefined when a single selection is cleared", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(<Select allowClear options={options} defaultValue="design" onChange={onChange} />);
+
+    const trigger = screen.getByRole("button", { name: "Design" });
+    const clearIcon = trigger.querySelector("svg")?.parentElement;
+    expect(clearIcon).not.toBeNull();
+    await user.click(clearIcon as HTMLElement);
+
+    expect(onChange).toHaveBeenCalledWith(undefined, undefined);
+  });
+
+  it("passes the empty state through popupRender", () => {
+    render(
+      <Select
+        options={[]}
+        defaultOpen
+        notFoundContent="검색 결과가 없어요"
+        popupRender={(content) => <div data-testid="custom-popup">{content}</div>}
+      />,
+    );
+
+    expect(screen.getByTestId("custom-popup")).toHaveTextContent("검색 결과가 없어요");
+  });
+
+  it("always clears search after a single selection", async () => {
+    const user = userEvent.setup();
+    const onSearch = vi.fn();
+    render(<Select options={options} showSearch searchValue="plat" onSearch={onSearch} />);
+
+    await user.click(screen.getByRole("combobox"));
+    await user.click(screen.getByRole("button", { name: "Platform" }));
+
+    expect(onSearch).toHaveBeenLastCalledWith("");
+  });
+
+  it("truncates selected tags and supports a custom tag renderer", () => {
+    const tagRender = vi.fn(({ label }: { label: ReactNode }) => (
+      <span data-testid="custom-tag">custom: {label}</span>
+    ));
+    render(
+      <Select
+        mode="multiple"
+        options={options}
+        defaultValue={["platform"]}
+        maxTagTextLength={4}
+        tagRender={tagRender}
+      />,
+    );
+
+    expect(screen.getByTestId("custom-tag")).toHaveTextContent("custom: Plat...");
+    expect(tagRender).toHaveBeenCalledWith(
+      expect.objectContaining({ value: "platform", label: "Plat...", closable: true }),
+    );
   });
 
   it("returns labeled values", async () => {
@@ -94,7 +728,7 @@ describe("Select", () => {
     expect(onChange).toHaveBeenCalledWith({ value: "design", label: "Design" }, options[0]);
   });
 
-  it("renders grouped option labels and the design-system search input", async () => {
+  it("searches from the select input and renders grouped option labels", async () => {
     const user = userEvent.setup();
     render(
       <Select
@@ -106,10 +740,15 @@ describe("Select", () => {
       />,
     );
 
-    await user.click(screen.getByRole("button", { name: "선택하세요" }));
+    const search = screen.getByRole("combobox");
+    await user.click(search);
     const popup = document.querySelector("[data-select-popup]") as HTMLElement;
     expect(within(popup).getByText("기획")).toBeInTheDocument();
     expect(within(popup).getByText("개발")).toBeInTheDocument();
-    expect(within(popup).getByPlaceholderText("검색하세요")).toHaveClass("font-pretendard");
+    expect(within(popup).queryByRole("combobox")).not.toBeInTheDocument();
+
+    await user.type(search, "plat");
+    expect(within(popup).queryByRole("button", { name: "Product" })).not.toBeInTheDocument();
+    expect(within(popup).getByRole("button", { name: "Platform" })).toBeInTheDocument();
   });
 });

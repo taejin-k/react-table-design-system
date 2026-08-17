@@ -10,6 +10,11 @@ import {
 import { createPortal } from "react-dom";
 import { twMerge } from "tailwind-merge";
 import { Icon } from "../Icon";
+import {
+  MOTION_DURATION_SLOW,
+  MOTION_EASE_IN_OUT_CIRC,
+  MOTION_EASE_OUT_CIRC,
+} from "../_internal/motion";
 import { lockBodyScroll } from "../_internal/body-scroll-lock";
 import type {
   DrawerPlacement,
@@ -91,6 +96,8 @@ export function Drawer({
 }: DrawerProps) {
   const [rendered, setRendered] = useState(open || forceRender);
   const [closing, setClosing] = useState(false);
+  const [motionVisible, setMotionVisible] = useState(false);
+  const motionFrameRef = useRef<number | undefined>(undefined);
   const didMountRef = useRef(false);
   const renderedRef = useRef(open || forceRender);
   const lifecycleRef = useRef({
@@ -135,11 +142,22 @@ export function Drawer({
       renderedRef.current = true;
       setRendered(true);
       setClosing(false);
-      lifecycleRef.current.afterOpenChange?.(true);
-      return;
+      window.cancelAnimationFrame(motionFrameRef.current ?? 0);
+      motionFrameRef.current = window.requestAnimationFrame(() => {
+        motionFrameRef.current = window.requestAnimationFrame(() => setMotionVisible(true));
+      });
+      const timer = window.setTimeout(
+        () => lifecycleRef.current.afterOpenChange?.(true),
+        MOTION_DURATION_SLOW,
+      );
+      return () => {
+        window.cancelAnimationFrame(motionFrameRef.current ?? 0);
+        window.clearTimeout(timer);
+      };
     }
     if (!renderedRef.current) return;
     setClosing(true);
+    setMotionVisible(false);
     const timer = window.setTimeout(() => {
       setClosing(false);
       if (lifecycleRef.current.shouldDestroy && !lifecycleRef.current.forceRender) {
@@ -149,8 +167,11 @@ export function Drawer({
       lifecycleRef.current.afterOpenChange?.(false);
       if (lifecycleRef.current.focusable?.focusTriggerAfterClose !== false)
         triggerRef.current?.focus();
-    }, 200);
-    return () => window.clearTimeout(timer);
+    }, MOTION_DURATION_SLOW);
+    return () => {
+      window.cancelAnimationFrame(motionFrameRef.current ?? 0);
+      window.clearTimeout(timer);
+    };
   }, [open]);
 
   useEffect(() => {
@@ -173,10 +194,13 @@ export function Drawer({
       }
     };
     document.addEventListener("keydown", handleKeyDown);
-    window.setTimeout(() =>
+    const focusTimer = window.setTimeout(() =>
       panelRef.current?.querySelector<HTMLElement>("button:not(:disabled)")?.focus(),
     );
-    return () => document.removeEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      window.clearTimeout(focusTimer);
+    };
   }, [focusable?.trap, keyboard, onClose, open]);
 
   useEffect(() => {
@@ -191,15 +215,14 @@ export function Drawer({
       : { height: drawerSize, width: "100%" };
     return {
       ...base,
-      transform:
-        open && !closing
-          ? childOpen && push !== false
-            ? pushTransform(placement, pushDistance)
-            : "translate(0)"
-          : hiddenTransform(placement),
+      transform: motionVisible
+        ? childOpen && push !== false
+          ? pushTransform(placement, pushDistance)
+          : "translate(0)"
+        : hiddenTransform(placement),
       ...style,
     };
-  }, [childOpen, closing, drawerSize, open, placement, push, pushDistance, style]);
+  }, [childOpen, drawerSize, motionVisible, placement, push, pushDistance, style]);
 
   if (!rendered && !open) return null;
   const close = (event: MouseEvent<HTMLButtonElement | HTMLDivElement>) => onClose?.(event);
@@ -219,14 +242,17 @@ export function Drawer({
       ref={panelRef}
       data-drawer-panel
       className={twMerge(
-        "absolute flex flex-col bg-white font-pretendard text-sm text-[#111] shadow-[-8px_0_24px_rgba(0,0,0,0.12)] transition-transform duration-200 ease-out",
+        "absolute flex flex-col bg-white font-pretendard text-sm text-[#111] shadow-[-8px_0_24px_rgba(0,0,0,0.12)] transition-transform duration-300 motion-reduce:transition-none",
         placement === "left" && "inset-y-0 left-0",
         placement === "right" && "inset-y-0 right-0",
         placement === "top" && "inset-x-0 top-0",
         placement === "bottom" && "inset-x-0 bottom-0",
         className,
       )}
-      style={panelStyle}
+      style={{
+        ...panelStyle,
+        transitionTimingFunction: motionVisible ? MOTION_EASE_OUT_CIRC : MOTION_EASE_IN_OUT_CIRC,
+      }}
     >
       {resizable ? (
         <ResizeHandle
@@ -289,9 +315,9 @@ export function Drawer({
       {maskEnabled ? (
         <div
           className={twMerge(
-            "absolute inset-0 bg-black/45 transition-opacity duration-200",
+            "absolute inset-0 bg-black/45 transition-opacity duration-300 motion-reduce:transition-none",
             blurMask && "backdrop-blur-sm",
-            open && !closing ? "opacity-100" : "opacity-0",
+            motionVisible ? "opacity-100" : "opacity-0",
             classNames?.mask,
           )}
           style={styles?.mask}

@@ -1,5 +1,6 @@
 import { Description, Markdown, Stories, Title } from "@storybook/addon-docs/blocks";
 import type { Meta, StoryObj } from "@storybook/react";
+import { useEffect, useRef } from "react";
 import { storyDescriptions } from "../../storybook/story-descriptions";
 import { withStoryImports } from "../../storybook/story-source";
 import { Button } from "../Button";
@@ -20,7 +21,7 @@ const meta = {
           "작업 결과나 짧은 안내를 화면 위에 표시해요.  \n정적 메서드와 useMessage를 사용할 수 있어요.",
       },
       page: () => (
-        <div className="component-docs">
+        <div className="message-docs component-docs">
           <Title />
           <Description />
           <Stories />
@@ -67,6 +68,7 @@ export const Types: Story = {
   parameters: {
     ...storyDescription("components-message--types"),
     docs: {
+      ...storyDescription("components-message--types").docs,
       source: {
         code: withStoryImports(`function MessageTypes() {
   return (
@@ -97,10 +99,19 @@ export const Hook: Story = {
   parameters: {
     ...storyDescription("components-message--hook"),
     docs: {
+      ...storyDescription("components-message--hook").docs,
       source: {
         code: withStoryImports(`function MessageHook() {
   const [messageApi, contextHolder] = message.useMessage();
-  return <>{contextHolder}<Button onClick={() => messageApi.success('현재 Context에서 열렸어요.')}>Hook Message</Button></>;
+
+  return (
+    <>
+      {contextHolder}
+      <Button onClick={() => messageApi.success('현재 Context에서 열렸어요.')}>
+        Hook Message
+      </Button>
+    </>
+  );
 }`),
       },
     },
@@ -122,42 +133,75 @@ export const DurationAndUpdate: Story = {
   parameters: {
     ...storyDescription("components-message--duration-update"),
     docs: {
+      ...storyDescription("components-message--duration-update").docs,
       source: {
         code: withStoryImports(`function MessageUpdate() {
+  const timerRef = useRef<number | undefined>(undefined);
+
+  useEffect(() => () => window.clearTimeout(timerRef.current), []);
+
   const update = () => {
     message.loading({ key: 'save', content: '저장 중이에요.', duration: 0 });
-    setTimeout(() => message.success({ key: 'save', content: '저장했어요.' }), 1200);
+    window.clearTimeout(timerRef.current);
+    timerRef.current = window.setTimeout(
+      () => message.success({ key: 'save', content: '저장했어요.' }),
+      1200,
+    );
   };
+
   return <Button onClick={update}>key로 갱신</Button>;
 }`),
       },
     },
   },
-  render: () => (
-    <Button
-      onClick={() => {
-        message.loading({ key: "save", content: "저장 중이에요.", duration: 0 });
-        setTimeout(() => message.success({ key: "save", content: "저장했어요." }), 1200);
-      }}
-    >
-      key로 갱신
-    </Button>
-  ),
+  render: () => <MessageUpdateExample />,
 };
+
+function MessageUpdateExample() {
+  const timerRef = useRef<number | undefined>(undefined);
+
+  useEffect(() => () => window.clearTimeout(timerRef.current), []);
+
+  const update = () => {
+    message.loading({ key: "save", content: "저장 중이에요.", duration: 0 });
+    window.clearTimeout(timerRef.current);
+    timerRef.current = window.setTimeout(
+      () => message.success({ key: "save", content: "저장했어요." }),
+      1200,
+    );
+  };
+
+  return <Button onClick={update}>key로 갱신</Button>;
+}
 
 export const PromiseAndStack: Story = {
   parameters: {
     ...storyDescription("components-message--promise-stack"),
     docs: {
+      ...storyDescription("components-message--promise-stack").docs,
       source: {
         code: withStoryImports(`function MessagePromiseAndStack() {
   const [messageApi, contextHolder] = message.useMessage({ stack: { threshold: 3 } });
-  const openMany = () => Array.from({ length: 5 }, (_, index) => messageApi.info({ content: '메시지 ' + (index + 1), duration: 0 }));
+
+  const openMany = () =>
+    Array.from({ length: 5 }, (_, index) =>
+      messageApi.info({ content: '메시지 ' + (index + 1), duration: 0 }),
+    );
+
   const sequence = async () => {
     await messageApi.success({ content: '첫 메시지', duration: 1 });
     messageApi.info('첫 메시지가 닫혔어요.');
   };
-  return <>{contextHolder}<div className="flex gap-2"><Button onClick={openMany}>스택</Button><Button type="secondary" onClick={sequence}>순서대로</Button></div></>;
+
+  return (
+    <>
+      {contextHolder}
+      <div className="flex gap-2">
+        <Button onClick={openMany}>스택</Button>
+        <Button variant="secondary" onClick={sequence}>순서대로</Button>
+      </div>
+    </>
+  );
 }`),
       },
     },
@@ -180,7 +224,7 @@ function MessageStackExample() {
       {holder}
       <div className="flex gap-2">
         <Button onClick={openMany}>스택</Button>
-        <Button type="secondary" onClick={sequence}>
+        <Button variant="secondary" onClick={sequence}>
           순서대로
         </Button>
       </div>

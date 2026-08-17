@@ -1,6 +1,7 @@
 import { Description, Markdown, Stories, Title } from "@storybook/addon-docs/blocks";
 import type { Meta, StoryObj } from "@storybook/react";
 import { storyDescriptions } from "../../storybook/story-descriptions";
+import { withStoryImports } from "../../storybook/story-source";
 import { Label } from "./Label";
 
 const sizes = ["lg", "md", "sm"] as const;
@@ -12,8 +13,9 @@ const meta = {
   title: "Components/Label",
   component: Label,
   tags: ["autodocs"],
-  args: { children: "레이블", size: "md" },
+  args: { label: "레이블" },
   argTypes: {
+    label: { name: "레이블", control: "text" },
     size: { name: "크기", control: "select", options: sizes },
     required: { name: "필수 표시", control: "boolean" },
     className: { control: false, table: { disable: true } },
@@ -36,6 +38,7 @@ const meta = {
 
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
+| \`label\` | 화면에 표시할 레이블이에요. | \`ReactNode\` | - |
 | \`size\` | 글자 크기를 설정해요. | \`lg \\| md \\| sm\` | \`md\` |
 | \`required\` | 레이블 뒤에 필수 표시를 추가해요. | \`boolean\` | \`false\` |
 | \`className\` | 최상위 요소에 Tailwind 클래스를 추가해요. | \`string\` | - |
@@ -50,7 +53,21 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Sizes: Story = {
-  parameters: { ...storyDescription("components-label--sizes"), controls: { disable: false } },
+  argTypes: { size: { control: false, table: { disable: true } } },
+  parameters: {
+    ...storyDescription("components-label--sizes"),
+    controls: { disable: false },
+    docs: {
+      ...storyDescription("components-label--sizes").docs,
+      source: {
+        code: withStoryImports(`<div className="flex flex-wrap items-center gap-8">
+  <Label label="레이블" size="lg" />
+  <Label label="레이블" size="md" />
+  <Label label="레이블" size="sm" />
+</div>`),
+      },
+    },
+  },
   render: (args) => (
     <div className="flex flex-wrap items-center gap-8">
       {sizes.map((size) => (

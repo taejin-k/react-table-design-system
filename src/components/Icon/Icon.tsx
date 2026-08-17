@@ -84,43 +84,46 @@ const paths = {
 
 export const iconNames = Object.keys(paths) as IconName[];
 
-/** 16px 캔버스에서 아이콘마다 다른 실제 도형 크기를 약 12px로 맞춰요. */
+/**
+ * 16px 캔버스는 유지하고 내부 도형의 시각적 크기만 맞춰요.
+ * 얇은 외곽선 아이콘은 조금 키우고, 대각선이 크게 느껴지는 아이콘은 줄여요.
+ */
 const opticalScaleByIcon = {
   add: 1,
   "arrow-down": 1,
   "arrow-left": 1,
   "arrow-right": 1,
   "arrow-up": 1,
-  bell: 0.9,
-  calendar: 0.9,
+  bell: 0.96,
+  calendar: 0.96,
   check: 1,
-  "check-circle": 0.9,
+  "check-circle": 0.96,
   "chevron-down": 1,
   "chevron-left": 1,
   "chevron-right": 1,
   "chevron-up": 1,
-  close: 1,
-  "close-circle": 0.9,
-  clock: 0.9,
-  copy: 0.9,
+  close: 0.88,
+  "close-circle": 0.96,
+  clock: 0.96,
+  copy: 0.94,
   delete: 1,
   download: 1.05,
   "drag-handle": 1.05,
   edit: 1,
   "edit-square": 0.9,
   "external-link": 1,
-  eye: 0.9,
-  "eye-off": 0.9,
-  file: 0.9,
+  eye: 0.96,
+  "eye-off": 0.95,
+  file: 0.95,
   filter: 1.05,
   folder: 1.12,
-  "help-circle": 0.9,
+  "help-circle": 0.96,
   home: 1,
-  info: 0.9,
-  link: 0.9,
-  loading: 0.9,
-  lock: 0.95,
-  mail: 0.9,
+  info: 0.96,
+  link: 1.05,
+  loading: 0.96,
+  lock: 1,
+  mail: 0.96,
   menu: 1,
   "more-horizontal": 0.96,
   "more-vertical": 0.96,
@@ -129,10 +132,10 @@ const opticalScaleByIcon = {
   search: 0.91,
   setting: 1,
   sorter: 1,
-  star: 0.9,
+  star: 0.96,
   upload: 1.05,
   user: 0.95,
-  users: 0.75,
+  users: 0.9,
   warning: 1,
 } as const satisfies Record<IconName, number>;
 
@@ -140,15 +143,23 @@ export function Icon({
   icon,
   size = 16,
   color = "currentColor",
+  disabled = false,
+  loading = false,
   className,
+  style,
   onClick,
   onKeyDown,
   ...rest
 }: IconProps) {
-  const isInteractive = Boolean(onClick);
-  const iconPaths = paths[icon];
+  const resolvedIcon = loading ? "loading" : icon;
+  const isInteractive = Boolean(onClick) && !disabled && !loading;
+  const iconPaths = paths[resolvedIcon];
+  const effectiveColor = disabled ? "#aaa" : color;
+
+  if (!iconPaths) return null;
+
   const pathList: readonly string[] = typeof iconPaths === "string" ? [iconPaths] : iconPaths;
-  const opticalScale = opticalScaleByIcon[icon];
+  const opticalScale = opticalScaleByIcon[resolvedIcon];
 
   return (
     <svg
@@ -160,26 +171,36 @@ export function Icon({
       aria-hidden={!isInteractive}
       role={isInteractive ? "button" : undefined}
       tabIndex={isInteractive ? 0 : undefined}
+      style={{ outline: "none", ...style }}
       className={twMerge(
-        icon === "loading" && "animate-spin motion-reduce:animate-none",
+        "shrink-0",
+        resolvedIcon === "loading" && "animate-spin motion-reduce:animate-none",
         isInteractive
-          ? "cursor-pointer transition-opacity hover:opacity-75 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0062df] motion-reduce:transition-none"
+          ? "cursor-pointer transition-opacity outline-none hover:opacity-75 focus:outline-none focus-visible:outline-none motion-reduce:transition-none"
           : undefined,
+        disabled && "cursor-not-allowed",
+        loading && "cursor-default",
         className,
       )}
-      onClick={onClick}
-      onKeyDown={(event) => {
-        onKeyDown?.(event);
-        if (isInteractive && (event.key === "Enter" || event.key === " ")) {
-          event.preventDefault();
-          event.currentTarget.dispatchEvent(new globalThis.MouseEvent("click", { bubbles: true }));
-        }
-      }}
+      onClick={disabled || loading ? undefined : onClick}
+      onKeyDown={
+        disabled || loading
+          ? undefined
+          : (event) => {
+              onKeyDown?.(event);
+              if (isInteractive && (event.key === "Enter" || event.key === " ")) {
+                event.preventDefault();
+                event.currentTarget.dispatchEvent(
+                  new globalThis.MouseEvent("click", { bubbles: true }),
+                );
+              }
+            }
+      }
       {...rest}
     >
       <g transform={`translate(8 8) scale(${opticalScale}) translate(-8 -8)`}>
         {pathList.map((path, index) => (
-          <path key={index} d={path} fill={color} />
+          <path key={index} d={path} fill={effectiveColor} />
         ))}
       </g>
     </svg>

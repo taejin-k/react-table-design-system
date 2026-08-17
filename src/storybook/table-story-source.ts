@@ -29,6 +29,7 @@ const tablePropOrder = [
   "showSorterTooltip",
   "tableLayout",
   "rowHoverable",
+  "sticky",
   "virtual",
   "stickyScrollBar",
   "scroll",

@@ -1,26 +1,30 @@
 export { Button } from "./components/Button";
-export type { ButtonProps, ButtonSize, ButtonType } from "./components/Button";
+export type { ButtonProps, ButtonSize, ButtonVariant } from "./components/Button";
 export { Icon } from "./components/Icon";
 export type { IconProps, IconName } from "./components/Icon";
-export { Chip } from "./components/Chip";
-export type { ChipColor, ChipProps, ChipVariant } from "./components/Chip";
+export { Tag } from "./components/Tag";
+export type { TagColor, TagProps, TagVariant } from "./components/Tag";
 export { Toggle } from "./components/Toggle";
 export type { ToggleProps, ToggleSize } from "./components/Toggle";
 export { Label } from "./components/Label";
 export type { LabelProps, LabelSize } from "./components/Label";
-export { ErrorText } from "./components/ErrorText";
-export type { ErrorTextProps } from "./components/ErrorText";
+export { ErrorMessage } from "./components/ErrorMessage";
+export type { ErrorMessageProps } from "./components/ErrorMessage";
 export { Input } from "./components/Input";
-export type { InputProps, InputSize, InputVariant } from "./components/Input";
+export type { AllowedCharacterType, InputProps, InputSize, InputVariant } from "./components/Input";
 export { TextArea } from "./components/TextArea";
-export type { TextAreaAutoSize, TextAreaProps } from "./components/TextArea";
+export type { TextAreaAutoSize, TextAreaProps, TextAreaVariant } from "./components/TextArea";
 export { Select } from "./components/Select";
 export type {
+  SelectLabeledValue,
   SelectMode,
   SelectOption,
   SelectPlacement,
   SelectProps,
+  SelectRef,
+  SelectTagRenderProps,
   SelectValue,
+  SelectVariant,
 } from "./components/Select";
 export { DatePicker } from "./components/DatePicker";
 export type {
@@ -53,7 +57,6 @@ export type {
   DropdownClickInfo,
   DropdownItem,
   DropdownMenu,
-  DropdownOpenSource,
   DropdownPlacement,
   DropdownProps,
   DropdownTrigger,
@@ -61,12 +64,11 @@ export type {
 export { Popover } from "./components/Popover";
 export type { PopoverPlacement, PopoverProps, PopoverTrigger } from "./components/Popover";
 export { Flex } from "./components/Flex";
-export type { FlexGap, FlexOrientation, FlexProps } from "./components/Flex";
+export type { FlexGap, FlexProps } from "./components/Flex";
 export { Segmented } from "./components/Segmented";
 export type {
   SegmentedItemType,
   SegmentedOption,
-  SegmentedOrientation,
   SegmentedProps,
   SegmentedSize,
   SegmentedValue,

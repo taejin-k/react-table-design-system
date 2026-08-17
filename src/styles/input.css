@@ -4,6 +4,7 @@
 @import "../../theme.css" layer(theme);
 @import "tailwindcss/utilities.css" layer(utilities);
 @import "./table-scrollbar.css";
+@import "./motion.css";
 
 .wizard-scrollbar-hidden {
   scrollbar-width: none;
@@ -20,5 +21,16 @@
   }
   to {
     transform: scaleX(0);
+  }
+}
+
+@keyframes wizard-button-loading-in {
+  from {
+    opacity: 0;
+    transform: scale(0.75);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
   }
 }

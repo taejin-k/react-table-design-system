@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Table } from "./Table";
@@ -67,6 +67,112 @@ describe("Table regressions", () => {
     expect(container.querySelector("table")).toHaveStyle({ tableLayout: "auto" });
   });
 
+  it("keeps the configured selection column width fixed", () => {
+    const { container } = render(
+      <Table
+        columns={[{ title: "이름", dataIndex: "name" }]}
+        dataSource={data}
+        pagination={false}
+        rowSelection={{ type: "checkbox", columnWidth: 80 }}
+      />,
+    );
+
+    const expectedWidth = { width: "80px", minWidth: "80px", maxWidth: "80px" };
+    const columns = container.querySelectorAll<HTMLTableColElement>("col");
+    expect(columns[0]).toHaveStyle(expectedWidth);
+    expect(columns[1]).toHaveStyle({ width: "calc(100% - 80px)" });
+    expect(container.querySelector("thead th:first-child")).toHaveStyle(expectedWidth);
+    expect(container.querySelector("tbody td:first-child")).toHaveStyle(expectedWidth);
+  });
+
+  it("keeps explicit widths fixed and gives the remaining width to a minWidth column", () => {
+    const { container } = render(
+      <Table
+        columns={[
+          { title: "이름", dataIndex: "name", width: 150 },
+          { title: "직무", dataIndex: "team", minWidth: 190 },
+          { title: "프로젝트", dataIndex: "projects", width: 100 },
+        ]}
+        dataSource={data}
+        pagination={false}
+      />,
+    );
+
+    const columns = container.querySelectorAll<HTMLTableColElement>("col");
+    expect(columns[0]).toHaveStyle({ width: "150px" });
+    expect(columns[1]).toHaveStyle({ width: "calc(100% - 250px)" });
+    expect(columns[2]).toHaveStyle({ width: "100px" });
+    expect(container.querySelector("table")).toHaveStyle({ minWidth: "440px" });
+  });
+
+  it("uses minWidth as the lower bound when an explicit numeric width is smaller", () => {
+    const { container } = render(
+      <Table
+        columns={[
+          { title: "이름", dataIndex: "name", width: 120, minWidth: 160 },
+          { title: "직무", dataIndex: "team" },
+        ]}
+        dataSource={data}
+        pagination={false}
+      />,
+    );
+
+    const columns = container.querySelectorAll<HTMLTableColElement>("col");
+    expect(columns[0]).toHaveStyle({ width: "160px" });
+    expect(columns[1]).toHaveStyle({ width: "calc(100% - 160px)" });
+  });
+
+  it("preserves minWidth in a max-content table with a fixed selection column", () => {
+    const { container } = render(
+      <Table
+        columns={[
+          { title: "이름", dataIndex: "name", width: 220 },
+          { title: "직무", dataIndex: "team", minWidth: 190 },
+          { title: "프로젝트", dataIndex: "projects", width: 220 },
+        ]}
+        dataSource={data}
+        pagination={false}
+        rowSelection={{ type: "checkbox", fixed: true }}
+        scroll={{ x: "max-content" }}
+      />,
+    );
+
+    const columns = container.querySelectorAll<HTMLTableColElement>("col");
+    expect(columns[0]).toHaveStyle({ width: "48px", minWidth: "48px", maxWidth: "48px" });
+    expect(columns[1]).toHaveStyle({ width: "220px" });
+    expect(columns[2]).toHaveStyle({ width: "190px" });
+    expect(columns[3]).toHaveStyle({ width: "220px" });
+    expect(container.querySelector("table")).toHaveStyle({ minWidth: "max-content" });
+  });
+
+  it("keeps ellipsis content inside the cell when the shared tooltip is enabled", () => {
+    const longRole =
+      "Global Product Design System, User Experience Research Strategy, and Visual Language";
+    const { container } = render(
+      <Table
+        columns={[
+          { title: "이름", dataIndex: "name", width: 120 },
+          { title: "직무", dataIndex: "team", width: 160, ellipsis: true },
+        ]}
+        dataSource={[{ key: "1", name: "김민준", team: longRole }]}
+        pagination={false}
+      />,
+    );
+
+    const cell = screen.getByText(longRole).closest("td");
+    const tooltipTrigger = screen.getByText(longRole).parentElement;
+
+    expect(cell).toHaveClass("overflow-hidden");
+    expect(tooltipTrigger).toHaveClass("block", "w-full", "min-w-0", "overflow-hidden");
+    expect(screen.getByText(longRole)).toHaveClass(
+      "w-full",
+      "overflow-hidden",
+      "text-ellipsis",
+      "whitespace-nowrap",
+    );
+    expect(container.querySelector("table")).toHaveStyle({ tableLayout: "fixed" });
+  });
+
   it("renders multiple anonymous column groups without duplicate-key errors", () => {
     const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
     const columns: ColumnsType<Row> = [
@@ -111,6 +217,32 @@ describe("Table regressions", () => {
     expect(screen.getAllByRole("row")[1]).toHaveTextContent("이서연");
   });
 
+  it("shows the next sorter action in the shared tooltip", async () => {
+    const user = userEvent.setup();
+    render(
+      <Table
+        columns={[
+          {
+            title: "이름",
+            dataIndex: "name",
+            sorter: (left, right) => left.name.localeCompare(right.name, "ko"),
+            showSorterTooltip: { target: "sorter-icon" },
+          },
+        ]}
+        dataSource={rows}
+        pagination={false}
+      />,
+    );
+
+    const sorter = screen.getByRole("button", { name: "이름 정렬" });
+    await user.hover(sorter);
+    expect(await screen.findByText("오름차순 정렬")).toBeInTheDocument();
+    await user.unhover(sorter);
+    await user.click(sorter);
+    await user.hover(sorter);
+    expect(await screen.findByText("내림차순 정렬")).toBeInTheDocument();
+  });
+
   it("filters rows after confirming the filter menu", async () => {
     const user = userEvent.setup();
     render(
@@ -135,9 +267,37 @@ describe("Table regressions", () => {
     await user.click(screen.getByRole("checkbox", { name: "Design" }));
     await user.click(screen.getByRole("button", { name: "확인" }));
 
+    await waitFor(() => {
+      expect(document.querySelector("[data-table-filter-motion]")).not.toBeInTheDocument();
+    });
     expect(screen.getAllByText("Design")).toHaveLength(2);
     expect(screen.queryByText("Platform")).not.toBeInTheDocument();
     expect(screen.getAllByRole("row")).toHaveLength(3);
+  });
+
+  it("closes the filter popup when the page scrolls", async () => {
+    const user = userEvent.setup();
+    render(
+      <Table
+        columns={[
+          {
+            title: "팀",
+            dataIndex: "team",
+            filters: [{ text: "Design", value: "Design" }],
+            onFilter: (value, record) => record.team === value,
+          },
+        ]}
+        dataSource={rows}
+        pagination={false}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "팀 필터" }));
+    expect(document.querySelector("[data-table-filter-motion]")).toBeInTheDocument();
+    fireEvent.scroll(window);
+    await waitFor(() => {
+      expect(document.querySelector("[data-table-filter-motion]")).not.toBeInTheDocument();
+    });
   });
 
   it("changes pages and page size without stale rows", async () => {
@@ -154,7 +314,13 @@ describe("Table regressions", () => {
     expect(screen.getByText("이서연")).toBeInTheDocument();
     expect(screen.queryByText("김민준")).not.toBeInTheDocument();
 
-    await user.selectOptions(screen.getByRole("combobox", { name: "페이지 크기" }), "2");
+    await user.click(screen.getByRole("button", { name: "1 / 페이지" }));
+    const pageSizePopup = await waitFor(() => {
+      const popup = document.querySelector<HTMLElement>("[data-select-popup]");
+      expect(popup).toBeInTheDocument();
+      return popup as HTMLElement;
+    });
+    fireEvent.click(within(pageSizePopup).getAllByRole("button", { hidden: true })[1]);
     expect(screen.getByText("박지호")).toBeInTheDocument();
     expect(screen.queryByText("김민준")).not.toBeInTheDocument();
   });
@@ -241,6 +407,34 @@ describe("Table regressions", () => {
     );
   });
 
+  it("calculates the header checkbox state from selectable table rows", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(
+      <Table
+        columns={[{ title: "이름", dataIndex: "name" }]}
+        dataSource={rows}
+        pagination={false}
+        rowSelection={{
+          defaultSelectedRowKeys: ["1"],
+          getCheckboxProps: (record) => ({ disabled: record.key === "3" }),
+          onChange,
+        }}
+      />,
+    );
+
+    const selectAll = screen.getByRole("checkbox", { name: "모든 행 선택" });
+    expect(selectAll).toBePartiallyChecked();
+
+    await user.click(selectAll);
+    expect(selectAll).toBeChecked();
+    expect(onChange).toHaveBeenLastCalledWith(
+      ["1", "2"],
+      rows.slice(0, 2),
+      expect.objectContaining({ type: "all" }),
+    );
+  });
+
   it("renders internal row drag handles without custom row components", () => {
     const { container } = render(
       <Table
@@ -291,6 +485,34 @@ describe("Table regressions", () => {
     expect(scrollRegion.querySelector("thead")).not.toBeInTheDocument();
     expect(scrollRegion.querySelector("tbody")).toBeInTheDocument();
     expect(scrollRegion).toHaveStyle({ maxHeight: "120px" });
+  });
+
+  it("keeps a sticky header in the table flow without reparenting it", () => {
+    const { container } = render(
+      <Table
+        columns={[{ title: "이름", dataIndex: "name" }]}
+        dataSource={rows}
+        pagination={false}
+        sticky
+      />,
+    );
+
+    const headerRegion = container.querySelector("[data-table-sticky-header]");
+    const scrollRegion = container.querySelector("[data-table-scroll-container]");
+
+    expect(headerRegion).toHaveStyle({
+      position: "sticky",
+      top: "0px",
+      zIndex: "40",
+    });
+    expect(container.contains(headerRegion)).toBe(true);
+    expect(
+      document.body.querySelector("[data-table-sticky-header-active]"),
+    ).not.toBeInTheDocument();
+    expect(headerRegion?.querySelector("thead")).toBeInTheDocument();
+    expect(scrollRegion?.querySelector("thead")).not.toBeInTheDocument();
+    expect(scrollRegion?.querySelector("tbody")).toBeInTheDocument();
+    expect(scrollRegion).not.toHaveStyle({ maxHeight: "400px" });
   });
 
   it("keeps a separated header aligned with horizontal body scrolling", () => {
@@ -365,6 +587,32 @@ describe("Table regressions", () => {
     expect(container.querySelector("[data-table-horizontal-scrollbar-thumb]")).toHaveStyle({
       transform: "translateX(200px)",
     });
+  });
+
+  it("ignores subpixel width differences before showing horizontal scrolling", () => {
+    vi.stubGlobal("CSS", { supports: () => true });
+    const { container } = render(
+      <Table
+        columns={[{ title: "이름", dataIndex: "name", width: 300 }]}
+        dataSource={rows}
+        pagination={false}
+        scroll={{ x: 300 }}
+      />,
+    );
+
+    const scrollRegion = container.querySelector<HTMLElement>("[data-table-scroll-container]");
+    expect(scrollRegion).not.toBeNull();
+    if (!scrollRegion) return;
+    Object.defineProperties(scrollRegion, {
+      clientWidth: { configurable: true, value: 400 },
+      scrollWidth: { configurable: true, value: 401.5 },
+    });
+    fireEvent.scroll(scrollRegion);
+
+    expect(scrollRegion).toHaveClass("overflow-x-auto");
+    expect(
+      container.querySelector("[data-table-horizontal-scrollbar-track]"),
+    ).not.toBeInTheDocument();
   });
 
   it("shows and synchronizes the sticky horizontal scrollbar while the table bottom is offscreen", () => {
@@ -456,6 +704,33 @@ describe("Table regressions", () => {
       "[&>thead>tr>th:not(:last-child)]:border-r",
       "[&>tbody>tr>td:not(:last-child)]:border-r",
     );
+  });
+
+  it("병합 범위의 두 번째 행을 hover해도 병합 셀을 함께 강조한다", () => {
+    const { container } = render(
+      <Table
+        columns={[
+          { title: "이름", dataIndex: "name" },
+          {
+            title: "팀",
+            dataIndex: "team",
+            onCell: (_record, index) =>
+              index === 0 ? { rowSpan: 2 } : index === 1 ? { rowSpan: 0 } : {},
+          },
+        ]}
+        dataSource={rows.slice(0, 2)}
+        pagination={false}
+      />,
+    );
+
+    const renderedRows = container.querySelectorAll<HTMLTableRowElement>("tbody tr[data-row-key]");
+    const mergedCell = screen.getByText("Design").closest("td");
+
+    fireEvent.mouseEnter(renderedRows[1]);
+    expect(mergedCell).toHaveClass("bg-[#f5f5f5]");
+
+    fireEvent.mouseLeave(renderedRows[1]);
+    expect(mergedCell).not.toHaveClass("bg-[#f5f5f5]");
   });
 
   it("applies pagination classes", () => {

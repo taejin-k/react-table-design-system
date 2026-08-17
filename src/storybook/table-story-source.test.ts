@@ -4,18 +4,16 @@ import { Illustrations } from "../components/Illustrations";
 import { formatTableStorySource } from "./table-story-source";
 
 describe("formatTableStorySource", () => {
-  it("adds the scroll.y explanation beside the fixed-header value", () => {
+  it("adds the scroll.y explanation beside the fixed-table-height value", () => {
     const source = formatTableStorySource("<Table />", {
       args: { scroll: { y: 280 } },
-      name: "Fixed Header",
+      name: "Fixed Table Height",
       parameters: {
-        tableScrollYComment: "테이블 본문의 세로 높이를 정하면 헤더가 자동으로 고정돼요.",
+        tableScrollYComment: "테이블 본문의 최대 세로 높이를 설정해요.",
       },
     });
 
-    expect(source).toContain(
-      "y: 280, // 테이블 본문의 세로 높이를 정하면 헤더가 자동으로 고정돼요.",
-    );
+    expect(source).toContain("y: 280, // 테이블 본문의 최대 세로 높이를 설정해요.");
   });
 
   it("adds the scroll.x explanation beside the fixed-column value", () => {

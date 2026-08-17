@@ -5,26 +5,20 @@ import {
   useMemo,
   useRef,
   useState,
-  type CSSProperties,
   type FocusEvent,
   type MouseEvent,
   type PointerEvent,
 } from "react";
 import { createPortal } from "react-dom";
 import { twMerge } from "tailwind-merge";
+import { calculateFloatingPosition } from "../_internal/floating-position";
 import type { TooltipPlacement, TooltipProps } from "./Tooltip.types";
 
 const VIEWPORT_GAP = 8;
 const TARGET_GAP = 9;
 const ARROW_SIZE = 8;
 const EDGE_ARROW_CENTER = 16;
-
-interface TooltipPosition {
-  left: number;
-  top: number;
-  placement: TooltipPlacement;
-  arrowStyle: CSSProperties;
-}
+const MOTION_DURATION = 100;
 
 export function Tooltip({
   title,
@@ -46,12 +40,18 @@ export function Tooltip({
   const popupRef = useRef<HTMLDivElement>(null);
   const openTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const motionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const contextMenuPointRef = useRef<{ x: number; y: number } | null>(null);
   const [innerOpen, setInnerOpen] = useState(defaultOpen);
-  const [position, setPosition] = useState<TooltipPosition | null>(null);
+  const [position, setPosition] = useState<ReturnType<typeof calculateFloatingPosition> | null>(
+    null,
+  );
   const triggers = useMemo(() => new Set(Array.isArray(trigger) ? trigger : [trigger]), [trigger]);
   const content = typeof title === "function" ? title() : title;
   const enabled = content !== null && content !== undefined && content !== "";
   const isOpen = enabled && (open ?? innerOpen);
+  const [popupMounted, setPopupMounted] = useState(isOpen);
+  const [motionVisible, setMotionVisible] = useState(false);
 
   const clearTimers = useCallback(() => {
     if (openTimerRef.current) clearTimeout(openTimerRef.current);
@@ -93,14 +93,48 @@ export function Tooltip({
     const popup = popupRef.current;
     if (!target || !popup) return;
 
-    const targetRect = target.getBoundingClientRect();
+    const targetRect = contextMenuPointRef.current
+      ? createPointRect(contextMenuPointRef.current.x, contextMenuPointRef.current.y)
+      : target.getBoundingClientRect();
     const popupRect = popup.getBoundingClientRect();
-    const nextPosition = calculatePosition(targetRect, popupRect, placement, autoAdjustOverflow);
+    const nextPosition = calculateFloatingPosition(targetRect, popupRect, placement, {
+      arrowSize: ARROW_SIZE,
+      autoAdjustOverflow,
+      edgeArrowCenter: EDGE_ARROW_CENTER,
+      targetGap: TARGET_GAP,
+      viewportGap: VIEWPORT_GAP,
+    });
     setPosition(nextPosition);
   }, [autoAdjustOverflow, placement]);
 
+  useEffect(() => {
+    if (motionTimerRef.current) clearTimeout(motionTimerRef.current);
+
+    if (isOpen) {
+      setPopupMounted(true);
+      return;
+    }
+
+    setMotionVisible(false);
+    motionTimerRef.current = setTimeout(() => {
+      setPopupMounted(false);
+      setPosition(null);
+    }, MOTION_DURATION);
+
+    return () => {
+      if (motionTimerRef.current) clearTimeout(motionTimerRef.current);
+    };
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen || !popupMounted) return;
+
+    const frame = requestAnimationFrame(() => setMotionVisible(true));
+    return () => cancelAnimationFrame(frame);
+  }, [isOpen, popupMounted]);
+
   useLayoutEffect(() => {
-    if (!isOpen) {
+    if (!popupMounted) {
       setPosition(null);
       return;
     }
@@ -123,12 +157,12 @@ export function Tooltip({
       window.removeEventListener("scroll", handleScroll, true);
       resizeObserver?.disconnect();
     };
-  }, [changeOpen, clearTimers, content, isOpen, updatePosition]);
+  }, [changeOpen, clearTimers, content, popupMounted, updatePosition]);
 
   useEffect(() => clearTimers, [clearTimers]);
 
   useEffect(() => {
-    if (!isOpen || !triggers.has("click")) return;
+    if (!isOpen || (!triggers.has("click") && !triggers.has("contextMenu"))) return;
 
     const handleOutsidePointerDown = (event: globalThis.PointerEvent) => {
       const target = event.target;
@@ -152,7 +186,9 @@ export function Tooltip({
   }, [changeOpen, clearTimers, isOpen, triggers]);
 
   const handlePointerEnter = (_event: PointerEvent<HTMLSpanElement>) => {
-    if (triggers.has("hover")) scheduleOpen();
+    if (!triggers.has("hover")) return;
+    contextMenuPointRef.current = null;
+    scheduleOpen();
   };
 
   const handlePointerLeave = (_event: PointerEvent<HTMLSpanElement>) => {
@@ -160,7 +196,9 @@ export function Tooltip({
   };
 
   const handleFocus = (_event: FocusEvent<HTMLSpanElement>) => {
-    if (triggers.has("focus")) scheduleOpen();
+    if (!triggers.has("focus")) return;
+    contextMenuPointRef.current = null;
+    scheduleOpen();
   };
 
   const handleBlur = (event: FocusEvent<HTMLSpanElement>) => {
@@ -170,8 +208,18 @@ export function Tooltip({
 
   const handleClick = (_event: MouseEvent<HTMLSpanElement>) => {
     if (!triggers.has("click")) return;
+    contextMenuPointRef.current = null;
     clearTimers();
     changeOpen(!isOpen);
+  };
+
+  const handleContextMenu = (event: MouseEvent<HTMLSpanElement>) => {
+    if (!triggers.has("contextMenu")) return;
+    event.preventDefault();
+    contextMenuPointRef.current = { x: event.clientX, y: event.clientY };
+    clearTimers();
+    if (isOpen) updatePosition();
+    else changeOpen(true);
   };
 
   return (
@@ -181,13 +229,14 @@ export function Tooltip({
         className={twMerge("inline-flex min-w-0", className)}
         onBlur={handleBlur}
         onClick={handleClick}
+        onContextMenu={handleContextMenu}
         onFocus={handleFocus}
         onPointerEnter={handlePointerEnter}
         onPointerLeave={handlePointerLeave}
       >
         {children}
       </span>
-      {isOpen && typeof document !== "undefined"
+      {popupMounted && typeof document !== "undefined"
         ? createPortal(
             <div
               ref={popupRef}
@@ -202,21 +251,36 @@ export function Tooltip({
               }}
             >
               <div
-                className="relative rounded px-2 py-1 shadow-[0_2px_8px_rgba(0,0,0,0.18)]"
-                style={{ backgroundColor: color, color: getTextColor(color) }}
+                data-tooltip-motion
+                className={twMerge(
+                  "relative",
+                  motionVisible && position
+                    ? "wizard-zoom-big-fast-enter"
+                    : isOpen
+                      ? "scale-[0.8] opacity-0"
+                      : "wizard-zoom-big-fast-leave",
+                )}
+                style={{
+                  transformOrigin: getTransformOrigin(position?.placement ?? placement),
+                }}
               >
-                <span className="block min-h-5">{content}</span>
+                <div
+                  className="relative rounded px-2 py-1 shadow-[0_2px_8px_rgba(0,0,0,0.18)]"
+                  style={{ backgroundColor: color, color: getTextColor(color) }}
+                >
+                  <span className="block min-h-5 whitespace-pre-line">{content}</span>
+                </div>
+                {arrow ? (
+                  <span
+                    data-tooltip-arrow
+                    className="absolute size-2 rotate-45"
+                    style={{
+                      backgroundColor: color,
+                      ...position?.arrowStyle,
+                    }}
+                  />
+                ) : null}
               </div>
-              {arrow ? (
-                <span
-                  data-tooltip-arrow
-                  className="absolute size-2 rotate-45"
-                  style={{
-                    backgroundColor: color,
-                    ...position?.arrowStyle,
-                  }}
-                />
-              ) : null}
             </div>,
             document.body,
           )
@@ -225,125 +289,39 @@ export function Tooltip({
   );
 }
 
-function calculatePosition(
-  target: DOMRect,
-  popup: DOMRect,
-  requestedPlacement: TooltipPlacement,
-  autoAdjustOverflow: boolean,
-): TooltipPosition {
-  let placement = requestedPlacement;
-  let point = getPlacementPoint(target, popup, placement);
-
-  if (autoAdjustOverflow && overflowsMainAxis(point, popup, placement)) {
-    placement = flipPlacement(placement);
-    point = getPlacementPoint(target, popup, placement);
-  }
-
-  const maxLeft = Math.max(VIEWPORT_GAP, window.innerWidth - popup.width - VIEWPORT_GAP);
-  const maxTop = Math.max(VIEWPORT_GAP, window.innerHeight - popup.height - VIEWPORT_GAP);
-  const left = autoAdjustOverflow ? clamp(point.left, VIEWPORT_GAP, maxLeft) : point.left;
-  const top = autoAdjustOverflow ? clamp(point.top, VIEWPORT_GAP, maxTop) : point.top;
-
+function createPointRect(x: number, y: number): DOMRect {
   return {
-    left,
-    top,
-    placement,
-    arrowStyle: getArrowStyle(target, popup, placement, left, top),
+    x,
+    y,
+    width: 0,
+    height: 0,
+    top: y,
+    right: x,
+    bottom: y,
+    left: x,
+    toJSON: () => ({ x, y, width: 0, height: 0, top: y, right: x, bottom: y, left: x }),
   };
 }
 
-function getPlacementPoint(target: DOMRect, popup: DOMRect, placement: TooltipPlacement) {
-  const vertical = placement.startsWith("top") || placement.startsWith("bottom");
-  const side = placement.startsWith("top")
-    ? "top"
-    : placement.startsWith("bottom")
-      ? "bottom"
-      : placement.startsWith("left")
-        ? "left"
-        : "right";
-
-  if (vertical) {
-    const left = placement.endsWith("Left")
-      ? target.left
-      : placement.endsWith("Right")
-        ? target.right - popup.width
-        : target.left + (target.width - popup.width) / 2;
-    const top =
-      side === "top" ? target.top - popup.height - TARGET_GAP : target.bottom + TARGET_GAP;
-    return { left, top };
-  }
-
-  const top = placement.endsWith("Top")
-    ? target.top
-    : placement.endsWith("Bottom")
-      ? target.bottom - popup.height
-      : target.top + (target.height - popup.height) / 2;
-  const left = side === "left" ? target.left - popup.width - TARGET_GAP : target.right + TARGET_GAP;
-  return { left, top };
-}
-
-function overflowsMainAxis(
-  point: { left: number; top: number },
-  popup: DOMRect,
-  placement: TooltipPlacement,
-) {
-  if (placement.startsWith("top")) return point.top < VIEWPORT_GAP;
-  if (placement.startsWith("bottom"))
-    return point.top + popup.height > window.innerHeight - VIEWPORT_GAP;
-  if (placement.startsWith("left")) return point.left < VIEWPORT_GAP;
-  return point.left + popup.width > window.innerWidth - VIEWPORT_GAP;
-}
-
-function flipPlacement(placement: TooltipPlacement): TooltipPlacement {
-  if (placement.startsWith("top")) return placement.replace("top", "bottom") as TooltipPlacement;
-  if (placement.startsWith("bottom")) return placement.replace("bottom", "top") as TooltipPlacement;
-  if (placement.startsWith("left")) return placement.replace("left", "right") as TooltipPlacement;
-  return placement.replace("right", "left") as TooltipPlacement;
-}
-
-function getArrowStyle(
-  target: DOMRect,
-  popup: DOMRect,
-  placement: TooltipPlacement,
-  left: number,
-  top: number,
-): CSSProperties {
-  const halfArrow = ARROW_SIZE / 2;
-  const targetCenterX = target.left + target.width / 2 - left - halfArrow;
-  const targetCenterY = target.top + target.height / 2 - top - halfArrow;
-  const horizontalArrowPosition = placement.endsWith("Left")
-    ? EDGE_ARROW_CENTER - halfArrow
-    : placement.endsWith("Right")
-      ? popup.width - EDGE_ARROW_CENTER - halfArrow
-      : targetCenterX;
-  const verticalArrowPosition = placement.endsWith("Top")
-    ? EDGE_ARROW_CENTER - halfArrow
-    : placement.endsWith("Bottom")
-      ? popup.height - EDGE_ARROW_CENTER - halfArrow
-      : targetCenterY;
-
+function getTransformOrigin(placement: TooltipPlacement) {
   if (placement.startsWith("top")) {
-    return {
-      bottom: -halfArrow,
-      left: clamp(horizontalArrowPosition, ARROW_SIZE, popup.width - ARROW_SIZE * 2),
-    };
+    if (placement.endsWith("Left")) return "16px bottom";
+    if (placement.endsWith("Right")) return "calc(100% - 16px) bottom";
+    return "center bottom";
   }
   if (placement.startsWith("bottom")) {
-    return {
-      top: -halfArrow,
-      left: clamp(horizontalArrowPosition, ARROW_SIZE, popup.width - ARROW_SIZE * 2),
-    };
+    if (placement.endsWith("Left")) return "16px top";
+    if (placement.endsWith("Right")) return "calc(100% - 16px) top";
+    return "center top";
   }
   if (placement.startsWith("left")) {
-    return {
-      right: -halfArrow,
-      top: clamp(verticalArrowPosition, ARROW_SIZE, popup.height - ARROW_SIZE * 2),
-    };
+    if (placement.endsWith("Top")) return "right 16px";
+    if (placement.endsWith("Bottom")) return "right calc(100% - 16px)";
+    return "right center";
   }
-  return {
-    left: -halfArrow,
-    top: clamp(verticalArrowPosition, ARROW_SIZE, popup.height - ARROW_SIZE * 2),
-  };
+  if (placement.endsWith("Top")) return "left 16px";
+  if (placement.endsWith("Bottom")) return "left calc(100% - 16px)";
+  return "left center";
 }
 
 function getTextColor(color: string) {
@@ -354,8 +332,4 @@ function getTextColor(color: string) {
   const green = Number.parseInt(normalized.slice(2, 4), 16);
   const blue = Number.parseInt(normalized.slice(4, 6), 16);
   return red * 0.299 + green * 0.587 + blue * 0.114 > 160 ? "#111111" : "#ffffff";
-}
-
-function clamp(value: number, min: number, max: number) {
-  return Math.min(Math.max(value, min), max);
 }

@@ -1,0 +1,144 @@
+import { forwardRef, type ReactNode } from "react";
+import { cva } from "class-variance-authority";
+import { twMerge } from "tailwind-merge";
+import type { TagProps } from "./Tag.types";
+
+/** null/undefined/빈 배열이면 false. 배열이 아니면 일반 truthy 체크. */
+function hasContent(node: ReactNode): boolean {
+  return Array.isArray(node) ? node.length > 0 : Boolean(node);
+}
+
+/** 아이콘을 Tag의 텍스트와 같은 간격으로 배치하는 16x16 소켓. */
+const IconSocket = ({ children }: { children: ReactNode }) => (
+  <span className="inline-flex size-4 shrink-0 items-center justify-center">{children}</span>
+);
+
+export const Tag = forwardRef<HTMLSpanElement, TagProps>(
+  (
+    { color = "black", variant = "filled", prefixIcon, suffixIcon, className, children, ...rest },
+    ref,
+  ) => {
+    return (
+      <span ref={ref} className={twMerge(tagVariants({ color, variant }), className)} {...rest}>
+        {hasContent(prefixIcon) ? <IconSocket>{prefixIcon}</IconSocket> : null}
+        {children}
+        {hasContent(suffixIcon) ? <IconSocket>{suffixIcon}</IconSocket> : null}
+      </span>
+    );
+  },
+);
+
+Tag.displayName = "Tag";
+
+const tagVariants = cva(
+  "inline-flex h-[22px] items-center gap-1 rounded px-[6px] py-0.5 font-pretendard text-[11px] leading-[1.6] font-medium whitespace-nowrap",
+  {
+    variants: {
+      color: {
+        green: "",
+        navy: "",
+        red: "",
+        grey: "",
+        black: "",
+        purple: "",
+        blue: "",
+      },
+      variant: {
+        filled: "",
+        outlined: "bg-white",
+        solid: "",
+        "soft-outlined": "",
+      },
+    },
+    compoundVariants: [
+      { color: "green", variant: "filled", className: "bg-[#eff5ee] text-[#1c8616]" },
+      {
+        color: "green",
+        variant: "outlined",
+        className: "text-[#1c8616] shadow-[inset_0_0_0_1px_#1c8616]",
+      },
+      { color: "green", variant: "solid", className: "bg-[#1c8616] text-white" },
+      {
+        color: "green",
+        variant: "soft-outlined",
+        className: "bg-[#eff5ee] text-[#1c8616] shadow-[inset_0_0_0_1px_#b7d9b4]",
+      },
+      { color: "navy", variant: "filled", className: "bg-[#eef0f8] text-[#2149a5]" },
+      {
+        color: "navy",
+        variant: "outlined",
+        className: "text-[#2149a5] shadow-[inset_0_0_0_1px_#2149a5]",
+      },
+      { color: "navy", variant: "solid", className: "bg-[#2149a5] text-white" },
+      {
+        color: "navy",
+        variant: "soft-outlined",
+        className: "bg-[#eef0f8] text-[#2149a5] shadow-[inset_0_0_0_1px_#bdc9e7]",
+      },
+      { color: "red", variant: "filled", className: "bg-[#faefef] text-[#d92626]" },
+      {
+        color: "red",
+        variant: "outlined",
+        className: "text-[#d92626] shadow-[inset_0_0_0_1px_#d92626]",
+      },
+      { color: "red", variant: "solid", className: "bg-[#d92626] text-white" },
+      {
+        color: "red",
+        variant: "soft-outlined",
+        className: "bg-[#faefef] text-[#d92626] shadow-[inset_0_0_0_1px_#efbcbc]",
+      },
+      { color: "grey", variant: "filled", className: "bg-[#f2f2f2] text-[#777777]" },
+      {
+        color: "grey",
+        variant: "outlined",
+        className: "text-[#999999] shadow-[inset_0_0_0_1px_#999999]",
+      },
+      { color: "grey", variant: "solid", className: "bg-[#777777] text-white" },
+      {
+        color: "grey",
+        variant: "soft-outlined",
+        className: "bg-[#f2f2f2] text-[#777777] shadow-[inset_0_0_0_1px_#d5d5d5]",
+      },
+      { color: "black", variant: "filled", className: "bg-[#f5f5f5] text-[#111111]" },
+      {
+        color: "black",
+        variant: "outlined",
+        className: "text-[#111111] shadow-[inset_0_0_0_1px_#111111]",
+      },
+      { color: "black", variant: "solid", className: "bg-[#111111] text-white" },
+      {
+        color: "black",
+        variant: "soft-outlined",
+        className: "bg-[#f5f5f5] text-[#111111] shadow-[inset_0_0_0_1px_#d0d0d0]",
+      },
+      { color: "purple", variant: "filled", className: "bg-[#f5f2fd] text-[#4f19c4]" },
+      {
+        color: "purple",
+        variant: "outlined",
+        className: "text-[#4f19c4] shadow-[inset_0_0_0_1px_#4f19c4]",
+      },
+      { color: "purple", variant: "solid", className: "bg-[#4f19c4] text-white" },
+      {
+        color: "purple",
+        variant: "soft-outlined",
+        className: "bg-[#f5f2fd] text-[#4f19c4] shadow-[inset_0_0_0_1px_#d7c8f4]",
+      },
+      { color: "blue", variant: "filled", className: "bg-[#ebf4ff] text-[#1e59a3]" },
+      {
+        color: "blue",
+        variant: "outlined",
+        className: "text-[#1e59a3] shadow-[inset_0_0_0_1px_#1e59a3]",
+      },
+      { color: "blue", variant: "solid", className: "bg-[#1e59a3] text-white" },
+      {
+        color: "blue",
+        variant: "soft-outlined",
+        className: "bg-[#ebf4ff] text-[#1e59a3] shadow-[inset_0_0_0_1px_#bdd8f7]",
+      },
+    ],
+    defaultVariants: {
+      color: "black",
+      variant: "filled",
+    },
+  },
+);

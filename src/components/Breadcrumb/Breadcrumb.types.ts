@@ -13,8 +13,8 @@ export interface Item extends Omit<
   "children" | "color" | "href" | "onClick" | "title"
 > {
   key?: BreadcrumbKey;
-  /** 화면에 표시할 경로 이름. */
-  title: ReactNode;
+  /** 화면에 표시할 경로 이름. 아이콘만 표시할 때는 생략한다. */
+  title?: ReactNode;
   /** 있으면 링크로 렌더링하고 hover·focus 디자인을 적용한다. */
   href?: string;
   /** 클릭할 때 실행하며, href가 없어도 hover·focus 디자인을 적용한다. */

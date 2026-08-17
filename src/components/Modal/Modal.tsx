@@ -13,6 +13,11 @@ import { createPortal } from "react-dom";
 import { twMerge } from "tailwind-merge";
 import { Button } from "../Button";
 import { Icon } from "../Icon";
+import {
+  MOTION_DURATION_MID,
+  MOTION_EASE_IN_OUT_CIRC,
+  MOTION_EASE_OUT_CIRC,
+} from "../_internal/motion";
 import { lockBodyScroll } from "../_internal/body-scroll-lock";
 import type {
   ModalComponent,
@@ -82,6 +87,8 @@ function ModalBase({
 }: ModalProps) {
   const [rendered, setRendered] = useState(open || forceRender);
   const [closing, setClosing] = useState(false);
+  const [motionVisible, setMotionVisible] = useState(false);
+  const motionFrameRef = useRef<number | undefined>(undefined);
   const didMountRef = useRef(false);
   const renderedRef = useRef(open || forceRender);
   const lifecycleRef = useRef({
@@ -119,11 +126,22 @@ function ModalBase({
       renderedRef.current = true;
       setRendered(true);
       setClosing(false);
-      lifecycleRef.current.afterOpenChange?.(true);
-      return;
+      window.cancelAnimationFrame(motionFrameRef.current ?? 0);
+      motionFrameRef.current = window.requestAnimationFrame(() => {
+        motionFrameRef.current = window.requestAnimationFrame(() => setMotionVisible(true));
+      });
+      const timer = window.setTimeout(
+        () => lifecycleRef.current.afterOpenChange?.(true),
+        MOTION_DURATION_MID,
+      );
+      return () => {
+        window.cancelAnimationFrame(motionFrameRef.current ?? 0);
+        window.clearTimeout(timer);
+      };
     }
     if (!renderedRef.current) return;
     setClosing(true);
+    setMotionVisible(false);
     const timer = window.setTimeout(() => {
       setClosing(false);
       if (lifecycleRef.current.shouldDestroy && !lifecycleRef.current.forceRender) {
@@ -138,8 +156,11 @@ function ModalBase({
         true
       )
         triggerRef.current?.focus();
-    }, 180);
-    return () => window.clearTimeout(timer);
+    }, MOTION_DURATION_MID);
+    return () => {
+      window.cancelAnimationFrame(motionFrameRef.current ?? 0);
+      window.clearTimeout(timer);
+    };
   }, [open]);
 
   useEffect(() => {
@@ -162,10 +183,13 @@ function ModalBase({
       }
     };
     document.addEventListener("keydown", handleKeyDown);
-    window.setTimeout(() =>
+    const focusTimer = window.setTimeout(() =>
       panelRef.current?.querySelector<HTMLElement>("button:not(:disabled)")?.focus(),
     );
-    return () => document.removeEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      window.clearTimeout(focusTimer);
+    };
   }, [focusable?.trap, keyboard, onCancel, open]);
 
   useEffect(() => {
@@ -177,13 +201,13 @@ function ModalBase({
 
   const close = (event: MouseEvent<HTMLButtonElement | HTMLDivElement>) => onCancel?.(event);
   const CancelBtn = () => (
-    <Button type="secondary" {...cancelButtonProps} onClick={(event) => close(event)}>
+    <Button variant="secondary" {...cancelButtonProps} onClick={(event) => close(event)}>
       {cancelText}
     </Button>
   );
   const OkBtn = () => (
     <Button
-      type={okType}
+      variant={okType}
       {...okButtonProps}
       disabled={confirmLoading || okButtonProps?.disabled}
       onClick={onOk}
@@ -209,11 +233,16 @@ function ModalBase({
       ref={panelRef}
       data-modal-panel
       className={twMerge(
-        "relative max-h-[calc(100vh-48px)] overflow-hidden rounded-lg bg-white font-pretendard text-sm text-[#111] shadow-[0_12px_32px_rgba(0,0,0,0.18)] transition-[opacity,transform] duration-180",
-        open && !closing ? "translate-y-0 opacity-100" : "-translate-y-2 opacity-0",
+        "relative max-h-[calc(100vh-48px)] overflow-hidden rounded-lg bg-white font-pretendard text-sm text-[#111] shadow-[0_12px_32px_rgba(0,0,0,0.18)] transition-[opacity,transform] duration-200 motion-reduce:transition-none",
+        motionVisible ? "scale-100 opacity-100" : "scale-[0.8] opacity-0",
         className,
       )}
-      style={{ width: resolveWidth(width), maxWidth: "calc(100vw - 32px)", ...style }}
+      style={{
+        width: resolveWidth(width),
+        maxWidth: "calc(100vw - 32px)",
+        transitionTimingFunction: motionVisible ? MOTION_EASE_OUT_CIRC : MOTION_EASE_IN_OUT_CIRC,
+        ...style,
+      }}
     >
       {title !== undefined ? (
         <div
@@ -275,9 +304,9 @@ function ModalBase({
         <div
           data-modal-mask
           className={twMerge(
-            "absolute inset-0 bg-black/45 transition-opacity duration-180",
+            "absolute inset-0 bg-black/45 transition-opacity duration-200 motion-reduce:transition-none",
             blurMask && "backdrop-blur-sm",
-            open && !closing ? "opacity-100" : "opacity-0",
+            motionVisible ? "opacity-100" : "opacity-0",
             classNames?.mask,
           )}
           style={styles?.mask}

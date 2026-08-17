@@ -1,72 +1,118 @@
-import { useMemo, useState } from "react";
+import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import { cva } from "class-variance-authority";
 import { twMerge } from "tailwind-merge";
 import { Tooltip } from "../Tooltip";
-import type {
-  SegmentedItemType,
-  SegmentedOption,
-  SegmentedProps,
-  SegmentedValue,
-} from "./Segmented.types";
-
-function normalizeOption(option: SegmentedOption): SegmentedItemType {
-  return typeof option === "object" ? option : { label: String(option), value: option };
-}
+import type { SegmentedProps, SegmentedValue } from "./Segmented.types";
 
 export function Segmented({
   options,
   value,
   defaultValue,
   onChange,
-  block = false,
+  fullWidth = false,
   disabled = false,
-  orientation,
   vertical = false,
-  size = "medium",
+  size = "md",
   shape = "default",
-  name,
   className,
-  classNames,
-  styles,
   ...rest
 }: SegmentedProps) {
-  const normalized = useMemo(() => options.map(normalizeOption), [options]);
+  const normalized = options;
   const [innerValue, setInnerValue] = useState<SegmentedValue | undefined>(
     defaultValue ?? normalized[0]?.value,
   );
   const selectedValue = value ?? innerValue;
-  const direction = orientation ?? (vertical ? "vertical" : "horizontal");
+  const direction = vertical ? "vertical" : "horizontal";
+  const rootRef = useRef<HTMLDivElement>(null);
+  const itemRefs = useRef(new Map<SegmentedValue, HTMLLabelElement>());
+  const hasMeasuredThumb = useRef(false);
+  const [thumb, setThumb] = useState({
+    animate: false,
+    height: 0,
+    left: 0,
+    top: 0,
+    width: 0,
+  });
+
+  const updateThumb = useCallback(() => {
+    const selectedItem =
+      selectedValue === undefined ? undefined : itemRefs.current.get(selectedValue);
+
+    if (!selectedItem) return;
+
+    setThumb({
+      animate: hasMeasuredThumb.current,
+      height: selectedItem.offsetHeight,
+      left: selectedItem.offsetLeft,
+      top: selectedItem.offsetTop,
+      width: selectedItem.offsetWidth,
+    });
+    hasMeasuredThumb.current = true;
+  }, [selectedValue]);
+
+  useLayoutEffect(() => {
+    updateThumb();
+
+    const root = rootRef.current;
+    if (!root || typeof ResizeObserver === "undefined") return;
+
+    const observer = new ResizeObserver(updateThumb);
+    observer.observe(root);
+    itemRefs.current.forEach((item) => observer.observe(item));
+
+    return () => observer.disconnect();
+  }, [normalized, direction, updateThumb]);
 
   return (
     <div
-      className={twMerge(
-        segmentedVariants({ block, direction, shape }),
-        classNames?.root,
-        className,
-      )}
-      style={styles?.root}
+      ref={rootRef}
+      className={twMerge(segmentedVariants({ fullWidth, direction, shape }), className)}
       {...rest}
     >
+      {selectedValue !== undefined ? (
+        <span
+          aria-hidden
+          data-segmented-thumb=""
+          className={twMerge(
+            thumbVariants({ shape }),
+            thumb.animate
+              ? "transition-[transform,width,height] duration-300 ease-[cubic-bezier(0.645,0.045,0.355,1)] motion-reduce:transition-none"
+              : "transition-none",
+          )}
+          style={{
+            height: thumb.height,
+            transform: `translate3d(${thumb.left}px, ${thumb.top}px, 0)`,
+            width: thumb.width,
+          }}
+        />
+      ) : null}
       {normalized.map((option) => {
         const selected = option.value === selectedValue;
+        const itemDisabled = disabled || option.disabled;
         const item = (
           <label
             key={option.value}
+            ref={(node) => {
+              if (node) itemRefs.current.set(option.value, node);
+              else itemRefs.current.delete(option.value);
+            }}
             className={twMerge(
-              itemVariants({ size, selected, shape }),
-              disabled || option.disabled ? "cursor-not-allowed text-[#bbb]" : "cursor-pointer",
+              itemVariants({ size, shape }),
+              fullWidth && direction === "horizontal" ? "flex-1" : "flex-none",
+              itemDisabled
+                ? "cursor-not-allowed text-[#bbb]"
+                : selected
+                  ? "cursor-pointer font-medium text-[#111]"
+                  : "cursor-pointer text-[#666] hover:text-[#111]",
               option.className,
-              classNames?.item,
             )}
-            style={styles?.item}
           >
             <input
               type="radio"
               className="sr-only"
-              name={name}
               value={option.value}
               checked={selected}
-              disabled={disabled || option.disabled}
+              disabled={itemDisabled}
               onChange={() => {
                 if (value === undefined) setInnerValue(option.value);
                 onChange?.(option.value);
@@ -74,12 +120,7 @@ export function Segmented({
             />
             {option.icon ? <span className="inline-flex shrink-0">{option.icon}</span> : null}
             {option.label !== undefined ? (
-              <span
-                className={twMerge("min-w-0 truncate", classNames?.label)}
-                style={styles?.label}
-              >
-                {option.label}
-              </span>
+              <span className="min-w-0 truncate">{option.label}</span>
             ) : null}
           </label>
         );
@@ -98,27 +139,35 @@ export function Segmented({
   );
 }
 
-const segmentedVariants = cva("inline-flex gap-0.5 bg-[#f5f5f5] p-0.5 font-pretendard", {
-  variants: {
-    block: { true: "flex w-full", false: "" },
-    direction: { horizontal: "flex-row", vertical: "flex-col" },
-    shape: { default: "rounded-lg", round: "rounded-full" },
+const segmentedVariants = cva(
+  "relative isolate inline-flex w-fit gap-0.5 bg-[#f5f5f5] p-0.5 font-pretendard",
+  {
+    variants: {
+      fullWidth: { true: "flex w-full", false: "" },
+      direction: { horizontal: "flex-row", vertical: "flex-col" },
+      shape: { default: "rounded-lg", round: "rounded-full" },
+    },
   },
-});
+);
 
 const itemVariants = cva(
-  "inline-flex min-w-0 flex-1 items-center justify-center gap-1 whitespace-nowrap transition-[color,background-color,box-shadow]",
+  "relative z-10 inline-flex min-w-0 items-center justify-center gap-1 whitespace-nowrap transition-[color,font-weight] duration-200 ease-out motion-reduce:transition-none",
   {
     variants: {
       size: {
-        large: "h-10 px-4 text-base",
-        medium: "h-8 px-3 text-sm",
-        small: "h-6 px-2 text-xs",
+        lg: "h-9 px-4 text-base",
+        md: "h-[26px] px-3 text-sm",
+        sm: "h-4 px-2 text-xs",
       },
-      selected: {
-        true: "bg-white font-medium text-[#111] shadow-[0_1px_2px_rgba(0,0,0,0.08)]",
-        false: "text-[#666] hover:text-[#111]",
-      },
+      shape: { default: "rounded-md", round: "rounded-full" },
+    },
+  },
+);
+
+const thumbVariants = cva(
+  "pointer-events-none absolute top-0 left-0 z-0 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.08)] will-change-transform",
+  {
+    variants: {
       shape: { default: "rounded-md", round: "rounded-full" },
     },
   },

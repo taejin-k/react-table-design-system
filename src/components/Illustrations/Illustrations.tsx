@@ -18,9 +18,7 @@ export const Illustrations = forwardRef<HTMLDivElement, IllustrationsProps>(
             <Illustration />
           </div>
           {description ? (
-            <div className="text-center font-pretendard text-base leading-relaxed font-medium whitespace-pre-line text-[#677589]">
-              {description}
-            </div>
+            <div className={illustrationDescriptionVariants({ size })}>{description}</div>
           ) : null}
         </div>
       </div>
@@ -255,3 +253,19 @@ const illustrationSizeVariants = cva("shrink-0", {
     size: "md",
   },
 });
+
+const illustrationDescriptionVariants = cva(
+  "text-center font-pretendard font-medium whitespace-pre-line text-[#677589]",
+  {
+    variants: {
+      size: {
+        sm: "text-sm leading-5",
+        md: "text-[15px] leading-6",
+        lg: "text-base leading-6",
+      },
+    },
+    defaultVariants: {
+      size: "md",
+    },
+  },
+);

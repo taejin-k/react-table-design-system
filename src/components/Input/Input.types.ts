@@ -1,25 +1,30 @@
 import type { InputHTMLAttributes, ReactNode } from "react";
+import type { AllowedCharacterType } from "../_internal/filterAllowedCharacters";
+
+export type { AllowedCharacterType } from "../_internal/filterAllowedCharacters";
 
 export type InputSize = "lg" | "md" | "sm";
-export type InputVariant = "default" | "filled";
+export type InputVariant = "default" | "filled" | "borderless" | "underlined";
 
 export interface InputProps extends Omit<
   InputHTMLAttributes<HTMLInputElement>,
-  "className" | "onBlur" | "onChange" | "onError" | "prefix" | "size" | "value"
+  "className" | "onChange" | "onError" | "prefix" | "size" | "value" | "width"
 > {
   value?: string;
+  width?: number;
   size?: InputSize;
   variant?: InputVariant;
   label?: ReactNode;
-  errorText?: ReactNode;
+  errorMessage?: ReactNode;
   required?: boolean;
+  password?: boolean;
+  allowOnly?: AllowedCharacterType;
   allowClear?: boolean;
   showCount?: boolean;
   prefixIcon?: ReactNode;
   suffixIcon?: ReactNode;
   className?: string;
-  onBlur?: () => void;
+  validate?: (value: string) => string | Promise<string>;
   onChange?: (value: string) => void;
-  onError?: (error: string) => void;
   onEnter?: () => void;
 }

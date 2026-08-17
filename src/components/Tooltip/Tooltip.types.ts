@@ -14,7 +14,7 @@ export type TooltipPlacement =
   | "rightTop"
   | "rightBottom";
 
-export type TooltipTrigger = "hover" | "focus" | "click";
+export type TooltipTrigger = "hover" | "focus" | "click" | "contextMenu";
 
 export interface TooltipProps {
   /** Tooltip 안에 표시할 내용이에요. 비어 있으면 Tooltip을 표시하지 않아요. */

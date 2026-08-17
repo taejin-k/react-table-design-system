@@ -11,8 +11,9 @@ import {
 import { cva } from "class-variance-authority";
 import { twMerge } from "tailwind-merge";
 import { Label } from "../Label";
-import { ErrorText } from "../ErrorText";
+import { ErrorMessage } from "../ErrorMessage";
 import { Icon } from "../Icon";
+import { filterAllowedCharacters } from "../_internal/filterAllowedCharacters";
 import type { InputProps } from "./Input.types";
 
 /** prefixIcon/suffixIcon에 onClick이 붙어있어도 무시하도록 제거한다(장식 목적). */
@@ -20,6 +21,12 @@ function stripOnClick(node: ReactNode): ReactNode {
   if (isValidElement<{ onClick?: unknown }>(node))
     return cloneElement(node, { onClick: undefined });
   return node;
+}
+
+function getInitialValidationError(validate: InputProps["validate"], value: string): string {
+  if (!validate || validate.constructor.name === "AsyncFunction") return "";
+  const result = validate(value);
+  return typeof result === "string" ? result : "";
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
@@ -30,19 +37,29 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       value,
       onChange,
       label,
-      errorText,
+      errorMessage,
       required = false,
+      password = false,
+      allowOnly,
       allowClear = false,
       showCount = false,
       maxLength,
       prefixIcon,
       suffixIcon,
+      readOnly = false,
       disabled,
       defaultValue,
       id,
+      autoComplete = "off",
+      autoCorrect = "off",
+      autoCapitalize = "off",
+      spellCheck = false,
+      type = "text",
+      inputMode,
+      width,
       className,
+      validate,
       onBlur,
-      onError,
       onEnter,
       onKeyDown,
       "aria-describedby": ariaDescribedBy,
@@ -54,9 +71,15 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     const generatedId = useId();
     const inputId = id ?? generatedId;
     const inputRef = useRef<HTMLInputElement>(null);
+    const validationRequestRef = useRef(0);
+    const [passwordVisible, setPasswordVisible] = useState(false);
     const [uncontrolledValue, setUncontrolledValue] = useState(() => String(defaultValue ?? ""));
     const currentValue = value ?? uncontrolledValue;
-    const hasError = Boolean(errorText);
+    const [validationError, setValidationError] = useState(() =>
+      getInitialValidationError(validate, String(value ?? defaultValue ?? "")),
+    );
+    const displayedErrorMessage = errorMessage || validationError;
+    const hasError = Boolean(displayedErrorMessage);
     const hasValue = currentValue.length > 0;
     const errorId = `${inputId}-error`;
     const describedBy =
@@ -64,11 +87,9 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     useImperativeHandle(ref, () => inputRef.current as HTMLInputElement);
 
     return (
-      <div className={twMerge("flex w-full flex-col gap-[4px]", className)}>
+      <div className={twMerge("flex w-full flex-col", className)} style={{ width }}>
         {label && (
-          <Label size={size} required={required} htmlFor={inputId}>
-            {label}
-          </Label>
+          <Label label={label} size={size} required={required} htmlFor={inputId} className="mb-1" />
         )}
         <div className={twMerge(inputRowVariants({ size, variant, error: hasError, disabled }))}>
           {prefixIcon && (
@@ -81,22 +102,52 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             id={inputId}
             value={currentValue}
             maxLength={maxLength}
+            readOnly={readOnly}
             disabled={disabled}
             required={required}
+            autoComplete={autoComplete}
+            autoCorrect={autoCorrect}
+            autoCapitalize={autoCapitalize}
+            spellCheck={spellCheck}
+            type={password ? (passwordVisible ? "text" : "password") : type}
+            inputMode={inputMode ?? (allowOnly === "number" ? "numeric" : undefined)}
             aria-invalid={ariaInvalid ?? (hasError || undefined)}
             aria-describedby={describedBy}
             className={twMerge(
               inputVariants({ size, disabled }),
               "min-w-0 flex-1 bg-transparent outline-none placeholder:text-[#999]",
             )}
-            onBlur={onBlur}
+            onBlur={(event) => {
+              if (validate) {
+                const requestId = ++validationRequestRef.current;
+                const result = validate(currentValue);
+
+                if (typeof result === "string") {
+                  setValidationError(result);
+                } else {
+                  void result
+                    .then((nextError) => {
+                      if (validationRequestRef.current === requestId) {
+                        setValidationError(nextError);
+                      }
+                    })
+                    .catch(() => {
+                      if (validationRequestRef.current === requestId) {
+                        setValidationError("");
+                      }
+                    });
+                }
+              }
+              onBlur?.(event);
+            }}
             onChange={(event) => {
-              const nextValue = event.target.value;
+              const nextValue = filterAllowedCharacters(event.target.value, allowOnly);
               // 한글 등 IME 조합 중에는 네이티브 maxLength가 강제되지 않아 직접 막는다.
               if (maxLength !== undefined && nextValue.length > maxLength) return;
+              validationRequestRef.current += 1;
               if (value === undefined) setUncontrolledValue(nextValue);
               onChange?.(nextValue);
-              onError?.("");
+              setValidationError("");
             }}
             onKeyDown={(event) => {
               onKeyDown?.(event);
@@ -117,15 +168,16 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
                 : currentValue.length}
             </span>
           )}
-          {allowClear && hasValue && !disabled && (
+          {allowClear && hasValue && !readOnly && !disabled && (
             <Icon
               icon="close"
               className="shrink-0 text-[#999]"
               onMouseDown={(event) => event.preventDefault()}
               onClick={() => {
+                validationRequestRef.current += 1;
                 if (value === undefined) setUncontrolledValue("");
                 onChange?.("");
-                onError?.("");
+                setValidationError("");
                 inputRef.current?.focus();
               }}
             />
@@ -135,10 +187,21 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
               {stripOnClick(suffixIcon)}
             </span>
           )}
+          {password && (
+            <Icon
+              icon={passwordVisible ? "eye" : "eye-off"}
+              disabled={disabled}
+              className="shrink-0 text-[#999]"
+              onMouseDown={(event) => event.preventDefault()}
+              onClick={() => setPasswordVisible((visible) => !visible)}
+            />
+          )}
         </div>
-        <ErrorText id={errorId} className="-mt-0.5">
-          {errorText}
-        </ErrorText>
+        <ErrorMessage
+          id={errorId}
+          className={hasError ? "mt-0.5" : undefined}
+          errorMessage={displayedErrorMessage}
+        />
       </div>
     );
   },
@@ -158,6 +221,9 @@ const inputRowVariants = cva(
       variant: {
         default: "border-[#ddd]",
         filled: "border-[#f5f5f5] bg-[#f5f5f5]",
+        borderless: "border-transparent bg-white focus-within:border-transparent",
+        underlined:
+          "rounded-none border-x-0 border-t-0 border-b-[#ddd] bg-white focus-within:border-x-0 focus-within:border-t-0 focus-within:border-b-[#0062df]",
       },
       error: {
         true: "border-[#fe5150]",

@@ -1,12 +1,12 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { Dropdown } from "./Dropdown";
 
 const items = [
-  { key: "edit", label: "수정" },
-  { key: "disabled", label: "이동", disabled: true },
-  { key: "delete", label: "삭제", danger: true },
+  { value: "edit", label: "수정" },
+  { value: "disabled", label: "이동", disabled: true },
+  { value: "delete", label: "삭제", danger: true },
 ];
 
 describe("Dropdown", () => {
@@ -23,7 +23,54 @@ describe("Dropdown", () => {
     expect(screen.getByRole("button", { name: "이동" })).toHaveClass("cursor-not-allowed");
 
     fireEvent.scroll(window);
-    expect(screen.queryByRole("button", { name: "수정" })).not.toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.queryByRole("button", { name: "수정" })).not.toBeInTheDocument(),
+    );
+  });
+
+  it("supports an array of trigger events", async () => {
+    const user = userEvent.setup();
+    render(
+      <Dropdown menu={{ items }} mouseEnterDelay={0} trigger={["focus", "click"]}>
+        <button type="button">메뉴</button>
+      </Dropdown>,
+    );
+
+    const trigger = screen.getByRole("button", { name: "메뉴" });
+    await user.tab();
+    expect(trigger).toHaveFocus();
+    expect(screen.getByRole("button", { name: "수정" })).toBeInTheDocument();
+
+    fireEvent.scroll(window);
+    await waitFor(() =>
+      expect(screen.queryByRole("button", { name: "수정" })).not.toBeInTheDocument(),
+    );
+
+    await user.click(trigger);
+    expect(screen.getByRole("button", { name: "수정" })).toBeInTheDocument();
+  });
+
+  it("opens at the pointer position with the context menu trigger", async () => {
+    render(
+      <Dropdown menu={{ items }} trigger="contextMenu">
+        <button type="button">메뉴</button>
+      </Dropdown>,
+    );
+
+    const trigger = screen.getByRole("button", { name: "메뉴" });
+    const defaultPrevented = !fireEvent.contextMenu(trigger, {
+      clientX: 240,
+      clientY: 180,
+    });
+
+    expect(defaultPrevented).toBe(true);
+    expect(await screen.findByRole("button", { name: "수정" })).toBeInTheDocument();
+    await waitFor(() =>
+      expect(document.querySelector<HTMLElement>("[data-dropdown]")).toHaveStyle({
+        left: "240px",
+        top: "189px",
+      }),
+    );
   });
 
   it("runs the menu callback and closes after clicking an item", async () => {
@@ -39,9 +86,13 @@ describe("Dropdown", () => {
     await user.click(screen.getByRole("button", { name: "메뉴" }));
     await user.click(screen.getByRole("button", { name: "수정" }));
 
-    expect(onClick).toHaveBeenCalledWith(expect.objectContaining({ key: "edit" }));
-    expect(onOpenChange).toHaveBeenLastCalledWith(false, { source: "menu" });
-    expect(screen.queryByRole("button", { name: "수정" })).not.toBeInTheDocument();
+    expect(onClick).toHaveBeenCalledWith(expect.objectContaining({ value: "edit" }));
+    expect(onOpenChange).toHaveBeenLastCalledWith(false);
+    const motion = document.querySelector<HTMLElement>("[data-dropdown-motion]");
+    expect(motion).toHaveStyle({ opacity: "0", transform: "scaleY(0.8)" });
+    await waitFor(() =>
+      expect(screen.queryByRole("button", { name: "수정" })).not.toBeInTheDocument(),
+    );
   });
 
   it("supports selectable and multiple menu items", async () => {
@@ -55,12 +106,12 @@ describe("Dropdown", () => {
 
     await user.click(screen.getByRole("button", { name: "메뉴" }));
     await user.click(screen.getByRole("button", { name: "수정" }));
-    expect(onSelect).toHaveBeenCalledWith({ key: "edit", selectedKeys: ["edit"] });
+    expect(onSelect).toHaveBeenCalledWith({ value: "edit", selectedValues: ["edit"] });
 
     await user.click(screen.getByRole("button", { name: "삭제" }));
     expect(onSelect).toHaveBeenLastCalledWith({
-      key: "delete",
-      selectedKeys: ["edit", "delete"],
+      value: "delete",
+      selectedValues: ["edit", "delete"],
     });
     expect(screen.getByRole("button", { name: "수정" })).toBeInTheDocument();
   });
@@ -74,10 +125,7 @@ describe("Dropdown", () => {
     );
 
     const trigger = screen.getByRole("button", { name: "메뉴" });
-    expect(trigger.parentElement).toHaveClass(
-      "cursor-not-allowed",
-      "[&>*]:pointer-events-none",
-    );
+    expect(trigger.parentElement).toHaveClass("cursor-not-allowed", "[&>*]:pointer-events-none");
 
     await user.click(trigger);
     expect(screen.queryByRole("button", { name: "수정" })).not.toBeInTheDocument();
@@ -91,10 +139,10 @@ describe("Dropdown", () => {
         menu={{
           items: [
             {
-              key: "actions",
+              value: "actions",
               label: "문서 작업",
               type: "group",
-              children: [{ key: "edit", label: "수정", onClick: onItemClick }],
+              children: [{ value: "edit", label: "수정", onClick: onItemClick }],
             },
           ],
         }}
@@ -108,7 +156,7 @@ describe("Dropdown", () => {
     expect(screen.getByText("문서 작업")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "수정" }));
     expect(onItemClick).toHaveBeenCalledWith(
-      expect.objectContaining({ key: "edit", keyPath: ["edit", "actions"] }),
+      expect.objectContaining({ value: "edit", valuePath: ["edit", "actions"] }),
     );
   });
 

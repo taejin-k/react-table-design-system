@@ -1,5 +1,6 @@
 import { Description, Markdown, Stories, Title } from "@storybook/addon-docs/blocks";
 import type { Meta, StoryObj } from "@storybook/react";
+import { useEffect, useRef } from "react";
 import { storyDescriptions } from "../../storybook/story-descriptions";
 import { withStoryImports } from "../../storybook/story-source";
 import { Button } from "../Button";
@@ -21,7 +22,7 @@ const meta = {
           "제목과 설명이 있는 전역 알림을 화면 가장자리에 표시해요.  \n정적 메서드와 useNotification을 사용할 수 있어요.",
       },
       page: () => (
-        <div className="component-docs">
+        <div className="notification-docs component-docs">
           <Title />
           <Description />
           <Stories />
@@ -70,6 +71,7 @@ export const TypesAndActions: Story = {
   parameters: {
     ...storyDescription("components-notification--types-actions"),
     docs: {
+      ...storyDescription("components-notification--types-actions").docs,
       source: {
         code: withStoryImports(`function NotificationTypes() {
   const actions = <Button size="sm">되돌리기</Button>;
@@ -130,10 +132,37 @@ export const Placements: Story = {
   parameters: {
     ...storyDescription("components-notification--placements"),
     docs: {
+      ...storyDescription("components-notification--placements").docs,
       source: {
-        code: withStoryImports(`const placements = ['topLeft', 'top', 'topRight', 'bottomLeft', 'bottom', 'bottomRight'] as const;
+        code: withStoryImports(`const placements = [
+  'topLeft',
+  'top',
+  'topRight',
+  'bottomLeft',
+  'bottom',
+  'bottomRight',
+] as const;
+
 function NotificationPlacements() {
-  return <div className="flex flex-wrap gap-2">{placements.map((placement) => <Button key={placement} type="secondary" onClick={() => notification.info({ title: placement, description: '선택한 위치에 표시돼요.', placement })}>{placement}</Button>)}</div>;
+  return (
+    <div className="flex flex-wrap gap-2">
+      {placements.map((placement) => (
+        <Button
+          key={placement}
+          variant="secondary"
+          onClick={() =>
+            notification.info({
+              title: placement,
+              description: '선택한 위치에 표시돼요.',
+              placement,
+            })
+          }
+        >
+          {placement}
+        </Button>
+      ))}
+    </div>
+  );
 }`),
       },
     },
@@ -152,7 +181,7 @@ function NotificationPlacements() {
       ).map((placement) => (
         <Button
           key={placement}
-          type="secondary"
+          variant="secondary"
           onClick={() =>
             notification.info({
               title: placement,
@@ -172,11 +201,29 @@ export const ProgressAndStack: Story = {
   parameters: {
     ...storyDescription("components-notification--progress-stack"),
     docs: {
+      ...storyDescription("components-notification--progress-stack").docs,
       source: {
         code: withStoryImports(`function NotificationProgressAndStack() {
-  const [api, contextHolder] = notification.useNotification({ stack: { threshold: 3 }, showProgress: true });
-  const openMany = () => Array.from({ length: 5 }, (_, index) => api.info({ title: '알림 ' + (index + 1), description: '여러 알림을 스택으로 표시해요.' }));
-  return <>{contextHolder}<Button onClick={openMany}>알림 5개 열기</Button></>;
+  const [api, contextHolder] = notification.useNotification({
+    stack: { threshold: 3 },
+    showProgress: true,
+  });
+
+  const openMany = () => {
+    Array.from({ length: 5 }, (_, index) =>
+      api.info({
+        title: '알림 ' + (index + 1),
+        description: '여러 알림을 스택으로 표시해요.',
+      }),
+    );
+  };
+
+  return (
+    <>
+      {contextHolder}
+      <Button onClick={openMany}>알림 5개 열기</Button>
+    </>
+  );
 }`),
       },
     },
@@ -209,50 +256,79 @@ export const Update: Story = {
   parameters: {
     ...storyDescription("components-notification--update"),
     docs: {
+      ...storyDescription("components-notification--update").docs,
       source: {
         code: withStoryImports(`function NotificationUpdate() {
+  const timerRef = useRef<number | undefined>(undefined);
+
+  useEffect(() => () => window.clearTimeout(timerRef.current), []);
+
   const update = () => {
     notification.open({ key: 'upload', title: '업로드 중', description: '파일을 전송하고 있어요.', duration: false });
-    setTimeout(() => notification.success({ key: 'upload', title: '업로드 완료', description: '파일을 전송했어요.' }), 1200);
+    window.clearTimeout(timerRef.current);
+    timerRef.current = window.setTimeout(
+      () => notification.success({ key: 'upload', title: '업로드 완료', description: '파일을 전송했어요.' }),
+      1200,
+    );
   };
+
   return <Button onClick={update}>key로 갱신</Button>;
 }`),
       },
     },
   },
-  render: () => (
-    <Button
-      onClick={() => {
-        notification.open({
-          key: "upload",
-          title: "업로드 중",
-          description: "파일을 전송하고 있어요.",
-          duration: false,
-        });
-        setTimeout(
-          () =>
-            notification.success({
-              key: "upload",
-              title: "업로드 완료",
-              description: "파일을 전송했어요.",
-            }),
-          1200,
-        );
-      }}
-    >
-      key로 갱신
-    </Button>
-  ),
+  render: () => <NotificationUpdateExample />,
 };
+
+function NotificationUpdateExample() {
+  const timerRef = useRef<number | undefined>(undefined);
+
+  useEffect(() => () => window.clearTimeout(timerRef.current), []);
+
+  const update = () => {
+    notification.open({
+      key: "upload",
+      title: "업로드 중",
+      description: "파일을 전송하고 있어요.",
+      duration: false,
+    });
+    window.clearTimeout(timerRef.current);
+    timerRef.current = window.setTimeout(
+      () =>
+        notification.success({
+          key: "upload",
+          title: "업로드 완료",
+          description: "파일을 전송했어요.",
+        }),
+      1200,
+    );
+  };
+
+  return <Button onClick={update}>key로 갱신</Button>;
+}
 
 export const Hook: Story = {
   parameters: {
     ...storyDescription("components-notification--hook"),
     docs: {
+      ...storyDescription("components-notification--hook").docs,
       source: {
         code: withStoryImports(`function NotificationHook() {
   const [api, contextHolder] = notification.useNotification();
-  return <>{contextHolder}<Button onClick={() => api.success({ title: 'Hook 알림', description: '현재 Context에서 열렸어요.' })}>Hook Notification</Button></>;
+
+  return (
+    <>
+      {contextHolder}
+      <Button
+        onClick={() => api.success({
+          title: 'Hook 알림',
+          description: '현재 Context에서 열렸어요.',
+        })}
+      >
+        Hook Notification
+      </Button>
+    </>
+  );
 }`),
       },
     },

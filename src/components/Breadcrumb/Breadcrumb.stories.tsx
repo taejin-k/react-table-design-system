@@ -3,6 +3,7 @@ import type { ComponentType } from "react";
 import { Description, Markdown, Stories, Title } from "@storybook/addon-docs/blocks";
 import { fn } from "storybook/test";
 import { storyDescriptions } from "../../storybook/story-descriptions";
+import { withStoryImports } from "../../storybook/story-source";
 import { Icon } from "../Icon";
 import { Breadcrumb } from "./Breadcrumb";
 import type { BreadcrumbProps, Item } from "./Breadcrumb.types";
@@ -79,7 +80,7 @@ const meta = {
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
 | \`key\` | 항목을 구분하는 고유한 값이에요. | \`string \\| number\` | - |
-| \`title\` | 화면에 표시할 경로 이름이에요. | \`ReactNode\` | - |
+| \`title\` | 화면에 표시할 경로 이름이에요. 아이콘만 표시할 때는 생략해요. | \`ReactNode\` | - |
 | \`href\` | 이동할 주소예요. 값이 있으면 링크와 호버 디자인을 적용해요. | \`string\` | - |
 | \`icon\` | 경로 이름 앞에 표시할 아이콘이에요. | \`ReactNode\` | - |
 | \`color\` | 해당 항목의 글자와 아이콘 색상이에요. | \`CSSProperties['color']\` | - |
@@ -107,6 +108,44 @@ export const Items: Story = {
   parameters: {
     ...storyDescription("components-breadcrumb--items"),
     controls: { disable: false },
+    docs: {
+      ...storyDescription("components-breadcrumb--items").docs,
+      source: {
+        type: "code",
+        code: withStoryImports(`function BreadcrumbItems() {
+  return (
+    <div className="grid gap-5">
+      <Breadcrumb items={[{ title: '홈' }]} />
+      <Breadcrumb items={[{ title: '홈', href: '#' }, { title: '프로젝트' }]} />
+      <Breadcrumb
+        items={[
+          { title: '홈', href: '#' },
+          { title: '프로젝트', onClick: () => {} },
+          { title: '디자인 시스템' },
+        ]}
+      />
+      <Breadcrumb
+        items={[
+          { title: '홈', href: '#' },
+          { title: '프로젝트', onClick: () => {} },
+          { title: '디자인 시스템', href: '#design-system' },
+          { title: '컴포넌트' },
+        ]}
+      />
+      <Breadcrumb
+        items={[
+          { title: '홈', href: '#' },
+          { title: '프로젝트', onClick: () => {} },
+          { title: '디자인 시스템', href: '#design-system' },
+          { title: '컴포넌트', onClick: () => {} },
+          { title: 'Breadcrumb' },
+        ]}
+      />
+    </div>
+  );
+}`),
+      },
+    },
   },
   render: ({ itemCount = 3 }, { viewMode }) =>
     viewMode === "docs" ? (
@@ -132,6 +171,23 @@ export const WithIcons: Story = {
   parameters: {
     ...storyDescription("components-breadcrumb--with-icons"),
     controls: { disable: false },
+    docs: {
+      ...storyDescription("components-breadcrumb--with-icons").docs,
+      source: {
+        type: "code",
+        code: withStoryImports(`function BreadcrumbWithIcons() {
+  return (
+    <Breadcrumb
+      items={[
+        { title: '홈', href: '#', icon: <Icon icon="home" /> },
+        { title: '설정', href: '#settings', icon: <Icon icon="setting" /> },
+        { title: '내 정보', icon: <Icon icon="edit" /> },
+      ]}
+    />
+  );
+}`),
+      },
+    },
   },
   render: ({ showIcons }) => (
     <Breadcrumb
@@ -139,6 +195,38 @@ export const WithIcons: Story = {
         { title: "홈", href: "#", icon: showIcons ? <Icon icon="home" /> : undefined },
         { title: "설정", href: "#settings", icon: showIcons ? <Icon icon="setting" /> : undefined },
         { title: "내 정보", icon: showIcons ? <Icon icon="edit" /> : undefined },
+      ]}
+    />
+  ),
+};
+
+export const SingleIcon: Story = {
+  parameters: {
+    ...storyDescription("components-breadcrumb--single-icon"),
+    docs: {
+      ...storyDescription("components-breadcrumb--single-icon").docs,
+      source: {
+        type: "code",
+        code: withStoryImports(`function BreadcrumbSingleIcon() {
+  return (
+    <Breadcrumb
+      items={[
+        { icon: <Icon icon="home" />, href: '#' },
+        { title: '프로젝트', href: '#projects' },
+        { title: '디자인 시스템' },
+      ]}
+    />
+  );
+}`),
+      },
+    },
+  },
+  render: () => (
+    <Breadcrumb
+      items={[
+        { icon: <Icon icon="home" />, href: "#" },
+        { title: "프로젝트", href: "#projects" },
+        { title: "디자인 시스템" },
       ]}
     />
   ),
@@ -154,13 +242,35 @@ export const ItemColors: Story = {
   parameters: {
     ...storyDescription("components-breadcrumb--item-colors"),
     controls: { disable: false },
+    docs: {
+      ...storyDescription("components-breadcrumb--item-colors").docs,
+      source: {
+        type: "code",
+        code: withStoryImports(`function BreadcrumbItemColors() {
+  return (
+    <Breadcrumb
+      items={[
+        { title: '홈', href: '#', icon: <Icon icon="home" />, color: '#0062df' },
+        { title: '프로젝트', href: '#projects', icon: <Icon icon="folder" />, color: '#4f19c4' },
+        { title: '현재 위치', icon: <Icon icon="edit" />, color: '#d92626' },
+      ]}
+    />
+  );
+}`),
+      },
+    },
   },
   render: ({ firstColor, secondColor, currentColor }) => (
     <Breadcrumb
       items={[
-        { title: "홈", href: "#", color: firstColor },
-        { title: "프로젝트", href: "#projects", color: secondColor },
-        { title: "현재 위치", color: currentColor },
+        { title: "홈", href: "#", icon: <Icon icon="home" />, color: firstColor },
+        {
+          title: "프로젝트",
+          href: "#projects",
+          icon: <Icon icon="folder" />,
+          color: secondColor,
+        },
+        { title: "현재 위치", icon: <Icon icon="edit" />, color: currentColor },
       ]}
     />
   ),

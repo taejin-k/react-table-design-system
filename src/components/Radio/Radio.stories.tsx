@@ -22,10 +22,12 @@ const meta = {
   tags: ["autodocs"],
   args: { label: "레이블", checked: false, disabled: false, error: false },
   argTypes: {
-    label: { name: "레이블", control: "text" },
     checked: { name: "선택", control: "boolean" },
+    defaultChecked: { control: false, table: { disable: true } },
     disabled: { name: "비활성", control: "boolean" },
+    label: { name: "레이블", control: "text" },
     error: { name: "오류", control: "boolean" },
+    name: { control: false, table: { disable: true } },
     className: { control: false, table: { disable: true } },
     onChange: { control: false, table: { disable: true } },
   },
@@ -47,6 +49,11 @@ const meta = {
 
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
+| \`checked\` | 선택 상태를 외부에서 관리해요. | \`boolean\` | - |
+| \`defaultChecked\` | 처음 렌더링할 때 선택된 상태로 표시해요. | \`boolean\` | \`false\` |
+| \`key\` | 목록에서 항목을 구분하는 React 예약 속성이에요. | \`Key\` | - |
+| \`name\` | 같은 이름을 가진 Radio를 하나의 선택 그룹으로 묶어요. | \`string\` | - |
+| \`disabled\` | Radio를 비활성화하고 선택 동작을 막아요. | \`boolean\` | \`false\` |
 | \`label\` | Radio 오른쪽에 레이블을 표시해요. | \`ReactNode\` | - |
 | \`error\` | 테두리와 선택 색상을 오류 색상으로 표시해요. | \`boolean\` | \`false\` |
 | \`className\` | 최상위 요소에 Tailwind 클래스를 추가해요. | \`string\` | - |
@@ -64,10 +71,7 @@ type Story = StoryObj<typeof meta>;
 export const States: Story = {
   parameters: {
     ...storyDescription("components-radio--states"),
-    controls: {
-      disable: false,
-      include: ["레이블", "선택", "오류", "비활성"],
-    },
+    controls: { disable: true },
     docs: {
       ...storyDescription("components-radio--states").docs,
       source: {
@@ -89,25 +93,15 @@ export const States: Story = {
         name="radio-state"
         onChange={() => setSelected('error')}
       />
-      <Radio disabled label="비활성" name="radio-state" />
-      <Radio checked disabled label="비활성 · 선택" name="radio-state" />
+      <Radio disabled label="비활성" name="radio-disabled-state" />
+      <Radio checked disabled label="비활성 · 선택" name="radio-disabled-state" />
     </div>
   );
 }`),
       },
     },
   },
-  render: (args, { viewMode }) =>
-    viewMode === "docs" ? (
-      <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
-        <Radio label="기본" />
-        <Radio error label="오류" />
-        <Radio disabled label="비활성" />
-        <Radio defaultChecked disabled label="비활성 · 선택" />
-      </div>
-    ) : (
-      <ControlledRadio {...args} />
-    ),
+  render: () => <RadioStatesStory />,
 };
 
 export const Label: Story = {
@@ -139,12 +133,7 @@ export const Label: Story = {
       },
     },
   },
-  render: (args) => (
-    <div className="flex items-center gap-8">
-      <ControlledRadio {...args} label={undefined} />
-      <ControlledRadio {...args} />
-    </div>
-  ),
+  render: (args) => <RadioLabelsStory checked={args.checked} label={args.label} />,
 };
 
 export const Group: Story = {
@@ -182,18 +171,49 @@ function PaymentMethods() {
   render: () => <RadioGroupStory />,
 };
 
-function ControlledRadio(args: RadioProps) {
-  const [checked, setChecked] = useState(Boolean(args.checked));
-  useEffect(() => setChecked(Boolean(args.checked)), [args.checked]);
+function RadioStatesStory() {
+  const [selected, setSelected] = useState("basic");
+
   return (
-    <Radio
-      {...args}
-      checked={checked}
-      onChange={(event) => {
-        setChecked(event.target.checked);
-        args.onChange?.(event);
-      }}
-    />
+    <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
+      <Radio
+        checked={selected === "basic"}
+        label="기본"
+        name="radio-state"
+        onChange={() => setSelected("basic")}
+      />
+      <Radio
+        checked={selected === "error"}
+        error
+        label="오류"
+        name="radio-state"
+        onChange={() => setSelected("error")}
+      />
+      <Radio disabled label="비활성" name="radio-disabled-state" />
+      <Radio checked disabled label="비활성 · 선택" name="radio-disabled-state" />
+    </div>
+  );
+}
+
+function RadioLabelsStory({ checked, label }: Pick<RadioProps, "checked" | "label">) {
+  const [selected, setSelected] = useState(checked ? "with-label" : "without-label");
+
+  useEffect(() => setSelected(checked ? "with-label" : "without-label"), [checked]);
+
+  return (
+    <div className="flex items-center gap-8">
+      <Radio
+        checked={selected === "without-label"}
+        name="label-example"
+        onChange={() => setSelected("without-label")}
+      />
+      <Radio
+        checked={selected === "with-label"}
+        label={label}
+        name="label-example"
+        onChange={() => setSelected("with-label")}
+      />
+    </div>
   );
 }
 

@@ -47,15 +47,42 @@ const preview: Preview = {
   ],
   parameters: {
     layout: "padded",
-    a11y: { test: "todo" },
     options: {
       storySort: (a, b) => {
+        const componentRank = (title) => {
+          if (title === "Components/Icon") return 0;
+          if (title === "Components/Button") return 1;
+          if (title === "Components/Tag") return 2;
+          if (title === "Components/Checkbox") return 3;
+          if (title === "Components/Radio") return 4;
+          if (title === "Components/Toggle") return 5;
+          if (title === "Components/Label") return 6;
+          if (title === "Components/ErrorMessage") return 7;
+          if (title === "Components/Breadcrumb") return 8;
+          if (title === "Components/Input") return 9;
+          if (title === "Components/TextArea") return 10;
+          if (title === "Components/Tooltip") return 11;
+          if (title === "Components/Popover") return 12;
+          if (title === "Components/Dropdown") return 13;
+          if (title === "Components/Segmented") return 14;
+          if (title === "Components/Illustrations") return 15;
+          if (title === "Components/Flex") return 16;
+          if (title === "Components/Select") return 17;
+          return 18;
+        };
+        const rankDifference = componentRank(a.title) - componentRank(b.title);
+
+        if (rankDifference !== 0) return rankDifference;
+
         if (a.title === "Components/Table" && b.title === "Components/Table") {
           const groupRank = (id) => {
             if (id === "components-table--documentation") return 0;
             if (id.startsWith("components-table--")) return 1;
-            if (id === "components-table-layout--virtual-thousand-rows") return 2.5;
-            if (id === "components-table-api-compatibility--imperative-scroll-to") return 2.6;
+            if (id === "components-table-api-compatibility--fixed-table-height") return 2.4;
+            if (id === "components-table-api-compatibility--sticky-header") return 2.5;
+            if (id === "components-table-api-compatibility--fixed-columns") return 2.6;
+            if (id === "components-table-layout--virtual-thousand-rows") return 2.7;
+            if (id === "components-table-api-compatibility--imperative-scroll-to") return 2.7;
             if (id.startsWith("components-table-api-compatibility--")) return 2;
             if (id.startsWith("components-table-expandable--")) return 3;
             if (id.startsWith("components-table-layout--")) return 4;

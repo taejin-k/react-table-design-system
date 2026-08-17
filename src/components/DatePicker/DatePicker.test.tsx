@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { DatePicker } from "./DatePicker";
@@ -14,7 +14,9 @@ describe("DatePicker", () => {
     await user.click(within(popup).getAllByRole("button", { name: "12" })[0]);
 
     expect(onChange).toHaveBeenCalledWith("2026-08-12", "2026-08-12");
-    expect(document.querySelector("[data-datepicker-popup]")).not.toBeInTheDocument();
+    await waitFor(() =>
+      expect(document.querySelector("[data-datepicker-popup]")).not.toBeInTheDocument(),
+    );
   });
 
   it("prevents disabled dates from being selected", async () => {

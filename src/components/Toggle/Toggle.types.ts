@@ -8,5 +8,6 @@ export interface ToggleProps extends Omit<
 > {
   checked: boolean;
   size?: ToggleSize;
+  loading?: boolean;
   onChange?: (checked: boolean) => void;
 }

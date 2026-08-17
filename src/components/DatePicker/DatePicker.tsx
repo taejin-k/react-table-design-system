@@ -3,11 +3,12 @@ import { useMemo, useState } from "react";
 import { cva } from "class-variance-authority";
 import { twMerge } from "tailwind-merge";
 import { Button } from "../Button";
-import { Chip } from "../Chip";
-import { ErrorText } from "../ErrorText";
+import { Tag } from "../Tag";
+import { ErrorMessage } from "../ErrorMessage";
 import { Icon } from "../Icon";
 import { Label } from "../Label";
 import { TimePanel } from "../TimePicker/TimePicker";
+import { getPopupMotionStyle } from "../_internal/motion";
 import { useFloatingLayer } from "../_internal/use-floating-layer";
 import type {
   DatePickerMode,
@@ -94,11 +95,12 @@ function BaseDatePicker({
   format,
   size = "md",
   variant = "default",
-  status,
   label,
-  errorText,
+  errorMessage,
   required = false,
   disabled = false,
+  readOnly = false,
+  width,
   allowClear = true,
   multiple = false,
   order = true,
@@ -147,7 +149,7 @@ function BaseDatePicker({
   const floating = useFloatingLayer({
     placement,
     trigger: "click",
-    disabled,
+    disabled: disabled || readOnly,
     open,
     defaultOpen,
     onOpenChange: (nextOpen) => {
@@ -210,21 +212,19 @@ function BaseDatePicker({
   };
 
   return (
-    <div className={twMerge("flex w-full flex-col gap-1", className)}>
-      {label ? (
-        <Label required={required} size={size}>
-          {label}
-        </Label>
-      ) : null}
+    <div className={twMerge("flex w-full flex-col gap-1", className)} style={{ width }}>
+      {label ? <Label label={label} required={required} size={size} /> : null}
       <span ref={floating.triggerRef} className="block w-full" {...floating.triggerProps}>
         <button
           type="button"
           disabled={disabled}
+          aria-readonly={readOnly || undefined}
           className={pickerRootVariants({
             size,
             variant,
-            status: errorText ? "error" : status,
+            error: Boolean(errorMessage),
             disabled,
+            readOnly,
           })}
         >
           <span
@@ -235,20 +235,20 @@ function BaseDatePicker({
           >
             {selectedValues.length
               ? selectedValues.map((item) => (
-                  <Chip
+                  <Tag
                     key={item}
                     color="grey"
-                    variant="soft-filled"
+                    variant="filled"
                     className={twMerge(
                       !multiple && "h-auto bg-transparent p-0 text-sm text-[#111]",
                     )}
                   >
                     {formatDisplayValue(item, format)}
-                  </Chip>
+                  </Tag>
                 ))
               : (placeholder ?? pickerPlaceholder(picker))}
           </span>
-          {allowClear && selectedValues.length && !disabled ? (
+          {allowClear && selectedValues.length && !disabled && !readOnly ? (
             <span
               className="cursor-pointer"
               onClick={(event) => {
@@ -267,8 +267,8 @@ function BaseDatePicker({
           )}
         </button>
       </span>
-      <ErrorText>{errorText}</ErrorText>
-      {floating.isOpen && typeof document !== "undefined"
+      <ErrorMessage errorMessage={errorMessage} />
+      {floating.isRendered && typeof document !== "undefined"
         ? createPortal(
             <div
               ref={floating.popupRef}
@@ -276,12 +276,14 @@ function BaseDatePicker({
               className={twMerge(
                 "fixed rounded-lg bg-white p-3 font-pretendard text-sm text-[#111] shadow-[0_6px_16px_rgba(0,0,0,0.06),0_3px_6px_-4px_rgba(0,0,0,0.08),0_9px_28px_8px_rgba(0,0,0,0.03)]",
                 showTime ? "w-[468px]" : "w-[296px]",
+                !floating.isMotionVisible && "pointer-events-none",
               )}
               style={{
                 left: floating.position?.left ?? 0,
                 top: floating.position?.top ?? 0,
                 zIndex: 1050,
                 visibility: floating.position ? "visible" : "hidden",
+                ...getPopupMotionStyle(floating.position?.placement, floating.isMotionVisible),
               }}
               {...floating.popupProps}
             >
@@ -291,7 +293,7 @@ function BaseDatePicker({
                     <Button
                       key={String(preset.label)}
                       size="sm"
-                      type="ghost"
+                      variant="ghost"
                       onClick={() => {
                         const presetValue =
                           typeof preset.value === "function" ? preset.value() : preset.value;
@@ -454,7 +456,7 @@ function PickerPanel({
       )}
       {showNow ? (
         <div className="mt-2 border-t border-[#f0f0f0] pt-2 text-right">
-          <Button size="sm" type="ghost" onClick={() => onSelect(new Date())}>
+          <Button size="sm" variant="ghost" onClick={() => onSelect(new Date())}>
             오늘
           </Button>
         </div>
@@ -668,13 +670,14 @@ function DateRangePicker({
   defaultValue = [null, null],
   placeholder = ["시작 날짜", "종료 날짜"],
   label,
-  errorText,
+  errorMessage,
   required = false,
   size = "md",
   presets,
   onChange,
   onCalendarChange,
   className,
+  width,
   ...props
 }: DateRangePickerProps) {
   const [innerValue, setInnerValue] = useState(defaultValue);
@@ -689,19 +692,15 @@ function DateRangePicker({
   };
 
   return (
-    <div className={twMerge("flex w-full flex-col gap-1", className)}>
-      {label ? (
-        <Label required={required} size={size}>
-          {label}
-        </Label>
-      ) : null}
+    <div className={twMerge("flex w-full flex-col gap-1", className)} style={{ width }}>
+      {label ? <Label label={label} required={required} size={size} /> : null}
       {presets?.length ? (
         <div className="mb-1 flex flex-wrap gap-1">
           {presets.map((preset) => (
             <Button
               key={String(preset.label)}
               size="sm"
-              type="secondary"
+              variant="secondary"
               onClick={() => {
                 const nextRange =
                   typeof preset.value === "function" ? preset.value() : preset.value;
@@ -735,7 +734,7 @@ function DateRangePicker({
           onChange={(nextValue) => changeRange(1, nextValue)}
         />
       </div>
-      <ErrorText>{errorText}</ErrorText>
+      <ErrorMessage errorMessage={errorMessage} />
     </div>
   );
 }
@@ -758,12 +757,22 @@ const pickerRootVariants = cva(
         borderless: "border-transparent",
         underlined: "rounded-none border-x-0 border-t-0 border-b-[#ddd] px-0",
       },
-      status: { error: "border-[#fe5150]", warning: "border-[#faad14]" },
+      error: { true: "border-[#fe5150]", false: "" },
+      readOnly: {
+        true: "cursor-default bg-white hover:border-[#ddd]",
+        false: "",
+      },
       disabled: {
         true: "cursor-not-allowed border-[#ddd] bg-[#f8f8f8] text-[#999] hover:border-[#ddd]",
         false: "",
       },
     },
-    defaultVariants: { size: "md", variant: "default", disabled: false },
+    defaultVariants: {
+      size: "md",
+      variant: "default",
+      error: false,
+      disabled: false,
+      readOnly: false,
+    },
   },
 );

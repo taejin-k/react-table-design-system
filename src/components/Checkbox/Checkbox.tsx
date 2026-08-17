@@ -4,15 +4,15 @@ import { twMerge } from "tailwind-merge";
 import type { CheckboxProps } from "./Checkbox.types";
 
 export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
-  ({ label, error = false, indeterminate = false, disabled, className, id, ...rest }, ref) => {
+  ({ label, error = false, partiallyChecked = false, disabled, className, id, ...rest }, ref) => {
     const generatedId = useId();
     const inputId = id ?? generatedId;
     const inputRef = useRef<HTMLInputElement>(null);
 
     useImperativeHandle(ref, () => inputRef.current as HTMLInputElement, []);
     useEffect(() => {
-      if (inputRef.current) inputRef.current.indeterminate = indeterminate;
-    }, [indeterminate]);
+      if (inputRef.current) inputRef.current.indeterminate = partiallyChecked;
+    }, [partiallyChecked]);
 
     return (
       <label
@@ -29,7 +29,7 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
           id={inputId}
           type="checkbox"
           disabled={disabled}
-          aria-checked={indeterminate ? "mixed" : undefined}
+          aria-checked={partiallyChecked ? "mixed" : undefined}
           className={checkboxVariants({ error })}
         />
         {label != null ? (

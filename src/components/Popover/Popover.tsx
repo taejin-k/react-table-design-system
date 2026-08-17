@@ -1,7 +1,10 @@
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { twMerge } from "tailwind-merge";
 import { useFloatingLayer } from "../_internal/use-floating-layer";
-import type { PopoverProps } from "./Popover.types";
+import type { PopoverPlacement, PopoverProps } from "./Popover.types";
+
+const MOTION_DURATION = 100;
 
 export function Popover({
   children,
@@ -34,6 +37,42 @@ export function Popover({
     mouseLeaveDelay,
     onOpenChange: (nextOpen) => onOpenChange?.(nextOpen),
   });
+  const motionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastPositionRef = useRef(floating.position);
+  const [popupMounted, setPopupMounted] = useState(floating.isOpen);
+  const [motionVisible, setMotionVisible] = useState(false);
+
+  if (floating.position) lastPositionRef.current = floating.position;
+  const renderPosition = floating.position ?? lastPositionRef.current;
+
+  useEffect(() => {
+    if (motionTimerRef.current) clearTimeout(motionTimerRef.current);
+
+    if (floating.isOpen) {
+      setPopupMounted(true);
+      return;
+    }
+
+    setMotionVisible(false);
+    motionTimerRef.current = setTimeout(() => {
+      setPopupMounted(false);
+      lastPositionRef.current = null;
+    }, MOTION_DURATION);
+
+    return () => {
+      if (motionTimerRef.current) clearTimeout(motionTimerRef.current);
+    };
+  }, [floating.isOpen]);
+
+  useEffect(() => {
+    if (!floating.isOpen || !popupMounted) return;
+    const frame = requestAnimationFrame(() => setMotionVisible(true));
+    return () => cancelAnimationFrame(frame);
+  }, [floating.isOpen, popupMounted]);
+
+  useLayoutEffect(() => {
+    if (floating.isOpen && popupMounted) floating.updatePosition();
+  }, [floating.isOpen, floating.updatePosition, popupMounted]);
 
   return (
     <>
@@ -44,43 +83,79 @@ export function Popover({
       >
         {children}
       </span>
-      {floating.isOpen && typeof document !== "undefined"
+      {popupMounted && typeof document !== "undefined"
         ? createPortal(
             <div
               ref={floating.popupRef}
               data-popover
-              data-placement={floating.position?.placement ?? placement}
+              data-placement={renderPosition?.placement ?? placement}
               className="fixed max-w-80 min-w-[177px] font-pretendard text-sm leading-[22px] text-[#111]"
               style={{
-                left: floating.position?.left ?? 0,
-                top: floating.position?.top ?? 0,
+                left: renderPosition?.left ?? 0,
+                top: renderPosition?.top ?? 0,
                 zIndex,
-                visibility: floating.position ? "visible" : "hidden",
+                visibility: renderPosition ? "visible" : "hidden",
               }}
               {...floating.popupProps}
             >
               <div
-                className="relative rounded-lg px-3 py-2.5 shadow-[0_6px_16px_rgba(0,0,0,0.08),0_3px_6px_-4px_rgba(0,0,0,0.12),0_9px_28px_8px_rgba(0,0,0,0.05)]"
-                style={{ backgroundColor: color, color: getTextColor(color) }}
+                data-popover-motion
+                className={twMerge(
+                  "relative",
+                  motionVisible && renderPosition
+                    ? "wizard-zoom-big-fast-enter"
+                    : floating.isOpen
+                      ? "scale-[0.8] opacity-0"
+                      : "wizard-zoom-big-fast-leave",
+                )}
+                style={{
+                  transformOrigin: getTransformOrigin(renderPosition?.placement ?? placement),
+                }}
               >
-                {resolvedTitle !== null && resolvedTitle !== undefined && resolvedTitle !== "" ? (
-                  <div className="mb-1 font-semibold">{resolvedTitle}</div>
+                <div
+                  className="relative rounded-lg px-3 py-2.5 shadow-[0_6px_16px_rgba(0,0,0,0.08),0_3px_6px_-4px_rgba(0,0,0,0.12),0_9px_28px_8px_rgba(0,0,0,0.05)]"
+                  style={{ backgroundColor: color, color: getTextColor(color) }}
+                >
+                  {resolvedTitle !== null && resolvedTitle !== undefined && resolvedTitle !== "" ? (
+                    <div className="mb-1 font-semibold">{resolvedTitle}</div>
+                  ) : null}
+                  <div>{resolvedContent}</div>
+                </div>
+                {arrow ? (
+                  <span
+                    data-popover-arrow
+                    className="absolute size-2 rotate-45"
+                    style={{ backgroundColor: color, ...renderPosition?.arrowStyle }}
+                  />
                 ) : null}
-                <div>{resolvedContent}</div>
               </div>
-              {arrow ? (
-                <span
-                  data-popover-arrow
-                  className="absolute size-2 rotate-45"
-                  style={{ backgroundColor: color, ...floating.position?.arrowStyle }}
-                />
-              ) : null}
             </div>,
             document.body,
           )
         : null}
     </>
   );
+}
+
+function getTransformOrigin(placement: PopoverPlacement) {
+  if (placement.startsWith("top")) {
+    if (placement.endsWith("Left")) return "16px bottom";
+    if (placement.endsWith("Right")) return "calc(100% - 16px) bottom";
+    return "center bottom";
+  }
+  if (placement.startsWith("bottom")) {
+    if (placement.endsWith("Left")) return "16px top";
+    if (placement.endsWith("Right")) return "calc(100% - 16px) top";
+    return "center top";
+  }
+  if (placement.startsWith("left")) {
+    if (placement.endsWith("Top")) return "right 16px";
+    if (placement.endsWith("Bottom")) return "right calc(100% - 16px)";
+    return "right center";
+  }
+  if (placement.endsWith("Top")) return "left 16px";
+  if (placement.endsWith("Bottom")) return "left calc(100% - 16px)";
+  return "left center";
 }
 
 function getTextColor(color: string) {

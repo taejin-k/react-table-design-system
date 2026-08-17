@@ -77,12 +77,18 @@ export const Headerless: Story = {
   args: { columns, showHeader: false },
 };
 
-export const FixedHeader: Story = {
+export const FixedTableHeight: Story = {
   parameters: {
-    ...storyDescription("components-table-api-compatibility--fixed-header"),
-    tableScrollYComment: "테이블 본문의 세로 높이를 정하면 헤더가 자동으로 고정돼요.",
+    ...storyDescription("components-table-api-compatibility--fixed-table-height"),
+    tableScrollYComment: "테이블 본문의 최대 세로 높이를 설정해요.",
   },
   args: { dataSource: members, columns, pagination: false, scroll: { y: 280 } },
+};
+
+export const StickyHeader: Story = {
+  name: "Sticky Header",
+  parameters: storyDescription("components-table-api-compatibility--sticky-header"),
+  args: { dataSource: members, columns, pagination: false, sticky: true },
 };
 
 export const FixedColumns: Story = {
@@ -157,13 +163,13 @@ function ImperativeScrollTable() {
   return (
     <>
       <div className="mb-4 flex gap-2">
-        <Button type="secondary" onClick={() => tableRef.current?.scrollTo({ index: 0, align: 'start' })}>
+        <Button variant="secondary" onClick={() => tableRef.current?.scrollTo({ index: 0, align: 'start' })}>
           첫 행
         </Button>
-        <Button type="secondary" onClick={() => tableRef.current?.scrollTo({ key: 'M-75', align: 'center' })}>
+        <Button variant="secondary" onClick={() => tableRef.current?.scrollTo({ key: 'M-75', align: 'center' })}>
           75번째 행
         </Button>
-        <Button type="secondary" onClick={() => tableRef.current?.scrollTo({ index: 99, align: 'end' })}>
+        <Button variant="secondary" onClick={() => tableRef.current?.scrollTo({ index: 99, align: 'end' })}>
           마지막 행
         </Button>
       </div>
@@ -190,18 +196,21 @@ function ImperativeScrollStory(args: TableProps<Member>) {
     <>
       <div className="mb-4 flex gap-2">
         <Button
-          type="secondary"
+          variant="secondary"
           onClick={() => ref.current?.scrollTo({ index: 0, align: "start" })}
         >
           첫 행
         </Button>
         <Button
-          type="secondary"
+          variant="secondary"
           onClick={() => ref.current?.scrollTo({ key: "V-75", align: "center" })}
         >
           75번째 행
         </Button>
-        <Button type="secondary" onClick={() => ref.current?.scrollTo({ index: 99, align: "end" })}>
+        <Button
+          variant="secondary"
+          onClick={() => ref.current?.scrollTo({ index: 99, align: "end" })}
+        >
           마지막 행
         </Button>
       </div>

@@ -5,7 +5,7 @@ import { Flex } from "./Flex";
 describe("Flex", () => {
   it("applies direction, alignment, wrap and gap", () => {
     render(
-      <Flex vertical align="center" justify="space-between" wrap gap="small" data-testid="flex">
+      <Flex vertical align="center" justify="space-between" wrap gap={8} data-testid="flex">
         내용
       </Flex>,
     );

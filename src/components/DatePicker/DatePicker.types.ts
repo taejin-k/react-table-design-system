@@ -6,7 +6,6 @@ export type DatePickerValue = string;
 export type DatePickerMode = "date" | "week" | "month" | "quarter" | "year";
 export type DatePickerPlacement = "bottomLeft" | "bottomRight" | "topLeft" | "topRight";
 export type DatePickerVariant = "default" | "outlined" | "filled" | "borderless" | "underlined";
-export type DatePickerStatus = "error" | "warning";
 
 export interface DatePickerCellInfo {
   originNode: ReactNode;
@@ -44,11 +43,12 @@ export interface DatePickerProps {
   format?: string | ((value: DatePickerValue) => string);
   size?: InputSize;
   variant?: DatePickerVariant;
-  status?: DatePickerStatus;
   label?: ReactNode;
-  errorText?: ReactNode;
+  errorMessage?: ReactNode;
   required?: boolean;
   disabled?: boolean;
+  readOnly?: boolean;
+  width?: number | string;
   allowClear?: boolean | { clearIcon?: ReactNode };
   multiple?: boolean;
   order?: boolean;

@@ -19,4 +19,16 @@ describe("Radio", () => {
     expect(radio).not.toHaveClass("custom-radio");
     expect(radio.closest("label")).toHaveClass("custom-radio");
   });
+
+  it("supports defaultChecked and blocks changes when disabled", async () => {
+    const user = userEvent.setup();
+    render(<Radio defaultChecked disabled label="비활성 옵션" />);
+
+    const radio = screen.getByRole("radio", { name: "비활성 옵션" });
+    expect(radio).toBeChecked();
+    expect(radio).toBeDisabled();
+
+    await user.click(screen.getByText("비활성 옵션"));
+    expect(radio).toBeChecked();
+  });
 });

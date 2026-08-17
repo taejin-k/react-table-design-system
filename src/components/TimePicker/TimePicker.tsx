@@ -3,10 +3,11 @@ import { useState } from "react";
 import { cva } from "class-variance-authority";
 import { twMerge } from "tailwind-merge";
 import { Button } from "../Button";
-import { ErrorText } from "../ErrorText";
+import { ErrorMessage } from "../ErrorMessage";
 import { Icon } from "../Icon";
 import { Label } from "../Label";
 import { ScrollFade } from "../_internal/ScrollFade";
+import { getPopupMotionStyle } from "../_internal/motion";
 import { useFloatingLayer } from "../_internal/use-floating-layer";
 import type { TimePickerProps, TimeRangePickerProps } from "./TimePicker.types";
 
@@ -35,11 +36,12 @@ function BaseTimePicker({
   placeholder = "시간을 선택하세요",
   size = "md",
   variant = "default",
-  status,
   label,
-  errorText,
+  errorMessage,
   required = false,
   disabled = false,
+  readOnly = false,
+  width,
   allowClear = true,
   use12Hours = false,
   showSecond = true,
@@ -72,7 +74,7 @@ function BaseTimePicker({
   const floating = useFloatingLayer({
     placement,
     trigger: "click",
-    disabled,
+    disabled: disabled || readOnly,
     open,
     defaultOpen,
     onOpenChange: (nextOpen) => {
@@ -101,21 +103,19 @@ function BaseTimePicker({
     : null;
 
   return (
-    <div className={twMerge("flex w-full flex-col gap-1", className)}>
-      {label ? (
-        <Label required={required} size={size}>
-          {label}
-        </Label>
-      ) : null}
+    <div className={twMerge("flex w-full flex-col gap-1", className)} style={{ width }}>
+      {label ? <Label label={label} required={required} size={size} /> : null}
       <span ref={floating.triggerRef} className="block w-full" {...floating.triggerProps}>
         <button
           type="button"
           disabled={disabled}
+          aria-readonly={readOnly || undefined}
           className={timePickerRootVariants({
             size,
             variant,
-            status: errorText ? "error" : status,
+            error: Boolean(errorMessage),
             disabled,
+            readOnly,
           })}
         >
           {prefix ? <span className="flex shrink-0 items-center">{prefix}</span> : null}
@@ -126,7 +126,7 @@ function BaseTimePicker({
                 : formatTime(preview, showSecond)
               : (displayedValue ?? placeholder)}
           </span>
-          {allowClear && selectedValue && !disabled ? (
+          {allowClear && selectedValue && !disabled && !readOnly ? (
             <span
               className="cursor-pointer"
               onClick={(event) => {
@@ -146,18 +146,22 @@ function BaseTimePicker({
           )}
         </button>
       </span>
-      <ErrorText>{errorText}</ErrorText>
-      {floating.isOpen && typeof document !== "undefined"
+      <ErrorMessage errorMessage={errorMessage} />
+      {floating.isRendered && typeof document !== "undefined"
         ? createPortal(
             <div
               ref={floating.popupRef}
               data-timepicker-popup
-              className="fixed overflow-hidden rounded-lg bg-white font-pretendard text-sm text-[#111] shadow-[0_6px_16px_rgba(0,0,0,0.06),0_3px_6px_-4px_rgba(0,0,0,0.08),0_9px_28px_8px_rgba(0,0,0,0.03)]"
+              className={twMerge(
+                "fixed overflow-hidden rounded-lg bg-white font-pretendard text-sm text-[#111] shadow-[0_6px_16px_rgba(0,0,0,0.06),0_3px_6px_-4px_rgba(0,0,0,0.08),0_9px_28px_8px_rgba(0,0,0,0.03)] motion-reduce:transition-none",
+                !floating.isMotionVisible && "pointer-events-none",
+              )}
               style={{
                 left: floating.position?.left ?? 0,
                 top: floating.position?.top ?? 0,
                 zIndex: 1050,
                 visibility: floating.position ? "visible" : "hidden",
+                ...getPopupMotionStyle(floating.position?.placement, floating.isMotionVisible),
               }}
               {...floating.popupProps}
             >
@@ -182,7 +186,7 @@ function BaseTimePicker({
                 {showNow ? (
                   <Button
                     size="sm"
-                    type="ghost"
+                    variant="ghost"
                     onClick={() => {
                       const now = new Date();
                       const next = {
@@ -419,12 +423,13 @@ function TimeRangePicker({
   defaultValue = [null, null],
   placeholder = ["시작 시간", "종료 시간"],
   label,
-  errorText,
+  errorMessage,
   required = false,
   size = "md",
   onChange,
   onCalendarChange,
   className,
+  width,
   ...props
 }: TimeRangePickerProps) {
   const [innerValue, setInnerValue] = useState(defaultValue);
@@ -440,12 +445,8 @@ function TimeRangePicker({
   };
 
   return (
-    <div className={twMerge("flex w-full flex-col gap-1", className)}>
-      {label ? (
-        <Label required={required} size={size}>
-          {label}
-        </Label>
-      ) : null}
+    <div className={twMerge("flex w-full flex-col gap-1", className)} style={{ width }}>
+      {label ? <Label label={label} required={required} size={size} /> : null}
       <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-2">
         <BaseTimePicker
           {...props}
@@ -463,7 +464,7 @@ function TimeRangePicker({
           onChange={(nextValue) => changeRange(1, nextValue)}
         />
       </div>
-      <ErrorText>{errorText}</ErrorText>
+      <ErrorMessage errorMessage={errorMessage} />
     </div>
   );
 }
@@ -486,15 +487,22 @@ const timePickerRootVariants = cva(
         borderless: "border-transparent",
         underlined: "rounded-none border-x-0 border-t-0 border-b-[#ddd] px-0",
       },
-      status: {
-        error: "border-[#fe5150]",
-        warning: "border-[#faad14]",
+      error: { true: "border-[#fe5150]", false: "" },
+      readOnly: {
+        true: "cursor-default bg-white hover:border-[#ddd]",
+        false: "",
       },
       disabled: {
         true: "cursor-not-allowed border-[#ddd] bg-[#f8f8f8] text-[#999] hover:border-[#ddd]",
         false: "",
       },
     },
-    defaultVariants: { size: "md", variant: "default", disabled: false },
+    defaultVariants: {
+      size: "md",
+      variant: "default",
+      error: false,
+      disabled: false,
+      readOnly: false,
+    },
   },
 );

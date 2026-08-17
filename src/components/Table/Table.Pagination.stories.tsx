@@ -1,7 +1,9 @@
-import type { ComponentType } from "react";
+import { useState, type ComponentType } from "react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { storyDescriptions } from "../../storybook/story-descriptions";
+import { withStoryImports } from "../../storybook/story-source";
 import { formatTableStorySource } from "../../storybook/table-story-source";
+import { Button } from "../Button";
 import { largeData, columns, members, type Member } from "./Table.playground-data";
 import { Table } from "./Table";
 import type { TableProps } from "./Table.types";
@@ -63,6 +65,49 @@ export const PaginationDisabled: Story = {
 };
 
 export const PaginationHideOnSinglePage: Story = {
-  parameters: storyDescription("components-table-pagination--pagination-hide-on-single-page"),
-  args: { dataSource: members.slice(0, 4), pagination: { hideOnSinglePage: true } },
+  parameters: {
+    ...storyDescription("components-table-pagination--pagination-hide-on-single-page"),
+    tableSource: false,
+    docs: {
+      ...storyDescription("components-table-pagination--pagination-hide-on-single-page").docs,
+      source: {
+        code: withStoryImports(`function PaginationHideOnSinglePageTable() {
+  const [hideOnSinglePage, setHideOnSinglePage] = useState(true);
+
+  return (
+    <div className="grid gap-4">
+      <Button
+        className="justify-self-start"
+        onClick={() => setHideOnSinglePage((current) => !current)}
+      >
+        hideOnSinglePage: {String(hideOnSinglePage)}
+      </Button>
+      <Table
+        dataSource={members.slice(0, 4)}
+        columns={columns}
+        pagination={{ hideOnSinglePage }}
+      />
+    </div>
+  );
+}`),
+      },
+    },
+  },
+  render: () => <PaginationHideOnSinglePageTable />,
 };
+
+function PaginationHideOnSinglePageTable() {
+  const [hideOnSinglePage, setHideOnSinglePage] = useState(true);
+
+  return (
+    <div className="grid gap-4">
+      <Button
+        className="justify-self-start"
+        onClick={() => setHideOnSinglePage((current) => !current)}
+      >
+        hideOnSinglePage: {String(hideOnSinglePage)}
+      </Button>
+      <Table dataSource={members.slice(0, 4)} columns={columns} pagination={{ hideOnSinglePage }} />
+    </div>
+  );
+}

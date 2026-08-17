@@ -46,7 +46,7 @@ export type ColumnType<T> = {
   className?: string;
   hidden?: boolean;
   fixed?: FixedType;
-  ellipsis?: boolean | { showTitle?: boolean };
+  ellipsis?: boolean;
   responsive?: Breakpoint[];
   colSpan?: number;
   rowSpan?: number;
@@ -103,7 +103,6 @@ export type PaginationConfig = {
   showPrevNextJumpers?: boolean;
   showQuickJumper?: boolean | { goButton?: ReactNode };
   showSizeChanger?: boolean | { disabled?: boolean };
-  showTitle?: boolean;
   showTotal?: (total: number, range: [number, number]) => ReactNode;
   simple?: boolean | { readOnly?: boolean };
   size?: "large" | "medium" | "small";
@@ -251,6 +250,7 @@ export type TableProps<T extends object> = Omit<
   tableLayout?: "auto" | "fixed";
   rowClassName?: (record: T, index: number, indent: number) => string;
   rowHoverable?: boolean;
+  sticky?: boolean;
   virtual?: boolean;
   stickyScrollBar?: boolean | TableStickyScrollBarConfig;
   scroll?: { x?: string | number | true; y?: string | number; scrollToFirstRowOnChange?: boolean };

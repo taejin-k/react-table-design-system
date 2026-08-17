@@ -29,6 +29,7 @@ const tableApi = `
 | \`showSorterTooltip\` | 정렬 아이콘의 안내 문구를 설정해요. | \`boolean \\| SorterTooltipConfig\` | \`true\` |
 | \`tableLayout\` | 브라우저의 표 레이아웃 계산 방식을 설정해요. | \`auto \\| fixed\` | \`fixed\` |
 | \`rowHoverable\` | 행에 마우스를 올렸을 때 배경을 표시해요. | \`boolean\` | \`true\` |
+| \`sticky\` | 페이지를 내려도 테이블 헤더를 화면 상단에 고정해요. | \`boolean\` | \`false\` |
 | \`virtual\` | 많은 행을 가상 스크롤로 렌더링해요. | \`boolean\` | \`false\` |
 | \`stickyScrollBar\` | 페이지를 내려도 가로 스크롤바가 화면 아래를 따라오게 해요. | \`boolean \\| { offsetScroll? }\` | \`false\` |
 | \`scroll\` | 가로·세로 스크롤 크기와 이동 동작을 설정해요. | \`{ x?, y?, scrollToFirstRowOnChange? }\` | - |
@@ -57,7 +58,7 @@ columns 배열의 각 항목에 아래 속성을 설정할 수 있어요.
 | \`align\` | 헤더와 셀의 가로 정렬을 설정해요. | \`left \\| center \\| right \\| AlignType\` | \`left\` |
 | \`hidden\` | 열을 화면에서 숨겨요. | \`boolean\` | \`false\` |
 | \`fixed\` | 가로 스크롤 중 열을 왼쪽이나 오른쪽에 고정해요. | \`boolean \\| left \\| right\` | \`false\` |
-| \`ellipsis\` | 긴 셀 내용을 말줄임으로 표시해요. | \`boolean \\| { showTitle? }\` | \`false\` |
+| \`ellipsis\` | 긴 셀 내용을 말줄임과 Tooltip으로 표시해요. | \`boolean\` | \`false\` |
 | \`responsive\` | 지정한 화면 너비에서만 열을 표시해요. | \`Breakpoint[]\` | - |
 | \`colSpan\` | 헤더가 차지할 열의 개수를 설정해요. | \`number\` | - |
 | \`rowSpan\` | 헤더가 차지할 행의 개수를 설정해요. | \`number\` | - |
@@ -88,7 +89,6 @@ const paginationApi = `
 | \`showPrevNextJumpers\` | 생략 구간의 이전·다음 점프 버튼을 표시해요. | \`boolean\` | \`true\` |
 | \`showQuickJumper\` | 페이지 번호를 직접 입력하는 기능을 표시해요. | \`boolean \\| { goButton? }\` | \`false\` |
 | \`showSizeChanger\` | 페이지당 행 수 선택기를 표시해요. | \`boolean \\| { disabled? }\` | 자동 |
-| \`showTitle\` | 페이지 버튼의 title 안내를 표시해요. | \`boolean\` | \`true\` |
 | \`simple\` | 간결한 페이지네이션으로 표시해요. | \`boolean \\| { readOnly? }\` | \`false\` |
 | \`size\` | 페이지네이션의 크기를 설정해요. | \`large \\| medium \\| small\` | \`medium\` |
 | \`locale\` | 페이지네이션 안내 문구를 바꿔요. | \`PaginationLocale\` | - |
@@ -184,15 +184,12 @@ const storyGroups = [
   {
     id: "components-table-api-compatibility",
     module: apiStories,
-    stories: [
-      "GroupedHeaders",
-      "Headerless",
-      "FixedHeader",
-      "FixedColumns",
-      "StickyScrollbar",
-      "Loading",
-      "Empty",
-    ],
+    stories: ["GroupedHeaders", "Headerless", "StickyScrollbar", "Loading", "Empty"],
+  },
+  {
+    id: "components-table-api-compatibility",
+    module: apiStories,
+    stories: ["FixedTableHeight", "StickyHeader", "FixedColumns"],
   },
   {
     id: "components-table-layout",

@@ -37,13 +37,14 @@ describe("Illustrations", () => {
   });
 
   it.each([
-    ["sm", "size-16"],
-    ["md", "size-24"],
-    ["lg", "size-32"],
-  ] as const)("%s 크기를 적용한다", (size, expectedClass) => {
-    const { container } = render(<Illustrations size={size} />);
+    ["sm", "size-16", "text-sm"],
+    ["md", "size-24", "text-[15px]"],
+    ["lg", "size-32", "text-base"],
+  ] as const)("%s 크기를 이미지와 설명에 적용한다", (size, expectedClass, descriptionClass) => {
+    const { container } = render(<Illustrations size={size} description="안내 문구" />);
 
     expect(container.querySelector("svg")?.parentElement).toHaveClass(expectedClass);
+    expect(screen.getByText("안내 문구")).toHaveClass(descriptionClass);
   });
 
   it.each(illustrationTypes)("%s 이미지를 표시한다", (type) => {

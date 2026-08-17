@@ -37,10 +37,12 @@ const meta = {
     },
     placeholder: { name: "안내 문구", control: "text" },
     label: { name: "레이블", control: "text" },
-    errorText: { name: "오류 문구", control: "text" },
+    errorMessage: { name: "오류 문구", control: "text" },
     required: { name: "필수 표시", control: "boolean" },
     allowClear: { name: "지우기", control: "boolean" },
+    readOnly: { name: "읽기 전용", control: "boolean" },
     disabled: { name: "비활성", control: "boolean" },
+    width: { name: "가로 길이", control: "text" },
     className: { control: false },
     disabledDate: { control: false },
     onChange: { control: false },
@@ -71,9 +73,10 @@ const meta = {
 | \`format\` | 선택값을 화면에 표시할 형식을 설정해요. | \`string \\| (value) => string\` | - |
 | \`size\` | DatePicker의 크기를 설정해요. | \`lg \\| md \\| sm\` | \`md\` |
 | \`variant\` | 배경과 테두리 표현 방식을 설정해요. | \`default \\| outlined \\| filled \\| borderless \\| underlined\` | \`default\` |
-| \`status\` | 경고나 오류 상태를 표시해요. | \`warning \\| error\` | - |
 | \`allowClear\` | 선택값을 지우는 버튼을 표시해요. | \`boolean \\| { clearIcon }\` | \`true\` |
 | \`disabled\` | 날짜 선택과 열기 동작을 비활성화해요. | \`boolean\` | \`false\` |
+| \`readOnly\` | 선택값을 읽기 전용으로 표시해요. | \`boolean\` | \`false\` |
+| \`width\` | DatePicker의 가로 길이를 설정해요. | \`number \\| string\` | \`100%\` |
 | \`multiple\` | 여러 날짜를 선택해요. | \`boolean\` | \`false\` |
 | \`order\` | 여러 선택값을 날짜 순서로 정렬해요. | \`boolean\` | \`true\` |
 | \`minDate\` | 선택할 수 있는 최소 날짜를 설정해요. | \`string\` | - |
@@ -92,7 +95,7 @@ const meta = {
 | \`defaultOpen\` | 처음 달력을 표시할지 설정해요. | \`boolean\` | \`false\` |
 | \`placement\` | 달력이 표시될 위치를 설정해요. | \`topLeft \\| topRight \\| bottomLeft \\| bottomRight\` | \`bottomLeft\` |
 | \`label\` | DatePicker 위에 레이블을 표시해요. | \`ReactNode\` | - |
-| \`errorText\` | DatePicker 아래에 오류 문구를 표시해요. | \`ReactNode\` | - |
+| \`errorMessage\` | DatePicker 아래에 오류 문구를 표시해요. | \`ReactNode\` | - |
 | \`required\` | 레이블에 필수 표시를 추가해요. | \`boolean\` | \`false\` |
 | \`className\` | 최상위 요소에 Tailwind 클래스를 추가해요. | \`string\` | - |
 | \`onChange\` | 선택값이 바뀔 때 실행할 함수예요. | \`(value, dateString) => void\` | - |
@@ -149,10 +152,11 @@ export const Sizes: Story = {
   parameters: {
     ...storyDescription("components-datepicker--sizes"),
     docs: {
+      ...storyDescription("components-datepicker--sizes").docs,
       source: {
         code: withStoryImports(`<div className="grid max-w-xs gap-3">
   <DatePicker size="lg" />
-  <DatePicker />
+  <DatePicker size="md" />
   <DatePicker size="sm" />
 </div>`),
       },
@@ -161,21 +165,52 @@ export const Sizes: Story = {
   render: () => (
     <div className="grid max-w-xs gap-3">
       <DatePicker size="lg" />
-      <DatePicker />
+      <DatePicker size="md" />
       <DatePicker size="sm" />
     </div>
   ),
+};
+
+export const Widths: Story = {
+  args: {
+    placeholder: "가로 길이 320px",
+    width: 320,
+  },
+  parameters: {
+    ...storyDescription("components-datepicker--widths"),
+    controls: { disable: false, include: ["안내 문구", "가로 길이"] },
+    docs: {
+      ...storyDescription("components-datepicker--widths").docs,
+      source: {
+        code: withStoryImports(`<div className="grid max-w-xl gap-3">
+  <DatePicker placeholder="부모 너비 100%" />
+  <DatePicker width={240} placeholder="가로 길이 240px" />
+  <DatePicker width={320} placeholder="가로 길이 320px" />
+</div>`),
+      },
+    },
+  },
+  render: (args, { viewMode }) =>
+    viewMode === "docs" ? (
+      <div className="grid max-w-xl gap-3">
+        <DatePicker placeholder="부모 너비 100%" />
+        <DatePicker width={240} placeholder="가로 길이 240px" />
+        <DatePicker width={320} placeholder="가로 길이 320px" />
+      </div>
+    ) : (
+      <DatePicker {...args} />
+    ),
 };
 
 export const States: Story = {
   parameters: {
     ...storyDescription("components-datepicker--states"),
     docs: {
+      ...storyDescription("components-datepicker--states").docs,
       source: {
         code: withStoryImports(`<div className="grid max-w-xs gap-3">
   <DatePicker placeholder="기본" />
-  <DatePicker variant="filled" placeholder="채움" />
-  <DatePicker status="warning" placeholder="경고" />
+  <DatePicker readOnly defaultValue="2026-08-10" />
   <DatePicker disabled defaultValue="2026-08-11" />
 </div>`),
       },
@@ -184,52 +219,67 @@ export const States: Story = {
   render: () => (
     <div className="grid max-w-xs gap-3">
       <DatePicker placeholder="기본" />
-      <DatePicker variant="filled" placeholder="채움" />
-      <DatePicker status="warning" placeholder="경고" />
+      <DatePicker readOnly defaultValue="2026-08-10" />
       <DatePicker disabled defaultValue="2026-08-11" />
     </div>
   ),
 };
 
-export const LabelAndError: Story = {
+export const Variants: Story = {
   parameters: {
-    ...storyDescription("components-datepicker--label-and-error"),
+    ...storyDescription("components-datepicker--variants"),
     docs: {
+      ...storyDescription("components-datepicker--variants").docs,
       source: {
-        code: withStoryImports(`<div className="max-w-xs">
-  <DatePicker label="예약일" required errorText="예약일을 선택해 주세요." />
+        code: withStoryImports(`<div className="grid max-w-xs gap-3">
+  <DatePicker placeholder="기본" />
+  <DatePicker variant="filled" placeholder="채움" />
+  <DatePicker variant="borderless" placeholder="테두리 없음" />
+  <DatePicker variant="underlined" placeholder="밑줄" />
 </div>`),
       },
     },
   },
   render: () => (
-    <div className="max-w-xs">
-      <DatePicker label="예약일" required errorText="예약일을 선택해 주세요." />
+    <div className="grid max-w-xs gap-3">
+      <DatePicker placeholder="기본" />
+      <DatePicker variant="filled" placeholder="채움" />
+      <DatePicker variant="borderless" placeholder="테두리 없음" />
+      <DatePicker variant="underlined" placeholder="밑줄" />
     </div>
+  ),
+};
+
+export const StaticError: Story = {
+  parameters: {
+    ...storyDescription("components-datepicker--static-error"),
+    docs: {
+      ...storyDescription("components-datepicker--static-error").docs,
+      source: {
+        code: withStoryImports(
+          `<DatePicker label="예약일" required errorMessage="예약일을 선택해 주세요." width={320} />`,
+        ),
+      },
+    },
+  },
+  render: () => (
+    <DatePicker label="예약일" required errorMessage="예약일을 선택해 주세요." width={320} />
   ),
 };
 
 export const Basic: Story = {
   parameters: {
-    ...storySource(
-      "components-datepicker--basic",
-      `<div className="max-w-xs">
-  <DatePicker />
-</div>`,
-    ),
+    ...storySource("components-datepicker--basic", `<DatePicker width={320} />`),
     controls: { disable: false },
   },
-  render: (args) => (
-    <div className="max-w-xs">
-      <DatePicker {...args} />
-    </div>
-  ),
+  render: (args) => <DatePicker {...args} width={320} />,
 };
 
 export const PickerTypes: Story = {
   parameters: {
     ...storyDescription("components-datepicker--picker-types"),
     docs: {
+      ...storyDescription("components-datepicker--picker-types").docs,
       source: {
         code: withStoryImports(`<div className="grid max-w-xs gap-3">
   <DatePicker />
@@ -256,6 +306,7 @@ export const Format: Story = {
   parameters: {
     ...storyDescription("components-datepicker--format"),
     docs: {
+      ...storyDescription("components-datepicker--format").docs,
       source: {
         code: withStoryImports(`<div className="grid max-w-xs gap-3">
   <DatePicker defaultValue="2026-08-11" format="YYYY년 MM월 DD일" />
@@ -467,6 +518,7 @@ export const Range: Story = {
   parameters: {
     ...storyDescription("components-datepicker--range"),
     docs: {
+      ...storyDescription("components-datepicker--range").docs,
       source: {
         code: withStoryImports(`function ProjectPeriod() {
   const [period, setPeriod] = useState<[string | null, string | null]>([null, null]);
@@ -494,6 +546,7 @@ export const DisabledDate: Story = {
   parameters: {
     ...storyDescription("components-datepicker--disabled-date"),
     docs: {
+      ...storyDescription("components-datepicker--disabled-date").docs,
       source: {
         code: withStoryImports(`<div className="max-w-xs">
   <DatePicker disabledDate={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))} />

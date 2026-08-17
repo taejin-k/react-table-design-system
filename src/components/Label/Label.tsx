@@ -4,10 +4,10 @@ import { twMerge } from "tailwind-merge";
 import type { LabelProps } from "./Label.types";
 
 export const Label = forwardRef<HTMLLabelElement, LabelProps>(
-  ({ size = "md", required = false, className, children, ...rest }, ref) => {
+  ({ label, size = "md", required = false, className, ...rest }, ref) => {
     return (
       <label ref={ref} className={twMerge(labelVariants({ size }), className)} {...rest}>
-        {children}
+        {label}
         {required && (
           <span aria-hidden="true" className="text-[#fe5150]">
             *

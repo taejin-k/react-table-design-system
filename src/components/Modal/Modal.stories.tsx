@@ -1,6 +1,6 @@
 import { Description, Markdown, Stories, Title } from "@storybook/addon-docs/blocks";
 import type { Meta, StoryObj } from "@storybook/react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { storyDescriptions } from "../../storybook/story-descriptions";
 import { withStoryImports } from "../../storybook/story-source";
 import { Button } from "../Button";
@@ -22,7 +22,7 @@ const meta = {
           "현재 화면 위에서 중요한 정보나 작업을 확인해요.  \n일반 컴포넌트·정적 메서드와 useModal을 사용할 수 있어요.",
       },
       page: () => (
-        <div className="component-docs">
+        <div className="modal-docs component-docs">
           <Title />
           <Description />
           <Stories />
@@ -43,22 +43,24 @@ const meta = {
 | \`confirmLoading\` | 확인 버튼의 로딩 상태를 표시해요. | \`boolean\` | \`false\` |
 | \`okText\` | 확인 버튼 내용을 설정해요. | \`ReactNode\` | \`확인\` |
 | \`cancelText\` | 취소 버튼 내용을 설정해요. | \`ReactNode\` | \`취소\` |
-| \`okType\` | 확인 버튼 타입을 설정해요. | \`ButtonType\` | \`primary\` |
+| \`okType\` | 확인 버튼 종류를 설정해요. | \`ButtonVariant\` | \`primary\` |
 | \`okButtonProps\` | 확인 Button의 속성을 설정해요. | \`ButtonProps\` | - |
 | \`cancelButtonProps\` | 취소 Button의 속성을 설정해요. | \`ButtonProps\` | - |
 | \`keyboard\` | Escape로 닫을 수 있게 해요. | \`boolean\` | \`true\` |
 | \`mask\` | 배경 마스크·블러·닫기 동작을 설정해요. | \`boolean \\| ModalMask\` | \`true\` |
+| \`maskClosable\` | 배경을 눌러 닫을지 설정해요. | \`boolean\` | \`true\` |
 | \`scrollLock\` | 열려 있는 동안 문서 스크롤을 잠가요. | \`boolean\` | \`true\` |
 | \`forceRender\` | 닫힌 상태에서도 내용을 미리 렌더링해요. | \`boolean\` | \`false\` |
 | \`destroyOnHidden\` | 닫힌 뒤 내용을 제거해요. | \`boolean\` | \`false\` |
 | \`focusable\` | 포커스 순환과 원래 요소 복귀를 설정해요. | \`object\` | - |
+| \`focusTriggerAfterClose\` | 닫힌 뒤 열었던 요소로 포커스를 돌려요. | \`boolean\` | \`true\` |
 | \`getContainer\` | Modal을 렌더링할 컨테이너를 설정해요. | \`HTMLElement \\| () => HTMLElement \\| string \\| false\` | \`document.body\` |
 | \`zIndex\` | 겹치는 순서를 설정해요. | \`number\` | \`1000\` |
-| \`modalRender\` | 전체 패널을 감싸서 렌더링해요. | \`(node) => ReactNode\` | - |
 | \`classNames\` | 각 영역의 클래스를 설정해요. | \`Record<SemanticName, string>\` | - |
 | \`styles\` | 각 영역의 스타일을 설정해요. | \`Record<SemanticName, CSSProperties>\` | - |
-| \`className\` | 패널에 Tailwind 클래스를 추가해요. | \`string\` | - |
 | \`rootClassName\` | 최상위 요소에 Tailwind 클래스를 추가해요. | \`string\` | - |
+| \`className\` | 패널에 Tailwind 클래스를 추가해요. | \`string\` | - |
+| \`modalRender\` | 전체 패널을 감싸서 렌더링해요. | \`(node) => ReactNode\` | - |
 | \`afterClose\` | 닫힘 애니메이션 뒤 실행해요. | \`() => void\` | - |
 | \`afterOpenChange\` | 열림 상태 전환이 끝나면 실행해요. | \`(open) => void\` | - |
 | \`onOk\` | 확인 버튼을 누르면 실행해요. | \`(event) => void\` | - |
@@ -83,6 +85,7 @@ export const Basic: Story = {
   parameters: {
     ...storyDescription("components-modal--basic"),
     docs: {
+      ...storyDescription("components-modal--basic").docs,
       source: {
         code: withStoryImports(`function BasicModal() {
   const [open, setOpen] = useState(false);
@@ -122,20 +125,34 @@ export const Async: Story = {
   parameters: {
     ...storyDescription("components-modal--async"),
     docs: {
+      ...storyDescription("components-modal--async").docs,
       source: {
         code: withStoryImports(`function AsyncModal() {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const save = async () => {
+  const timerRef = useRef<number | undefined>(undefined);
+
+  useEffect(() => () => window.clearTimeout(timerRef.current), []);
+
+  const save = () => {
     setLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 1200));
-    setLoading(false);
-    setOpen(false);
+    window.clearTimeout(timerRef.current);
+    timerRef.current = window.setTimeout(() => {
+      setLoading(false);
+      setOpen(false);
+    }, 1200);
   };
+
   return (
     <>
       <Button onClick={() => setOpen(true)}>비동기 저장</Button>
-      <Modal open={open} title="변경사항 저장" confirmLoading={loading} onCancel={() => setOpen(false)} onOk={save}>
+      <Modal
+        open={open}
+        title="변경사항 저장"
+        confirmLoading={loading}
+        onCancel={() => setOpen(false)}
+        onOk={save}
+      >
         변경사항을 저장할까요?
       </Modal>
     </>
@@ -150,11 +167,17 @@ export const Async: Story = {
 function AsyncModalExample() {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const save = async () => {
+  const timerRef = useRef<number | undefined>(undefined);
+
+  useEffect(() => () => window.clearTimeout(timerRef.current), []);
+
+  const save = () => {
     setLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 1200));
-    setLoading(false);
-    setOpen(false);
+    window.clearTimeout(timerRef.current);
+    timerRef.current = window.setTimeout(() => {
+      setLoading(false);
+      setOpen(false);
+    }, 1200);
   };
   return (
     <>
@@ -176,6 +199,7 @@ export const FooterAndLoading: Story = {
   parameters: {
     ...storyDescription("components-modal--footer-loading"),
     docs: {
+      ...storyDescription("components-modal--footer-loading").docs,
       source: {
         code: withStoryImports(`function ModalFooterAndLoading() {
   const [open, setOpen] = useState(false);
@@ -217,6 +241,7 @@ export const StaticMethods: Story = {
   parameters: {
     ...storyDescription("components-modal--static-methods"),
     docs: {
+      ...storyDescription("components-modal--static-methods").docs,
       source: {
         code: withStoryImports(`function ModalStaticMethods() {
   return (
@@ -259,6 +284,7 @@ export const Hook: Story = {
   parameters: {
     ...storyDescription("components-modal--hook"),
     docs: {
+      ...storyDescription("components-modal--hook").docs,
       source: {
         code: withStoryImports(`function ModalHook() {
   const [modal, contextHolder] = Modal.useModal();
@@ -295,6 +321,7 @@ export const PositionAndWidth: Story = {
   parameters: {
     ...storyDescription("components-modal--position-width"),
     docs: {
+      ...storyDescription("components-modal--position-width").docs,
       source: {
         code: withStoryImports(`function ModalPositionAndWidth() {
   const [open, setOpen] = useState(false);

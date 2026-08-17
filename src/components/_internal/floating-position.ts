@@ -41,18 +41,33 @@ export function calculateFloatingPosition(
     viewportGap = 8,
   }: FloatingPositionOptions = {},
 ): FloatingPosition {
-  let placement = requestedPlacement;
-  let point = getPlacementPoint(target, popup, placement, targetGap);
+  const boundary = getViewportBoundary(viewportGap);
+  const placements = autoAdjustOverflow
+    ? getPlacementCandidates(target, requestedPlacement, boundary)
+    : [requestedPlacement];
+  const best = placements
+    .map((placement, priority) => {
+      const point = getPlacementPoint(target, popup, placement, targetGap);
+      return {
+        placement,
+        point,
+        priority,
+        overflow: getOverflow(point, popup, boundary),
+      };
+    })
+    .reduce((current, candidate) => {
+      if (candidate.overflow < current.overflow) return candidate;
+      if (candidate.overflow === current.overflow && candidate.priority < current.priority)
+        return candidate;
+      return current;
+    });
 
-  if (autoAdjustOverflow && overflowsMainAxis(point, popup, placement, viewportGap)) {
-    placement = flipPlacement(placement);
-    point = getPlacementPoint(target, popup, placement, targetGap);
-  }
-
-  const maxLeft = Math.max(viewportGap, window.innerWidth - popup.width - viewportGap);
-  const maxTop = Math.max(viewportGap, window.innerHeight - popup.height - viewportGap);
-  const left = autoAdjustOverflow ? clamp(point.left, viewportGap, maxLeft) : point.left;
-  const top = autoAdjustOverflow ? clamp(point.top, viewportGap, maxTop) : point.top;
+  const placement = best.placement;
+  const point = best.point;
+  const maxLeft = Math.max(boundary.left, boundary.right - popup.width);
+  const maxTop = Math.max(boundary.top, boundary.bottom - popup.height);
+  const left = autoAdjustOverflow ? clamp(point.left, boundary.left, maxLeft) : point.left;
+  const top = autoAdjustOverflow ? clamp(point.top, boundary.top, maxTop) : point.top;
 
   return {
     left,
@@ -60,6 +75,56 @@ export function calculateFloatingPosition(
     placement,
     arrowStyle: getArrowStyle(target, popup, placement, left, top, arrowSize, edgeArrowCenter),
   };
+}
+
+interface FloatingBoundary {
+  top: number;
+  right: number;
+  bottom: number;
+  left: number;
+}
+
+function getViewportBoundary(viewportGap: number): FloatingBoundary {
+  const viewport = window.visualViewport;
+  const left = (viewport?.offsetLeft ?? 0) + viewportGap;
+  const top = (viewport?.offsetTop ?? 0) + viewportGap;
+  const width = viewport?.width ?? window.innerWidth;
+  const height = viewport?.height ?? window.innerHeight;
+
+  return {
+    left,
+    top,
+    right: left + width - viewportGap * 2,
+    bottom: top + height - viewportGap * 2,
+  };
+}
+
+function getPlacementCandidates(
+  target: DOMRect,
+  requestedPlacement: FloatingPlacement,
+  boundary: FloatingBoundary,
+): FloatingPlacement[] {
+  const flippedPlacement = flipPlacement(requestedPlacement);
+  const alignedPlacement = flipAlignment(requestedPlacement);
+  const flippedAlignedPlacement = flipAlignment(flippedPlacement);
+  const vertical = requestedPlacement.startsWith("top") || requestedPlacement.startsWith("bottom");
+  const perpendicularPlacements: FloatingPlacement[] = vertical
+    ? boundary.right - target.right >= target.left - boundary.left
+      ? ["right", "left"]
+      : ["left", "right"]
+    : boundary.bottom - target.bottom >= target.top - boundary.top
+      ? ["bottom", "top"]
+      : ["top", "bottom"];
+
+  return [
+    ...new Set([
+      requestedPlacement,
+      flippedPlacement,
+      alignedPlacement,
+      flippedAlignedPlacement,
+      ...perpendicularPlacements,
+    ]),
+  ];
 }
 
 function getPlacementPoint(
@@ -96,25 +161,33 @@ function getPlacementPoint(
   return { left, top };
 }
 
-function overflowsMainAxis(
-  point: { left: number; top: number },
-  popup: DOMRect,
-  placement: FloatingPlacement,
-  viewportGap: number,
-) {
-  if (placement.startsWith("top")) return point.top < viewportGap;
-  if (placement.startsWith("bottom"))
-    return point.top + popup.height > window.innerHeight - viewportGap;
-  if (placement.startsWith("left")) return point.left < viewportGap;
-  return point.left + popup.width > window.innerWidth - viewportGap;
-}
-
 function flipPlacement(placement: FloatingPlacement): FloatingPlacement {
   if (placement.startsWith("top")) return placement.replace("top", "bottom") as FloatingPlacement;
   if (placement.startsWith("bottom"))
     return placement.replace("bottom", "top") as FloatingPlacement;
   if (placement.startsWith("left")) return placement.replace("left", "right") as FloatingPlacement;
   return placement.replace("right", "left") as FloatingPlacement;
+}
+
+function flipAlignment(placement: FloatingPlacement): FloatingPlacement {
+  if (placement.endsWith("Left")) return placement.replace("Left", "Right") as FloatingPlacement;
+  if (placement.endsWith("Right")) return placement.replace("Right", "Left") as FloatingPlacement;
+  if (placement.endsWith("Top")) return placement.replace("Top", "Bottom") as FloatingPlacement;
+  if (placement.endsWith("Bottom")) return placement.replace("Bottom", "Top") as FloatingPlacement;
+  return placement;
+}
+
+function getOverflow(
+  point: { left: number; top: number },
+  popup: DOMRect,
+  boundary: FloatingBoundary,
+) {
+  return (
+    Math.max(0, boundary.left - point.left) +
+    Math.max(0, point.left + popup.width - boundary.right) +
+    Math.max(0, boundary.top - point.top) +
+    Math.max(0, point.top + popup.height - boundary.bottom)
+  );
 }
 
 function getArrowStyle(

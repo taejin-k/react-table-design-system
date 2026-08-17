@@ -11,10 +11,10 @@ Tailwind CSS 기반 디자인 시스템입니다.
 - [컴포넌트](#컴포넌트)
   - [Button](#button)
   - [Icon](#icon)
-  - [Chip](#chip)
+  - [Tag](#tag)
   - [Toggle](#toggle)
   - [Label](#label)
-  - [ErrorText](#errortext)
+  - [ErrorMessage](#errormessage)
   - [Input](#input)
   - [Checkbox](#checkbox)
   - [Radio](#radio)
@@ -89,7 +89,7 @@ import "@taejin-k/wizard-design/style.css";
 ```tsx
 import { Button, Icon } from '@taejin-k/wizard-design';
 
-<Button type="primary" size="lg">
+<Button variant="primary" size="lg">
   버튼
 </Button>
 
@@ -102,16 +102,17 @@ import { Button, Icon } from '@taejin-k/wizard-design';
 
 ### Button
 
-| prop         | 타입                                                        | 필수  | 기본값    | 설명                                    |
-| ------------ | ----------------------------------------------------------- | ----- | --------- | --------------------------------------- |
-| `type`       | `primary` \| `secondary` \| `tertiary` \| `dark` \| `ghost` | false | `primary` | 버튼 타입                               |
-| `size`       | `lg` \| `md` \| `sm`                                        | false | `md`      | 버튼 크기                               |
-| `iconOnly`   | `boolean`                                                   | false | `false`   | 아이콘만 표시(정사각형)                 |
-| `shadow`     | `boolean`                                                   | false | `false`   | 그림자 표시                             |
-| `fullWidth`  | `boolean`                                                   | false | `false`   | 부모 너비 100%                          |
-| `prefixIcon` | `ReactNode`                                                 | false | -         | 앞쪽 아이콘. 배열로 0~여러 개 전달 가능 |
-| `suffixIcon` | `ReactNode`                                                 | false | -         | 뒤쪽 아이콘. 배열로 0~여러 개 전달 가능 |
-| `onClick`    | `MouseEventHandler<HTMLButtonElement>`                      | false | -         | 클릭할 때 실행할 함수                   |
+| prop         | 타입                                                        | 필수  | 기본값    | 설명                        |
+| ------------ | ----------------------------------------------------------- | ----- | --------- | --------------------------- |
+| `variant`    | `primary` \| `secondary` \| `tertiary` \| `dark` \| `ghost` | false | `primary` | 버튼 종류                   |
+| `size`       | `lg` \| `md` \| `sm`                                        | false | `md`      | 버튼 크기                   |
+| `iconOnly`   | `boolean`                                                   | false | `false`   | 아이콘만 표시(정사각형)     |
+| `shadow`     | `boolean`                                                   | false | `false`   | 그림자 표시                 |
+| `fullWidth`  | `boolean`                                                   | false | `false`   | 부모 너비 100%              |
+| `prefixIcon` | `ReactElement`                                              | false | -         | 앞쪽에 표시할 단일 아이콘   |
+| `suffixIcon` | `ReactElement`                                              | false | -         | 뒤쪽에 표시할 단일 아이콘   |
+| `loading`    | `boolean`                                                   | false | `false`   | 로딩을 표시하고 클릭을 막음 |
+| `onClick`    | `MouseEventHandler<HTMLButtonElement>`                      | false | -         | 클릭할 때 실행할 함수       |
 
 `disabled`, `onClick` 등 나머지 네이티브 `<button>` props는 그대로 지원합니다.
 `iconOnly`를 사용할 때는 동작을 설명하는 `aria-label`을 반드시 함께 전달합니다.
@@ -123,27 +124,29 @@ Figma Icon 라이브러리 아이콘입니다.
 ```tsx
 <Icon icon="add" />
 <Icon icon="add" size={24} color="#0062df" />
+<Icon icon="close" loading />
 ```
 
-| prop    | 타입                                          | 필수  | 기본값         | 설명                       |
-| ------- | --------------------------------------------- | ----- | -------------- | -------------------------- |
-| `icon`  | `add` \| `close` \| `delete` \| `edit` \| ... | true  | -              | 아이콘 종류                |
-| `size`  | `number`                                      | false | `16`           | 크기(px)                   |
-| `color` | `string`                                      | false | `currentColor` | 색상(기본: 부모 텍스트 색) |
+| prop      | 타입                                          | 필수  | 기본값         | 설명                       |
+| --------- | --------------------------------------------- | ----- | -------------- | -------------------------- |
+| `icon`    | `add` \| `close` \| `delete` \| `edit` \| ... | true  | -              | 아이콘 종류                |
+| `size`    | `number`                                      | false | `16`           | 크기(px)                   |
+| `color`   | `string`                                      | false | `currentColor` | 색상(기본: 부모 텍스트 색) |
+| `loading` | `boolean`                                     | false | `false`        | 로딩 표시 및 동작 차단     |
 
 장식용 아이콘은 기본적으로 접근성 트리에서 제외됩니다. `onClick`으로 직접 상호작용하게 만들 때는 `aria-label`을 함께 전달해야 하며 Enter와 Space 키로도 실행됩니다. 일반적인 작업은 Icon 단독보다 `Button iconOnly` 조합을 권장합니다.
 
-### Chip
+### Tag
 
 ```tsx
-<Chip color="green" variant="filled">텍스트</Chip>
-<Chip prefixIcon={<Icon icon="edit" />} suffixIcon={<Icon icon="close" />}>텍스트</Chip>
+<Tag color="green" variant="filled">텍스트</Tag>
+<Tag prefixIcon={<Icon icon="edit" />} suffixIcon={<Icon icon="close" />}>텍스트</Tag>
 ```
 
 | prop         | 타입                                                                  | 필수  | 기본값   | 설명                                         |
 | ------------ | --------------------------------------------------------------------- | ----- | -------- | -------------------------------------------- |
-| `color`      | `green` \| `navy` \| `red` \| `grey` \| `black` \| `purple` \| `blue` | false | `green`  | 색상                                         |
-| `variant`    | `filled` \| `soft-filled` \| `outlined`                               | false | `filled` | 스타일                                       |
+| `color`      | `black` \| `green` \| `navy` \| `red` \| `grey` \| `purple` \| `blue` | false | `black`  | 색상                                         |
+| `variant`    | `filled` \| `outlined` \| `solid` \| `soft-outlined`                  | false | `filled` | 스타일                                       |
 | `prefixIcon` | `ReactNode`                                                           | false | -        | 앞쪽 아이콘. 16x16 소켓, hover 시 opacity-75 |
 | `suffixIcon` | `ReactNode`                                                           | false | -        | 뒤쪽 아이콘. 16x16 소켓, hover 시 opacity-75 |
 
@@ -154,82 +157,82 @@ Button과 달리 아이콘의 `onClick`을 무시하지 않습니다(닫기 버�
 ```tsx
 const [checked, setChecked] = useState(false);
 
-<Toggle aria-label="알림 사용" size="md" checked={checked} onChange={setChecked} />;
+<Toggle aria-label="알림 사용" checked={checked} onChange={setChecked} />;
 ```
 
 | prop       | 타입                         | 필수  | 기본값  | 설명                                 |
 | ---------- | ---------------------------- | ----- | ------- | ------------------------------------ |
 | `size`     | `lg` \| `md` \| `sm`         | false | `md`    | 크기                                 |
 | `checked`  | `boolean`                    | true  | -       | 컨트롤드 컴포넌트라 반드시 넘겨야 함 |
+| `loading`  | `boolean`                    | false | `false` | thumb 안에 로딩 표시 및 동작 차단    |
 | `onChange` | `(checked: boolean) => void` | false | -       | 클릭 시 반전된 값과 함께 호출        |
 | `disabled` | `boolean`                    | false | `false` | 비활성화                             |
-
-라벨(온/오프 텍스트) 기능은 시도했으나 가변폭 처리에서 CSS 버그가 계속 발생해 제외했습니다. 라벨 없는 버전만 지원합니다.
 
 ### Label
 
 ```tsx
-<Label size="md" required>
-  이름
-</Label>
+<Label label="이름" size="md" required />
 ```
 
 | prop       | 타입                 | 필수  | 기본값  | 설명               |
 | ---------- | -------------------- | ----- | ------- | ------------------ |
 | `size`     | `lg` \| `md` \| `sm` | false | `md`    | 크기               |
 | `required` | `boolean`            | false | `false` | 뒤에 빨간 `*` 표시 |
-| `children` | `ReactNode`          | true  | -       | 라벨 텍스트        |
+| `label`    | `ReactNode`          | true  | -       | 라벨 텍스트        |
 
 `htmlFor` 등 나머지 네이티브 `<label>` props도 그대로 지원합니다. Input 전용이 아니라 Select, CheckBox 등 다른 필드에서도 재사용하는 독립 컴포넌트입니다.
 
-### ErrorText
+### ErrorMessage
 
 ```tsx
-<ErrorText>{error && "형식이 올바르지 않습니다"}</ErrorText>
+<ErrorMessage errorMessage={error ? "형식이 올바르지 않습니다" : undefined} />
 ```
 
-| prop       | 타입        | 필수  | 기본값 | 설명                                                    |
-| ---------- | ----------- | ----- | ------ | ------------------------------------------------------- |
-| `children` | `ReactNode` | false | -      | 에러 메시지. 없으면(`undefined`/`false`) 접혀서 안 보임 |
+| prop           | 타입        | 필수  | 기본값 | 설명                                                    |
+| -------------- | ----------- | ----- | ------ | ------------------------------------------------------- |
+| `errorMessage` | `ReactNode` | false | -      | 에러 메시지. 없으면(`undefined`/`false`) 접혀서 안 보임 |
 
-`children`이 생기면 위→아래로 슬라이드하며 나타나고, 없어지면 반대로 슬라이드업하며 사라집니다. 긴 문장은 줄바꿈되며 `role="alert"`/`aria-live="polite"`로 보조기기에 전달됩니다. Label과 마찬가지로 Input 전용이 아닌 독립 컴포넌트입니다.
+`errorMessage`가 생기면 위→아래로 슬라이드하며 나타나고, 없어지면 반대로 슬라이드업하며 사라집니다. 긴 문장은 줄바꿈되며 `role="alert"`/`aria-live="polite"`로 보조기기에 전달됩니다. Label과 마찬가지로 Input 전용이 아닌 독립 컴포넌트입니다.
 
 ### Input
 
 ```tsx
 const [value, setValue] = useState("");
 
+const validateEmail = (value: string) => (value.includes("@") ? "" : "형식이 올바르지 않습니다");
+
 <Input
   label="이메일"
   required
   value={value}
+  validate={validateEmail}
   onChange={setValue}
-  errorText={!value.includes("@") ? "형식이 올바르지 않습니다" : undefined}
   allowClear
   maxLength={30}
 />;
 ```
 
-| prop         | 타입                      | 필수  | 기본값    | 설명                                                             |
-| ------------ | ------------------------- | ----- | --------- | ---------------------------------------------------------------- |
-| `size`       | `lg` \| `md` \| `sm`      | false | `md`      | 크기                                                             |
-| `variant`    | `default` \| `filled`     | false | `default` | 스타일                                                           |
-| `label`      | `ReactNode`               | false | -         | 있으면 위에 [Label](#label) 렌더링                               |
-| `required`   | `boolean`                 | false | `false`   | 실제 input에 required 적용 + Label이 있으면 `*` 표시             |
-| `errorText`  | `ReactNode`               | false | -         | 있으면 아래에 [ErrorText](#errortext) 렌더링 + 테두리 warning 색 |
-| `disabled`   | `boolean`                 | false | `false`   | 비활성화                                                         |
-| `allowClear` | `boolean`                 | false | `false`   | 값 있을 때 지우기 버튼. 지운 뒤 input으로 포커스 복귀            |
-| `showCount`  | `boolean`                 | false | `false`   | 글자 수 표시. `maxLength`가 있으면 `n / maxLength` 형식          |
-| `maxLength`  | `number`                  | false | -         | 최대 글자수. 한글 IME 조합 중에도 자체 검증해서 강제함           |
-| `prefixIcon` | `ReactNode`               | false | -         | 앞쪽 아이콘                                                      |
-| `suffixIcon` | `ReactNode`               | false | -         | 뒤쪽 아이콘                                                      |
-| `className`  | `string`                  | false | -         | 최상위 요소 클래스                                               |
-| `onChange`   | `(value: string) => void` | false | -         | 입력값이 바뀔 때 변경된 입력값과 함께 호출                       |
-| `onBlur`     | `() => void`              | false | -         | 포커스가 빠질 때 호출                                            |
-| `onError`    | `(error: string) => void` | false | -         | 입력값이 바뀔 때 빈 문자열과 함께 호출                           |
-| `onEnter`    | `() => void`              | false | -         | Enter를 누를 때 호출                                             |
+| prop           | 타입                                                  | 필수  | 기본값    | 설명                                                                        |
+| -------------- | ----------------------------------------------------- | ----- | --------- | --------------------------------------------------------------------------- |
+| `size`         | `lg` \| `md` \| `sm`                                  | false | `md`      | 크기                                                                        |
+| `variant`      | `default` \| `filled` \| `borderless` \| `underlined` | false | `default` | 스타일                                                                      |
+| `label`        | `ReactNode`                                           | false | -         | 있으면 위에 [Label](#label) 렌더링                                          |
+| `required`     | `boolean`                                             | false | `false`   | 실제 input에 required 적용 + Label이 있으면 `*` 표시                        |
+| `password`     | `boolean`                                             | false | `false`   | 입력값을 가리고 눈 아이콘으로 표시 상태 전환                                |
+| `errorMessage` | `ReactNode`                                           | false | -         | 있으면 아래에 [ErrorMessage](#errormessage) 렌더링 + 테두리 warning 색      |
+| `disabled`     | `boolean`                                             | false | `false`   | 비활성화                                                                    |
+| `allowClear`   | `boolean`                                             | false | `false`   | 값 있을 때 지우기 버튼. 지운 뒤 input으로 포커스 복귀                       |
+| `showCount`    | `boolean`                                             | false | `false`   | 글자 수 표시. `maxLength`가 있으면 `n / maxLength` 형식                     |
+| `maxLength`    | `number`                                              | false | -         | 최대 글자수. 한글 IME 조합 중에도 자체 검증해서 강제함                      |
+| `prefixIcon`   | `ReactNode`                                           | false | -         | 앞쪽 아이콘                                                                 |
+| `suffixIcon`   | `ReactNode`                                           | false | -         | 뒤쪽 아이콘                                                                 |
+| `validate`     | `(value: string) => string \| Promise<string>`        | false | -         | 동기 검사는 최초 렌더링과 포커스 해제 시, 비동기 검사는 포커스 해제 시 실행 |
+| `className`    | `string`                                              | false | -         | 최상위 요소 클래스                                                          |
+| `onChange`     | `(value: string) => void`                             | false | -         | 입력값이 바뀔 때 변경된 입력값과 함께 호출                                  |
+| `onBlur`       | `() => void`                                          | false | -         | 포커스가 빠질 때 호출                                                       |
+| `onEnter`      | `() => void`                                          | false | -         | Enter를 누를 때 호출                                                        |
 
-`placeholder`, `disabled` 등 나머지 네이티브 `<input>` props도 지원합니다. `errorText`가 있으면 `aria-invalid`와 `aria-describedby`가 자동으로 연결됩니다.
+`placeholder`, `disabled` 등 나머지 네이티브 `<input>` props도 지원합니다. `errorMessage`가 있으면 `aria-invalid`와 `aria-describedby`가 자동으로 연결됩니다.
 
 ### Checkbox
 
@@ -298,13 +301,13 @@ Ant Design과 익숙한 핵심 API 사용 패턴을 제공하는 독립 Table입
 ```tsx
 import { Button, Flex } from "@taejin-k/wizard-design";
 
-<Flex align="center" gap="small" justify="space-between" wrap>
+<Flex align="center" gap={8} justify="space-between" wrap>
   <Button>취소</Button>
-  <Button type="primary">저장</Button>
+  <Button variant="primary">저장</Button>
 </Flex>;
 ```
 
-`gap`은 `small`, `medium`, `large` 토큰뿐 아니라 숫자와 CSS 문자열도 받을 수 있습니다. `vertical` 또는 `orientation="vertical"`로 세로 배치를 만들고, `component`로 최상위 HTML 요소를 변경할 수 있습니다.
+`gap`은 px 단위의 숫자로 설정합니다. `vertical`로 세로 배치를 만들고, `component`로 최상위 HTML 요소를 변경할 수 있습니다.
 
 ### Segmented
 

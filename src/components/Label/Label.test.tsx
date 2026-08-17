@@ -8,9 +8,7 @@ describe("Label", () => {
     const ref = createRef<HTMLLabelElement>();
     render(
       <>
-        <Label ref={ref} htmlFor="name">
-          이름
-        </Label>
+        <Label ref={ref} htmlFor="name" label="이름" />
         <input id="name" />
       </>,
     );
@@ -22,19 +20,15 @@ describe("Label", () => {
   });
 
   it("shows the required mark only when requested", () => {
-    const { rerender } = render(<Label>이름</Label>);
+    const { rerender } = render(<Label label="이름" />);
     expect(screen.queryByText("*")).not.toBeInTheDocument();
 
-    rerender(<Label required>이름</Label>);
+    rerender(<Label label="이름" required />);
     expect(screen.getByText("*")).toHaveAttribute("aria-hidden", "true");
   });
 
   it("applies size and an external class", () => {
-    render(
-      <Label className="custom-label" size="lg">
-        이름
-      </Label>,
-    );
+    render(<Label className="custom-label" label="이름" size="lg" />);
 
     expect(screen.getByText("이름")).toHaveClass("custom-label", "text-[14px]");
   });

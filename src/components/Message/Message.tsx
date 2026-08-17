@@ -11,6 +11,11 @@ import { createRoot, type Root } from "react-dom/client";
 import { createPortal } from "react-dom";
 import { twMerge } from "tailwind-merge";
 import { Icon } from "../Icon";
+import {
+  MOTION_DURATION_MID,
+  MOTION_EASE_IN_OUT_CIRC,
+  MOTION_EASE_OUT_CIRC,
+} from "../_internal/motion";
 import type {
   MessageApi,
   MessageArgsProps,
@@ -24,6 +29,7 @@ import type {
 interface MessageItem extends MessageArgsProps {
   key: MessageKey;
   resolve: (value: boolean) => void;
+  closing?: boolean;
 }
 
 const globalConfig: MessageGlobalConfig = { duration: 3, stack: false, top: 8 };
@@ -43,25 +49,47 @@ function useMessageHolder(config: MessageGlobalConfig = {}): [MessageInstance, R
   const resolvedConfig = { ...globalConfig, ...config };
   const [items, setItems] = useState<MessageItem[]>([]);
   const resolvers = useRef(new Map<MessageKey, (value: boolean) => void>());
+  const onCloseCallbacks = useRef(new Map<MessageKey, (() => void) | undefined>());
+  const closeTimers = useRef(new Map<MessageKey, number>());
   const close = useCallback((key?: MessageKey) => {
-    setItems((current) => {
-      const removed = key === undefined ? current : current.filter((item) => item.key === key);
-      removed.forEach((item) => {
-        item.onClose?.();
-        resolvers.current.get(item.key)?.(true);
-        resolvers.current.delete(item.key);
-      });
-      return key === undefined ? [] : current.filter((item) => item.key !== key);
+    setItems((current) =>
+      current.map((item) =>
+        (key === undefined || item.key === key) && !item.closing
+          ? { ...item, closing: true }
+          : item,
+      ),
+    );
+    const keys = key === undefined ? Array.from(resolvers.current.keys()) : [key];
+    keys.forEach((targetKey) => {
+      if (closeTimers.current.has(targetKey)) return;
+      closeTimers.current.set(
+        targetKey,
+        window.setTimeout(() => {
+          onCloseCallbacks.current.get(targetKey)?.();
+          onCloseCallbacks.current.delete(targetKey);
+          setItems((current) => current.filter((item) => item.key !== targetKey));
+          resolvers.current.get(targetKey)?.(true);
+          resolvers.current.delete(targetKey);
+          closeTimers.current.delete(targetKey);
+        }, MOTION_DURATION_MID),
+      );
     });
   }, []);
+  useEffect(() => () => closeTimers.current.forEach((timer) => window.clearTimeout(timer)), []);
   const open = useCallback(
     (input: MessageArgsProps) => {
       const key = input.key ?? `message-${Date.now()}-${Math.random()}`;
+      const closeTimer = closeTimers.current.get(key);
+      if (closeTimer !== undefined) {
+        window.clearTimeout(closeTimer);
+        closeTimers.current.delete(key);
+      }
       let resolvePromise: (value: boolean) => void = () => undefined;
       const promise = new Promise<boolean>((resolve) => {
         resolvePromise = resolve;
       });
       resolvers.current.set(key, resolvePromise);
+      onCloseCallbacks.current.set(key, input.onClose);
       setItems((current) => {
         const nextItem = {
           ...input,
@@ -152,11 +180,17 @@ function MessageCard({
   onClose: () => void;
 }) {
   const timer = useRef<number | undefined>(undefined);
+  const [entered, setEntered] = useState(false);
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => setEntered(true));
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
   const startTimer = useCallback(() => {
     window.clearTimeout(timer.current);
+    if (item.closing) return;
     if (item.duration && item.duration > 0)
       timer.current = window.setTimeout(onClose, item.duration * 1000);
-  }, [item.duration, onClose]);
+  }, [item.closing, item.duration, onClose]);
   useEffect(() => {
     startTimer();
     return () => window.clearTimeout(timer.current);
@@ -165,14 +199,21 @@ function MessageCard({
   return (
     <div
       className={twMerge(
-        "pointer-events-auto flex min-h-10 max-w-[calc(100vw-32px)] items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm text-[#111] shadow-[0_6px_18px_rgba(0,0,0,0.14)] transition-[transform,opacity]",
+        "pointer-events-auto flex min-h-10 max-w-[calc(100vw-32px)] items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm text-[#111] shadow-[0_6px_18px_rgba(0,0,0,0.14)] transition-[transform,opacity] duration-200 motion-reduce:transition-none",
+        item.closing && "pointer-events-none",
         item.classNames?.root,
         item.className,
       )}
       style={{
-        transform: stacked
-          ? `translateY(${(count - index - 1) * -4}px) scale(${1 - (count - index - 1) * 0.03})`
-          : undefined,
+        opacity: entered && !item.closing ? 1 : 0,
+        transform:
+          entered && !item.closing
+            ? stacked
+              ? `translateY(${(count - index - 1) * -4}px) scale(${1 - (count - index - 1) * 0.03})`
+              : "translateY(0)"
+            : "translateY(-100%)",
+        transitionTimingFunction:
+          entered && !item.closing ? MOTION_EASE_OUT_CIRC : MOTION_EASE_IN_OUT_CIRC,
         ...item.style,
         ...item.styles?.root,
       }}
