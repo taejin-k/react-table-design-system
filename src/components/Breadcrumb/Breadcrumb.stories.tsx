@@ -1,12 +1,11 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import type { ComponentType } from "react";
 import { Description, Markdown, Stories, Title } from "@storybook/addon-docs/blocks";
-import { fn } from "storybook/test";
 import { storyDescriptions } from "../../storybook/story-descriptions";
 import { withStoryImports } from "../../storybook/story-source";
 import { Icon } from "../Icon";
 import { Breadcrumb } from "./Breadcrumb";
-import type { BreadcrumbProps, Item } from "./Breadcrumb.types";
+import type { BreadcrumbItem, BreadcrumbProps } from "./Breadcrumb.types";
 
 interface BreadcrumbStoryArgs extends BreadcrumbProps {
   itemCount?: number;
@@ -16,7 +15,7 @@ interface BreadcrumbStoryArgs extends BreadcrumbProps {
   currentColor?: string;
 }
 
-const handleItemClick = fn();
+const handleItemClick = () => alert("Breadcrumb 항목을 클릭했어요.");
 
 const itemExamples = [
   [{ title: "홈" }],
@@ -39,7 +38,7 @@ const itemExamples = [
     { title: "컴포넌트", onClick: handleItemClick },
     { title: "Breadcrumb" },
   ],
-] satisfies Item[][];
+] satisfies BreadcrumbItem[][];
 
 const storyDescription = (id: string) => ({
   docs: { description: { story: storyDescriptions[id] } },
@@ -70,16 +69,14 @@ const meta = {
 
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
-| \`items\` | 왼쪽의 상위 경로부터 현재 위치까지 순서대로 전달해요. | \`Item[]\` | \`[]\` |
+| \`items\` | 왼쪽의 상위 경로부터 현재 위치까지 순서대로 전달해요. | [\`BreadcrumbItem[]\`](#breadcrumb-item) | \`[]\` |
 | \`className\` | 외부에서 Tailwind 클래스를 추가해요. | \`string\` | - |
-
-### Item
-
-\`items\` 배열의 각 항목에 아래 속성을 설정할 수 있어요.
-
+          `}</Markdown>
+          <h3 id="breadcrumb-item">BreadcrumbItem</h3>
+          <p>items 배열의 각 경로 항목에 사용할 속성을 설정해요.</p>
+          <Markdown>{`
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
-| \`key\` | 항목을 구분하는 고유한 값이에요. | \`string \\| number\` | - |
 | \`title\` | 화면에 표시할 경로 이름이에요. 아이콘만 표시할 때는 생략해요. | \`ReactNode\` | - |
 | \`href\` | 이동할 주소예요. 값이 있으면 링크와 호버 디자인을 적용해요. | \`string\` | - |
 | \`icon\` | 경로 이름 앞에 표시할 아이콘이에요. | \`ReactNode\` | - |
@@ -120,14 +117,14 @@ export const Items: Story = {
       <Breadcrumb
         items={[
           { title: '홈', href: '#' },
-          { title: '프로젝트', onClick: () => {} },
+          { title: '프로젝트', onClick: () => alert('Breadcrumb 항목을 클릭했어요.') },
           { title: '디자인 시스템' },
         ]}
       />
       <Breadcrumb
         items={[
           { title: '홈', href: '#' },
-          { title: '프로젝트', onClick: () => {} },
+          { title: '프로젝트', onClick: () => alert('Breadcrumb 항목을 클릭했어요.') },
           { title: '디자인 시스템', href: '#design-system' },
           { title: '컴포넌트' },
         ]}
@@ -135,9 +132,9 @@ export const Items: Story = {
       <Breadcrumb
         items={[
           { title: '홈', href: '#' },
-          { title: '프로젝트', onClick: () => {} },
+          { title: '프로젝트', onClick: () => alert('Breadcrumb 항목을 클릭했어요.') },
           { title: '디자인 시스템', href: '#design-system' },
-          { title: '컴포넌트', onClick: () => {} },
+          { title: '컴포넌트', onClick: () => alert('Breadcrumb 항목을 클릭했어요.') },
           { title: 'Breadcrumb' },
         ]}
       />
@@ -179,7 +176,7 @@ export const WithIcons: Story = {
   return (
     <Breadcrumb
       items={[
-        { title: '홈', href: '#', icon: <Icon icon="home" /> },
+        { title: '홈', href: '#', icon: <Icon icon="home-outlined" /> },
         { title: '설정', href: '#settings', icon: <Icon icon="setting" /> },
         { title: '내 정보', icon: <Icon icon="edit" /> },
       ]}
@@ -192,7 +189,7 @@ export const WithIcons: Story = {
   render: ({ showIcons }) => (
     <Breadcrumb
       items={[
-        { title: "홈", href: "#", icon: showIcons ? <Icon icon="home" /> : undefined },
+        { title: "홈", href: "#", icon: showIcons ? <Icon icon="home-outlined" /> : undefined },
         { title: "설정", href: "#settings", icon: showIcons ? <Icon icon="setting" /> : undefined },
         { title: "내 정보", icon: showIcons ? <Icon icon="edit" /> : undefined },
       ]}
@@ -211,7 +208,7 @@ export const SingleIcon: Story = {
   return (
     <Breadcrumb
       items={[
-        { icon: <Icon icon="home" />, href: '#' },
+        { icon: <Icon icon="home-outlined" />, href: '#' },
         { title: '프로젝트', href: '#projects' },
         { title: '디자인 시스템' },
       ]}
@@ -224,7 +221,7 @@ export const SingleIcon: Story = {
   render: () => (
     <Breadcrumb
       items={[
-        { icon: <Icon icon="home" />, href: "#" },
+        { icon: <Icon icon="home-outlined" />, href: "#" },
         { title: "프로젝트", href: "#projects" },
         { title: "디자인 시스템" },
       ]}
@@ -250,8 +247,8 @@ export const ItemColors: Story = {
   return (
     <Breadcrumb
       items={[
-        { title: '홈', href: '#', icon: <Icon icon="home" />, color: '#0062df' },
-        { title: '프로젝트', href: '#projects', icon: <Icon icon="folder" />, color: '#4f19c4' },
+        { title: '홈', href: '#', icon: <Icon icon="home-outlined" />, color: '#0062df' },
+        { title: '프로젝트', href: '#projects', icon: <Icon icon="folder-outlined" />, color: '#4f19c4' },
         { title: '현재 위치', icon: <Icon icon="edit" />, color: '#d92626' },
       ]}
     />
@@ -263,11 +260,11 @@ export const ItemColors: Story = {
   render: ({ firstColor, secondColor, currentColor }) => (
     <Breadcrumb
       items={[
-        { title: "홈", href: "#", icon: <Icon icon="home" />, color: firstColor },
+        { title: "홈", href: "#", icon: <Icon icon="home-outlined" />, color: firstColor },
         {
           title: "프로젝트",
           href: "#projects",
-          icon: <Icon icon="folder" />,
+          icon: <Icon icon="folder-outlined" />,
           color: secondColor,
         },
         { title: "현재 위치", icon: <Icon icon="edit" />, color: currentColor },

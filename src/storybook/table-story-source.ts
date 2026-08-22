@@ -29,7 +29,7 @@ const tablePropOrder = [
   "showSorterTooltip",
   "tableLayout",
   "rowHoverable",
-  "sticky",
+  "stickyHeader",
   "virtual",
   "stickyScrollBar",
   "scroll",
@@ -63,7 +63,7 @@ const objectPropOrder = [
   "render",
 ];
 
-const memberPropOrder = ["key", "name", "role", "team", "status", "projects", "joinedAt"];
+const memberPropOrder = ["id", "name", "role", "team", "status", "projects", "joinedAt"];
 
 const functionProp = (name: string) =>
   name.startsWith("on") || ["render", "sorter", "showTotal", "getPopupContainer"].includes(name);

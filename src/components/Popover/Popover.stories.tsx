@@ -1,13 +1,13 @@
 import { Description, Markdown, Stories, Title } from "@storybook/addon-docs/blocks";
 import type { Meta, StoryObj } from "@storybook/react";
-import { useState } from "react";
+import { useState, type ComponentType } from "react";
 import { storyDescriptions } from "../../storybook/story-descriptions";
 import { withStoryImports } from "../../storybook/story-source";
 import { Button } from "../Button";
 import { Popover } from "./Popover";
-import type { PopoverPlacement, PopoverTrigger } from "./Popover.types";
+import type { PopoverPlacementType, PopoverProps, PopoverTriggerType } from "./Popover.types";
 
-const placements: PopoverPlacement[] = [
+const placements: PopoverPlacementType[] = [
   "topLeft",
   "top",
   "topRight",
@@ -21,7 +21,7 @@ const placements: PopoverPlacement[] = [
   "bottom",
   "bottomRight",
 ];
-const triggers: PopoverTrigger[] = ["hover", "focus", "click", "contextMenu"];
+const triggers: PopoverTriggerType[] = ["hover", "focus", "click", "contextMenu"];
 
 const storyDescription = (id: string) => ({
   docs: { description: { story: storyDescriptions[id] } },
@@ -29,18 +29,8 @@ const storyDescription = (id: string) => ({
 
 const meta = {
   title: "Components/Popover",
-  component: Popover,
+  component: Popover as ComponentType<Partial<PopoverProps>>,
   tags: ["autodocs"],
-  args: {
-    children: <Button variant="secondary">마우스를 올려보세요</Button>,
-    title: "제목",
-    content: "추가 내용을 표시해요.",
-    placement: "top",
-    trigger: "hover",
-    arrow: true,
-    color: "#ffffff",
-    autoAdjustOverflow: true,
-  },
   argTypes: {
     title: { name: "제목", control: "text" },
     content: { name: "내용", control: "text" },
@@ -74,28 +64,60 @@ const meta = {
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
 | \`children\` | Popover를 연결할 하나의 요소예요. | \`ReactElement\` | - |
-| \`title\` | 카드의 제목을 설정해요. | \`ReactNode \\| () => ReactNode\` | - |
+| \`title\` | 카드의 제목을 설정해요. | \`ReactNode\` | - |
 | \`content\` | 카드에 표시할 내용을 설정해요. | \`ReactNode \\| () => ReactNode\` | - |
-| \`placement\` | 카드가 표시될 위치를 설정해요. | \`PopoverPlacement\` | \`top\` |
-| \`trigger\` | hover, focus, click, contextMenu로 표시해요. | \`PopoverTrigger \\| PopoverTrigger[]\` | \`hover\` |
+| \`placement\` | 카드가 표시될 위치를 설정해요. | [\`PopoverPlacementType\`](#popover-placement-type) | \`top\` |
+| \`trigger\` | hover, focus, click, contextMenu로 표시해요. | [\`PopoverTriggerType\`](#popover-trigger-type) \\| [\`PopoverTriggerType[]\`](#popover-trigger-type) | \`hover\` |
 | \`arrow\` | 대상을 가리키는 화살표를 표시해요. | \`boolean\` | \`true\` |
-| \`color\` | 카드의 배경 색상을 설정해요. | \`string\` | \`#ffffff\` |
+| \`color\` | 카드의 배경 색상을 설정해요. | \`CSSProperties['backgroundColor']\` | \`#ffffff\` |
 | \`open\` | 카드의 표시 상태를 외부에서 관리해요. | \`boolean\` | - |
 | \`defaultOpen\` | 처음 렌더링할 때 카드를 표시해요. | \`boolean\` | \`false\` |
 | \`autoAdjustOverflow\` | 화면을 벗어나면 반대 위치로 보정해요. | \`boolean\` | \`true\` |
 | \`className\` | 대상에 Tailwind 클래스를 추가해요. | \`string\` | - |
 | \`onOpenChange\` | 표시 상태가 바뀔 때 실행할 함수예요. | \`(open: boolean) => void\` | - |
           `}</Markdown>
+          <h2 className="component-docs-types-heading">Types</h2>
+          <h3 id="popover-placement-type">PopoverPlacementType</h3>
+          <p>대상을 기준으로 Popover가 표시될 위치를 선택해요.</p>
+          <div className="flex flex-wrap gap-2">
+            {placements.map((placement) => (
+              <PopoverTypeCode key={placement} value={placement} />
+            ))}
+          </div>
+          <h3 id="popover-trigger-type">PopoverTriggerType</h3>
+          <p>Popover를 표시할 동작을 선택해요.</p>
+          <div className="flex flex-wrap gap-2">
+            {triggers.map((trigger) => (
+              <PopoverTypeCode key={trigger} value={trigger} />
+            ))}
+          </div>
         </div>
       ),
     },
   },
-} satisfies Meta<typeof Popover>;
+} satisfies Meta<Partial<PopoverProps>>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+function PopoverTypeCode({ value }: { value: PopoverPlacementType | PopoverTriggerType }) {
+  return (
+    <code className="rounded-full border border-[#e3e8ef] bg-[#f8fafc] px-3 py-1.5 text-[13px] text-[#4a5667]">
+      {value}
+    </code>
+  );
+}
+
 export const Basic: Story = {
+  args: {
+    title: "제목",
+    content: "추가 내용을 표시해요.",
+    placement: "top",
+    trigger: "hover",
+    arrow: true,
+    color: "#ffffff",
+    autoAdjustOverflow: true,
+  },
   parameters: {
     ...storyDescription("components-popover--basic"),
     controls: { disable: false },
@@ -106,7 +128,7 @@ export const Basic: Story = {
   return (
     <div className="flex min-h-32 items-center justify-center">
       <Popover title="제목" content="추가 내용을 표시해요.">
-        <Button variant="secondary">마우스를 올려보세요</Button>
+        <Button>마우스를 올려보세요</Button>
       </Popover>
     </div>
   );
@@ -116,8 +138,8 @@ export const Basic: Story = {
   },
   render: (args) => (
     <div className="flex min-h-32 items-center justify-center">
-      <Popover {...args}>
-        <Button variant="secondary">마우스를 올려보세요</Button>
+      <Popover {...args} content={args.content ?? "추가 내용을 표시해요."}>
+        <Button>마우스를 올려보세요</Button>
       </Popover>
     </div>
   ),
@@ -134,40 +156,40 @@ export const Placements: Story = {
   return (
     <div className="grid min-h-[420px] grid-cols-3 place-items-center gap-x-24 gap-y-10 px-24 py-16">
       <Popover content="추가 내용" placement="topLeft" title="Popover" trigger="click">
-        <Button className="w-28" variant="secondary">topLeft</Button>
+        <Button>topLeft</Button>
       </Popover>
-      <Popover content="추가 내용" placement="top" title="Popover" trigger="click">
-        <Button className="w-28" variant="secondary">top</Button>
+      <Popover content="추가 내용" title="Popover" trigger="click">
+        <Button>top</Button>
       </Popover>
       <Popover content="추가 내용" placement="topRight" title="Popover" trigger="click">
-        <Button className="w-28" variant="secondary">topRight</Button>
+        <Button>topRight</Button>
       </Popover>
       <Popover content="추가 내용" placement="leftTop" title="Popover" trigger="click">
-        <Button className="w-28" variant="secondary">leftTop</Button>
+        <Button>leftTop</Button>
       </Popover>
       <Popover content="추가 내용" placement="rightTop" title="Popover" trigger="click">
-        <Button className="w-28" variant="secondary">rightTop</Button>
+        <Button>rightTop</Button>
       </Popover>
       <Popover content="추가 내용" placement="left" title="Popover" trigger="click">
-        <Button className="w-28" variant="secondary">left</Button>
+        <Button>left</Button>
       </Popover>
       <Popover content="추가 내용" placement="right" title="Popover" trigger="click">
-        <Button className="w-28" variant="secondary">right</Button>
+        <Button>right</Button>
       </Popover>
       <Popover content="추가 내용" placement="leftBottom" title="Popover" trigger="click">
-        <Button className="w-28" variant="secondary">leftBottom</Button>
+        <Button>leftBottom</Button>
       </Popover>
       <Popover content="추가 내용" placement="rightBottom" title="Popover" trigger="click">
-        <Button className="w-28" variant="secondary">rightBottom</Button>
+        <Button>rightBottom</Button>
       </Popover>
       <Popover content="추가 내용" placement="bottomLeft" title="Popover" trigger="click">
-        <Button className="w-28" variant="secondary">bottomLeft</Button>
+        <Button>bottomLeft</Button>
       </Popover>
       <Popover content="추가 내용" placement="bottom" title="Popover" trigger="click">
-        <Button className="w-28" variant="secondary">bottom</Button>
+        <Button>bottom</Button>
       </Popover>
       <Popover content="추가 내용" placement="bottomRight" title="Popover" trigger="click">
-        <Button className="w-28" variant="secondary">bottomRight</Button>
+        <Button>bottomRight</Button>
       </Popover>
     </div>
   );
@@ -185,9 +207,7 @@ export const Placements: Story = {
           title="Popover"
           trigger="click"
         >
-          <Button className="w-28" variant="secondary">
-            {placement}
-          </Button>
+          <Button>{placement}</Button>
         </Popover>
       ))}
     </div>
@@ -205,19 +225,19 @@ export const Triggers: Story = {
   return (
     <div className="flex min-h-32 flex-wrap items-center justify-center gap-3">
       <Popover content="hover로 열었어요.">
-        <Button variant="secondary">hover</Button>
+        <Button>hover</Button>
       </Popover>
       <Popover content="focus로 열었어요." trigger="focus">
-        <Button variant="secondary">focus</Button>
+        <Button>focus</Button>
       </Popover>
       <Popover content="click으로 열었어요." trigger="click">
-        <Button variant="secondary">click</Button>
+        <Button>click</Button>
       </Popover>
       <Popover content="contextMenu로 열었어요." trigger="contextMenu">
-        <Button variant="secondary">contextMenu (우클릭)</Button>
+        <Button>contextMenu (우클릭)</Button>
       </Popover>
       <Popover content="hover + focus로 열었어요." trigger={['hover', 'focus']}>
-        <Button variant="secondary">hover + focus</Button>
+        <Button>hover + focus</Button>
       </Popover>
     </div>
   );
@@ -229,13 +249,11 @@ export const Triggers: Story = {
     <div className="flex min-h-32 flex-wrap items-center justify-center gap-3">
       {triggers.map((trigger) => (
         <Popover key={trigger} content={`${trigger}로 열었어요.`} trigger={trigger}>
-          <Button variant="secondary">
-            {trigger === "contextMenu" ? "contextMenu (우클릭)" : trigger}
-          </Button>
+          <Button>{trigger === "contextMenu" ? "contextMenu (우클릭)" : trigger}</Button>
         </Popover>
       ))}
       <Popover content="hover + focus로 열었어요." trigger={["hover", "focus"]}>
-        <Button variant="secondary">hover + focus</Button>
+        <Button>hover + focus</Button>
       </Popover>
     </div>
   ),
@@ -260,13 +278,13 @@ export const Appearance: Story = {
   return (
     <div className="flex min-h-32 flex-wrap items-center justify-center gap-3">
       <Popover content="추가 내용" title="기본 색상">
-        <Button variant="secondary">기본</Button>
+        <Button>기본</Button>
       </Popover>
       <Popover color="#0062df" content="추가 내용" title="파란색">
-        <Button variant="secondary">색상</Button>
+        <Button>색상</Button>
       </Popover>
       <Popover arrow={false} content="추가 내용" title="화살표 없음">
-        <Button variant="secondary">화살표 없음</Button>
+        <Button>화살표 없음</Button>
       </Popover>
     </div>
   );
@@ -277,13 +295,13 @@ export const Appearance: Story = {
   render: () => (
     <div className="flex min-h-32 flex-wrap items-center justify-center gap-3">
       <Popover content="추가 내용" title="기본 색상">
-        <Button variant="secondary">기본</Button>
+        <Button>기본</Button>
       </Popover>
       <Popover color="#0062df" content="추가 내용" title="파란색">
-        <Button variant="secondary">색상</Button>
+        <Button>색상</Button>
       </Popover>
       <Popover arrow={false} content="추가 내용" title="화살표 없음">
-        <Button variant="secondary">화살표 없음</Button>
+        <Button>화살표 없음</Button>
       </Popover>
     </div>
   ),
@@ -316,7 +334,7 @@ export const Actions: Story = {
         trigger="click"
         onOpenChange={setOpen}
       >
-        <Button variant="secondary">작업 열기</Button>
+        <Button>작업 열기</Button>
       </Popover>
     </div>
   );
@@ -349,7 +367,7 @@ function PopoverActionsExample() {
         trigger="click"
         onOpenChange={setOpen}
       >
-        <Button variant="secondary">작업 열기</Button>
+        <Button>작업 열기</Button>
       </Popover>
     </div>
   );
@@ -374,7 +392,7 @@ export const Controlled: Story = {
         trigger="click"
         onOpenChange={setOpen}
       >
-        <Button variant="secondary">{open ? '닫기' : '열기'}</Button>
+        <Button>{open ? '닫기' : '열기'}</Button>
       </Popover>
     </div>
   );
@@ -391,7 +409,7 @@ function ControlledPopover() {
   return (
     <div className="flex min-h-32 items-center justify-center">
       <Popover content="추가 내용" open={open} title="제목" trigger="click" onOpenChange={setOpen}>
-        <Button variant="secondary">{open ? "닫기" : "열기"}</Button>
+        <Button>{open ? "닫기" : "열기"}</Button>
       </Popover>
     </div>
   );

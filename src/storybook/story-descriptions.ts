@@ -4,6 +4,8 @@ export const storyDescriptions: Record<string, string> = {
     "다섯 가지 버튼 종류를 비교해요. ghost는 hover하면 tertiary 배경으로 바뀌어요.",
   "components-button--sizes": "화면과 작업 환경에 맞게 세 가지 버튼 크기를 선택할 수 있어요.",
   "components-button--states": "기본, 그림자, 비활성, 전체 너비 상태를 사용할 수 있어요.",
+  "components-button--rounded":
+    "rounded를 사용해 각 버튼 크기의 높이만큼 모서리를 둥글게 만들 수 있어요.",
   "components-button--icons": "버튼 이름의 앞뒤에 아이콘을 배치하거나 아이콘만 표시할 수 있어요.",
   "components-button--loading": "버튼을 클릭하면 기존 아이콘 자리에 로딩을 표시해요.",
 
@@ -30,7 +32,7 @@ export const storyDescriptions: Record<string, string> = {
   "components-input--password":
     "입력값을 비밀번호로 가리고 눈 아이콘을 눌러 표시 상태를 전환할 수 있어요.",
   "components-input--icons-and-count":
-    "아이콘과 지우기 버튼을 추가하고 글자 수를 현재 값 또는 현재/최대 값으로 표시할 수 있어요.",
+    "기본·filled 입력창에 아이콘과 지우기 버튼을 추가하고 글자 수를 현재 값 또는 현재/최대 값으로 표시할 수 있어요.",
   "components-input--static-error":
     "errorMessage를 전달해 입력창 아래에 고정 오류 문구와 오류 상태를 표시해요.",
   "components-input--client-error":
@@ -71,7 +73,7 @@ export const storyDescriptions: Record<string, string> = {
   "components-select--label-and-error":
     "Select 위에 레이블과 필수 표시를 추가하고 아래에 오류 문구를 표시할 수 있어요.",
   "components-select--multiple-and-search":
-    "그룹 항목을 검색하고 여러 값을 선택하거나 해제할 수 있어요.",
+    "기본·filled 입력창에서 그룹 항목을 검색하고 여러 값을 선택하거나 해제할 수 있어요.",
   "components-select--search":
     "Select에 검색어를 입력해 일치하는 항목만 드롭다운에 표시할 수 있어요.",
   "components-select--filter-option":
@@ -84,8 +86,6 @@ export const storyDescriptions: Record<string, string> = {
     "직접 입력한 값을 쉼표 같은 구분자로 나눠 여러 Tag로 한 번에 추가할 수 있어요.",
   "components-select--selection-limits":
     "선택할 수 있는 최대 항목 수와 입력창에 표시할 최대 Tag 수를 각각 제한할 수 있어요.",
-  "components-select--label-in-value":
-    "labelInValue를 사용해 선택값과 화면 레이블을 하나의 객체로 함께 받을 수 있어요.",
   "components-select--custom-rendering": "항목, 선택 레이블과 목록 아래 영역을 직접 구성해요.",
   "components-select--popup-width-and-placement":
     "Select를 기준으로 드롭다운의 너비와 위·아래 표시 위치를 설정할 수 있어요.",
@@ -166,7 +166,8 @@ export const storyDescriptions: Record<string, string> = {
   "components-timepicker--placements":
     "입력창을 기준으로 시간 패널이 열릴 네 가지 위치를 선택할 수 있어요.",
 
-  "components-icon--icons": "제공하는 아이콘 종류와 기본 모양을 한눈에 확인할 수 있어요.",
+  "components-icon--icons":
+    "비슷한 아이콘을 가까이 배치한 목록에서 이름으로 검색하고 outlined·filled 아이콘을 각각 확인할 수 있어요.",
   "components-icon--size-and-color": "사용 환경에 맞게 아이콘의 크기와 색상을 변경할 수 있어요.",
   "components-icon--clickable": "아이콘에 클릭 동작과 hover 피드백을 추가할 수 있어요.",
   "components-icon--loading":
@@ -230,10 +231,9 @@ export const storyDescriptions: Record<string, string> = {
 
   "components-segmented--basic":
     "연관된 여러 선택지 중 하나를 선택하고 슬라이딩 표시로 빠르게 전환할 수 있어요.",
-  "components-segmented--sizes-shapes":
-    "화면 밀도에 맞는 세 가지 크기와 기본·둥근 모양을 비교할 수 있어요.",
-  "components-segmented--vertical-full-width":
-    "항목을 세로로 배치하거나 부모의 가로 길이를 모두 채우도록 설정할 수 있어요.",
+  "components-segmented--sizes": "화면 밀도에 맞는 세 가지 크기를 비교할 수 있어요.",
+  "components-segmented--vertical": "항목을 세로 방향으로 배치할 수 있어요.",
+  "components-segmented--full-width": "부모의 가로 길이를 모두 채우도록 설정할 수 있어요.",
   "components-segmented--icons-tooltip":
     "선택 항목에 아이콘을 표시하고 필요한 경우 Tooltip 설명을 함께 제공할 수 있어요.",
   "components-segmented--controlled":
@@ -348,6 +348,67 @@ export const storyDescriptions: Record<string, string> = {
     "한 페이지만 존재할 때 hideOnSinglePage로 페이지네이션을 숨겨요.",
   "components-table-selection--associated-tree-selection":
     "checkStrictly=false로 부모와 자식 선택 상태를 연동해요.",
+
+  "components-menu--basic":
+    "아이콘, 구분선과 하위 메뉴를 포함한 인라인 내비게이션을 구성하고 항목을 선택해요.",
+  "components-menu--horizontal":
+    "메뉴를 가로로 배치하고 하위 메뉴를 팝업으로 열어 상단 내비게이션에 사용해요.",
+  "components-menu--dark":
+    "어두운 배경에 맞는 색상과 선택 상태를 적용하고 하위 메뉴를 기본으로 펼쳐요.",
+
+  "components-tabs--basic": "탭을 선택해 연결된 콘텐츠를 전환하고 비활성 탭의 동작을 제한해요.",
+  "components-tabs--card": "탭을 카드 형태로 표시해 영역별 콘텐츠를 명확하게 구분해요.",
+  "components-tabs--editable": "탭 추가·삭제 버튼을 표시하고 onEdit으로 편집 동작을 처리해요.",
+  "components-tabs--vertical": "탭 목록을 콘텐츠 왼쪽에 세로로 배치해요.",
+
+  "components-colorpicker--basic":
+    "색상 패널에서 색조·채도·명도·투명도를 조절하고 프리셋 색상을 선택해요.",
+  "components-colorpicker--sizes": "세 가지 트리거 크기를 나란히 비교해요.",
+  "components-colorpicker--without-alpha": "투명도 조절을 숨기고 불투명 색상만 선택해요.",
+
+  "components-upload--basic":
+    "버튼으로 파일을 선택하고 업로드 전에 파일 목록과 제거 동작을 확인해요.",
+  "components-upload--picture-card":
+    "이미지 파일을 카드 썸네일 목록으로 표시하고 최대 파일 수를 제한해요.",
+  "components-upload--drag-and-drop": "영역을 클릭하거나 파일을 드래그해 여러 파일을 추가해요.",
+
+  "components-avatar--basic": "텍스트, 아이콘과 서로 다른 크기·모양의 아바타를 비교해요.",
+  "components-avatar--group":
+    "여러 아바타를 겹쳐 표시하고 최대 개수를 넘는 사용자를 숫자로 요약해요.",
+
+  "components-badge--count": "아바타 위에 알림 개수를 표시하고 overflowCount를 넘으면 축약해요.",
+  "components-badge--dot": "내용 위에 작은 점을 표시해 새로운 상태가 있음을 알려요.",
+  "components-badge--statuses": "성공, 처리 중, 오류와 경고 상태를 색상과 텍스트로 구분해요.",
+  "components-badge--ribbon": "콘텐츠 모서리에 강조 문구를 담은 리본을 배치해요.",
+
+  "components-calendar--fullscreen":
+    "월간 달력을 전체 너비로 표시하고 날짜와 이전·다음 달을 탐색해요.",
+  "components-calendar--card": "작은 카드형 달력에서 주차와 날짜를 함께 확인해요.",
+  "components-calendar--year": "한 해의 열두 달을 한 화면에서 선택해요.",
+
+  "components-collapse--basic": "여러 패널을 독립적으로 열고 닫으며 비활성 패널의 동작을 제한해요.",
+  "components-collapse--accordion": "한 번에 하나의 패널만 펼쳐지는 아코디언을 사용해요.",
+  "components-collapse--ghost": "배경과 테두리를 제거해 주변 콘텐츠에 자연스럽게 배치해요.",
+
+  "components-description--basic":
+    "레이블과 값을 열 단위로 정렬해 사용자 정보를 읽기 쉽게 표시해요.",
+  "components-description--bordered": "각 레이블과 값을 테두리로 구분한 정보 표를 만들어요.",
+  "components-description--vertical": "레이블을 값 위에 배치해 세로형 정보 목록을 만들어요.",
+
+  "components-image--preview":
+    "이미지를 클릭해 확대 미리보기를 열고 확대·축소·회전·반전 도구를 사용해요.",
+  "components-image--fallback": "원본 이미지를 불러오지 못하면 지정한 대체 이미지를 표시해요.",
+  "components-image--group": "여러 이미지를 하나의 미리보기 그룹으로 묶어 앞뒤로 탐색해요.",
+
+  "components-tree--basic": "계층형 데이터를 펼치고 접으며 폴더와 파일 항목을 선택해요.",
+  "components-tree--checkable": "체크박스로 부모와 자식 노드의 선택 상태를 함께 관리해요.",
+  "components-tree--lines": "부모와 자식 노드 사이의 연결선을 표시해 계층을 강조해요.",
+
+  "components-skeleton--basic":
+    "콘텐츠를 불러오는 동안 아바타, 제목과 문단 형태의 자리 표시자를 표시해요.",
+  "components-skeleton--elements":
+    "아바타, 버튼, 입력창과 이미지 영역에 맞는 단독 Skeleton 요소를 사용해요.",
+  "components-skeleton--loaded": "loading이 끝나면 Skeleton을 실제 콘텐츠로 교체해요.",
 
   "components-table-sorting-filtering--server-table":
     "페이지, 페이지당 행 수, 정렬과 필터 조건을 onChange로 받아 서버 API 요청 파라미터로 사용해요.",

@@ -2,8 +2,6 @@
 import {
   forwardRef,
   Fragment,
-  isValidElement,
-  memo,
   useCallback,
   useEffect,
   useId,
@@ -49,7 +47,7 @@ import {
   TableDragProvider,
 } from "./Table.row-drag";
 import type {
-  ColumnTitleProps,
+  ColumnFixedType,
   ColumnType,
   ColumnsType,
   FilterItem,
@@ -57,16 +55,15 @@ import type {
   FilterValue,
   Key,
   PaginationConfig,
-  PaginationPlacement,
-  RenderedCell,
-  RowSelectMethod,
-  SortOrder,
+  PaginationPlacementType,
+  RowSelectMethodType,
+  SortOrderType,
   SorterResult,
   TableProps,
   TableRef,
 } from "./Table.types";
 
-type SortState<T> = { column: ColumnType<T>; key: string; order: SortOrder; priority: number };
+type SortState<T> = { column: ColumnType<T>; key: string; order: SortOrderType; priority: number };
 type FlatRow<T> = { record: T; depth: number; parent?: Key };
 type VerticalScrollbarState = {
   visible: boolean;
@@ -110,19 +107,21 @@ const HIDDEN_STICKY_SCROLLBAR: StickyScrollbarState = {
   thumbLeft: 0,
   thumbWidth: 0,
 };
+const HORIZONTAL_SCROLLBAR_HEIGHT = 8;
+const STICKY_SCROLLBAR_BOTTOM_GAP = 6;
 
 // ---- 스타일 상수 (wizard-design cva/Tailwind 컨벤션, GROO 색상) ----
 
 const cellSizePad: Record<NonNullable<TableProps<object>["size"]>, string> = {
-  large: "p-4",
-  medium: "px-2 py-3",
-  small: "p-2",
+  lg: "p-4",
+  md: "px-2 py-3",
+  sm: "p-2",
 };
 
 const cellBaseClass =
   "relative z-0 border-b border-[#f0f0f0] bg-white align-middle transition-colors";
 const headerCellBaseClass = "bg-[#f5f5f5] text-left text-[14px] font-semibold text-[#111]";
-const nestedHeaderBorderClass = "border-r border-[#e5e5e5]";
+const nestedHeaderBorderClass = "border-r border-r-[#f0f0f0]";
 const headerCellSortedClass = "bg-[#eee]";
 const cellLastNoRightBorder = "border-r-0";
 const borderedGridClass =
@@ -171,41 +170,38 @@ const fixedRightFirstShadowBaseClass =
   "before:pointer-events-none before:absolute before:left-0 before:top-0 before:bottom-[-1px] before:z-[1] before:w-[30px] before:-translate-x-full before:content-[''] before:shadow-[inset_-10px_0_8px_-8px_rgba(5,5,5,0)] before:transition-shadow";
 const fixedRightFirstShadowVisibleClass = "before:shadow-[inset_-10px_0_8px_-8px_rgba(5,5,5,0.12)]";
 
-function fixedSide(fixed?: ColumnType<object>["fixed"]) {
-  if (fixed === true || fixed === "left" || fixed === "start") return "left";
-  if (fixed === "right" || fixed === "end") return "right";
+function fixedSide(fixed?: ColumnFixedType) {
+  if (fixed === "left") return "left";
+  if (fixed === "right") return "right";
   return null;
 }
 
-function isRenderedCell<T>(value: ReactNode | RenderedCell<T>): value is RenderedCell<T> {
-  return (
-    value !== null &&
-    !isValidElement(value) &&
-    typeof value === "object" &&
-    ("children" in value || "props" in value)
-  );
+function resolvedColumnWidth<T extends object>(item: ColumnType<T>): number | undefined {
+  if (item.width != null && item.minWidth != null) {
+    return Math.max(item.width, item.minWidth);
+  }
+  return item.width;
 }
 
-function normalizePlacement(config: PaginationConfig): PaginationPlacement[] {
-  if (config.placement?.length) return config.placement;
-  if (!config.position?.length) return ["bottomEnd"];
-  const map = {
-    topLeft: "topStart",
-    topCenter: "topCenter",
-    topRight: "topEnd",
-    bottomLeft: "bottomStart",
-    bottomCenter: "bottomCenter",
-    bottomRight: "bottomEnd",
-    none: "none",
-  } as const;
-  return config.position.map((item) => map[item]);
+type ColumnOffset = number;
+
+function fixedOffsetWidth<T extends object>(item: ColumnType<T>): ColumnOffset {
+  return resolvedColumnWidth(item) ?? item.minWidth ?? 120;
+}
+
+function addColumnOffset(offset: ColumnOffset, width: ColumnOffset): ColumnOffset {
+  return offset + width;
+}
+
+function normalizePlacement(config: PaginationConfig): PaginationPlacementType[] {
+  return config.placement?.length ? config.placement : ["bottomEnd"];
 }
 
 function InnerTable<T extends object>(props: TableProps<T>, ref: React.ForwardedRef<TableRef>) {
   const {
     dataSource: sourceDataSource = EMPTY_DATA_SOURCE,
     columns: sourceColumns,
-    rowKey = "key" as keyof T,
+    rowKey = "id" as keyof T,
     pagination = {},
     rowSelection,
     rowDrag,
@@ -213,14 +209,13 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
     expandable,
     bordered = false,
     loading = false,
-    size = "large",
+    size = "lg",
     locale = {},
     showHeader = true,
     showSorterTooltip = true,
     tableLayout = "fixed",
-    rowClassName,
     rowHoverable = true,
-    sticky = false,
+    stickyHeader = false,
     virtual = false,
     stickyScrollBar = false,
     scroll,
@@ -253,6 +248,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
   const [horizontalScrollbar, setHorizontalScrollbar] = useState<HorizontalScrollbarState>(
     HIDDEN_HORIZONTAL_SCROLLBAR,
   );
+  const [tableViewportWidth, setTableViewportWidth] = useState(0);
   const [stickyScrollbar, setStickyScrollbar] =
     useState<StickyScrollbarState>(HIDDEN_STICKY_SCROLLBAR);
   const scrollbarDragRef = useRef<{
@@ -402,11 +398,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
     return () => window.clearTimeout(timer);
   }, [loading]);
 
-  const keyOf = useCallback(
-    (record: T, index?: number): Key =>
-      typeof rowKey === "function" ? rowKey(record, index) : (record[rowKey] as Key),
-    [rowKey],
-  );
+  const keyOf = useCallback((record: T): Key => record[rowKey] as Key, [rowKey]);
   const childrenName = expandable?.childrenColumnName ?? "children";
   const controlledExpanded = expandable?.expandedRowKeys
     ? new Set(expandable.expandedRowKeys)
@@ -427,11 +419,9 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
   }, [childrenName, dataSource]);
 
   useEffect(() => {
-    allDataRows.forEach((record, index) =>
-      selectionCache.current.set(keyOf(record, index), record),
-    );
+    allDataRows.forEach((record) => selectionCache.current.set(keyOf(record), record));
     if (!rowSelection?.preserveSelectedRowKeys && !rowSelection?.selectedRowKeys) {
-      const available = new Set(allDataRows.map((record, index) => keyOf(record, index)));
+      const available = new Set(allDataRows.map((record) => keyOf(record)));
       setSelectedKeys((current) => new Set([...current].filter((key) => available.has(key))));
     }
     // keyOf intentionally follows the current rowKey prop.
@@ -581,10 +571,10 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
   const selectionEntities = useMemo(() => {
     const entities = new Map<Key, { record: T; parent?: Key; children: Key[] }>();
     const walk = (items: T[], parent?: Key) =>
-      items.forEach((record, index) => {
-        const key = keyOf(record, index);
+      items.forEach((record) => {
+        const key = keyOf(record);
         const children = (record as Record<string, unknown>)[childrenName] as T[] | undefined;
-        const childKeys = children?.map((child, childIndex) => keyOf(child, childIndex)) ?? [];
+        const childKeys = children?.map((child) => keyOf(child)) ?? [];
         entities.set(key, { record, parent, children: childKeys });
         if (children?.length) walk(children, key);
       });
@@ -616,7 +606,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
       ];
     });
   const allFlatRows = flattenRows(pageData);
-  const rowHeight = size === "small" ? 39 : size === "medium" ? 47 : 55;
+  const rowHeight = size === "sm" ? 39 : size === "md" ? 47 : 55;
   const viewportHeight = typeof scroll?.y === "number" ? scroll.y : 400;
   const virtualStart = virtual ? Math.max(0, Math.floor(scrollTop / rowHeight) - 3) : 0;
   const virtualCount = virtual ? Math.ceil(viewportHeight / rowHeight) + 6 : allFlatRows.length;
@@ -633,18 +623,18 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
       if (!over || active.id === over.id) return;
 
       const activeIndex = dataSource.findIndex(
-        (record, index) => `row:${String(keyOf(record, index))}` === String(active.id),
+        (record) => `row:${String(keyOf(record))}` === String(active.id),
       );
       const overIndex = dataSource.findIndex(
-        (record, index) => `row:${String(keyOf(record, index))}` === String(over.id),
+        (record) => `row:${String(keyOf(record))}` === String(over.id),
       );
       if (activeIndex < 0 || overIndex < 0) return;
 
       const nextDataSource = arrayMove(dataSource, activeIndex, overIndex);
       setDragDataSource(nextDataSource);
       rowDragConfig?.onChange?.(nextDataSource, {
-        activeKey: keyOf(dataSource[activeIndex], activeIndex),
-        overKey: keyOf(dataSource[overIndex], overIndex),
+        activeKey: keyOf(dataSource[activeIndex]),
+        overKey: keyOf(dataSource[overIndex]),
         activeIndex,
         overIndex,
       });
@@ -784,7 +774,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
     }
   };
 
-  const updateSelection = (next: Set<Key>, type: RowSelectMethod) => {
+  const updateSelection = (next: Set<Key>, type: RowSelectMethodType) => {
     if (!rowSelection?.selectedRowKeys) setSelectedKeys(next);
     const source = rowSelection?.preserveSelectedRowKeys
       ? [...selectionCache.current.values()]
@@ -863,36 +853,101 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
   const selectionWidth = rowSelection ? Number(rowSelection.columnWidth ?? 48) : 0;
   const expandWidth =
     expandable && expandable.showExpandColumn !== false ? Number(expandable.columnWidth ?? 48) : 0;
+  const selectionSide = fixedSide(rowSelection?.fixed);
+  const expandSide = fixedSide(expandable?.fixed);
   const selectionColumnWidth = rowSelection?.columnWidth ?? 48;
   const selectionColumnWidthStyle: CSSProperties = {
     width: selectionColumnWidth,
     minWidth: selectionColumnWidth,
     maxWidth: selectionColumnWidth,
   };
+  const dragColumnWidthStyle: CSSProperties = {
+    width: rowDragConfig?.columnWidth ?? 48,
+    minWidth: rowDragConfig?.columnWidth ?? 48,
+    maxWidth: rowDragConfig?.columnWidth ?? 48,
+  };
+  const expandColumnWidthStyle: CSSProperties = {
+    width: expandable?.columnWidth ?? 48,
+    minWidth: expandable?.columnWidth ?? 48,
+    maxWidth: expandable?.columnWidth ?? 48,
+  };
+  const effectiveLayout =
+    tableLayout === "fixed" || scroll?.x || leafColumns.some((item) => item.ellipsis || item.fixed)
+      ? "fixed"
+      : "auto";
+  const flexibleColumnCount = leafColumns.filter((item) => item.width == null).length;
+  const hasNumericColumnSizing = leafColumns.every(
+    (item) => item.width == null || typeof item.width === "number",
+  );
+  const canDistributeFixedWidth =
+    effectiveLayout === "fixed" && flexibleColumnCount > 0 && hasNumericColumnSizing;
+  const fixedPixelWidth = hasNumericColumnSizing
+    ? dragWidth +
+      selectionWidth +
+      expandWidth +
+      leafColumns.reduce((total, item) => {
+        const width = resolvedColumnWidth(item);
+        return total + (typeof width === "number" ? width : 0);
+      }, 0)
+    : 0;
+  const flexibleMinimumWidth = hasNumericColumnSizing
+    ? leafColumns.reduce(
+        (total, item) => total + (item.width == null ? (item.minWidth ?? 0) : 0),
+        0,
+      )
+    : 0;
+  const minimumFixedTableWidth = hasNumericColumnSizing
+    ? fixedPixelWidth + flexibleMinimumWidth
+    : 0;
+  const flexibleColumns = leafColumns
+    .map((item, index) => ({ item, index }))
+    .filter(({ item }) => item.width == null);
+  const canResolveFlexibleWidths =
+    canDistributeFixedWidth &&
+    (flexibleColumns.length === 1 || flexibleColumns.every(({ item }) => item.minWidth != null));
+  const growingColumnIndex = canResolveFlexibleWidths ? flexibleColumns[0]?.index : undefined;
+  const flexibleColumnWidth = (item: ColumnType<T>, index: number): CSSProperties["width"] => {
+    const width = resolvedColumnWidth(item);
+    if (!canDistributeFixedWidth || width != null) return width ?? item.minWidth;
+    if (!canResolveFlexibleWidths) return item.minWidth;
+    if (index !== growingColumnIndex) return item.minWidth;
+
+    const otherMinimumWidth = flexibleMinimumWidth - (item.minWidth ?? 0);
+    const occupiedWidth = fixedPixelWidth + otherMinimumWidth;
+    const configuredPixelWidth = typeof scroll?.x === "number" ? scroll.x : 0;
+    const availableWidth = Math.max(tableViewportWidth, configuredPixelWidth);
+    if (availableWidth > 0) {
+      return Math.max(item.minWidth ?? 0, availableWidth - occupiedWidth);
+    }
+    return occupiedWidth > 0 ? `calc(100% - ${occupiedWidth}px)` : "100%";
+  };
   const leftOffsets = useMemo(() => {
-    let offset = dragWidth + selectionWidth + expandWidth;
-    const map: Record<string, number> = {};
+    let offset: ColumnOffset =
+      dragWidth +
+      (selectionSide === "left" ? selectionWidth : 0) +
+      (expandSide === "left" ? expandWidth : 0);
+    const map: Record<string, ColumnOffset> = {};
     leafColumns.forEach((item, index) => {
-      if (fixedSide(item.fixed as ColumnType<object>["fixed"]) === "left") {
+      if (fixedSide(item.fixed) === "left") {
         map[columnKey(item, index)] = offset;
-        offset += Number(item.width ?? 120);
+        offset = addColumnOffset(offset, fixedOffsetWidth(item));
       }
     });
     return map;
-  }, [dragWidth, expandWidth, leafColumns, selectionWidth]);
+  }, [dragWidth, expandSide, expandWidth, leafColumns, selectionSide, selectionWidth]);
   const rightOffsets = useMemo(() => {
-    let offset =
-      fixedSide(expandable?.fixed as ColumnType<object>["fixed"]) === "right" ? expandWidth : 0;
-    const map: Record<string, number> = {};
+    let offset: ColumnOffset =
+      (expandSide === "right" ? expandWidth : 0) + (selectionSide === "right" ? selectionWidth : 0);
+    const map: Record<string, ColumnOffset> = {};
     [...leafColumns].reverse().forEach((item, reverseIndex) => {
       const index = leafColumns.length - reverseIndex - 1;
-      if (fixedSide(item.fixed as ColumnType<object>["fixed"]) === "right") {
+      if (fixedSide(item.fixed) === "right") {
         map[columnKey(item, index)] = offset;
-        offset += Number(item.width ?? 120);
+        offset = addColumnOffset(offset, fixedOffsetWidth(item));
       }
     });
     return map;
-  }, [expandWidth, expandable?.fixed, leafColumns]);
+  }, [expandSide, expandWidth, leafColumns, selectionSide, selectionWidth]);
   const fixedStyle = (item: ColumnType<T>, index: number): CSSProperties => {
     const key = columnKey(item, index);
     if (key in leftOffsets) return { position: "sticky", left: leftOffsets[key], zIndex: 2 };
@@ -904,16 +959,21 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
     return style.position ? { ...style, zIndex: 6 } : style;
   };
   const selectionFixedStyle: CSSProperties =
-    fixedSide(rowSelection?.fixed as ColumnType<object>["fixed"]) === "left"
+    selectionSide === "left"
       ? { position: "sticky", left: dragWidth, zIndex: 3 }
-      : {};
+      : selectionSide === "right"
+        ? { position: "sticky", right: expandSide === "right" ? expandWidth : 0, zIndex: 3 }
+        : {};
   const selectionHeaderFixedStyle: CSSProperties = selectionFixedStyle.position
     ? { ...selectionFixedStyle, zIndex: 7 }
     : selectionFixedStyle;
-  const expandSide = fixedSide(expandable?.fixed as ColumnType<object>["fixed"]);
   const expandFixedStyle: CSSProperties =
     expandSide === "left"
-      ? { position: "sticky", left: dragWidth + selectionWidth, zIndex: 3 }
+      ? {
+          position: "sticky",
+          left: dragWidth + (selectionSide === "left" ? selectionWidth : 0),
+          zIndex: 3,
+        }
       : expandSide === "right"
         ? { position: "sticky", right: 0, zIndex: 3 }
         : {};
@@ -959,7 +1019,6 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
       );
     return "";
   };
-  const selectionSide = fixedSide(rowSelection?.fixed as ColumnType<object>["fixed"]);
   const selectionBoundaryClass =
     selectionSide === "left" && expandSide !== "left" && lastLeftFixedIndex < 0
       ? twMerge(
@@ -1002,7 +1061,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
         else if (virtual && (index !== undefined || key !== undefined)) {
           const targetIndex =
             key !== undefined
-              ? allFlatRows.findIndex((item, itemIndex) => keyOf(item.record, itemIndex) === key)
+              ? allFlatRows.findIndex((item) => keyOf(item.record) === key)
               : (index ?? -1);
           if (targetIndex < 0) return;
           const targetStart = targetIndex * rowHeight;
@@ -1038,17 +1097,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
     [allFlatRows, keyOf, rowHeight, viewportHeight, virtual],
   );
 
-  const columnTitleProps: ColumnTitleProps<T> = {
-    sortColumns: activeSorts
-      .filter((state) => state.order)
-      .map((state) => ({ column: state.column, order: state.order })),
-    filters: activeFilters as Record<string, FilterValue>,
-  };
-  columnTitleProps.sortOrder = columnTitleProps.sortColumns[0]?.order;
-  columnTitleProps.sortColumn = columnTitleProps.sortColumns[0]?.column;
-  const renderTitle = (item: ColumnType<T>) =>
-    typeof item.title === "function" ? item.title(columnTitleProps) : item.title;
-  const nextSortLabel = (item: ColumnType<T>, order: SortOrder) => {
+  const nextSortLabel = (item: ColumnType<T>, order: SortOrderType) => {
     const directions = item.sortDirections ?? sortDirections;
     const cycle = directions.includes(null) ? directions : [...directions, null];
     const next = cycle[(cycle.indexOf(order) + 1) % cycle.length];
@@ -1077,10 +1126,10 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
                 : (locale.sortTitle ?? nextSortLabel(item, order));
             const headerProps = item.onHeaderCell?.(item, leafIndex) ?? {};
             const itemLeaves = item.children?.length ? flattenColumns(item.children) : [item];
+            const isLeafColumn = !item.children?.length;
             const visualLastIndex = leafColumns.indexOf(itemLeaves[itemLeaves.length - 1]);
-            const resolvedColSpan = item.children?.length ? leafCount(item) : item.colSpan;
+            const resolvedColSpan = item.children?.length ? leafCount(item) : undefined;
             const filterIsOpen = filterOpen === key;
-            if (resolvedColSpan === 0 || item.rowSpan === 0) return;
             const draggableColumn = columnDragEnabled && depth === 1 && !item.children;
             const RenderedHeaderCell: React.ElementType = draggableColumn
               ? SortableTableHeaderCell
@@ -1105,7 +1154,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
                   />
                 }
                 className={iconButtonClass}
-                aria-label={`${String(renderTitle(item))} 정렬`}
+                aria-label={`${String(item.title)} 정렬`}
                 onClick={(event) => {
                   event.stopPropagation();
                   toggleSort(item, leafIndex);
@@ -1126,7 +1175,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
                 className={twMerge(headerContentClass, item.sorter && "cursor-pointer select-none")}
                 onClick={item.sorter ? () => toggleSort(item, leafIndex) : undefined}
               >
-                <span>{renderTitle(item)}</span>
+                <span>{item.title}</span>
                 {sorterControl}
                 {item.filters?.length && !item.children ? (
                   <span className={filterWrapClass}>
@@ -1138,10 +1187,10 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
                       variant="ghost"
                       size="sm"
                       iconOnly
-                      prefixIcon={<Icon icon="filter" size={14} />}
+                      prefixIcon={<Icon icon="filter-filled" size={14} />}
                       className={twMerge(
                         iconButtonClass,
-                        (item.filtered || activeFilters[key]?.length) && iconButtonActiveClass,
+                        activeFilters[key]?.length && iconButtonActiveClass,
                       )}
                       onClick={(event) => {
                         event.stopPropagation();
@@ -1152,7 +1201,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
                         }));
                         setFilterOpen(open ? key : null);
                       }}
-                      aria-label={`${String(renderTitle(item))} 필터`}
+                      aria-label={`${String(item.title)} 필터`}
                       aria-haspopup="dialog"
                       aria-expanded={filterIsOpen}
                     />
@@ -1189,14 +1238,14 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
                 key={`${headerPath}-${key}-${level}`}
                 {...(draggableColumn ? { component: "th", dragId: `column:${key}` } : {})}
                 colSpan={resolvedColSpan}
-                rowSpan={item.children?.length ? 1 : (item.rowSpan ?? depth - level)}
+                rowSpan={item.children?.length ? 1 : depth - level}
                 {...headerProps}
                 title={headerProps.title}
                 style={{
-                  width: flexibleColumnWidth(item, leafIndex),
-                  minWidth: tableLayout === "auto" ? item.minWidth : undefined,
+                  width: isLeafColumn ? flexibleColumnWidth(item, leafIndex) : undefined,
+                  minWidth: isLeafColumn ? item.minWidth : undefined,
                   textAlign: item.align,
-                  ...(!item.children ? headerFixedStyle(item, leafIndex) : {}),
+                  ...(isLeafColumn ? headerFixedStyle(item, leafIndex) : {}),
                   ...headerProps.style,
                 }}
                 className={twMerge(
@@ -1247,7 +1296,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
                 dragCellClass,
               )}
               style={{
-                width: rowDragConfig?.columnWidth ?? 48,
+                ...dragColumnWidthStyle,
                 ...dragHeaderFixedStyle,
               }}
             />
@@ -1283,7 +1332,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
                 expandCellClass,
                 expandBoundaryClass,
               )}
-              style={{ width: expandable.columnWidth ?? 48, ...expandHeaderFixedStyle }}
+              style={{ ...expandColumnWidthStyle, ...expandHeaderFixedStyle }}
             >
               {expandable.columnTitle ?? (
                 <span className="sr-only">{locale.expand ?? "행 펼치기"}</span>
@@ -1299,19 +1348,18 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
   const RenderedRowComponent: React.ElementType = rowDragEnabled ? SortableTableRow : "tr";
   const renderRow = ({ record, depth }: FlatRow<T>, visibleIndex: number) => {
     const actualIndex = virtualStart + visibleIndex;
-    const key = keyOf(record, actualIndex);
+    const key = keyOf(record);
     const children = (record as Record<string, unknown>)[childrenName] as T[] | undefined;
     const canExpand =
       Boolean(children?.length || expandable?.expandedRowRender) &&
       (expandable?.rowExpandable?.(record) ?? true);
     const expanded = controlledExpanded.has(key);
     const rowProps = onRow?.(record, actualIndex) ?? {};
-    const customClass = rowClassName?.(record, actualIndex, depth) ?? "";
     const rowClass = twMerge(
       depth > 0 && "[&>td]:bg-[#fafafa]",
       rowHoverable && "hover:[&>td]:bg-[#f5f5f5]",
+      expandable?.expandRowByClick && canExpand && "cursor-pointer",
       controlledSelected.has(key) && "[&>td]:bg-[#eef0f8] hover:[&>td]:bg-[#e3e7f5]",
-      customClass,
       rowProps.className,
     );
     const checkboxProps = rowSelection?.getCheckboxProps?.(record) ?? {};
@@ -1380,7 +1428,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
             <td
               className={twMerge(cellBaseClass, cellSizePad[size], dragCellClass)}
               style={{
-                width: rowDragConfig?.columnWidth ?? 48,
+                ...dragColumnWidthStyle,
                 ...dragFixedStyle,
               }}
             >
@@ -1412,7 +1460,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
                 expandCellBodyClass,
                 expandBoundaryClass,
               )}
-              style={{ width: expandable.columnWidth ?? 48, ...expandFixedStyle }}
+              style={{ ...expandColumnWidthStyle, ...expandFixedStyle }}
             >
               <span
                 className={expandIndentClass}
@@ -1449,6 +1497,8 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
               hoveredRowIndex={hoveredRowIndex}
               rowHoverable={rowHoverable}
               fixedStyle={fixedStyle(item, columnIndex)}
+              width={flexibleColumnWidth(item, columnIndex)}
+              minWidth={item.minWidth}
               className={twMerge(
                 cellBaseClass,
                 cellSizePad[size],
@@ -1481,7 +1531,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
   const placements = pageConfig
     ? normalizePlacement(pageConfig).filter((item) => item !== "none")
     : [];
-  const renderPagination = (placement: PaginationPlacement) =>
+  const renderPagination = (placement: PaginationPlacementType) =>
     pageConfig && total > 0 && !(pageConfig.hideOnSinglePage && pageCount <= 1) ? (
       <Pagination
         key={placement}
@@ -1499,71 +1549,17 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
   const bottomPagination = placements
     .filter((item) => item.startsWith("bottom"))
     .map(renderPagination);
-  const effectiveLayout =
-    tableLayout === "fixed" || scroll?.x || leafColumns.some((item) => item.ellipsis || item.fixed)
-      ? "fixed"
-      : "auto";
-  const resolvedColumnWidth = (item: ColumnType<T>) => {
-    if (typeof item.width === "number" && item.minWidth != null) {
-      return Math.max(item.width, item.minWidth);
-    }
-    return item.width;
-  };
-  const flexibleColumnCount = leafColumns.filter((item) => item.width == null).length;
-  const canDistributeFixedWidth =
-    effectiveLayout === "fixed" &&
-    flexibleColumnCount > 0 &&
-    leafColumns.every((item) => item.width == null || typeof item.width === "number") &&
-    [dragWidth, selectionWidth, expandWidth].every(Number.isFinite);
-  const fixedPixelWidth = canDistributeFixedWidth
-    ? dragWidth +
-      selectionWidth +
-      expandWidth +
-      leafColumns.reduce((total, item) => {
-        const width = resolvedColumnWidth(item);
-        return total + (typeof width === "number" ? width : 0);
-      }, 0)
-    : 0;
-  const flexibleMinimumWidth = canDistributeFixedWidth
-    ? leafColumns.reduce(
-        (total, item) => total + (item.width == null ? (item.minWidth ?? 0) : 0),
-        0,
-      )
-    : 0;
-  const minimumFixedTableWidth = fixedPixelWidth + flexibleMinimumWidth;
-  const flexibleColumns = leafColumns
-    .map((item, index) => ({ item, index }))
-    .filter(({ item }) => item.width == null);
-  const canResolveFlexibleWidths =
-    canDistributeFixedWidth &&
-    (flexibleColumns.length === 1 || flexibleColumns.every(({ item }) => item.minWidth != null));
-  const growingColumnIndex = canResolveFlexibleWidths ? flexibleColumns[0]?.index : undefined;
-  const flexibleColumnWidth = (item: ColumnType<T>, index: number) => {
-    const width = resolvedColumnWidth(item);
-    if (!canDistributeFixedWidth || width != null) return width ?? item.minWidth;
-
-    // max-content tables derive their scroll width from each column's intrinsic
-    // width. A percentage calc here makes a minWidth column depend on the
-    // viewport instead of preserving its configured minimum.
-    if (scroll?.x === "max-content") return item.minWidth;
-
-    if (!canResolveFlexibleWidths) return item.minWidth;
-    if (index !== growingColumnIndex) return item.minWidth;
-
-    const otherMinimumWidth = flexibleMinimumWidth - (item.minWidth ?? 0);
-    const occupiedWidth = fixedPixelWidth + otherMinimumWidth;
-    return occupiedWidth > 0 ? `calc(100% - ${occupiedWidth}px)` : "100%";
-  };
   const emptyText =
     typeof locale.emptyText === "function"
       ? locale.emptyText()
       : (locale.emptyText ?? <DefaultEmpty />);
   const loadingConfig = typeof loading === "object" ? loading : undefined;
-  const wrapperMaxHeight = scroll?.y;
-  const separateHeader = Boolean(scroll?.y || sticky);
+  const wrapperMaxHeight = scroll?.y ?? (virtual ? viewportHeight : undefined);
+  const hasVerticalViewport = Boolean(scroll?.y || virtual);
+  const separateHeader = Boolean(hasVerticalViewport || stickyHeader);
   const measureVerticalScrollbar = useCallback(
     (node: HTMLDivElement | null) => {
-      if (!node || !scroll?.y || !overlayScrollbarSupported) {
+      if (!node || !hasVerticalViewport || !overlayScrollbarSupported) {
         setVerticalScrollbar((current) => (current.visible ? HIDDEN_VERTICAL_SCROLLBAR : current));
         return;
       }
@@ -1589,7 +1585,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
           : next,
       );
     },
-    [overlayScrollbarSupported, scroll?.y],
+    [hasVerticalViewport, overlayScrollbarSupported],
   );
 
   const measureHorizontalScrollbar = useCallback(
@@ -1642,12 +1638,13 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
       const maxScrollLeft = Math.max(0, node.scrollWidth - node.clientWidth);
       const bounds = node.getBoundingClientRect();
       const viewportBottom = window.innerHeight - Math.max(0, stickyOffsetScroll);
-      const stickyTop = viewportBottom - 14;
+      const stickyTop = viewportBottom - HORIZONTAL_SCROLLBAR_HEIGHT - STICKY_SCROLLBAR_BOTTOM_GAP;
+      const regularScrollbarTop = bounds.bottom - HORIZONTAL_SCROLLBAR_HEIGHT;
       const left = Math.max(0, bounds.left);
       const hiddenLeft = Math.max(0, -bounds.left);
       const width = Math.max(0, Math.min(node.clientWidth - hiddenLeft, window.innerWidth - left));
       const visible =
-        maxScrollLeft > 1 && width > 0 && bounds.top < stickyTop && bounds.bottom > stickyTop;
+        maxScrollLeft > 1 && width > 0 && bounds.top < stickyTop && regularScrollbarTop > stickyTop;
 
       if (!visible) {
         setStickyScrollbar((current) =>
@@ -1684,13 +1681,19 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
       setScrollBoundary({ left: false, right: false });
       setHasHorizontalOverflow(false);
       setVerticalScrollbarWidth(0);
+      setTableViewportWidth(0);
       setHorizontalScrollbar(HIDDEN_HORIZONTAL_SCROLLBAR);
       return;
     }
     let frame = 0;
     const measure = () => {
+      const nextViewportWidth = node.clientWidth;
+      if (Math.abs(tableViewportWidth - nextViewportWidth) >= 0.5) {
+        setTableViewportWidth(nextViewportWidth);
+        return;
+      }
       measureScrollBoundary(node);
-      setVerticalScrollbarWidth(scroll?.y ? node.offsetWidth - node.clientWidth : 0);
+      setVerticalScrollbarWidth(hasVerticalViewport ? node.offsetWidth - node.clientWidth : 0);
       measureVerticalScrollbar(node);
       measureHorizontalScrollbar(node);
       measureStickyScrollbar(node);
@@ -1717,7 +1720,8 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
     measureVerticalScrollbar,
     pageData.length,
     scroll?.x,
-    scroll?.y,
+    tableViewportWidth,
+    hasVerticalViewport,
   ]);
 
   useLayoutEffect(() => {
@@ -1736,35 +1740,34 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
     };
   }, [measureStickyScrollbar, stickyScrollBarEnabled]);
 
+  const configuredMinimumWidth =
+    typeof scroll?.x === "number"
+      ? Math.max(scroll.x, minimumFixedTableWidth)
+      : scroll?.x === "max-content"
+        ? minimumFixedTableWidth || "max-content"
+        : typeof scroll?.x === "string"
+          ? minimumFixedTableWidth
+            ? `max(${scroll.x}, ${minimumFixedTableWidth}px)`
+            : scroll.x
+          : minimumFixedTableWidth || undefined;
   const tableStyle: CSSProperties = {
     tableLayout: effectiveLayout,
-    minWidth:
-      typeof scroll?.x === "number"
-        ? Math.max(scroll.x, minimumFixedTableWidth)
-        : scroll?.x === "max-content"
-          ? "max-content"
-          : minimumFixedTableWidth || undefined,
+    minWidth: configuredMinimumWidth,
   };
-  const verticallyScrolledTableStyle: CSSProperties = {
-    ...tableStyle,
-    width:
-      overlayScrollbarSupported && verticalScrollbarWidth
-        ? `calc(100% + ${verticalScrollbarWidth}px)`
-        : undefined,
-  };
+  const verticallyScrolledTableStyle = tableStyle;
   const renderColumnGroup = () => (
     <colgroup>
-      {rowDragEnabled && <col style={{ width: rowDragConfig?.columnWidth ?? 48 }} />}
+      {rowDragEnabled && <col style={dragColumnWidthStyle} />}
       {rowSelection && <col style={selectionColumnWidthStyle} />}
       {expandable && expandable.showExpandColumn !== false && (
-        <col style={{ width: expandable.columnWidth ?? 48 }} />
+        <col style={expandColumnWidthStyle} />
       )}
       {leafColumns.map((item, index) => (
         <col
           key={columnKey(item, index)}
           style={{
             width: flexibleColumnWidth(item, index),
-            minWidth: effectiveLayout === "auto" ? item.minWidth : undefined,
+            minWidth: item.minWidth,
           }}
         />
       ))}
@@ -1782,7 +1785,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
     <>
       <RowSortableContext
         enabled={rowDragEnabled}
-        items={allFlatRows.map(({ record }, index) => `row:${String(keyOf(record, index))}`)}
+        items={allFlatRows.map(({ record }) => `row:${String(keyOf(record))}`)}
       >
         <tbody className={twMerge(bordered && "[&>tr:last-child>td]:border-b-0")}>
           {topPad > 0 && (
@@ -2039,13 +2042,13 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
     <div
       ref={headerScrollRef}
       data-table-header-scroll
-      data-table-sticky-header={sticky ? "" : undefined}
-      className="w-full overflow-hidden rounded-t-[inherit] bg-white font-pretendard text-[14px] leading-[1.5715] text-[#111]"
+      data-table-sticky-header={stickyHeader ? "" : undefined}
+      className="box-border w-full overflow-hidden rounded-t-[inherit] bg-white font-pretendard text-[14px] leading-[1.5715] text-[#111]"
       style={{
         paddingRight: verticalScrollbarWidth,
-        position: sticky ? "sticky" : undefined,
-        top: sticky ? 0 : undefined,
-        zIndex: sticky ? 40 : undefined,
+        position: stickyHeader ? "sticky" : undefined,
+        top: stickyHeader ? 0 : undefined,
+        zIndex: stickyHeader ? 40 : undefined,
       }}
     >
       <table
@@ -2066,14 +2069,19 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
       {...rootProps}
       ref={rootRef}
       className={twMerge(
-        "relative w-full font-pretendard text-[14px] leading-[1.5715] text-[#111] [overflow-anchor:none]",
+        "relative w-full min-w-0 font-pretendard text-[14px] leading-[1.5715] text-[#111] [overflow-anchor:none]",
         className,
       )}
       style={rootStyle}
       aria-busy={loadingVisible}
     >
       {topPagination}
-      <div className={twMerge("w-full rounded-lg bg-white", bordered && "border border-[#f0f0f0]")}>
+      <div
+        className={twMerge(
+          "w-full min-w-0 rounded-lg bg-white",
+          bordered && "border border-[#f0f0f0]",
+        )}
+      >
         <TableDragProvider
           enabled={rowDragEnabled || columnDragEnabled}
           onDragEnd={handleTableDragEnd}
@@ -2088,7 +2096,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
                   data-table-overlay-scrollbar={overlayScrollbarSupported ? "" : undefined}
                   className={twMerge(
                     "relative w-full overflow-x-auto rounded-b-[inherit] bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0062df]",
-                    scroll?.y ? "overflow-y-auto" : "overflow-y-hidden",
+                    hasVerticalViewport ? "overflow-y-auto" : "overflow-y-hidden",
                     !showHeader && "rounded-t-[inherit]",
                   )}
                   role="region"
@@ -2178,23 +2186,26 @@ type BodyCellProps<T extends object> = {
   hoveredRowIndex: number | null;
   rowHoverable: boolean;
   fixedStyle: CSSProperties;
+  width: CSSProperties["width"];
+  minWidth: CSSProperties["minWidth"];
   className: string;
 };
 
-function BodyCellInner<T extends object>({
+function BodyCell<T extends object>({
   item,
   record,
   rowIndex,
   hoveredRowIndex,
   rowHoverable,
   fixedStyle,
+  width,
+  minWidth,
   className,
 }: BodyCellProps<T>) {
   const value = getValue(record, item.dataIndex);
   const cellProps = item.onCell?.(record, rowIndex) ?? {};
   const rendered = item.render ? item.render(value, record, rowIndex) : String(value ?? "");
-  const renderedCell = isRenderedCell(rendered) ? rendered : null;
-  const mergedProps = { ...cellProps, ...renderedCell?.props };
+  const mergedProps = cellProps;
   if (mergedProps.colSpan === 0 || mergedProps.rowSpan === 0) return null;
   const rowSpan = Number(mergedProps.rowSpan ?? 1);
   const mergedCellHovered =
@@ -2206,7 +2217,6 @@ function BodyCellInner<T extends object>({
   return (
     <td
       {...mergedProps}
-      scope={item.rowScope}
       title={mergedProps.title}
       className={twMerge(
         className,
@@ -2216,8 +2226,8 @@ function BodyCellInner<T extends object>({
         mergedProps.className,
       )}
       style={{
-        width: item.width,
-        minWidth: item.minWidth,
+        width,
+        minWidth,
         textAlign: item.align,
         ...fixedStyle,
         ...mergedProps.style,
@@ -2225,32 +2235,14 @@ function BodyCellInner<T extends object>({
     >
       {item.ellipsis ? (
         <Tooltip title={String(value ?? "")} className={ellipsisTooltipTriggerClass}>
-          <span className={ellipsisClass}>
-            {renderedCell ? renderedCell.children : (rendered as ReactNode)}
-          </span>
+          <span className={ellipsisClass}>{rendered}</span>
         </Tooltip>
-      ) : renderedCell ? (
-        renderedCell.children
       ) : (
-        (rendered as ReactNode)
+        rendered
       )}
     </td>
   );
 }
-
-const BodyCell = memo(BodyCellInner, (previous, next) => {
-  if (
-    previous.item !== next.item ||
-    previous.rowIndex !== next.rowIndex ||
-    previous.hoveredRowIndex !== next.hoveredRowIndex ||
-    previous.rowHoverable !== next.rowHoverable ||
-    previous.className !== next.className
-  )
-    return false;
-  return next.item.shouldCellUpdate
-    ? !next.item.shouldCellUpdate(next.record, previous.record)
-    : false;
-}) as typeof BodyCellInner;
 
 function FilterMenu<T extends object>({
   open,

@@ -32,28 +32,27 @@ describe("TextArea", () => {
       <TextArea label="소개" errorMessage="내용을 입력해 주세요." className="custom-root" />,
     );
     const textarea = screen.getByRole("textbox", { name: "소개" });
-    const error = screen.getByRole("alert");
     expect(container.firstElementChild).toHaveClass("custom-root");
-    expect(textarea).toHaveAttribute("aria-invalid", "true");
-    expect(textarea).toHaveAttribute("aria-describedby", error.id);
+    expect(textarea.parentElement).toHaveClass("ring-[#fe5150]");
+    expect(screen.getByText("내용을 입력해 주세요.")).toBeInTheDocument();
   });
 
   it("fills the parent by default and applies a custom width to the root", () => {
-    const { container, rerender } = render(<TextArea aria-label="너비 입력" />);
+    const { container, rerender } = render(<TextArea />);
 
     expect(container.firstElementChild).toHaveClass("w-full");
 
-    rerender(<TextArea aria-label="너비 입력" width={320} />);
+    rerender(<TextArea width={320} />);
     expect(container.firstElementChild).toHaveStyle({ width: "320px" });
 
-    rerender(<TextArea aria-label="너비 입력" width={240} />);
+    rerender(<TextArea width={240} />);
     expect(container.firstElementChild).toHaveStyle({ width: "240px" });
   });
 
   it("does not reserve error spacing when there is no error message", () => {
-    const { container } = render(<TextArea aria-label="간격 입력" />);
+    const { container } = render(<TextArea />);
     const root = container.firstElementChild;
-    const errorRoot = container.querySelector('[role="alert"]')?.parentElement?.parentElement;
+    const errorRoot = root?.lastElementChild;
 
     expect(root).not.toHaveClass("gap-1");
     expect(errorRoot).not.toHaveClass("mt-1");
@@ -62,25 +61,25 @@ describe("TextArea", () => {
   it("allows only the configured character type", () => {
     render(
       <>
-        <TextArea aria-label="한글" allowOnly="korean" />
-        <TextArea aria-label="영어" allowOnly="english" />
-        <TextArea aria-label="숫자" allowOnly="number" />
+        <TextArea placeholder="한글" allowOnly="korean" />
+        <TextArea placeholder="영어" allowOnly="english" />
+        <TextArea placeholder="숫자" allowOnly="number" />
       </>,
     );
 
-    fireEvent.change(screen.getByRole("textbox", { name: "한글" }), {
+    fireEvent.change(screen.getByPlaceholderText("한글"), {
       target: { value: "한글abc123" },
     });
-    fireEvent.change(screen.getByRole("textbox", { name: "영어" }), {
+    fireEvent.change(screen.getByPlaceholderText("영어"), {
       target: { value: "한글abc123" },
     });
-    fireEvent.change(screen.getByRole("textbox", { name: "숫자" }), {
+    fireEvent.change(screen.getByPlaceholderText("숫자"), {
       target: { value: "한글abc123" },
     });
 
-    expect(screen.getByRole("textbox", { name: "한글" })).toHaveValue("한글");
-    expect(screen.getByRole("textbox", { name: "영어" })).toHaveValue("abc");
-    expect(screen.getByRole("textbox", { name: "숫자" })).toHaveValue("123");
+    expect(screen.getByPlaceholderText("한글")).toHaveValue("한글");
+    expect(screen.getByPlaceholderText("영어")).toHaveValue("abc");
+    expect(screen.getByPlaceholderText("숫자")).toHaveValue("123");
   });
 
   it("clears a validation error while typing and validates again on blur", async () => {
@@ -88,22 +87,24 @@ describe("TextArea", () => {
     render(<ValidatedTextArea />);
 
     const textarea = screen.getByRole("textbox", { name: "요청 내용" });
-    expect(textarea).toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByText("요청 내용은 10자 이상 입력해 주세요.")).toBeInTheDocument();
 
     await user.clear(textarea);
     await user.type(textarea, "충분히 긴 요청 내용입니다");
-    expect(textarea).not.toHaveAttribute("aria-invalid");
+    await waitFor(() =>
+      expect(screen.queryByText("요청 내용은 10자 이상 입력해 주세요.")).not.toBeInTheDocument(),
+    );
 
     await user.tab();
-    expect(textarea).not.toHaveAttribute("aria-invalid");
+    expect(screen.queryByText("요청 내용은 10자 이상 입력해 주세요.")).not.toBeInTheDocument();
 
     await user.click(textarea);
     await user.clear(textarea);
     await user.type(textarea, "짧음");
-    expect(textarea).not.toHaveAttribute("aria-invalid");
+    expect(screen.queryByText("요청 내용은 10자 이상 입력해 주세요.")).not.toBeInTheDocument();
 
     await user.tab();
-    expect(textarea).toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByText("요청 내용은 10자 이상 입력해 주세요.")).toBeInTheDocument();
   });
 
   it("handles asynchronous validation internally", async () => {
@@ -111,9 +112,11 @@ describe("TextArea", () => {
     const validate = vi.fn(async (value: string) =>
       value === "이미 등록된 요청" ? "이미 등록된 요청이에요." : "",
     );
-    render(<TextArea aria-label="요청 내용" defaultValue="이미 등록된 요청" validate={validate} />);
+    render(
+      <TextArea placeholder="요청 내용" defaultValue="이미 등록된 요청" validate={validate} />,
+    );
 
-    const textarea = screen.getByRole("textbox", { name: "요청 내용" });
+    const textarea = screen.getByPlaceholderText("요청 내용");
     await user.click(textarea);
     await user.tab();
     expect(await screen.findByText("이미 등록된 요청이에요.")).toBeInTheDocument();
@@ -121,15 +124,17 @@ describe("TextArea", () => {
     await user.click(textarea);
     await user.clear(textarea);
     await user.type(textarea, "새로운 요청");
-    await waitFor(() => expect(textarea).not.toHaveAttribute("aria-invalid"));
+    await waitFor(() =>
+      expect(screen.queryByText("이미 등록된 요청이에요.")).not.toBeInTheDocument(),
+    );
   });
 
   it("passes the native focus event to onBlur", async () => {
     const user = userEvent.setup();
     const handleBlur = vi.fn();
-    render(<TextArea aria-label="요청 내용" onBlur={handleBlur} />);
+    render(<TextArea placeholder="요청 내용" onBlur={handleBlur} />);
 
-    const textarea = screen.getByRole("textbox", { name: "요청 내용" });
+    const textarea = screen.getByPlaceholderText("요청 내용");
     await user.click(textarea);
     await user.tab();
 

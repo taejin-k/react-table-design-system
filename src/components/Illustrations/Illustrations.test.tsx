@@ -36,6 +36,14 @@ describe("Illustrations", () => {
     expect(container.querySelectorAll("circle")).toHaveLength(0);
   });
 
+  it("description 문자열의 줄바꿈을 유지한다", () => {
+    render(<Illustrations description={"첫 번째 줄\n두 번째 줄"} />);
+
+    const description = screen.getByText(/첫 번째 줄/);
+    expect(description).toHaveTextContent("첫 번째 줄 두 번째 줄");
+    expect(description).toHaveClass("whitespace-pre-line");
+  });
+
   it.each([
     ["sm", "size-16", "text-sm"],
     ["md", "size-24", "text-[15px]"],

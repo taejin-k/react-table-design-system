@@ -1,14 +1,20 @@
 import { Description, Markdown, Stories, Title } from "@storybook/addon-docs/blocks";
 import type { Meta, StoryObj } from "@storybook/react";
-import { useState } from "react";
+import { useState, type ComponentType } from "react";
 import { storyDescriptions } from "../../storybook/story-descriptions";
 import { withStoryImports } from "../../storybook/story-source";
 import { Button } from "../Button";
 import { Icon } from "../Icon";
 import { Dropdown } from "./Dropdown";
-import type { DropdownItem, DropdownPlacement, DropdownTrigger } from "./Dropdown.types";
+import type {
+  DropdownItem,
+  DropdownItemType,
+  DropdownPlacementType,
+  DropdownProps,
+  DropdownTriggerType,
+} from "./Dropdown.types";
 
-const placements: DropdownPlacement[] = [
+const placements: DropdownPlacementType[] = [
   "topLeft",
   "top",
   "topRight",
@@ -22,7 +28,8 @@ const placements: DropdownPlacement[] = [
   "bottom",
   "bottomRight",
 ];
-const triggers: DropdownTrigger[] = ["hover", "focus", "click"];
+const triggers: DropdownTriggerType[] = ["hover", "focus", "click", "contextMenu"];
+const itemTypes: DropdownItemType[] = ["item", "divider", "group"];
 const basicItems: DropdownItem[] = [
   { value: "edit", label: "수정" },
   { value: "copy", label: "복사" },
@@ -35,7 +42,7 @@ const richItems: DropdownItem[] = [
     type: "group",
     children: [
       { value: "edit", label: "수정", icon: <Icon icon="edit" /> },
-      { value: "copy", label: "복사", icon: <Icon icon="copy" />, extra: "⌘C" },
+      { value: "copy", label: "복사", icon: <Icon icon="copy-outlined" />, extra: "⌘C" },
     ],
   },
   { value: "disabled", label: "이동", disabled: true },
@@ -48,7 +55,7 @@ const richItems: DropdownItem[] = [
       { value: "mail", label: "메일로 보내기" },
     ],
   },
-  { value: "delete", label: "삭제", danger: true, icon: <Icon icon="delete" /> },
+  { value: "delete", label: "삭제", danger: true, icon: <Icon icon="delete-outlined" /> },
 ];
 
 const storyDescription = (id: string) => ({
@@ -57,17 +64,8 @@ const storyDescription = (id: string) => ({
 
 const meta = {
   title: "Components/Dropdown",
-  component: Dropdown,
+  component: Dropdown as ComponentType<Partial<DropdownProps>>,
   tags: ["autodocs"],
-  args: {
-    children: <Button variant="secondary">메뉴 열기</Button>,
-    menu: { items: basicItems },
-    placement: "bottomLeft",
-    trigger: "hover",
-    arrow: false,
-    disabled: false,
-    autoAdjustOverflow: true,
-  },
   argTypes: {
     menu: { control: false, table: { disable: true } },
     children: { control: false, table: { disable: true } },
@@ -100,9 +98,9 @@ const meta = {
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
 | \`children\` | Dropdown을 연결할 하나의 요소예요. | \`ReactElement\` | - |
-| \`menu\` | 메뉴 항목과 선택 동작을 설정해요. | \`DropdownMenu\` | - |
-| \`placement\` | 메뉴가 표시될 위치를 설정해요. | \`DropdownPlacement\` | \`bottomLeft\` |
-| \`trigger\` | hover, focus, click, contextMenu로 표시해요. | \`DropdownTrigger \\| DropdownTrigger[]\` | \`hover\` |
+| \`menu\` | 메뉴 항목과 선택 동작을 설정해요. | [\`DropdownMenu\`](#dropdownmenu) | - |
+| \`placement\` | 메뉴가 표시될 위치를 설정해요. | [\`DropdownPlacementType\`](#dropdown-placement-type) | \`bottomLeft\` |
+| \`trigger\` | 표시 동작을 설정해요. | [\`DropdownTriggerType\`](#dropdown-trigger-type) \\| [\`DropdownTriggerType[]\`](#dropdown-trigger-type) | \`hover\` |
 | \`arrow\` | 대상을 가리키는 화살표를 표시해요. | \`boolean\` | \`false\` |
 | \`disabled\` | 메뉴를 열 수 없게 설정해요. | \`boolean\` | \`false\` |
 | \`open\` | 메뉴의 표시 상태를 외부에서 관리해요. | \`boolean\` | - |
@@ -115,7 +113,7 @@ const meta = {
 
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
-| \`items\` | 메뉴에 표시할 항목을 전달해요. | \`DropdownItem[]\` | - |
+| \`items\` | 메뉴에 표시할 항목을 전달해요. | [\`DropdownItem[]\`](#dropdownitem) | - |
 | \`selectable\` | 메뉴 항목을 선택 가능한 상태로 만들어요. | \`boolean\` | \`false\` |
 | \`multiple\` | 여러 메뉴 항목을 함께 선택해요. | \`boolean\` | \`false\` |
 | \`selectedValues\` | 선택된 항목 value를 외부에서 관리해요. | \`string[]\` | - |
@@ -133,20 +131,55 @@ const meta = {
 | \`extra\` | 메뉴 이름 뒤에 보조 내용을 표시해요. | \`ReactNode\` | - |
 | \`disabled\` | 메뉴 항목을 선택할 수 없게 해요. | \`boolean\` | \`false\` |
 | \`danger\` | 위험 작업의 색상을 적용해요. | \`boolean\` | \`false\` |
-| \`type\` | 일반 항목, 구분선, 그룹을 설정해요. | \`item \\| divider \\| group\` | \`item\` |
-| \`children\` | 오른쪽에 열리는 하위 메뉴를 설정해요. | \`DropdownItem[]\` | - |
+| \`type\` | 일반 항목, 구분선, 그룹을 설정해요. | [\`DropdownItemType\`](#dropdown-item-type) | \`item\` |
+| \`children\` | 오른쪽에 열리는 하위 메뉴를 설정해요. | [\`DropdownItem[]\`](#dropdownitem) | - |
 | \`onClick\` | 해당 항목을 클릭할 때 실행할 함수예요. | \`(info) => void\` | - |
           `}</Markdown>
+          <h2 className="component-docs-types-heading">Types</h2>
+          <h3 id="dropdown-placement-type">DropdownPlacementType</h3>
+          <p>대상을 기준으로 Dropdown 메뉴가 표시될 위치를 선택해요.</p>
+          <div className="flex flex-wrap gap-2">
+            {placements.map((placement) => (
+              <DropdownTypeCode key={placement} value={placement} />
+            ))}
+          </div>
+          <h3 id="dropdown-trigger-type">DropdownTriggerType</h3>
+          <p>Dropdown 메뉴를 표시할 동작을 선택해요.</p>
+          <div className="flex flex-wrap gap-2">
+            {triggers.map((trigger) => (
+              <DropdownTypeCode key={trigger} value={trigger} />
+            ))}
+          </div>
+          <h3 id="dropdown-item-type">DropdownItemType</h3>
+          <p>메뉴 항목의 형태를 선택해요.</p>
+          <div className="flex flex-wrap gap-2">
+            {itemTypes.map((itemType) => (
+              <DropdownTypeCode key={itemType} value={itemType} />
+            ))}
+          </div>
         </div>
       ),
     },
   },
-} satisfies Meta<typeof Dropdown>;
+} satisfies Meta<Partial<DropdownProps>>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+function DropdownTypeCode({
+  value,
+}: {
+  value: DropdownPlacementType | DropdownTriggerType | DropdownItemType;
+}) {
+  return (
+    <code className="rounded-full border border-[#e3e8ef] bg-[#f8fafc] px-3 py-1.5 text-[13px] text-[#4a5667]">
+      {value}
+    </code>
+  );
+}
+
 export const Basic: Story = {
+  args: { menu: { items: basicItems } },
   parameters: {
     ...storyDescription("components-dropdown--basic"),
     controls: { disable: true },
@@ -163,7 +196,7 @@ function BasicDropdown() {
   return (
     <div className="flex min-h-32 items-center justify-center">
       <Dropdown menu={{ items }}>
-        <Button variant="secondary">메뉴 열기</Button>
+        <Button>메뉴 열기</Button>
       </Dropdown>
     </div>
   );
@@ -173,8 +206,8 @@ function BasicDropdown() {
   },
   render: (args) => (
     <div className="flex min-h-32 items-center justify-center">
-      <Dropdown {...args}>
-        <Button variant="secondary">메뉴 열기</Button>
+      <Dropdown {...args} menu={args.menu ?? { items: basicItems }}>
+        <Button>메뉴 열기</Button>
       </Dropdown>
     </div>
   ),
@@ -197,19 +230,19 @@ function DropdownTriggers() {
   return (
     <div className="flex min-h-32 flex-wrap items-center justify-center gap-3">
       <Dropdown menu={{ items }}>
-        <Button variant="secondary">hover</Button>
+        <Button>hover</Button>
       </Dropdown>
       <Dropdown menu={{ items }} trigger="focus">
-        <Button variant="secondary">focus</Button>
+        <Button>focus</Button>
       </Dropdown>
       <Dropdown menu={{ items }} trigger="click">
-        <Button variant="secondary">click</Button>
+        <Button>click</Button>
       </Dropdown>
       <Dropdown menu={{ items }} trigger="contextMenu">
-        <Button variant="secondary">contextMenu (우클릭)</Button>
+        <Button>contextMenu (우클릭)</Button>
       </Dropdown>
       <Dropdown menu={{ items }} trigger={['hover', 'focus']}>
-        <Button variant="secondary">hover + focus</Button>
+        <Button>hover + focus</Button>
       </Dropdown>
     </div>
   );
@@ -221,14 +254,11 @@ function DropdownTriggers() {
     <div className="flex min-h-32 flex-wrap items-center justify-center gap-3">
       {triggers.map((trigger) => (
         <Dropdown key={trigger} menu={{ items: basicItems }} trigger={trigger}>
-          <Button variant="secondary">{trigger}</Button>
+          <Button>{trigger === "contextMenu" ? "contextMenu (우클릭)" : trigger}</Button>
         </Dropdown>
       ))}
-      <Dropdown menu={{ items: basicItems }} trigger="contextMenu">
-        <Button variant="secondary">contextMenu (우클릭)</Button>
-      </Dropdown>
       <Dropdown menu={{ items: basicItems }} trigger={["hover", "focus"]}>
-        <Button variant="secondary">hover + focus</Button>
+        <Button>hover + focus</Button>
       </Dropdown>
     </div>
   ),
@@ -251,40 +281,40 @@ function DropdownPlacements() {
   return (
     <div className="grid min-h-[360px] grid-cols-3 place-items-center gap-x-24 gap-y-10 px-24 py-16">
       <Dropdown menu={{ items }} placement="topLeft" trigger="click">
-        <Button className="w-28" variant="secondary">topLeft</Button>
+        <Button>topLeft</Button>
       </Dropdown>
       <Dropdown menu={{ items }} placement="top" trigger="click">
-        <Button className="w-28" variant="secondary">top</Button>
+        <Button>top</Button>
       </Dropdown>
       <Dropdown menu={{ items }} placement="topRight" trigger="click">
-        <Button className="w-28" variant="secondary">topRight</Button>
+        <Button>topRight</Button>
       </Dropdown>
       <Dropdown menu={{ items }} placement="leftTop" trigger="click">
-        <Button className="w-28" variant="secondary">leftTop</Button>
+        <Button>leftTop</Button>
       </Dropdown>
       <Dropdown menu={{ items }} placement="rightTop" trigger="click">
-        <Button className="w-28" variant="secondary">rightTop</Button>
+        <Button>rightTop</Button>
       </Dropdown>
       <Dropdown menu={{ items }} placement="left" trigger="click">
-        <Button className="w-28" variant="secondary">left</Button>
+        <Button>left</Button>
       </Dropdown>
       <Dropdown menu={{ items }} placement="right" trigger="click">
-        <Button className="w-28" variant="secondary">right</Button>
+        <Button>right</Button>
       </Dropdown>
       <Dropdown menu={{ items }} placement="leftBottom" trigger="click">
-        <Button className="w-28" variant="secondary">leftBottom</Button>
+        <Button>leftBottom</Button>
       </Dropdown>
       <Dropdown menu={{ items }} placement="rightBottom" trigger="click">
-        <Button className="w-28" variant="secondary">rightBottom</Button>
+        <Button>rightBottom</Button>
       </Dropdown>
       <Dropdown menu={{ items }} placement="bottomLeft" trigger="click">
-        <Button className="w-28" variant="secondary">bottomLeft</Button>
+        <Button>bottomLeft</Button>
       </Dropdown>
       <Dropdown menu={{ items }} placement="bottom" trigger="click">
-        <Button className="w-28" variant="secondary">bottom</Button>
+        <Button>bottom</Button>
       </Dropdown>
       <Dropdown menu={{ items }} placement="bottomRight" trigger="click">
-        <Button className="w-28" variant="secondary">bottomRight</Button>
+        <Button>bottomRight</Button>
       </Dropdown>
     </div>
   );
@@ -301,9 +331,7 @@ function DropdownPlacements() {
           placement={placement}
           trigger="click"
         >
-          <Button className="w-28" variant="secondary">
-            {placement}
-          </Button>
+          <Button>{placement}</Button>
         </Dropdown>
       ))}
     </div>
@@ -317,18 +345,18 @@ export const MenuItems: Story = {
     docs: {
       ...storyDescription("components-dropdown--menu-items").docs,
       source: {
-        code: withStoryImports(`const items = [
+        code: withStoryImports(`const items: DropdownItem[] = [
   {
     value: 'document',
     label: '문서 작업',
-    type: 'group' as const,
+    type: 'group',
     children: [
       { value: 'edit', label: '수정', icon: <Icon icon="edit" /> },
-      { value: 'copy', label: '복사', icon: <Icon icon="copy" />, extra: '⌘C' },
+      { value: 'copy', label: '복사', icon: <Icon icon="copy-outlined" />, extra: '⌘C' },
     ],
   },
   { value: 'disabled', label: '이동', disabled: true },
-  { value: 'divider', type: 'divider' as const },
+  { value: 'divider', type: 'divider' },
   {
     value: 'share',
     label: '공유',
@@ -337,14 +365,14 @@ export const MenuItems: Story = {
       { value: 'mail', label: '메일로 보내기' },
     ],
   },
-  { value: 'delete', label: '삭제', danger: true, icon: <Icon icon="delete" /> },
+  { value: 'delete', label: '삭제', danger: true, icon: <Icon icon="delete-outlined" /> },
 ];
 
 function DropdownMenuItems() {
   return (
     <div className="flex min-h-40 items-center justify-center">
       <Dropdown menu={{ items }} trigger="click">
-        <Button variant="secondary">다양한 메뉴</Button>
+        <Button>다양한 메뉴</Button>
       </Dropdown>
     </div>
   );
@@ -355,7 +383,7 @@ function DropdownMenuItems() {
   render: () => (
     <div className="flex min-h-40 items-center justify-center">
       <Dropdown menu={{ items: richItems }} trigger="click">
-        <Button variant="secondary">다양한 메뉴</Button>
+        <Button>다양한 메뉴</Button>
       </Dropdown>
     </div>
   ),
@@ -385,7 +413,7 @@ function SelectableDropdown() {
         }}
         trigger="click"
       >
-        <Button variant="secondary">팀 선택</Button>
+        <Button>팀 선택</Button>
       </Dropdown>
     </div>
   );
@@ -413,7 +441,7 @@ export const ItemClick: Story = {
   return (
     <div className="flex min-h-32 items-center justify-center">
       <Dropdown menu={{ items }} trigger="click">
-        <Button variant="secondary">{action}</Button>
+        <Button>{action}</Button>
       </Dropdown>
     </div>
   );
@@ -441,10 +469,10 @@ function ArrowDropdown() {
   return (
     <div className="flex min-h-32 items-center justify-center gap-3">
       <Dropdown menu={{ items }} trigger="click">
-        <Button variant="secondary">기본</Button>
+        <Button>기본</Button>
       </Dropdown>
       <Dropdown arrow menu={{ items }} trigger="click">
-        <Button variant="secondary">화살표</Button>
+        <Button>화살표</Button>
       </Dropdown>
     </div>
   );
@@ -455,10 +483,10 @@ function ArrowDropdown() {
   render: () => (
     <div className="flex min-h-32 items-center justify-center gap-3">
       <Dropdown menu={{ items: basicItems }} trigger="click">
-        <Button variant="secondary">기본</Button>
+        <Button>기본</Button>
       </Dropdown>
       <Dropdown arrow menu={{ items: basicItems }} trigger="click">
-        <Button variant="secondary">화살표</Button>
+        <Button>화살표</Button>
       </Dropdown>
     </div>
   ),
@@ -491,7 +519,7 @@ export const MultipleSelectable: Story = {
         }}
         trigger="click"
       >
-        <Button variant="secondary">팀 선택 ({selectedValues.length})</Button>
+        <Button>팀 선택 ({selectedValues.length})</Button>
       </Dropdown>
     </div>
   );
@@ -519,10 +547,10 @@ function DisabledDropdown() {
   return (
     <div className="flex min-h-32 items-center justify-center gap-3">
       <Dropdown menu={{ items }} trigger="click">
-        <Button variant="secondary">사용 가능</Button>
+        <Button>사용 가능</Button>
       </Dropdown>
       <Dropdown disabled menu={{ items }} trigger="click">
-        <Button variant="secondary">비활성</Button>
+        <Button>비활성</Button>
       </Dropdown>
     </div>
   );
@@ -533,10 +561,10 @@ function DisabledDropdown() {
   render: () => (
     <div className="flex min-h-32 items-center justify-center gap-3">
       <Dropdown menu={{ items: basicItems }} trigger="click">
-        <Button variant="secondary">사용 가능</Button>
+        <Button>사용 가능</Button>
       </Dropdown>
       <Dropdown disabled menu={{ items: basicItems }} trigger="click">
-        <Button variant="secondary">비활성</Button>
+        <Button>비활성</Button>
       </Dropdown>
     </div>
   ),
@@ -564,7 +592,7 @@ export const Controlled: Story = {
         trigger="click"
         onOpenChange={setOpen}
       >
-        <Button variant="secondary">{open ? '닫기' : '열기'}</Button>
+        <Button>{open ? '닫기' : '열기'}</Button>
       </Dropdown>
     </div>
   );
@@ -592,7 +620,7 @@ function SelectableDropdown() {
         }}
         trigger="click"
       >
-        <Button variant="secondary">팀 선택</Button>
+        <Button>팀 선택</Button>
       </Dropdown>
     </div>
   );
@@ -608,7 +636,7 @@ function ItemClickDropdown() {
   return (
     <div className="flex min-h-32 items-center justify-center">
       <Dropdown menu={{ items }} trigger="click">
-        <Button variant="secondary">{action}</Button>
+        <Button>{action}</Button>
       </Dropdown>
     </div>
   );
@@ -634,7 +662,7 @@ function MultipleSelectableDropdown() {
         }}
         trigger="click"
       >
-        <Button variant="secondary">팀 선택 ({selectedValues.length})</Button>
+        <Button>팀 선택 ({selectedValues.length})</Button>
       </Dropdown>
     </div>
   );
@@ -650,7 +678,7 @@ function ControlledDropdown() {
   return (
     <div className="flex min-h-32 items-center justify-center">
       <Dropdown menu={{ items }} open={open} trigger="click" onOpenChange={setOpen}>
-        <Button variant="secondary">{open ? "닫기" : "열기"}</Button>
+        <Button>{open ? "닫기" : "열기"}</Button>
       </Dropdown>
     </div>
   );

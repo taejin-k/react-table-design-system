@@ -1,6 +1,6 @@
-import type { ReactElement, ReactNode } from "react";
+import type { CSSProperties, ReactElement, ReactNode } from "react";
 
-export type TooltipPlacement =
+export type TooltipPlacementType =
   | "top"
   | "topLeft"
   | "topRight"
@@ -14,17 +14,17 @@ export type TooltipPlacement =
   | "rightTop"
   | "rightBottom";
 
-export type TooltipTrigger = "hover" | "focus" | "click" | "contextMenu";
+export type TooltipTriggerType = "hover" | "focus" | "click" | "contextMenu";
 
 export interface TooltipProps {
   /** Tooltip 안에 표시할 내용이에요. 비어 있으면 Tooltip을 표시하지 않아요. */
-  title?: ReactNode | (() => ReactNode);
+  title?: ReactNode;
   /** Tooltip을 연결할 하나의 요소예요. */
   children: ReactElement;
-  placement?: TooltipPlacement;
-  trigger?: TooltipTrigger | TooltipTrigger[];
+  placement?: TooltipPlacementType;
+  trigger?: TooltipTriggerType | TooltipTriggerType[];
   arrow?: boolean;
-  color?: string;
+  color?: CSSProperties["backgroundColor"];
   open?: boolean;
   defaultOpen?: boolean;
   autoAdjustOverflow?: boolean;

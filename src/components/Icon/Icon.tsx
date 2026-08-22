@@ -1,8 +1,12 @@
-import type { IconName, IconProps } from "./Icon.types";
+import type { IconNameType, IconProps } from "./Icon.types";
 import { twMerge } from "tailwind-merge";
+import { iconGalleryNames } from "./Icon.names";
+
+type IconPath = string | { d: string; fillRule: "evenodd" };
+type IconPaths = IconPath | readonly IconPath[];
 
 /** Figma Icon 라이브러리(901:2, 기본 16x16)의 path 데이터. */
-const paths = {
+const legacyPaths = {
   add: "M7.33333 14V8.66667H2V7.33333H7.33333V2H8.66667V7.33333H14V8.66667H8.66667V14H7.33333Z",
   "arrow-down":
     "M13.333 8.667 8 14 2.667 8.667l.943-.943 3.723 3.724V2h1.334v9.448l3.723-3.724.943.943Z",
@@ -80,9 +84,145 @@ const paths = {
   users:
     "M5.333 2a3 3 0 1 1 0 6 3 3 0 0 1 0-6Zm0 1.333a1.667 1.667 0 1 0 0 3.334 1.667 1.667 0 0 0 0-3.334ZM11 3.333a2.667 2.667 0 0 1 0 5.334V7.333a1.333 1.333 0 1 0 0-2.666V3.333ZM5.333 9c2.947 0 5.334 1.493 5.334 3.333V14H0v-1.667C0 10.493 2.387 9 5.333 9Zm0 1.333c-2.52 0-4 1.2-4 2V12.667h8v-.334c0-.8-1.48-2-4-2ZM12 9c2.2.333 4 1.667 4 3.333V14h-4v-1.333h2.667v-.334c0-.666-1.027-1.586-2.667-1.92V9Z",
   warning: "M7.2 2h1.6l-.2 8H7.4l-.2-8Zm.133 9.333h1.334V14H7.333v-2.667Z",
-} as const satisfies Record<IconName, string | readonly string[]>;
+} as const;
 
-export const iconNames = Object.keys(paths) as IconName[];
+const paths = {
+  ...legacyPaths,
+  "filter-outlined":
+    "M2.7 3.25a.75.75 0 0 1 .63-.35h9.34a.75.75 0 0 1 .57 1.24L9.5 8.5v3.35a.75.75 0 0 1-.37.65l-1.5.87A.75.75 0 0 1 6.5 12.7V8.5L2.76 4.14a.75.75 0 0 1-.06-.89ZM4.27 4.233l3.4 3.967v3.347l.66-.38V8.2l3.4-3.967H4.27Z",
+  "filter-filled": legacyPaths.filter,
+  "delete-outlined": legacyPaths.delete,
+  "delete-filled":
+    "M5.333 2V.667h5.334V2H14v1.333H2V2h3.333ZM3.333 4.667h9.334l-.62 9.286a1.333 1.333 0 0 1-1.33 1.247H5.283a1.333 1.333 0 0 1-1.33-1.247l-.62-9.286Z",
+  "copy-outlined": legacyPaths.copy,
+  "copy-filled":
+    "M5.333 1.333h7.334c.736 0 1.333.597 1.333 1.334V10h-2.667V5.333A1.333 1.333 0 0 0 10 4H5.333V1.333ZM3.333 4.667H10c.368 0 .667.298.667.666v8c0 .369-.299.667-.667.667H3.333a.667.667 0 0 1-.666-.667v-8c0-.368.298-.666.666-.666Z",
+  save: "M2.667 1.333h8.666L14 4v10.667H2.667V1.333ZM4 2.667v10.666h8.667V4.553l-1.22-1.22H10V6H5.333V2.667H4Zm2.667 0v2h2v-2h-2ZM5.333 8h5.334v4H5.333V8Zm1.334 1.333v1.334h2.666V9.333H6.667Z",
+  print:
+    "M4 1.333h8v3.334H4V1.333Zm1.333 1.334v.666h5.334v-.666H5.333ZM2.667 5.333h10.666c.737 0 1.334.597 1.334 1.334V12H12v2.667H4V12H1.333V6.667c0-.737.597-1.334 1.334-1.334ZM4 10.667V8h8v2.667h1.333v-4H2.667v4H4ZM5.333 9.333v4h5.334v-4H5.333Z",
+  share:
+    "M11.667 1.333a2.333 2.333 0 1 1-1.746 3.88L5.95 7.48a2.35 2.35 0 0 1 0 1.04l3.97 2.267a2.333 2.333 0 1 1-.66 1.157L5.29 9.677a2.333 2.333 0 1 1 0-3.354l3.97-2.267a2.333 2.333 0 0 1 2.407-2.723Zm0 1.334a1 1 0 1 0 0 2 1 1 0 0 0 0-2ZM3.333 7a1 1 0 1 0 0 2 1 1 0 0 0 0-2Zm8.334 4.333a1 1 0 1 0 0 2 1 1 0 0 0 0-2Z",
+  "check-circle-outlined": legacyPaths["check-circle"],
+  "check-circle-filled": {
+    d: "M8 1.333a6.667 6.667 0 1 1 0 13.334A6.667 6.667 0 0 1 8 1.333ZM6.933 10.8l-2.4-2.4.934-.933 1.466 1.46 3.6-3.594.934.94L6.933 10.8Z",
+    fillRule: "evenodd",
+  },
+  "close-circle-outlined": legacyPaths["close-circle"],
+  "close-circle-filled": {
+    d: "M8 1.333a6.667 6.667 0 1 1 0 13.334A6.667 6.667 0 0 1 8 1.333ZM6.133 5.187 8 7.057l1.867-1.87.946.946L8.943 8l1.87 1.867-.946.946L8 8.943l-1.867 1.87-.946-.946L7.057 8l-1.87-1.867.946-.946Z",
+    fillRule: "evenodd",
+  },
+  "plus-circle-outlined":
+    "M8 1.333a6.667 6.667 0 1 1 0 13.334A6.667 6.667 0 0 1 8 1.333Zm0 1.334a5.333 5.333 0 1 0 0 10.666A5.333 5.333 0 0 0 8 2.667ZM7.333 4.667h1.334v2.666h2.666v1.334H8.667v2.666H7.333V8.667H4.667V7.333h2.666V4.667Z",
+  "plus-circle-filled": {
+    d: "M8 1.333a6.667 6.667 0 1 1 0 13.334A6.667 6.667 0 0 1 8 1.333ZM7.333 4.667h1.334v2.666h2.666v1.334H8.667v2.666H7.333V8.667H4.667V7.333h2.666V4.667Z",
+    fillRule: "evenodd",
+  },
+  "minus-circle-outlined":
+    "M8 1.333a6.667 6.667 0 1 1 0 13.334A6.667 6.667 0 0 1 8 1.333Zm0 1.334a5.333 5.333 0 1 0 0 10.666A5.333 5.333 0 0 0 8 2.667ZM4.667 7.333h6.666v1.334H4.667V7.333Z",
+  "minus-circle-filled": {
+    d: "M8 1.333a6.667 6.667 0 1 1 0 13.334A6.667 6.667 0 0 1 8 1.333ZM4.667 7.333h6.666v1.334H4.667V7.333Z",
+    fillRule: "evenodd",
+  },
+  "info-circle-outlined": legacyPaths.info,
+  "info-circle-filled": {
+    d: "M8 1.333a6.667 6.667 0 1 1 0 13.334A6.667 6.667 0 0 1 8 1.333ZM7.333 6.667h1.334v4H7.333v-4Zm0-2.667h1.334v1.333H7.333V4Z",
+    fillRule: "evenodd",
+  },
+  "help-circle-outlined": legacyPaths["help-circle"],
+  "help-circle-filled": {
+    d: "M8 1.333a6.667 6.667 0 1 1 0 13.334A6.667 6.667 0 0 1 8 1.333ZM8 4a2.333 2.333 0 0 1 1.02 4.433c-.353.174-.353.267-.353.567H7.333c0-.893.367-1.4 1.1-1.76A1 1 0 1 0 7 6.34H5.667A2.333 2.333 0 0 1 8 4Zm-.667 6h1.334v1.333H7.333V10Z",
+    fillRule: "evenodd",
+  },
+  "home-outlined": legacyPaths.home,
+  "home-filled": "M2.667 6 8 2l5.333 4v8H9.667V9.333H6.333V14H2.667V6Z",
+  "bell-outlined":
+    "M7.333 1.333h1.334v1.06A4.333 4.333 0 0 1 12 6.6v2.46l1.667 2V12H2.333v-.94L4 9.06V6.6a4.333 4.333 0 0 1 3.333-4.207v-1.06ZM5.333 6.6v2.943L4.397 10.667h7.206l-.936-1.124V6.6a2.667 2.667 0 1 0-5.334 0ZM6.333 13h3.334A1.667 1.667 0 0 1 8 14.667 1.667 1.667 0 0 1 6.333 13Z",
+  "bell-filled": legacyPaths.bell,
+  "clock-outlined": legacyPaths.clock,
+  "clock-filled": {
+    d: "M8 1.333a6.667 6.667 0 1 1 0 13.334A6.667 6.667 0 0 1 8 1.333ZM7.333 4.667h1.334v3.056l2.28 2.28-.943.944-2.671-2.67v-3.61Z",
+    fillRule: "evenodd",
+  },
+  "star-outlined": legacyPaths.star,
+  "star-filled":
+    "m8 1.333 2.06 4.174 4.607.673-3.334 3.247.787 4.573L8 11.84 3.88 14l.787-4.573L1.333 6.18l4.607-.673L8 1.333Z",
+  "heart-outlined": {
+    d: "M8 14.333 2.64 9.167A4.167 4.167 0 0 1 8 2.827a4.167 4.167 0 0 1 5.36 6.34L8 14.333Zm0-1.853 4.433-4.273a2.833 2.833 0 0 0-4.006-4.006L8 4.627l-.427-.426a2.833 2.833 0 1 0-4.006 4.006L8 12.48Z",
+    fillRule: "evenodd",
+  },
+  "heart-filled":
+    "M8 14.333 2.64 9.167A4.167 4.167 0 0 1 8 2.827a4.167 4.167 0 0 1 5.36 6.34L8 14.333Z",
+  "bookmark-outlined": {
+    d: "M3 1.333h10v13.334L8 11.333l-5 3.334V1.333Zm1.333 1.334v9.466L8 9.667l3.667 2.466V2.667H4.333Z",
+    fillRule: "evenodd",
+  },
+  "bookmark-filled": "M3 1.333h10v13.334L8 11.333l-5 3.334V1.333Z",
+  "lock-outlined": legacyPaths.lock,
+  "lock-filled":
+    "M4.667 6V4.667a3.333 3.333 0 0 1 6.666 0V6H12c.736 0 1.333.597 1.333 1.333v6A1.333 1.333 0 0 1 12 14H4a1.333 1.333 0 0 1-1.333-1.333v-6C2.667 6.597 3.263 6 4 6h.667ZM6 6h4V4.667a2 2 0 1 0-4 0V6Z",
+  "mail-outlined": legacyPaths.mail,
+  "mail-filled":
+    "M2.667 3.333h10.666c.737 0 1.334.597 1.334 1.334v.226L8 9.613 1.333 4.893v-.226c0-.737.597-1.334 1.334-1.334ZM1.333 6.533 8 11.253l6.667-4.72v4.8c0 .737-.597 1.334-1.334 1.334H2.667a1.333 1.333 0 0 1-1.334-1.334v-4.8Z",
+  "message-outlined": {
+    d: "M2 2.667h12v9.333H8.667L5.333 14v-2H2V2.667ZM3.333 4v6.667h3.334v1L8.3 10.667h4.367V4H3.333Z",
+    fillRule: "evenodd",
+  },
+  "message-filled": "M2 2.667h12V12H8.667L5.333 14v-2H2V2.667Z",
+  "phone-outlined":
+    "M4.187 1.333 6.2 5.36 4.787 6.773a10.7 10.7 0 0 0 4.44 4.44L10.64 9.8l4.027 2.013v2.12c0 .405-.329.734-.734.734C6.973 14.667 1.333 9.027 1.333 2.067c0-.405.329-.734.734-.734h2.12Zm-.827 1.334h-.673a10.68 10.68 0 0 0 9.98 9.98v-.82l-1.76-.88-1.347 1.346-.427-.2a12.03 12.03 0 0 1-5.226-5.226l-.2-.427 1.346-1.347-.88-1.76-.813-.666Z",
+  "phone-filled":
+    "M4.187 1.333 6.2 5.36 4.787 6.773a10.7 10.7 0 0 0 4.44 4.44L10.64 9.8l4.027 2.013v2.12c0 .405-.329.734-.734.734C6.973 14.667 1.333 9.027 1.333 2.067c0-.405.329-.734.734-.734h2.12Z",
+  "user-outlined": legacyPaths.user,
+  "user-filled":
+    "M8 1.333a3.333 3.333 0 1 1 0 6.667 3.333 3.333 0 0 1 0-6.667ZM8 8.667c3.333 0 6 1.666 6 3.666V14H2v-1.667c0-2 2.667-3.666 6-3.666Z",
+  "users-outlined": legacyPaths.users,
+  "users-filled":
+    "M5.333 2a3 3 0 1 1 0 6 3 3 0 0 1 0-6ZM11 3.333a2.667 2.667 0 0 1 0 5.334V3.333ZM5.333 9c2.947 0 5.334 1.493 5.334 3.333V14H0v-1.667C0 10.493 2.387 9 5.333 9ZM12 9c2.2.333 4 1.667 4 3.333V14h-4V9Z",
+  "file-outlined": legacyPaths.file,
+  "file-filled":
+    "M4 1.333h5.333L13.333 5v9.667H4A1.333 1.333 0 0 1 2.667 13.333V2.667C2.667 1.93 3.263 1.333 4 1.333ZM8.667 2.667v3H12l-3.333-3Z",
+  "folder-outlined": legacyPaths.folder,
+  "folder-filled":
+    "M2.667 3.333c0-.736.597-1.333 1.333-1.333h3.333L8.667 3.333H12c.736 0 1.333.597 1.333 1.334v6.666c0 .737-.597 1.334-1.333 1.334H4a1.333 1.333 0 0 1-1.333-1.334v-8Z",
+  "image-outlined":
+    "M2.667 2h10.666c.737 0 1.334.597 1.334 1.333v9.334c0 .736-.597 1.333-1.334 1.333H2.667a1.333 1.333 0 0 1-1.334-1.333V3.333C1.333 2.597 1.93 2 2.667 2Zm0 1.333v9.334h10.666V3.333H2.667ZM5 4.667a1.333 1.333 0 1 1 0 2.666 1.333 1.333 0 0 1 0-2.666ZM2.667 11.333l3.166-3.166 2.334 2.333 1.5-1.5 3.666 3.667H2.667v-1.334Z",
+  "image-filled": {
+    d: "M2.667 2h10.666c.737 0 1.334.597 1.334 1.333v9.334c0 .736-.597 1.333-1.334 1.333H2.667a1.333 1.333 0 0 1-1.334-1.333V3.333C1.333 2.597 1.93 2 2.667 2ZM5 4.667a1.333 1.333 0 1 1 0 2.666 1.333 1.333 0 0 1 0-2.666Zm-2.333 6.666 3.166-3.166L8.167 10.5l1.5-1.5 3.666 3.667H2.667v-1.334Z",
+    fillRule: "evenodd",
+  },
+  "camera-outlined":
+    "M5.333 2.667 6.267 1.333h3.466l.934 1.334h2.666c.737 0 1.334.597 1.334 1.333v8.667c0 .736-.597 1.333-1.334 1.333H2.667a1.333 1.333 0 0 1-1.334-1.333V4c0-.736.597-1.333 1.334-1.333h2.666ZM6.96 2.667l-.933 1.333h-3.36v8.667h10.666V4h-3.36L9.04 2.667H6.96ZM8 5.333a3 3 0 1 1 0 6 3 3 0 0 1 0-6Zm0 1.334a1.667 1.667 0 1 0 0 3.333 1.667 1.667 0 0 0 0-3.333Z",
+  "camera-filled": {
+    d: "M5.333 2.667 6.267 1.333h3.466l.934 1.334h2.666c.737 0 1.334.597 1.334 1.333v8.667c0 .736-.597 1.333-1.334 1.333H2.667a1.333 1.333 0 0 1-1.334-1.333V4c0-.736.597-1.333 1.334-1.333h2.666ZM8 5.333a3 3 0 1 1 0 6 3 3 0 0 1 0-6Zm0 1.334a1.667 1.667 0 1 0 0 3.333 1.667 1.667 0 0 0 0-3.333Z",
+    fillRule: "evenodd",
+  },
+  "location-outlined":
+    "M8 1.333a5 5 0 0 1 5 5c0 3.334-5 8.334-5 8.334s-5-5-5-8.334a5 5 0 0 1 5-5Zm0 1.334a3.667 3.667 0 0 0-3.667 3.666c0 1.98 2.28 5.107 3.667 6.727 1.387-1.62 3.667-4.747 3.667-6.727A3.667 3.667 0 0 0 8 2.667Zm0 1.666a2 2 0 1 1 0 4 2 2 0 0 1 0-4Zm0 1.334a.667.667 0 1 0 0 1.333.667.667 0 0 0 0-1.333Z",
+  "location-filled": {
+    d: "M8 1.333a5 5 0 0 1 5 5c0 3.334-5 8.334-5 8.334s-5-5-5-8.334a5 5 0 0 1 5-5Zm0 3a2 2 0 1 1 0 4 2 2 0 0 1 0-4Z",
+    fillRule: "evenodd",
+  },
+  "tag-outlined":
+    "M1.333 2.667C1.333 1.93 1.93 1.333 2.667 1.333H8.39l6.277 6.277-7.057 7.057L1.333 8.39V2.667Zm1.334 0v5.17L7.61 12.78l5.17-5.17-4.943-4.943h-5.17ZM5 4a1 1 0 1 1 0 2 1 1 0 0 1 0-2Z",
+  "tag-filled": {
+    d: "M1.333 2.667C1.333 1.93 1.93 1.333 2.667 1.333H8.39l6.277 6.277-7.057 7.057L1.333 8.39V2.667ZM5 4a1 1 0 1 1 0 2 1 1 0 0 1 0-2Z",
+    fillRule: "evenodd",
+  },
+  "cloud-outlined":
+    "M6.333 13.333H4a3.333 3.333 0 0 1-.347-6.648A4.667 4.667 0 0 1 12.6 5.42 4 4 0 0 1 12 13.333H6.333Zm0-1.333H12a2.667 2.667 0 1 0-.553-5.277l-.167-.796a3.333 3.333 0 0 0-6.4.82l-.1 1.23-.96.086A2 2 0 0 0 4 12h2.333Z",
+  "cloud-filled":
+    "M4 13.333a3.333 3.333 0 0 1-.347-6.648A4.667 4.667 0 0 1 12.6 5.42 4 4 0 0 1 12 13.333H4Z",
+  "play-circle-outlined":
+    "M8 1.333a6.667 6.667 0 1 1 0 13.334A6.667 6.667 0 0 1 8 1.333Zm0 1.334a5.333 5.333 0 1 0 0 10.666A5.333 5.333 0 0 0 8 2.667ZM6.667 5.333 11.333 8l-4.666 2.667V5.333Z",
+  "play-circle-filled": {
+    d: "M8 1.333a6.667 6.667 0 1 1 0 13.334A6.667 6.667 0 0 1 8 1.333ZM6.667 5.333 11.333 8l-4.666 2.667V5.333Z",
+    fillRule: "evenodd",
+  },
+} as const satisfies Record<IconNameType, IconPaths>;
+
+export const iconNames = Object.keys(paths) as IconNameType[];
+export { iconGalleryNames };
 
 /**
  * 16px 캔버스는 유지하고 내부 도형의 시각적 크기만 맞춰요.
@@ -137,7 +277,7 @@ const opticalScaleByIcon = {
   user: 0.95,
   users: 0.9,
   warning: 1,
-} as const satisfies Record<IconName, number>;
+} as const satisfies Partial<Record<IconNameType, number>>;
 
 export function Icon({
   icon,
@@ -158,8 +298,18 @@ export function Icon({
 
   if (!iconPaths) return null;
 
-  const pathList: readonly string[] = typeof iconPaths === "string" ? [iconPaths] : iconPaths;
-  const opticalScale = opticalScaleByIcon[resolvedIcon];
+  const pathList: readonly IconPath[] =
+    typeof iconPaths === "string"
+      ? [iconPaths]
+      : Array.isArray(iconPaths)
+        ? iconPaths
+        : [iconPaths as IconPath];
+  const opticalScaleName =
+    resolvedIcon === "info-circle-outlined"
+      ? "info"
+      : resolvedIcon.replace(/-(outlined|filled)$/, "");
+  const opticalScale =
+    opticalScaleByIcon[opticalScaleName as keyof typeof opticalScaleByIcon] ?? 0.96;
 
   return (
     <svg
@@ -168,8 +318,6 @@ export function Icon({
       viewBox="0 0 16 16"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      aria-hidden={!isInteractive}
-      role={isInteractive ? "button" : undefined}
       tabIndex={isInteractive ? 0 : undefined}
       style={{ outline: "none", ...style }}
       className={twMerge(
@@ -199,9 +347,14 @@ export function Icon({
       {...rest}
     >
       <g transform={`translate(8 8) scale(${opticalScale}) translate(-8 -8)`}>
-        {pathList.map((path, index) => (
-          <path key={index} d={path} fill={effectiveColor} />
-        ))}
+        {pathList.map((path, index) => {
+          const pathProps: { d: string; fillRule?: "evenodd" } =
+            typeof path === "string" ? { d: path } : path;
+
+          return (
+            <path key={index} {...pathProps} clipRule={pathProps.fillRule} fill={effectiveColor} />
+          );
+        })}
       </g>
     </svg>
   );

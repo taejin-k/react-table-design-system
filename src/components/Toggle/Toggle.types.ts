@@ -1,13 +1,13 @@
 import type { ButtonHTMLAttributes } from "react";
 
-export type ToggleSize = "lg" | "md" | "sm";
+export type ToggleSizeType = "lg" | "md" | "sm";
 
 export interface ToggleProps extends Omit<
   ButtonHTMLAttributes<HTMLButtonElement>,
-  "aria-checked" | "checked" | "onChange" | "role" | "size" | "type"
+  "checked" | "onChange" | "size" | "type"
 > {
   checked: boolean;
-  size?: ToggleSize;
+  size?: ToggleSizeType;
   loading?: boolean;
   onChange?: (checked: boolean) => void;
 }

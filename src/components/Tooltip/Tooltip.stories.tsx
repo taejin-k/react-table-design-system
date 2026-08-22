@@ -1,13 +1,13 @@
 import { Description, Markdown, Stories, Title } from "@storybook/addon-docs/blocks";
 import type { Meta, StoryObj } from "@storybook/react";
-import { useState } from "react";
+import { useState, type ComponentType } from "react";
 import { storyDescriptions } from "../../storybook/story-descriptions";
 import { formatTooltipStorySource, withStoryImports } from "../../storybook/story-source";
 import { Button } from "../Button";
 import { Tooltip } from "./Tooltip";
-import type { TooltipPlacement, TooltipProps, TooltipTrigger } from "./Tooltip.types";
+import type { TooltipPlacementType, TooltipProps, TooltipTriggerType } from "./Tooltip.types";
 
-const placements: TooltipPlacement[] = [
+const placements: TooltipPlacementType[] = [
   "topLeft",
   "top",
   "topRight",
@@ -21,7 +21,7 @@ const placements: TooltipPlacement[] = [
   "bottom",
   "bottomRight",
 ];
-const triggers: TooltipTrigger[] = ["hover", "focus", "click", "contextMenu"];
+const triggers: TooltipTriggerType[] = ["hover", "focus", "click", "contextMenu"];
 
 const storyDescription = (id: string) => ({
   docs: { description: { story: storyDescriptions[id] } },
@@ -29,18 +29,8 @@ const storyDescription = (id: string) => ({
 
 const meta = {
   title: "Components/Tooltip",
-  component: Tooltip,
+  component: Tooltip as ComponentType<Partial<TooltipProps>>,
   tags: ["autodocs"],
-  args: {
-    title: "Tooltip",
-    children: <Button variant="secondary">마우스를 올려보세요</Button>,
-    placement: "top",
-    trigger: "hover",
-    arrow: true,
-    autoAdjustOverflow: true,
-    mouseEnterDelay: 0.1,
-    mouseLeaveDelay: 0.1,
-  },
   argTypes: {
     title: { name: "내용", control: "text" },
     placement: { name: "위치", control: "select", options: placements },
@@ -80,12 +70,12 @@ const meta = {
 
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
-| \`title\` | 표시할 내용을 설정해요. 비어 있으면 표시하지 않아요. | \`ReactNode \\| () => ReactNode\` | - |
+| \`title\` | 표시할 내용을 설정해요. 비어 있으면 표시하지 않아요. | \`ReactNode\` | - |
 | \`children\` | Tooltip을 연결할 하나의 요소예요. | \`ReactElement\` | - |
-| \`placement\` | 대상을 기준으로 Tooltip이 표시될 위치를 설정해요. | \`TooltipPlacement\` | \`top\` |
-| \`trigger\` | hover, focus, click, contextMenu로 표시해요. | \`TooltipTrigger \\| TooltipTrigger[]\` | \`hover\` |
+| \`placement\` | 대상을 기준으로 Tooltip이 표시될 위치를 설정해요. | [\`TooltipPlacementType\`](#tooltip-placement-type) | \`top\` |
+| \`trigger\` | hover, focus, click, contextMenu로 표시해요. | [\`TooltipTriggerType\`](#tooltip-trigger-type) \\| [\`TooltipTriggerType[]\`](#tooltip-trigger-type) | \`hover\` |
 | \`arrow\` | 대상 방향을 가리키는 화살표를 표시해요. | \`boolean\` | \`true\` |
-| \`color\` | Tooltip의 배경 색상을 설정해요. | \`string\` | \`#111\` |
+| \`color\` | Tooltip의 배경 색상을 설정해요. | \`CSSProperties['backgroundColor']\` | \`#111\` |
 | \`open\` | Tooltip의 표시 상태를 외부에서 관리해요. | \`boolean\` | - |
 | \`defaultOpen\` | 처음 렌더링할 때 Tooltip을 표시해요. | \`boolean\` | \`false\` |
 | \`autoAdjustOverflow\` | 화면을 벗어나면 반대 위치로 전환하고 안쪽으로 이동해요. | \`boolean\` | \`true\` |
@@ -95,16 +85,48 @@ const meta = {
 | \`className\` | 대상을 감싸는 요소에 Tailwind 클래스를 추가해요. | \`string\` | - |
 | \`onOpenChange\` | Tooltip의 표시 상태가 바뀔 때 실행할 함수예요. | \`(open: boolean) => void\` | - |
           `}</Markdown>
+          <h2 className="component-docs-types-heading">Types</h2>
+          <h3 id="tooltip-placement-type">TooltipPlacementType</h3>
+          <p>대상을 기준으로 Tooltip이 표시될 위치를 선택해요.</p>
+          <div className="flex flex-wrap gap-2">
+            {placements.map((placement) => (
+              <TooltipTypeCode key={placement} value={placement} />
+            ))}
+          </div>
+          <h3 id="tooltip-trigger-type">TooltipTriggerType</h3>
+          <p>Tooltip을 표시할 동작을 선택해요.</p>
+          <div className="flex flex-wrap gap-2">
+            {triggers.map((trigger) => (
+              <TooltipTypeCode key={trigger} value={trigger} />
+            ))}
+          </div>
         </div>
       ),
     },
   },
-} satisfies Meta<TooltipProps>;
+} satisfies Meta<Partial<TooltipProps>>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+function TooltipTypeCode({ value }: { value: TooltipPlacementType | TooltipTriggerType }) {
+  return (
+    <code className="rounded-full border border-[#e3e8ef] bg-[#f8fafc] px-3 py-1.5 text-[13px] text-[#4a5667]">
+      {value}
+    </code>
+  );
+}
+
 export const Basic: Story = {
+  args: {
+    title: "Tooltip",
+    placement: "top",
+    trigger: "hover",
+    arrow: true,
+    autoAdjustOverflow: true,
+    mouseEnterDelay: 0.1,
+    mouseLeaveDelay: 0.1,
+  },
   parameters: {
     ...storyDescription("components-tooltip--basic"),
     controls: { disable: false },
@@ -112,7 +134,7 @@ export const Basic: Story = {
   render: (args) => (
     <div className="flex min-h-28 items-center justify-center">
       <Tooltip {...args}>
-        <Button variant="secondary">마우스를 올려보세요</Button>
+        <Button>마우스를 올려보세요</Button>
       </Tooltip>
     </div>
   ),
@@ -134,41 +156,41 @@ export const Placements: Story = {
         code: withStoryImports(`function TooltipPlacements() {
   return (
     <div className="grid min-h-[360px] grid-cols-3 place-items-center gap-x-24 gap-y-10 px-24 py-16">
-      <Tooltip placement="topLeft" title={<>Tooltip<br />topLeft</>}>
-        <Button className="w-28" variant="secondary">topLeft</Button>
+      <Tooltip placement="topLeft" title={"Tooltip\\ntopLeft"}>
+        <Button>topLeft</Button>
       </Tooltip>
-      <Tooltip placement="top" title={<>Tooltip<br />top</>}>
-        <Button className="w-28" variant="secondary">top</Button>
+      <Tooltip placement="top" title={"Tooltip\\ntop"}>
+        <Button>top</Button>
       </Tooltip>
-      <Tooltip placement="topRight" title={<>Tooltip<br />topRight</>}>
-        <Button className="w-28" variant="secondary">topRight</Button>
+      <Tooltip placement="topRight" title={"Tooltip\\ntopRight"}>
+        <Button>topRight</Button>
       </Tooltip>
-      <Tooltip placement="leftTop" title={<>Tooltip<br />leftTop</>}>
-        <Button className="w-28" variant="secondary">leftTop</Button>
+      <Tooltip placement="leftTop" title={"Tooltip\\nleftTop"}>
+        <Button>leftTop</Button>
       </Tooltip>
-      <Tooltip placement="rightTop" title={<>Tooltip<br />rightTop</>}>
-        <Button className="w-28" variant="secondary">rightTop</Button>
+      <Tooltip placement="rightTop" title={"Tooltip\\nrightTop"}>
+        <Button>rightTop</Button>
       </Tooltip>
-      <Tooltip placement="left" title={<>Tooltip<br />left</>}>
-        <Button className="w-28" variant="secondary">left</Button>
+      <Tooltip placement="left" title={"Tooltip\\nleft"}>
+        <Button>left</Button>
       </Tooltip>
-      <Tooltip placement="right" title={<>Tooltip<br />right</>}>
-        <Button className="w-28" variant="secondary">right</Button>
+      <Tooltip placement="right" title={"Tooltip\\nright"}>
+        <Button>right</Button>
       </Tooltip>
-      <Tooltip placement="leftBottom" title={<>Tooltip<br />leftBottom</>}>
-        <Button className="w-28" variant="secondary">leftBottom</Button>
+      <Tooltip placement="leftBottom" title={"Tooltip\\nleftBottom"}>
+        <Button>leftBottom</Button>
       </Tooltip>
-      <Tooltip placement="rightBottom" title={<>Tooltip<br />rightBottom</>}>
-        <Button className="w-28" variant="secondary">rightBottom</Button>
+      <Tooltip placement="rightBottom" title={"Tooltip\\nrightBottom"}>
+        <Button>rightBottom</Button>
       </Tooltip>
-      <Tooltip placement="bottomLeft" title={<>Tooltip<br />bottomLeft</>}>
-        <Button className="w-28" variant="secondary">bottomLeft</Button>
+      <Tooltip placement="bottomLeft" title={"Tooltip\\nbottomLeft"}>
+        <Button>bottomLeft</Button>
       </Tooltip>
-      <Tooltip placement="bottom" title={<>Tooltip<br />bottom</>}>
-        <Button className="w-28" variant="secondary">bottom</Button>
+      <Tooltip placement="bottom" title={"Tooltip\\nbottom"}>
+        <Button>bottom</Button>
       </Tooltip>
-      <Tooltip placement="bottomRight" title={<>Tooltip<br />bottomRight</>}>
-        <Button className="w-28" variant="secondary">bottomRight</Button>
+      <Tooltip placement="bottomRight" title={"Tooltip\\nbottomRight"}>
+        <Button>bottomRight</Button>
       </Tooltip>
     </div>
   );
@@ -179,21 +201,8 @@ export const Placements: Story = {
   render: (args) => (
     <div className="grid min-h-[360px] grid-cols-3 place-items-center gap-x-24 gap-y-10 px-24 py-16">
       {placements.map((placement) => (
-        <Tooltip
-          {...args}
-          key={placement}
-          placement={placement}
-          title={
-            <>
-              Tooltip
-              <br />
-              {placement}
-            </>
-          }
-        >
-          <Button className="w-28" variant="secondary">
-            {placement}
-          </Button>
+        <Tooltip {...args} key={placement} placement={placement} title={"Tooltip\n" + placement}>
+          <Button>{placement}</Button>
         </Tooltip>
       ))}
     </div>
@@ -216,19 +225,19 @@ export const Triggers: Story = {
       source: {
         code: withStoryImports(`<div className="flex min-h-32 flex-wrap items-center justify-center gap-3">
   <Tooltip title="hover">
-    <Button variant="secondary">hover</Button>
+    <Button>hover</Button>
   </Tooltip>
   <Tooltip title="focus" trigger="focus">
-    <Button variant="secondary">focus</Button>
+    <Button>focus</Button>
   </Tooltip>
   <Tooltip title="click" trigger="click">
-    <Button variant="secondary">click</Button>
+    <Button>click</Button>
   </Tooltip>
   <Tooltip title="contextMenu" trigger="contextMenu">
-    <Button variant="secondary">contextMenu (우클릭)</Button>
+    <Button>contextMenu (우클릭)</Button>
   </Tooltip>
   <Tooltip title="hover + focus" trigger={['hover', 'focus']}>
-    <Button variant="secondary">hover + focus</Button>
+    <Button>hover + focus</Button>
   </Tooltip>
 </div>`),
       },
@@ -238,13 +247,11 @@ export const Triggers: Story = {
     <div className="flex min-h-32 flex-wrap items-center justify-center gap-3">
       {triggers.map((trigger) => (
         <Tooltip {...args} key={trigger} title={trigger} trigger={trigger}>
-          <Button variant="secondary">
-            {trigger === "contextMenu" ? "contextMenu (우클릭)" : trigger}
-          </Button>
+          <Button>{trigger === "contextMenu" ? "contextMenu (우클릭)" : trigger}</Button>
         </Tooltip>
       ))}
       <Tooltip {...args} title="hover + focus" trigger={["hover", "focus"]}>
-        <Button variant="secondary">hover + focus</Button>
+        <Button>hover + focus</Button>
       </Tooltip>
     </div>
   ),
@@ -261,17 +268,37 @@ export const Appearance: Story = {
   parameters: {
     ...storyDescription("components-tooltip--appearance"),
     controls: { disable: false },
+    docs: {
+      ...storyDescription("components-tooltip--appearance").docs,
+      source: {
+        code: withStoryImports(`function TooltipAppearance() {
+  return (
+    <div className="flex min-h-32 flex-wrap items-center justify-center gap-3">
+      <Tooltip title="기본 색상">
+        <Button>기본</Button>
+      </Tooltip>
+      <Tooltip color="#0062df" title="파란색">
+        <Button>색상</Button>
+      </Tooltip>
+      <Tooltip arrow={false} title="화살표 없음">
+        <Button>화살표 없음</Button>
+      </Tooltip>
+    </div>
+  );
+}`),
+      },
+    },
   },
   render: (args) => (
     <div className="flex min-h-32 flex-wrap items-center justify-center gap-3">
       <Tooltip {...args} title="기본 색상">
-        <Button variant="secondary">기본</Button>
+        <Button>기본</Button>
       </Tooltip>
       <Tooltip {...args} color="#0062df" title="파란색">
-        <Button variant="secondary">색상</Button>
+        <Button>색상</Button>
       </Tooltip>
       <Tooltip {...args} arrow={false} title="화살표 없음">
-        <Button variant="secondary">화살표 없음</Button>
+        <Button>화살표 없음</Button>
       </Tooltip>
     </div>
   ),
@@ -289,7 +316,7 @@ export const Controlled: Story = {
 
   return (
     <Tooltip open={open} title="Tooltip" onOpenChange={setOpen}>
-      <Button variant="secondary" onClick={() => setOpen((current) => !current)}>
+      <Button onClick={() => setOpen((current) => !current)}>
         {open ? '닫기' : '열기'}
       </Button>
     </Tooltip>
@@ -307,9 +334,7 @@ function ControlledTooltip() {
   return (
     <div className="flex min-h-28 items-center justify-center">
       <Tooltip open={open} title="Tooltip" onOpenChange={setOpen}>
-        <Button variant="secondary" onClick={() => setOpen((current) => !current)}>
-          {open ? "닫기" : "열기"}
-        </Button>
+        <Button onClick={() => setOpen((current) => !current)}>{open ? "닫기" : "열기"}</Button>
       </Tooltip>
     </div>
   );

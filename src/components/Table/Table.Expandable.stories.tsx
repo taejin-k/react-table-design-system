@@ -10,8 +10,8 @@ const treeData: Member[] = [
   {
     ...members[0],
     children: [
-      { ...members[5], key: "M-1001-1", name: "한지우 (하위)" },
-      { ...members[7], key: "M-1001-2", name: "송채원 (하위)" },
+      { ...members[5], id: "M-1001-1", name: "한지우 (하위)" },
+      { ...members[7], id: "M-1001-2", name: "송채원 (하위)" },
     ],
   },
   ...members.slice(1, 5),

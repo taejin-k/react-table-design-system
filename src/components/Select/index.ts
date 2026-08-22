@@ -1,12 +1,12 @@
 export { Select } from "./Select";
 export type {
-  SelectLabeledValue,
-  SelectMode,
+  SelectBasicProps,
+  SelectModeType,
   SelectOption,
-  SelectPlacement,
+  SelectPlacementType,
   SelectProps,
   SelectRef,
-  SelectTagRenderProps,
-  SelectValue,
-  SelectVariant,
+  SelectSizeType,
+  SelectTagProps,
+  SelectVariantType,
 } from "./Select.types";

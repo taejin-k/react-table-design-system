@@ -12,7 +12,7 @@ import {
 import { createPortal } from "react-dom";
 import { twMerge } from "tailwind-merge";
 import { calculateFloatingPosition } from "../_internal/floating-position";
-import type { TooltipPlacement, TooltipProps } from "./Tooltip.types";
+import type { TooltipPlacementType, TooltipProps } from "./Tooltip.types";
 
 const VIEWPORT_GAP = 8;
 const TARGET_GAP = 9;
@@ -47,8 +47,7 @@ export function Tooltip({
     null,
   );
   const triggers = useMemo(() => new Set(Array.isArray(trigger) ? trigger : [trigger]), [trigger]);
-  const content = typeof title === "function" ? title() : title;
-  const enabled = content !== null && content !== undefined && content !== "";
+  const enabled = title !== null && title !== undefined && title !== "";
   const isOpen = enabled && (open ?? innerOpen);
   const [popupMounted, setPopupMounted] = useState(isOpen);
   const [motionVisible, setMotionVisible] = useState(false);
@@ -157,7 +156,7 @@ export function Tooltip({
       window.removeEventListener("scroll", handleScroll, true);
       resizeObserver?.disconnect();
     };
-  }, [changeOpen, clearTimers, content, popupMounted, updatePosition]);
+  }, [changeOpen, clearTimers, popupMounted, title, updatePosition]);
 
   useEffect(() => clearTimers, [clearTimers]);
 
@@ -268,7 +267,7 @@ export function Tooltip({
                   className="relative rounded px-2 py-1 shadow-[0_2px_8px_rgba(0,0,0,0.18)]"
                   style={{ backgroundColor: color, color: getTextColor(color) }}
                 >
-                  <span className="block min-h-5 whitespace-pre-line">{content}</span>
+                  <span className="block min-h-5 whitespace-pre-line">{title}</span>
                 </div>
                 {arrow ? (
                   <span
@@ -303,7 +302,7 @@ function createPointRect(x: number, y: number): DOMRect {
   };
 }
 
-function getTransformOrigin(placement: TooltipPlacement) {
+function getTransformOrigin(placement: TooltipPlacementType) {
   if (placement.startsWith("top")) {
     if (placement.endsWith("Left")) return "16px bottom";
     if (placement.endsWith("Right")) return "calc(100% - 16px) bottom";

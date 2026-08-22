@@ -2,8 +2,9 @@ import type { ReactElement, ReactNode } from "react";
 import type { FloatingPlacement } from "../_internal/floating-position";
 import type { FloatingTrigger } from "../_internal/use-floating-layer";
 
-export type DropdownPlacement = FloatingPlacement;
-export type DropdownTrigger = FloatingTrigger | "contextMenu";
+export type DropdownPlacementType = FloatingPlacement;
+export type DropdownTriggerType = FloatingTrigger | "contextMenu";
+export type DropdownItemType = "item" | "divider" | "group";
 
 export interface DropdownClickInfo {
   value: string;
@@ -18,7 +19,7 @@ export interface DropdownItem {
   extra?: ReactNode;
   disabled?: boolean;
   danger?: boolean;
-  type?: "item" | "divider" | "group";
+  type?: DropdownItemType;
   children?: DropdownItem[];
   onClick?: (info: DropdownClickInfo) => void;
 }
@@ -38,8 +39,8 @@ export interface DropdownProps {
   children: ReactElement;
   /** 메뉴 항목과 선택 동작을 설정해요. */
   menu: DropdownMenu;
-  placement?: DropdownPlacement;
-  trigger?: DropdownTrigger | DropdownTrigger[];
+  placement?: DropdownPlacementType;
+  trigger?: DropdownTriggerType | DropdownTriggerType[];
   arrow?: boolean;
   disabled?: boolean;
   open?: boolean;

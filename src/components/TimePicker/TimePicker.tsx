@@ -142,7 +142,7 @@ function BaseTimePicker({
               )}
             </span>
           ) : (
-            (suffixIcon ?? <Icon icon="clock" color="#999" />)
+            (suffixIcon ?? <Icon icon="clock-outlined" color="#999" />)
           )}
         </button>
       </span>

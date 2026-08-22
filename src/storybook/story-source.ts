@@ -1,9 +1,16 @@
 const packageName = "@taejin-k/wizard-design";
 
 const componentExports = [
+  "Avatar",
+  "Badge",
   "Breadcrumb",
   "Button",
+  "Calendar",
   "Checkbox",
+  "Collapse",
+  "ColorPicker",
+  "Description",
+  "Descriptions",
   "Tag",
   "Dropdown",
   "Drawer",
@@ -12,23 +19,29 @@ const componentExports = [
   "Icon",
   "Input",
   "Illustrations",
+  "Image",
   "Label",
   "Flex",
   "Modal",
+  "Menu",
   "Popover",
   "Radio",
   "Select",
   "Segmented",
+  "Skeleton",
   "Table",
+  "Tabs",
   "TextArea",
   "TimePicker",
   "Tooltip",
   "Toggle",
+  "Tree",
+  "Upload",
 ] as const;
 const apiExports = ["message", "notification"] as const;
 
 const reactExports = ["useCallback", "useEffect", "useMemo", "useRef", "useState"] as const;
-const componentTypeExports = ["DrawerPlacement", "SelectLabeledValue"] as const;
+const componentTypeExports = ["DrawerPlacement", "DropdownItem"] as const;
 const dndCoreExports = [
   "closestCenter",
   "DndContext",

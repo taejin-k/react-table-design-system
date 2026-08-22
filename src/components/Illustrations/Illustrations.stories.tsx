@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { storyDescriptions } from "../../storybook/story-descriptions";
 import { withStoryImports } from "../../storybook/story-source";
 import { Illustrations } from "./Illustrations";
-import type { IllustrationSize, IllustrationType } from "./Illustrations.types";
+import type { IllustrationSizeType, IllustrationType } from "./Illustrations.types";
 
 const illustrationTypes: IllustrationType[] = [
   "list",
@@ -19,7 +19,7 @@ const illustrationTypes: IllustrationType[] = [
   "comingSoon",
   "completed",
 ];
-const illustrationSizes: IllustrationSize[] = ["sm", "md", "lg"];
+const illustrationSizes: IllustrationSizeType[] = ["sm", "md", "lg"];
 
 const storyDescription = (id: string) => ({
   docs: { description: { story: storyDescriptions[id] } },
@@ -29,7 +29,6 @@ const meta = {
   title: "Components/Illustrations",
   component: Illustrations,
   tags: ["autodocs"],
-  args: { type: "noResults", description: "표시할 내용이 없어요" },
   argTypes: {
     type: { name: "이미지", control: "select", options: illustrationTypes },
     size: { name: "크기", control: "select", options: illustrationSizes },
@@ -54,26 +53,25 @@ const meta = {
 
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
-| \`type\` | 표시할 이미지 종류를 설정해요 | \`IllustrationType\` | \`noResults\` |
-| \`size\` | 이미지 크기를 설정해요 | \`sm \\| md \\| lg\` | \`md\` |
+| \`type\` | 표시할 이미지 종류를 설정해요 | [\`IllustrationType\`](#illustration-type) | \`noResults\` |
+| \`size\` | 이미지 크기를 설정해요 | [\`IllustrationSizeType\`](#illustration-size-type) | \`md\` |
 | \`description\` | 이미지 아래에 안내 내용을 표시해요 | \`ReactNode\` | - |
 | \`className\` | 최상위 요소에 Tailwind 클래스를 추가해요 | \`string\` | - |
           `}</Markdown>
-          <h3>IllustrationType</h3>
+          <h2 className="component-docs-types-heading">Types</h2>
+          <h3 id="illustration-type">IllustrationType</h3>
           <p>상황에 맞는 이미지 타입을 선택해요</p>
           <div className="flex flex-wrap gap-2">
-            <IllustrationTypeCode type="list" />
-            <IllustrationTypeCode type="noResults" />
-            <IllustrationTypeCode type="error" />
-            <IllustrationTypeCode type="network" />
-            <IllustrationTypeCode type="permission" />
-            <IllustrationTypeCode type="file" />
-            <IllustrationTypeCode type="notification" />
-            <IllustrationTypeCode type="message" />
-            <IllustrationTypeCode type="calendar" />
-            <IllustrationTypeCode type="chart" />
-            <IllustrationTypeCode type="comingSoon" />
-            <IllustrationTypeCode type="completed" />
+            {illustrationTypes.map((type) => (
+              <IllustrationTypeCode key={type} value={type} />
+            ))}
+          </div>
+          <h3 id="illustration-size-type">IllustrationSizeType</h3>
+          <p>이미지 크기를 선택해요</p>
+          <div className="flex flex-wrap gap-2">
+            {illustrationSizes.map((size) => (
+              <IllustrationTypeCode key={size} value={size} />
+            ))}
           </div>
         </div>
       ),
@@ -84,10 +82,10 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-function IllustrationTypeCode({ type }: { type: IllustrationType }) {
+function IllustrationTypeCode({ value }: { value: IllustrationType | IllustrationSizeType }) {
   return (
     <code className="rounded-full border border-[#e3e8ef] bg-[#f8fafc] px-3 py-1.5 text-[13px] text-[#4a5667]">
-      {type}
+      {value}
     </code>
   );
 }
@@ -107,7 +105,7 @@ function IllustrationExample({
   );
 }
 
-function IllustrationSizeExample({ size }: { size: IllustrationSize }) {
+function IllustrationSizeExample({ size }: { size: IllustrationSizeType }) {
   return (
     <div className="flex flex-col items-center gap-3 text-center">
       <p className="m-0 font-mono text-sm text-[#677589]">{size}</p>
@@ -117,6 +115,7 @@ function IllustrationSizeExample({ size }: { size: IllustrationSize }) {
 }
 
 export const Types: Story = {
+  args: { type: "noResults", description: "표시할 내용이 없어요" },
   parameters: {
     ...storyDescription("components-illustrations--types"),
     controls: { disable: false },
@@ -198,6 +197,7 @@ export const Types: Story = {
 };
 
 export const Sizes: Story = {
+  args: { type: "noResults", size: "md", description: "표시할 내용이 없어요" },
   parameters: {
     ...storyDescription("components-illustrations--sizes"),
     controls: { disable: false },

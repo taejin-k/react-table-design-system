@@ -1,15 +1,14 @@
 import { Description, Markdown, Stories, Title } from "@storybook/addon-docs/blocks";
 import type { Meta, StoryObj } from "@storybook/react";
 import { useEffect, useState, type ComponentProps } from "react";
-import { fn } from "storybook/test";
 import { storyDescriptions } from "../../storybook/story-descriptions";
 import { withStoryImports } from "../../storybook/story-source";
 import { Icon } from "../Icon";
 import { Tag } from "./Tag";
+import type { TagColorType, TagVariantType } from "./Tag.types";
 
-const colors = ["black", "green", "navy", "red", "grey", "purple", "blue"] as const;
-const variants = ["filled", "outlined", "solid", "soft-outlined"] as const;
-const handleIconClick = fn();
+const colors: TagColorType[] = ["black", "green", "navy", "red", "grey", "purple", "blue"];
+const variants: TagVariantType[] = ["filled", "outlined", "solid", "soft-outlined"];
 
 const storyDescription = (id: string) => ({
   docs: { description: { story: storyDescriptions[id] } },
@@ -19,7 +18,6 @@ const meta = {
   title: "Components/Tag",
   component: Tag,
   tags: ["autodocs"],
-  args: { children: "텍스트", color: "black", variant: "filled" },
   argTypes: {
     children: { name: "텍스트", control: "text" },
     color: { name: "색상", control: "select", options: colors },
@@ -46,12 +44,27 @@ const meta = {
 
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
-| \`color\` | Tag의 색상을 설정해요. | \`black \\| green \\| navy \\| red \\| grey \\| purple \\| blue\` | \`black\` |
-| \`variant\` | 배경과 테두리 표현 방식을 설정해요. | \`filled \\| outlined \\| solid \\| soft-outlined\` | \`filled\` |
+| \`color\` | Tag의 색상을 설정해요. | [\`TagColorType\`](#tag-color) | \`black\` |
+| \`variant\` | 배경과 테두리 표현 방식을 설정해요. | [\`TagVariantType\`](#tag-variant) | \`filled\` |
 | \`prefixIcon\` | 텍스트 앞에 아이콘을 표시해요. | \`ReactNode\` | - |
 | \`suffixIcon\` | 텍스트 뒤에 아이콘을 표시해요. | \`ReactNode\` | - |
 | \`className\` | 최상위 요소에 Tailwind 클래스를 추가해요. | \`string\` | - |
           `}</Markdown>
+          <h2 className="component-docs-types-heading">Types</h2>
+          <h3 id="tag-color">TagColorType</h3>
+          <p>Tag에 적용할 색상을 선택해요.</p>
+          <div className="flex flex-wrap gap-2">
+            {colors.map((color) => (
+              <TagTypeCode key={color} value={color} />
+            ))}
+          </div>
+          <h3 id="tag-variant">TagVariantType</h3>
+          <p>Tag의 배경과 테두리 표현 방식을 선택해요.</p>
+          <div className="flex flex-wrap gap-2">
+            {variants.map((variant) => (
+              <TagTypeCode key={variant} value={variant} />
+            ))}
+          </div>
         </div>
       ),
     },
@@ -60,6 +73,14 @@ const meta = {
 
 export default meta;
 type Story = StoryObj<typeof meta>;
+
+function TagTypeCode({ value }: { value: TagColorType | TagVariantType }) {
+  return (
+    <code className="rounded-full border border-[#e3e8ef] bg-[#f8fafc] px-3 py-1.5 text-[13px] text-[#4a5667]">
+      {value}
+    </code>
+  );
+}
 
 export const Variants: Story = {
   argTypes: {
@@ -274,7 +295,9 @@ export const Colors: Story = {
   render: (args) => (
     <div className="flex flex-wrap items-center gap-3">
       {colors.map((color) => (
-        <Tag key={color} {...args} color={color} />
+        <Tag key={color} {...args} color={color}>
+          {color}
+        </Tag>
       ))}
     </div>
   ),
@@ -310,7 +333,7 @@ export const Icons: Story = {
       </Tag>
       <Tag
         prefixIcon={<Icon icon="edit" />}
-        suffixIcon={<Icon icon="close" onClick={() => {}} />}
+        suffixIcon={<Icon icon="close" onClick={() => alert("닫기 아이콘을 클릭했어요.")} />}
       >
         텍스트
       </Tag>
@@ -334,17 +357,23 @@ function TagIcons({ args }: { args: ComponentProps<typeof Tag> }) {
 
   return (
     <div className="flex flex-wrap items-center gap-3">
-      <Tag {...args} />
-      <Tag {...args} prefixIcon={<Icon icon="edit" />} />
+      <Tag {...args}>텍스트</Tag>
+      <Tag {...args} prefixIcon={<Icon icon="edit" />}>
+        텍스트
+      </Tag>
       <Tag
         {...args}
         suffixIcon={<Icon icon="close" loading={loading} onClick={() => setLoading(true)} />}
-      />
+      >
+        텍스트
+      </Tag>
       <Tag
         {...args}
         prefixIcon={<Icon icon="edit" />}
-        suffixIcon={<Icon icon="close" onClick={handleIconClick} />}
-      />
+        suffixIcon={<Icon icon="close" onClick={() => alert("닫기 아이콘을 클릭했어요.")} />}
+      >
+        텍스트
+      </Tag>
     </div>
   );
 }

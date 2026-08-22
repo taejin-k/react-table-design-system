@@ -2,7 +2,7 @@ import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import { cva } from "class-variance-authority";
 import { twMerge } from "tailwind-merge";
 import { Tooltip } from "../Tooltip";
-import type { SegmentedProps, SegmentedValue } from "./Segmented.types";
+import type { SegmentedProps } from "./Segmented.types";
 
 export function Segmented({
   options,
@@ -13,18 +13,17 @@ export function Segmented({
   disabled = false,
   vertical = false,
   size = "md",
-  shape = "default",
   className,
   ...rest
 }: SegmentedProps) {
   const normalized = options;
-  const [innerValue, setInnerValue] = useState<SegmentedValue | undefined>(
+  const [innerValue, setInnerValue] = useState<string | number | undefined>(
     defaultValue ?? normalized[0]?.value,
   );
   const selectedValue = value ?? innerValue;
   const direction = vertical ? "vertical" : "horizontal";
   const rootRef = useRef<HTMLDivElement>(null);
-  const itemRefs = useRef(new Map<SegmentedValue, HTMLLabelElement>());
+  const itemRefs = useRef(new Map<string | number, HTMLLabelElement>());
   const hasMeasuredThumb = useRef(false);
   const [thumb, setThumb] = useState({
     animate: false,
@@ -66,15 +65,14 @@ export function Segmented({
   return (
     <div
       ref={rootRef}
-      className={twMerge(segmentedVariants({ fullWidth, direction, shape }), className)}
+      className={twMerge(segmentedVariants({ fullWidth, direction }), className)}
       {...rest}
     >
       {selectedValue !== undefined ? (
         <span
-          aria-hidden
           data-segmented-thumb=""
           className={twMerge(
-            thumbVariants({ shape }),
+            thumbClassName,
             thumb.animate
               ? "transition-[transform,width,height] duration-300 ease-[cubic-bezier(0.645,0.045,0.355,1)] motion-reduce:transition-none"
               : "transition-none",
@@ -97,7 +95,7 @@ export function Segmented({
               else itemRefs.current.delete(option.value);
             }}
             className={twMerge(
-              itemVariants({ size, shape }),
+              itemVariants({ size }),
               fullWidth && direction === "horizontal" ? "flex-1" : "flex-none",
               itemDisabled
                 ? "cursor-not-allowed text-[#bbb]"
@@ -140,18 +138,17 @@ export function Segmented({
 }
 
 const segmentedVariants = cva(
-  "relative isolate inline-flex w-fit gap-0.5 bg-[#f5f5f5] p-0.5 font-pretendard",
+  "relative isolate inline-flex w-fit gap-0.5 rounded-lg bg-[#f5f5f5] p-0.5 font-pretendard",
   {
     variants: {
       fullWidth: { true: "flex w-full", false: "" },
       direction: { horizontal: "flex-row", vertical: "flex-col" },
-      shape: { default: "rounded-lg", round: "rounded-full" },
     },
   },
 );
 
 const itemVariants = cva(
-  "relative z-10 inline-flex min-w-0 items-center justify-center gap-1 whitespace-nowrap transition-[color,font-weight] duration-200 ease-out motion-reduce:transition-none",
+  "relative z-10 inline-flex min-w-0 items-center justify-center gap-1 rounded-md whitespace-nowrap transition-[color,font-weight] duration-200 ease-out motion-reduce:transition-none",
   {
     variants: {
       size: {
@@ -159,16 +156,9 @@ const itemVariants = cva(
         md: "h-[26px] px-3 text-sm",
         sm: "h-4 px-2 text-xs",
       },
-      shape: { default: "rounded-md", round: "rounded-full" },
     },
   },
 );
 
-const thumbVariants = cva(
-  "pointer-events-none absolute top-0 left-0 z-0 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.08)] will-change-transform",
-  {
-    variants: {
-      shape: { default: "rounded-md", round: "rounded-full" },
-    },
-  },
-);
+const thumbClassName =
+  "pointer-events-none absolute top-0 left-0 z-0 rounded-md bg-white shadow-[0_1px_2px_rgba(0,0,0,0.08)] will-change-transform";

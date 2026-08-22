@@ -62,8 +62,6 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       onBlur,
       onEnter,
       onKeyDown,
-      "aria-describedby": ariaDescribedBy,
-      "aria-invalid": ariaInvalid,
       ...rest
     },
     ref,
@@ -81,9 +79,6 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     const displayedErrorMessage = errorMessage || validationError;
     const hasError = Boolean(displayedErrorMessage);
     const hasValue = currentValue.length > 0;
-    const errorId = `${inputId}-error`;
-    const describedBy =
-      [ariaDescribedBy, hasError ? errorId : undefined].filter(Boolean).join(" ") || undefined;
     useImperativeHandle(ref, () => inputRef.current as HTMLInputElement);
 
     return (
@@ -111,8 +106,6 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             spellCheck={spellCheck}
             type={password ? (passwordVisible ? "text" : "password") : type}
             inputMode={inputMode ?? (allowOnly === "number" ? "numeric" : undefined)}
-            aria-invalid={ariaInvalid ?? (hasError || undefined)}
-            aria-describedby={describedBy}
             className={twMerge(
               inputVariants({ size, disabled }),
               "min-w-0 flex-1 bg-transparent outline-none placeholder:text-[#999]",
@@ -198,7 +191,6 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           )}
         </div>
         <ErrorMessage
-          id={errorId}
           className={hasError ? "mt-0.5" : undefined}
           errorMessage={displayedErrorMessage}
         />

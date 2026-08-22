@@ -6,13 +6,10 @@ import type {
   ReactNode,
 } from "react";
 
-export type BreadcrumbKey = string | number;
-
-export interface Item extends Omit<
+export interface BreadcrumbItem extends Omit<
   AnchorHTMLAttributes<HTMLAnchorElement>,
   "children" | "color" | "href" | "onClick" | "title"
 > {
-  key?: BreadcrumbKey;
   /** 화면에 표시할 경로 이름. 아이콘만 표시할 때는 생략한다. */
   title?: ReactNode;
   /** 있으면 링크로 렌더링하고 hover·focus 디자인을 적용한다. */
@@ -27,5 +24,5 @@ export interface Item extends Omit<
 
 export interface BreadcrumbProps extends Omit<HTMLAttributes<HTMLElement>, "children"> {
   /** 왼쪽부터 현재 위치까지 순서대로 전달한다. */
-  items?: Item[];
+  items?: BreadcrumbItem[];
 }

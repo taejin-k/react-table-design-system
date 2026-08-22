@@ -14,9 +14,6 @@ const meta = {
   title: "Components/Checkbox",
   component: Checkbox,
   tags: ["autodocs"],
-  args: {
-    label: "레이블",
-  },
   argTypes: {
     label: { name: "레이블", control: "text" },
     checked: { name: "선택", control: "boolean" },
@@ -93,6 +90,7 @@ export const States: Story = {
 };
 
 export const Label: Story = {
+  args: { label: "레이블" },
   argTypes: {
     disabled: { control: false, table: { disable: true } },
     error: { control: false, table: { disable: true } },

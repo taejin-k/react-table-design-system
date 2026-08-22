@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import type { InputSize } from "../Input";
+import type { InputSizeType } from "../Input";
 
 export type TimePickerValue = string;
 export type TimePickerPlacement = "bottomLeft" | "bottomRight" | "topLeft" | "topRight";
@@ -22,7 +22,7 @@ export interface TimePickerProps {
   defaultValue?: TimePickerValue;
   placeholder?: string;
   format?: string;
-  size?: InputSize;
+  size?: InputSizeType;
   variant?: TimePickerVariant;
   label?: ReactNode;
   errorMessage?: ReactNode;

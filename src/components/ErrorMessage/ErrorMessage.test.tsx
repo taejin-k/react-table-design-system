@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { ErrorMessage } from "./ErrorMessage";
 
 describe("ErrorMessage", () => {
-  it("renders an alert and applies className to the root", () => {
+  it("renders a message and applies className to the root", () => {
     const { container } = render(
       <ErrorMessage
         id="field-error"
@@ -13,7 +13,6 @@ describe("ErrorMessage", () => {
     );
 
     expect(container.firstElementChild).toHaveClass("custom-error");
-    expect(screen.getByRole("alert")).toHaveAttribute("id", "field-error");
-    expect(screen.getByRole("alert")).toHaveTextContent("입력값을 확인해 주세요.");
+    expect(screen.getByText("입력값을 확인해 주세요.")).toHaveAttribute("id", "field-error");
   });
 });

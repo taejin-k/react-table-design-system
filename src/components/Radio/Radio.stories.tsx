@@ -20,7 +20,6 @@ const meta = {
   title: "Components/Radio",
   component: Radio,
   tags: ["autodocs"],
-  args: { label: "레이블", checked: false, disabled: false, error: false },
   argTypes: {
     checked: { name: "선택", control: "boolean" },
     defaultChecked: { control: false, table: { disable: true } },
@@ -51,7 +50,6 @@ const meta = {
 | --- | --- | --- | --- |
 | \`checked\` | 선택 상태를 외부에서 관리해요. | \`boolean\` | - |
 | \`defaultChecked\` | 처음 렌더링할 때 선택된 상태로 표시해요. | \`boolean\` | \`false\` |
-| \`key\` | 목록에서 항목을 구분하는 React 예약 속성이에요. | \`Key\` | - |
 | \`name\` | 같은 이름을 가진 Radio를 하나의 선택 그룹으로 묶어요. | \`string\` | - |
 | \`disabled\` | Radio를 비활성화하고 선택 동작을 막아요. | \`boolean\` | \`false\` |
 | \`label\` | Radio 오른쪽에 레이블을 표시해요. | \`ReactNode\` | - |
@@ -105,6 +103,7 @@ export const States: Story = {
 };
 
 export const Label: Story = {
+  args: { checked: false, label: "레이블" },
   parameters: {
     ...storyDescription("components-radio--label"),
     controls: { disable: false, include: ["레이블", "선택"] },

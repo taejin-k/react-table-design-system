@@ -1,5 +1,5 @@
 import type { CSSProperties, MouseEvent, ReactNode } from "react";
-import type { ButtonProps, ButtonVariant } from "../Button";
+import type { ButtonProps, ButtonVariantType } from "../Button";
 
 export type ModalSemanticName = "root" | "mask" | "wrapper" | "header" | "body" | "footer";
 export type ModalWidth =
@@ -25,7 +25,7 @@ export interface ModalProps {
   confirmLoading?: boolean;
   okText?: ReactNode;
   cancelText?: ReactNode;
-  okType?: ButtonVariant;
+  okType?: ButtonVariantType;
   okButtonProps?: ButtonProps;
   cancelButtonProps?: ButtonProps;
   keyboard?: boolean;

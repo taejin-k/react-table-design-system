@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
-import { Icon, iconNames } from "./Icon";
+import { Icon, iconGalleryNames, iconNames } from "./Icon";
 
 describe("Icon", () => {
   it("renders every supported icon", () => {
@@ -24,15 +24,45 @@ describe("Icon", () => {
     expect(container).toBeEmptyDOMElement();
   });
 
-  it("normalizes each glyph within the shared 16px canvas", () => {
+  it("uses style suffixes only when both outlined and filled variants exist", () => {
+    expect(iconNames).toContain("arrow-down");
+    expect(iconGalleryNames).not.toContain("arrow-down-outlined" as never);
+    expect(iconGalleryNames).toContain("drag-handle");
+    expect(iconGalleryNames).not.toContain("drag-handle-filled" as never);
+    expect(iconGalleryNames).toContain("heart-outlined");
+    expect(iconGalleryNames).toContain("heart-filled");
+    expect(iconGalleryNames).not.toContain("eye-filled");
+    expect(iconGalleryNames).not.toContain("calendar-filled");
+    expect(iconNames).not.toContain("eye-filled");
+    expect(iconNames).not.toContain("calendar-filled");
+    expect(new Set(iconGalleryNames).size).toBe(iconGalleryNames.length);
+  });
+
+  it("uses the existing 16px path renderer for new filled icons", () => {
+    const { container } = render(<Icon icon="check-circle-filled" />);
+
+    expect(container.querySelector("svg")).toHaveAttribute("viewBox", "0 0 16 16");
+    expect(container.querySelector("path")).toHaveAttribute("fill-rule", "evenodd");
+  });
+
+  it("inherits the surrounding text color by default", () => {
+    const { container } = render(<Icon icon="check" />);
+
+    expect(container.querySelector("path")).toHaveAttribute("fill", "currentColor");
+  });
+
+  it("keeps per-glyph optical sizing when rendered at 12px", () => {
     const { container } = render(
       <>
-        <Icon icon="info" />
-        <Icon icon="drag-handle" />
-        <Icon icon="users" />
+        <Icon icon="info-circle-outlined" size={12} />
+        <Icon icon="drag-handle" size={12} />
+        <Icon icon="users-outlined" size={12} />
       </>,
     );
 
+    expect(
+      Array.from(container.querySelectorAll("svg")).map((icon) => icon.getAttribute("width")),
+    ).toEqual(["12", "12", "12"]);
     expect(
       Array.from(container.querySelectorAll("g")).map((group) => group.getAttribute("transform")),
     ).toEqual([
@@ -67,13 +97,12 @@ describe("Icon", () => {
     const user = userEvent.setup();
     const onClick = vi.fn();
     const { container } = render(
-      <Icon data-testid="icon" color="#fe5150" icon="delete" loading onClick={onClick} />,
+      <Icon data-testid="icon" color="#fe5150" icon="delete-outlined" loading onClick={onClick} />,
     );
 
     const icon = screen.getByTestId("icon");
     expect(icon).toHaveClass("animate-spin", "cursor-default");
     expect(icon).not.toHaveClass("cursor-pointer", "hover:opacity-75");
-    expect(icon).not.toHaveAttribute("role", "button");
     expect(icon).not.toHaveAttribute("tabindex");
     expect(container.querySelector("path")).toHaveAttribute("d", expect.stringContaining("1.333"));
     expect(container.querySelector("path")).toHaveAttribute("fill", "#fe5150");
@@ -107,9 +136,9 @@ describe("Icon", () => {
   it.each(["Enter", " "])("activates with %s", async (key) => {
     const user = userEvent.setup();
     const onClick = vi.fn();
-    render(<Icon icon="delete" aria-label="삭제" onClick={onClick} />);
+    render(<Icon data-testid="icon" icon="delete-outlined" onClick={onClick} />);
 
-    screen.getByRole("button", { name: "삭제" }).focus();
+    screen.getByTestId("icon").focus();
     await user.keyboard(key === "Enter" ? "{Enter}" : " ");
     expect(onClick).toHaveBeenCalledOnce();
   });
@@ -118,14 +147,13 @@ describe("Icon", () => {
     const user = userEvent.setup();
     const onClick = vi.fn();
     const { container } = render(
-      <Icon data-testid="icon" color="#fe5150" disabled icon="delete" onClick={onClick} />,
+      <Icon data-testid="icon" color="#fe5150" disabled icon="delete-outlined" onClick={onClick} />,
     );
 
     const icon = screen.getByTestId("icon");
     expect(icon).toHaveClass("cursor-not-allowed");
     expect(icon).not.toHaveClass("opacity-40");
     expect(icon).not.toHaveClass("cursor-pointer", "hover:opacity-75");
-    expect(icon).not.toHaveAttribute("role", "button");
     expect(icon).not.toHaveAttribute("tabindex");
     expect(container.querySelector("path")).toHaveAttribute("fill", "#aaa");
 

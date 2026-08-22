@@ -59,7 +59,7 @@ export const ServerTable: Story = {
       ...storyDescription("components-table-sorting-filtering--server-table").docs,
       source: {
         code: withStoryImports(`const members = [
-  { key: 'M-1001', name: '김민준', team: 'Design', status: '활성', projects: 8 },
+  { id: 'M-1001', name: '김민준', team: 'Design', status: '활성', projects: 8 },
   // ...나머지 4개 항목
 ];
 

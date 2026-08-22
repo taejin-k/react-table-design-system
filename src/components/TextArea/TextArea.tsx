@@ -37,8 +37,6 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
       onBlur,
       onEnter,
       onKeyDown,
-      "aria-describedby": ariaDescribedBy,
-      "aria-invalid": ariaInvalid,
       ...rest
     },
     forwardedRef,
@@ -55,9 +53,6 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
     );
     const displayedErrorMessage = errorMessage || validationError;
     const hasError = Boolean(displayedErrorMessage);
-    const errorId = `${textareaId}-error`;
-    const describedBy =
-      [ariaDescribedBy, hasError ? errorId : undefined].filter(Boolean).join(" ") || undefined;
     const autoSizeOptions = typeof autoSize === "object" ? autoSize : {};
 
     useLayoutEffect(() => {
@@ -127,8 +122,6 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
               required={required}
               disabled={disabled}
               maxLength={maxLength}
-              aria-invalid={ariaInvalid ?? (hasError || undefined)}
-              aria-describedby={describedBy}
               className={twMerge(
                 textAreaVariants({ size, disabled, autoSize: Boolean(autoSize) }),
                 !resize && "resize-none",
@@ -184,7 +177,6 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
           ) : null}
         </div>
         <ErrorMessage
-          id={errorId}
           className={hasError ? "mt-1" : undefined}
           errorMessage={displayedErrorMessage}
         />

@@ -21,13 +21,7 @@ import { Label } from "../Label";
 import { ScrollFade } from "../_internal/ScrollFade";
 import { getPopupMotionStyle } from "../_internal/motion";
 import { useFloatingLayer } from "../_internal/use-floating-layer";
-import type {
-  SelectLabeledValue,
-  SelectOption,
-  SelectProps,
-  SelectRef,
-  SelectValue,
-} from "./Select.types";
+import type { SelectOption, SelectProps, SelectRef } from "./Select.types";
 
 const OPTION_HEIGHT = 32;
 const OPTION_GAP = 2;
@@ -37,6 +31,12 @@ const selectTagSizeClasses = {
   md: "h-[22px]",
   sm: "h-4 px-1 py-0 text-[10px] leading-none [&>span]:size-3",
 } as const;
+type SelectLayoutPosition = { left: number; top: number };
+type SelectValue = string | number;
+type SelectChangeHandler = (
+  value: SelectValue | SelectValue[] | undefined,
+  option: SelectOption | SelectOption[] | undefined,
+) => void;
 
 function flattenOptions(options: SelectOption[]): SelectOption[] {
   return options.flatMap((option) => {
@@ -58,13 +58,9 @@ function optionText(option: SelectOption, property: string | string[] = "label")
     .join(" ");
 }
 
-function rawValue(value: SelectValue | SelectLabeledValue) {
-  return typeof value === "object" ? value.value : value;
-}
-
 function normalizeValue(value: SelectProps["value"] | SelectProps["defaultValue"]) {
   if (value === undefined || value === null || value === "") return [];
-  return (Array.isArray(value) ? value : [value]).map(rawValue);
+  return Array.isArray(value) ? value : [value];
 }
 
 function splitByTagSeparators(value: string, separators: string[]) {
@@ -110,7 +106,7 @@ export const Select = forwardRef<SelectRef, SelectProps>(
       allowClear = false,
       showSearch = mode === "tags",
       searchValue,
-      filterOption = true,
+      filterOption,
       optionsSort,
       optionFilterProp = "label",
       optionLabelProp,
@@ -118,15 +114,13 @@ export const Select = forwardRef<SelectRef, SelectProps>(
       defaultOpen = false,
       placement = "bottomLeft",
       notFoundContent = "검색 결과가 없어요",
-      labelInValue = false,
       listHeight = 256,
       loading = false,
       maxSelectedCount,
       maxVisibleTagCount,
-      hiddenTagsPlaceholder,
       maxTagTextLength,
       closable = true,
-      popupMatchSelectWidth = true,
+      popupMatchWidth = true,
       tagSeparators,
       virtual = true,
       optionRender,
@@ -172,6 +166,13 @@ export const Select = forwardRef<SelectRef, SelectProps>(
     const tagMeasureRef = useRef<HTMLSpanElement>(null);
     const [responsiveTagCount, setResponsiveTagCount] = useState(0);
     const [isSearchInputWrapped, setIsSearchInputWrapped] = useState(false);
+    const [isSearchInputFocused, setIsSearchInputFocused] = useState(false);
+    const previousCompositeHeightRef = useRef<number | null>(null);
+    const compositeHeightAnimationRef = useRef<Animation | null>(null);
+    const previousLayoutRectsRef = useRef<Map<string, SelectLayoutPosition>>(new Map());
+    const layoutAnimationsRef = useRef<Map<string, { element: HTMLElement; animation: Animation }>>(
+      new Map(),
+    );
     const values = value === undefined ? innerValue : normalizeValue(value);
     const query = searchValue ?? innerSearchValue;
     const isSearchable = Boolean(showSearch);
@@ -246,7 +247,7 @@ export const Select = forwardRef<SelectRef, SelectProps>(
       const observer = new ResizeObserver(measureResponsiveTags);
       observer.observe(container);
       return () => observer.disconnect();
-    }, [hiddenTagsPlaceholder, maxVisibleTagCount, measureResponsiveTags, selectedOptions.length]);
+    }, [maxVisibleTagCount, measureResponsiveTags, selectedOptions.length]);
 
     const getVisibleOptions = useCallback(
       (searchQuery: string) => {
@@ -254,8 +255,7 @@ export const Select = forwardRef<SelectRef, SelectProps>(
         const filtered = !normalizedQuery
           ? flatOptions
           : flatOptions.filter((option) => {
-              if (typeof filterOption === "function") return filterOption(searchQuery, option);
-              if (!filterOption) return true;
+              if (filterOption) return filterOption(searchQuery, option);
               return optionText(option, optionFilterProp)
                 .toLocaleLowerCase()
                 .includes(normalizedQuery);
@@ -316,14 +316,6 @@ export const Select = forwardRef<SelectRef, SelectProps>(
     }, [floating.isOpen, floating.triggerRef]);
 
     const toOutputValue = (nextValues: SelectValue[]) => {
-      const labeledValues = nextValues.map((selected) => {
-        const option = flatOptions.find((item) => item.value === selected);
-        return {
-          value: selected,
-          label: option ? getSelectedLabel(option) : String(selected),
-        };
-      });
-      if (labelInValue) return mode ? labeledValues : labeledValues[0];
       return mode ? nextValues : nextValues[0];
     };
 
@@ -335,7 +327,8 @@ export const Select = forwardRef<SelectRef, SelectProps>(
           (mode === "tags" ? { label: String(selected), value: selected } : undefined),
       );
       if (value === undefined) setInnerValue(nextValues);
-      onChange?.(
+      const notifyChange = onChange as SelectChangeHandler | undefined;
+      notifyChange?.(
         toOutputValue(nextValues),
         mode ? (nextOptions.filter(Boolean) as SelectOption[]) : nextOptions[0],
       );
@@ -348,9 +341,7 @@ export const Select = forwardRef<SelectRef, SelectProps>(
 
     const selectOption = (option: SelectOption) => {
       if (readOnly || interactionBlocked || option.disabled || option.value === undefined) return;
-      const outputValue = labelInValue
-        ? { value: option.value, label: getSelectedLabel(option) }
-        : option.value;
+      const outputValue = option.value;
       if (mode) {
         if (values.includes(option.value)) {
           commitValue(values.filter((item) => item !== option.value));
@@ -448,6 +439,160 @@ export const Select = forwardRef<SelectRef, SelectProps>(
       return () => observer.disconnect();
     }, [measureSearchInputWrap, query, size, values.length, visibleTags.length]);
 
+    useLayoutEffect(() => {
+      if (!mode) {
+        previousCompositeHeightRef.current = null;
+        compositeHeightAnimationRef.current?.cancel();
+        compositeHeightAnimationRef.current = null;
+        return;
+      }
+
+      const trigger = compositeTriggerRef.current;
+      if (!trigger) return;
+
+      const runningAnimation = compositeHeightAnimationRef.current;
+      const renderedHeight = runningAnimation ? trigger.getBoundingClientRect().height : null;
+      runningAnimation?.cancel();
+      compositeHeightAnimationRef.current = null;
+
+      // Canceling the previous animation restores the element's natural height.
+      // Measure only after that so rapid tag additions always animate toward the
+      // latest flex-wrapped layout instead of an in-between animated height.
+      const nextHeight = trigger.getBoundingClientRect().height;
+      const previousHeight = previousCompositeHeightRef.current;
+      previousCompositeHeightRef.current = nextHeight;
+
+      if (
+        previousHeight === null ||
+        Math.abs(previousHeight - nextHeight) < 0.5 ||
+        typeof trigger.animate !== "function" ||
+        (typeof window !== "undefined" &&
+          window.matchMedia?.("(prefers-reduced-motion: reduce)").matches)
+      ) {
+        return;
+      }
+
+      const startHeight = renderedHeight ?? previousHeight;
+
+      const animation = trigger.animate(
+        [
+          { height: `${startHeight}px`, overflow: "hidden" },
+          { height: `${nextHeight}px`, overflow: "hidden" },
+        ],
+        {
+          duration: 300,
+          easing: "cubic-bezier(0.645, 0.045, 0.355, 1)",
+        },
+      );
+      compositeHeightAnimationRef.current = animation;
+      animation.addEventListener("finish", () => {
+        if (compositeHeightAnimationRef.current === animation) {
+          compositeHeightAnimationRef.current = null;
+        }
+      });
+    }, [isSearchInputFocused, mode, selectedOptions.length, size, visibleTags.length]);
+
+    useLayoutEffect(() => {
+      if (!mode) {
+        previousLayoutRectsRef.current.clear();
+        layoutAnimationsRef.current.forEach(({ animation }) => animation.cancel());
+        layoutAnimationsRef.current.clear();
+        return;
+      }
+
+      const container = tagContainerRef.current;
+      if (!container) return;
+
+      const elements = Array.from(
+        container.querySelectorAll<HTMLElement>("[data-select-layout-key]"),
+      );
+      const renderedRects = new Map<string, SelectLayoutPosition>();
+      const renderedContainerRect = container.getBoundingClientRect();
+
+      layoutAnimationsRef.current.forEach(({ element, animation }, key) => {
+        if (element.isConnected) {
+          const rect = element.getBoundingClientRect();
+          renderedRects.set(key, {
+            left: rect.left - renderedContainerRect.left,
+            top: rect.top - renderedContainerRect.top,
+          });
+        }
+        animation.cancel();
+      });
+      layoutAnimationsRef.current.clear();
+
+      const nextRects = new Map<string, SelectLayoutPosition>();
+      const nextContainerRect = container.getBoundingClientRect();
+      elements.forEach((element) => {
+        const key = element.dataset.selectLayoutKey;
+        if (key) {
+          const rect = element.getBoundingClientRect();
+          nextRects.set(key, {
+            left: rect.left - nextContainerRect.left,
+            top: rect.top - nextContainerRect.top,
+          });
+        }
+      });
+
+      const previousRects = previousLayoutRectsRef.current;
+      previousLayoutRectsRef.current = nextRects;
+      const reducedMotion =
+        typeof window !== "undefined" &&
+        window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+
+      if (previousRects.size === 0 || reducedMotion) return;
+
+      elements.forEach((element) => {
+        const key = element.dataset.selectLayoutKey;
+        if (key === "search" || key === "omitted") return;
+        const nextRect = key ? nextRects.get(key) : undefined;
+        const ownPreviousRect = key
+          ? (renderedRects.get(key) ?? previousRects.get(key))
+          : undefined;
+        const previousRect =
+          ownPreviousRect ?? (key?.startsWith("tag:") ? previousRects.get("search") : undefined);
+        if (!key || !nextRect || !previousRect || typeof element.animate !== "function") return;
+
+        // A newly committed tag starts on the previous input row. Keeping its
+        // final horizontal position avoids a long diagonal sweep when it opens
+        // a new flex row; only the row movement follows the Select height.
+        const translateX = ownPreviousRect ? previousRect.left - nextRect.left : 0;
+        const translateY = previousRect.top - nextRect.top;
+        if (Math.abs(translateX) < 0.5 && Math.abs(translateY) < 0.5) return;
+
+        const animation = element.animate(
+          [
+            { transform: `translate(${translateX}px, ${translateY}px)` },
+            { transform: "translate(0, 0)" },
+          ],
+          {
+            duration: 300,
+            easing: "cubic-bezier(0.645, 0.045, 0.355, 1)",
+          },
+        );
+        layoutAnimationsRef.current.set(key, { element, animation });
+        animation.addEventListener("finish", () => {
+          if (layoutAnimationsRef.current.get(key)?.animation === animation) {
+            layoutAnimationsRef.current.delete(key);
+          }
+        });
+      });
+    }, [
+      isSearchInputFocused,
+      isSearchInputWrapped,
+      mode,
+      selectedOptions.length,
+      visibleTags.length,
+    ]);
+
+    useEffect(
+      () => () => {
+        compositeHeightAnimationRef.current?.cancel();
+        layoutAnimationsRef.current.forEach(({ animation }) => animation.cancel());
+      },
+      [],
+    );
+
     const optionList = (
       <OptionList
         options={visibleOptions}
@@ -523,12 +668,7 @@ export const Select = forwardRef<SelectRef, SelectProps>(
           label: String(removedValue),
         };
         commitValue(values.slice(0, -1));
-        onDeselect?.(
-          labelInValue
-            ? { value: removedValue, label: getSelectedLabel(removedOption) }
-            : removedValue,
-          removedOption,
-        );
+        onDeselect?.(removedValue, removedOption);
         return;
       }
       if (event.key === "ArrowDown") {
@@ -608,8 +748,6 @@ export const Select = forwardRef<SelectRef, SelectProps>(
           {usesCompositeTrigger ? (
             <div
               ref={compositeTriggerRef}
-              role={!isSearchable ? "combobox" : undefined}
-              aria-expanded={!isSearchable ? floating.isOpen : undefined}
               tabIndex={!isSearchable && !interactionBlocked ? 0 : undefined}
               className={twMerge(
                 selectRootVariants({
@@ -626,11 +764,17 @@ export const Select = forwardRef<SelectRef, SelectProps>(
                   : "cursor-pointer focus:border-[#0062df] focus:outline-none",
                 mode &&
                   values.length > 0 && [
+                    "items-start",
                     size === "sm" ? "pl-px" : "pl-[3px]",
                     size === "sm" ? "py-px" : "py-[3px]",
                   ],
                 maxVisibleTagCount === "responsive" && "overflow-hidden",
               )}
+              onMouseDown={(event) => {
+                if (isSearchable && event.target !== searchInputRef.current) {
+                  event.preventDefault();
+                }
+              }}
               onClick={() => {
                 if (interactionBlocked || readOnly) return;
                 if (isSearchable) searchInputRef.current?.focus();
@@ -644,7 +788,7 @@ export const Select = forwardRef<SelectRef, SelectProps>(
               <span
                 ref={tagContainerRef}
                 className={twMerge(
-                  "flex min-w-0 flex-1 flex-wrap items-center gap-[5px]",
+                  "relative flex min-w-0 flex-1 flex-wrap items-center gap-[5px]",
                   maxVisibleTagCount === "responsive" && "flex-nowrap overflow-hidden",
                 )}
               >
@@ -659,15 +803,14 @@ export const Select = forwardRef<SelectRef, SelectProps>(
                       const close = () => {
                         if (option.value === undefined) return;
                         commitValue(values.filter((item) => item !== option.value));
-                        onDeselect?.(
-                          labelInValue
-                            ? { value: option.value, label: getSelectedLabel(option) }
-                            : option.value,
-                          option,
-                        );
+                        onDeselect?.(option.value, option);
                       };
                       return tagRender ? (
-                        <span key={String(option.value)} data-select-tag>
+                        <span
+                          key={String(option.value)}
+                          data-select-tag
+                          data-select-layout-key={`tag:${String(option.value)}`}
+                        >
                           {tagRender({
                             label: tagLabel,
                             value: option.value as SelectValue,
@@ -680,9 +823,13 @@ export const Select = forwardRef<SelectRef, SelectProps>(
                         <Tag
                           key={String(option.value)}
                           data-select-tag
+                          data-select-layout-key={`tag:${String(option.value)}`}
                           color={option.color ?? "grey"}
                           variant="filled"
-                          className={selectTagSizeClasses[size]}
+                          className={twMerge(
+                            selectTagSizeClasses[size],
+                            variant === "filled" && "bg-white",
+                          )}
                           suffixIcon={
                             !closable || interactionBlocked || readOnly ? undefined : (
                               <Icon
@@ -702,15 +849,12 @@ export const Select = forwardRef<SelectRef, SelectProps>(
                       );
                     })}
                     {omittedTags.length ? (
-                      <span data-select-tag className="text-xs text-[#777]">
-                        {typeof hiddenTagsPlaceholder === "function"
-                          ? hiddenTagsPlaceholder(
-                              omittedTags.map((option) => ({
-                                value: option.value as SelectValue,
-                                label: getSelectedLabel(option),
-                              })),
-                            )
-                          : (hiddenTagsPlaceholder ?? `+ ${omittedTags.length} ...`)}
+                      <span
+                        data-select-tag
+                        data-select-layout-key="omitted"
+                        className="text-xs text-[#777]"
+                      >
+                        + {omittedTags.length} ...
                       </span>
                     ) : null}
                   </>
@@ -718,8 +862,7 @@ export const Select = forwardRef<SelectRef, SelectProps>(
                 {isSearchable ? (
                   <input
                     ref={searchInputRef}
-                    role="combobox"
-                    aria-expanded={floating.isOpen}
+                    data-select-layout-key="search"
                     disabled={interactionBlocked}
                     readOnly={readOnly}
                     value={query}
@@ -736,7 +879,7 @@ export const Select = forwardRef<SelectRef, SelectProps>(
                             : undefined
                     }
                     className={twMerge(
-                      "font-inherit w-0 max-w-full min-w-8 flex-1 border-0 bg-transparent p-0 text-inherit outline-none placeholder:text-[#999] disabled:cursor-not-allowed",
+                      "font-inherit w-0 max-w-full min-w-8 flex-1 border-0 bg-transparent p-0 text-inherit opacity-100 transition-opacity duration-300 ease-[cubic-bezier(0.645,0.045,0.355,1)] outline-none placeholder:text-[#999] disabled:cursor-not-allowed motion-reduce:transition-none",
                       size === "lg" && "h-8",
                       size === "md" && "h-[22px]",
                       size === "sm" && "h-4",
@@ -746,9 +889,20 @@ export const Select = forwardRef<SelectRef, SelectProps>(
                         values.length > 0 &&
                         isSearchInputWrapped &&
                         (size === "sm" ? "pl-[9px]" : "pl-[7px]"),
+                      mode &&
+                        values.length > 0 &&
+                        query.length === 0 && [
+                          !isSearchInputFocused && "-mt-[5px] -ml-[5px] h-0 min-w-0 opacity-0",
+                        ],
                     )}
-                    onFocus={onFocus}
-                    onBlur={onBlur}
+                    onFocus={(event) => {
+                      setIsSearchInputFocused(true);
+                      onFocus?.(event);
+                    }}
+                    onBlur={(event) => {
+                      setIsSearchInputFocused(false);
+                      onBlur?.(event);
+                    }}
                     onCompositionStart={() => {
                       isComposingRef.current = true;
                       if (compositionEnterTimerRef.current !== null) {
@@ -794,7 +948,10 @@ export const Select = forwardRef<SelectRef, SelectProps>(
                         data-select-measure-tag
                         color={option.color ?? "grey"}
                         variant="filled"
-                        className={selectTagSizeClasses[size]}
+                        className={twMerge(
+                          selectTagSizeClasses[size],
+                          variant === "filled" && "bg-white",
+                        )}
                         suffixIcon={
                           !closable || readOnly ? undefined : <Icon icon="close" size={12} />
                         }
@@ -804,22 +961,15 @@ export const Select = forwardRef<SelectRef, SelectProps>(
                     );
                   })}
                   <span data-select-measure-placeholder className="text-xs">
-                    {typeof hiddenTagsPlaceholder === "function"
-                      ? hiddenTagsPlaceholder(
-                          selectedOptions.map((option) => ({
-                            value: option.value as SelectValue,
-                            label: getSelectedLabel(option),
-                          })),
-                        )
-                      : (hiddenTagsPlaceholder ?? `+ ${selectedOptions.length} ...`)}
+                    + {selectedOptions.length} ...
                   </span>
                 </span>
               ) : null}
               {loading ? (
-                <Icon icon="loading" color="#999" className="animate-spin" />
+                <Icon icon="loading" color="#999" className="animate-spin self-center" />
               ) : allowClear && values.length && !interactionBlocked && !readOnly ? (
                 <span
-                  className="cursor-pointer"
+                  className="cursor-pointer self-center"
                   onClick={(event) => {
                     event.stopPropagation();
                     commitValue([]);
@@ -833,7 +983,10 @@ export const Select = forwardRef<SelectRef, SelectProps>(
                   icon="chevron-down"
                   size={14}
                   color="#bbb"
-                  className={twMerge("transition-transform", floating.isOpen && "rotate-180")}
+                  className={twMerge(
+                    "self-center transition-transform",
+                    floating.isOpen && "rotate-180",
+                  )}
                 />
               )}
             </div>
@@ -842,7 +995,6 @@ export const Select = forwardRef<SelectRef, SelectProps>(
               ref={buttonRef}
               type="button"
               disabled={interactionBlocked}
-              aria-readonly={readOnly || undefined}
               className={twMerge(
                 selectRootVariants({
                   size,
@@ -901,12 +1053,12 @@ export const Select = forwardRef<SelectRef, SelectProps>(
                   zIndex: 1050,
                   visibility: floating.position && triggerWidth > 0 ? "visible" : "hidden",
                   width:
-                    typeof popupMatchSelectWidth === "number"
-                      ? popupMatchSelectWidth
-                      : popupMatchSelectWidth
+                    typeof popupMatchWidth === "number"
+                      ? popupMatchWidth
+                      : popupMatchWidth
                         ? triggerWidth
                         : undefined,
-                  minWidth: popupMatchSelectWidth === false ? 128 : triggerWidth,
+                  minWidth: popupMatchWidth === false ? 128 : triggerWidth,
                 }}
                 {...floating.popupProps}
               >
@@ -963,7 +1115,7 @@ function OptionList({
   return (
     <ScrollFade
       style={{ maxHeight: height }}
-      fadeSize={40}
+      fadeSize={48}
       onScroll={(event) => {
         setScrollTop(event.currentTarget.scrollTop);
         onScroll?.(event);
@@ -1003,6 +1155,7 @@ function OptionList({
                     !selected && index !== activeIndex && "hover:bg-[#f5f5f5]",
                     disabled && "cursor-not-allowed text-[#bbb] hover:bg-transparent",
                   )}
+                  onMouseDown={(event) => event.preventDefault()}
                   onClick={() => onSelect(option)}
                 >
                   <span className="min-w-0 flex-1 truncate">

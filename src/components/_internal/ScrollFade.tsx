@@ -11,12 +11,22 @@ import { twMerge } from "tailwind-merge";
 
 interface ScrollFadeProps extends HTMLAttributes<HTMLDivElement> {
   viewportClassName?: string;
+  fadeClassName?: string;
   fadeSize?: number;
 }
 
 export const ScrollFade = forwardRef<HTMLDivElement, ScrollFadeProps>(
   (
-    { children, className, viewportClassName, fadeSize = 24, onScroll, style, ...rest },
+    {
+      children,
+      className,
+      viewportClassName,
+      fadeClassName = "via-white/70 via-40%",
+      fadeSize = 24,
+      onScroll,
+      style,
+      ...rest
+    },
     forwardedRef,
   ) => {
     const viewportRef = useRef<HTMLDivElement>(null);
@@ -65,6 +75,7 @@ export const ScrollFade = forwardRef<HTMLDivElement, ScrollFadeProps>(
         <div
           className={twMerge(
             "pointer-events-none absolute inset-x-0 top-0 bg-gradient-to-b from-white to-transparent transition-opacity duration-200 ease-in-out motion-reduce:transition-none",
+            fadeClassName,
             edge.top ? "opacity-100" : "opacity-0",
           )}
           style={{ height: fadeSize }}
@@ -72,6 +83,7 @@ export const ScrollFade = forwardRef<HTMLDivElement, ScrollFadeProps>(
         <div
           className={twMerge(
             "pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-white to-transparent transition-opacity duration-200 ease-in-out motion-reduce:transition-none",
+            fadeClassName,
             edge.bottom ? "opacity-100" : "opacity-0",
           )}
           style={{ height: fadeSize }}

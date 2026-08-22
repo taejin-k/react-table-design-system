@@ -29,7 +29,6 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
           id={inputId}
           type="checkbox"
           disabled={disabled}
-          aria-checked={partiallyChecked ? "mixed" : undefined}
           className={checkboxVariants({ error })}
         />
         {label != null ? (

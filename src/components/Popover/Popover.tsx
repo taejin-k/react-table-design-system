@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { twMerge } from "tailwind-merge";
 import { useFloatingLayer } from "../_internal/use-floating-layer";
-import type { PopoverPlacement, PopoverProps } from "./Popover.types";
+import type { PopoverPlacementType, PopoverProps } from "./Popover.types";
 
 const MOTION_DURATION = 100;
 
@@ -23,7 +23,6 @@ export function Popover({
   className,
   onOpenChange,
 }: PopoverProps) {
-  const resolvedTitle = typeof title === "function" ? title() : title;
   const resolvedContent = typeof content === "function" ? content() : content;
   const enabled = resolvedContent !== null && resolvedContent !== undefined;
   const floating = useFloatingLayer({
@@ -116,8 +115,8 @@ export function Popover({
                   className="relative rounded-lg px-3 py-2.5 shadow-[0_6px_16px_rgba(0,0,0,0.08),0_3px_6px_-4px_rgba(0,0,0,0.12),0_9px_28px_8px_rgba(0,0,0,0.05)]"
                   style={{ backgroundColor: color, color: getTextColor(color) }}
                 >
-                  {resolvedTitle !== null && resolvedTitle !== undefined && resolvedTitle !== "" ? (
-                    <div className="mb-1 font-semibold">{resolvedTitle}</div>
+                  {title !== null && title !== undefined && title !== "" ? (
+                    <div className="mb-1 font-semibold">{title}</div>
                   ) : null}
                   <div>{resolvedContent}</div>
                 </div>
@@ -137,7 +136,7 @@ export function Popover({
   );
 }
 
-function getTransformOrigin(placement: PopoverPlacement) {
+function getTransformOrigin(placement: PopoverPlacementType) {
   if (placement.startsWith("top")) {
     if (placement.endsWith("Left")) return "16px bottom";
     if (placement.endsWith("Right")) return "calc(100% - 16px) bottom";

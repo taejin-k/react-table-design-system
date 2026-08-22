@@ -5,6 +5,7 @@
 @import "tailwindcss/utilities.css" layer(utilities);
 @import "./table-scrollbar.css";
 @import "./motion.css";
+@import "./interactive.css";
 
 .wizard-scrollbar-hidden {
   scrollbar-width: none;

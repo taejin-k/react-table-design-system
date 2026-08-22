@@ -2,8 +2,9 @@ export { Dropdown } from "./Dropdown";
 export type {
   DropdownClickInfo,
   DropdownItem,
+  DropdownItemType,
   DropdownMenu,
-  DropdownPlacement,
+  DropdownPlacementType,
   DropdownProps,
-  DropdownTrigger,
+  DropdownTriggerType,
 } from "./Dropdown.types";

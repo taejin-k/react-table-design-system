@@ -1,7 +1,7 @@
 import type { ColumnsType } from "./Table.types";
 
 export type Member = {
-  key: string;
+  id: string;
   name: string;
   role: string;
   team: string;
@@ -13,7 +13,7 @@ export type Member = {
 
 export const members: Member[] = [
   {
-    key: "M-1001",
+    id: "M-1001",
     name: "김민준",
     role: "Product Designer",
     team: "Design",
@@ -22,7 +22,7 @@ export const members: Member[] = [
     joinedAt: "2023-02-14",
   },
   {
-    key: "M-1002",
+    id: "M-1002",
     name: "이서연",
     role: "Frontend Engineer",
     team: "Platform",
@@ -31,7 +31,7 @@ export const members: Member[] = [
     joinedAt: "2022-08-03",
   },
   {
-    key: "M-1003",
+    id: "M-1003",
     name: "박지호",
     role: "Product Manager",
     team: "Growth",
@@ -40,7 +40,7 @@ export const members: Member[] = [
     joinedAt: "2024-01-22",
   },
   {
-    key: "M-1004",
+    id: "M-1004",
     name: "최유진",
     role: "Data Analyst",
     team: "Data",
@@ -49,7 +49,7 @@ export const members: Member[] = [
     joinedAt: "2021-11-19",
   },
   {
-    key: "M-1005",
+    id: "M-1005",
     name: "정도윤",
     role: "Backend Engineer",
     team: "Platform",
@@ -58,7 +58,7 @@ export const members: Member[] = [
     joinedAt: "2024-05-08",
   },
   {
-    key: "M-1006",
+    id: "M-1006",
     name: "한지우",
     role: "UX Researcher",
     team: "Design",
@@ -67,7 +67,7 @@ export const members: Member[] = [
     joinedAt: "2023-07-01",
   },
   {
-    key: "M-1007",
+    id: "M-1007",
     name: "윤하준",
     role: "QA Engineer",
     team: "Product",
@@ -76,7 +76,7 @@ export const members: Member[] = [
     joinedAt: "2022-04-27",
   },
   {
-    key: "M-1008",
+    id: "M-1008",
     name: "송채원",
     role: "Content Designer",
     team: "Design",
@@ -85,7 +85,7 @@ export const members: Member[] = [
     joinedAt: "2023-10-12",
   },
   {
-    key: "M-1009",
+    id: "M-1009",
     name: "오시우",
     role: "iOS Engineer",
     team: "Mobile",
@@ -94,7 +94,7 @@ export const members: Member[] = [
     joinedAt: "2021-09-06",
   },
   {
-    key: "M-1010",
+    id: "M-1010",
     name: "강수아",
     role: "Android Engineer",
     team: "Mobile",
@@ -103,7 +103,7 @@ export const members: Member[] = [
     joinedAt: "2024-06-17",
   },
   {
-    key: "M-1011",
+    id: "M-1011",
     name: "임주원",
     role: "DevOps Engineer",
     team: "Platform",
@@ -112,7 +112,7 @@ export const members: Member[] = [
     joinedAt: "2020-12-02",
   },
   {
-    key: "M-1012",
+    id: "M-1012",
     name: "백예린",
     role: "Marketing Lead",
     team: "Growth",
@@ -151,7 +151,7 @@ export const columns: ColumnsType<Member> = [
 ];
 
 export const largeData: Member[] = Array.from({ length: 1000 }, (_, index) => ({
-  key: `V-${index + 1}`,
+  id: `V-${index + 1}`,
   name: `구성원 ${String(index + 1).padStart(4, "0")}`,
   role: index % 2 ? "Frontend Engineer" : "Product Designer",
   team: ["Design", "Platform", "Growth"][index % 3],

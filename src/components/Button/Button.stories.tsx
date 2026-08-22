@@ -6,7 +6,7 @@ import { storyDescriptions } from "../../storybook/story-descriptions";
 import { withStoryImports } from "../../storybook/story-source";
 import { Icon } from "../Icon";
 import { Button } from "./Button";
-import type { ButtonProps } from "./Button.types";
+import type { ButtonProps, ButtonSizeType, ButtonVariantType } from "./Button.types";
 
 type IconMode = "default" | "prefix" | "suffix" | "both" | "iconOnly";
 
@@ -14,8 +14,8 @@ interface ButtonStoryArgs extends ButtonProps {
   iconMode?: IconMode;
 }
 
-const buttonVariants = ["primary", "secondary", "tertiary", "dark", "ghost"] as const;
-const buttonSizes = ["lg", "md", "sm"] as const;
+const buttonVariants: ButtonVariantType[] = ["primary", "secondary", "tertiary", "dark", "ghost"];
+const buttonSizes: ButtonSizeType[] = ["lg", "md", "sm"];
 
 const storyDescription = (id: string) => ({
   docs: { description: { story: storyDescriptions[id] } },
@@ -25,9 +25,6 @@ const meta = {
   title: "Components/Button",
   component: Button as ComponentType<ButtonStoryArgs>,
   tags: ["autodocs"],
-  args: {
-    children: "Button",
-  },
   argTypes: {
     variant: { name: "종류", control: "select", options: buttonVariants },
     size: { name: "크기", control: "select", options: buttonSizes },
@@ -35,6 +32,7 @@ const meta = {
     disabled: { name: "비활성", control: "boolean" },
     shadow: { name: "그림자", control: "boolean" },
     fullWidth: { name: "전체 너비", control: "boolean" },
+    rounded: { name: "둥근 모양", control: "boolean" },
     loading: { name: "로딩", control: "boolean" },
     iconOnly: { control: false, table: { disable: true } },
     type: { control: false, table: { disable: true } },
@@ -48,7 +46,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "클릭해서 특정 동작을 실행해요.  \n종류와 크기를 선택하고 아이콘·로딩·비활성 상태·그림자·전체 너비를 설정할 수 있어요.",
+          "클릭해서 특정 동작을 실행해요.  \n종류와 크기를 선택하고 아이콘·로딩·비활성 상태·둥근 모양·그림자·전체 너비를 설정할 수 있어요.",
       },
       page: () => (
         <div className="button-docs component-docs">
@@ -61,18 +59,34 @@ const meta = {
 
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
-| \`variant\` | 버튼의 시각적 우선순위를 설정해요. | \`primary \\| secondary \\| tertiary \\| dark \\| ghost\` | \`primary\` |
-| \`size\` | 버튼의 높이와 내부 여백을 설정해요. | \`lg \\| md \\| sm\` | \`md\` |
+| \`variant\` | 버튼의 시각적 우선순위를 설정해요. | [\`ButtonVariantType\`](#button-variant) | \`primary\` |
+| \`size\` | 버튼의 높이와 내부 여백을 설정해요. | [\`ButtonSizeType\`](#button-size) | \`md\` |
 | \`prefixIcon\` | 버튼 이름 앞에 단일 아이콘을 표시해요. | \`ReactElement\` | - |
 | \`suffixIcon\` | 버튼 이름 뒤에 단일 아이콘을 표시해요. | \`ReactElement\` | - |
 | \`iconOnly\` | 아이콘만 표시하는 정사각형 버튼으로 만들어요. | \`boolean\` | \`false\` |
 | \`loading\` | 아이콘 자리에 로딩을 표시하고 클릭을 막아요. | \`boolean\` | \`false\` |
 | \`shadow\` | 버튼에 그림자를 표시해요. | \`boolean\` | \`false\` |
 | \`fullWidth\` | 부모 요소의 너비를 모두 채워요. | \`boolean\` | \`false\` |
+| \`rounded\` | 버튼 높이만큼 모서리를 둥글게 만들어요. | \`boolean\` | \`false\` |
 | \`disabled\` | 버튼을 비활성화하고 클릭 동작을 막아요. | \`boolean\` | \`false\` |
 | \`className\` | 외부에서 Tailwind 클래스를 추가해요. | \`string\` | - |
 | \`onClick\` | 버튼을 클릭할 때 실행할 함수예요. | \`MouseEventHandler<HTMLButtonElement>\` | - |
           `}</Markdown>
+          <h2 className="component-docs-types-heading">Types</h2>
+          <h3 id="button-variant">ButtonVariantType</h3>
+          <p>버튼의 시각적 우선순위를 선택해요.</p>
+          <div className="flex flex-wrap gap-2">
+            {buttonVariants.map((variant) => (
+              <ButtonVariantCode key={variant} variant={variant} />
+            ))}
+          </div>
+          <h3 id="button-size">ButtonSizeType</h3>
+          <p>버튼의 높이와 내부 여백을 선택해요.</p>
+          <div className="flex flex-wrap gap-2">
+            {buttonSizes.map((size) => (
+              <ButtonSizeCode key={size} size={size} />
+            ))}
+          </div>
         </div>
       ),
     },
@@ -81,6 +95,22 @@ const meta = {
 
 export default meta;
 type Story = StoryObj<typeof meta>;
+
+function ButtonVariantCode({ variant }: { variant: ButtonVariantType }) {
+  return (
+    <code className="rounded-full border border-[#e3e8ef] bg-[#f8fafc] px-3 py-1.5 text-[13px] text-[#4a5667]">
+      {variant}
+    </code>
+  );
+}
+
+function ButtonSizeCode({ size }: { size: ButtonSizeType }) {
+  return (
+    <code className="rounded-full border border-[#e3e8ef] bg-[#f8fafc] px-3 py-1.5 text-[13px] text-[#4a5667]">
+      {size}
+    </code>
+  );
+}
 
 export const Variants: Story = {
   argTypes: {
@@ -97,7 +127,7 @@ export const Variants: Story = {
       ...storyDescription("components-button--variants").docs,
       source: {
         code: withStoryImports(`<div className="flex flex-wrap items-center gap-2">
-  <Button>Button</Button>
+  <Button variant="primary">Button</Button>
   <Button variant="secondary">Button</Button>
   <Button variant="tertiary">Button</Button>
   <Button variant="dark">Button</Button>
@@ -178,6 +208,65 @@ export const States: Story = {
           전체 너비
         </Button>
       </div>
+    </div>
+  ),
+};
+
+export const Rounded: Story = {
+  argTypes: {
+    iconMode: { control: false, table: { disable: true } },
+    size: { control: false, table: { disable: true } },
+    children: { control: false, table: { disable: true } },
+    rounded: { control: false, table: { disable: true } },
+    shadow: { control: false, table: { disable: true } },
+    fullWidth: { control: false, table: { disable: true } },
+  },
+  parameters: {
+    ...storyDescription("components-button--rounded"),
+    controls: { disable: false },
+    docs: {
+      ...storyDescription("components-button--rounded").docs,
+      source: {
+        code: withStoryImports(`<div className="flex flex-wrap items-center gap-2">
+  <Button rounded size="lg">Button</Button>
+  <Button rounded size="md">Button</Button>
+  <Button rounded size="sm">Button</Button>
+  <Button rounded prefixIcon={<Icon icon="add" />}>Button</Button>
+  <Button
+    rounded
+    prefixIcon={<Icon icon="add" />}
+    suffixIcon={<Icon icon="arrow-right" />}
+  >
+    Button
+  </Button>
+  <Button
+    rounded
+    iconOnly
+    prefixIcon={<Icon icon="add" />}
+  />
+</div>`),
+      },
+    },
+  },
+  render: ({ iconMode: _iconMode, ...args }) => (
+    <div className="flex flex-wrap items-center gap-2">
+      {buttonSizes.map((size) => (
+        <Button {...args} key={size} rounded size={size}>
+          Button
+        </Button>
+      ))}
+      <Button {...args} rounded prefixIcon={<Icon icon="add" />}>
+        Button
+      </Button>
+      <Button
+        {...args}
+        rounded
+        prefixIcon={<Icon icon="add" />}
+        suffixIcon={<Icon icon="arrow-right" />}
+      >
+        Button
+      </Button>
+      <Button {...args} rounded iconOnly prefixIcon={<Icon icon="add" />} />
     </div>
   ),
 };

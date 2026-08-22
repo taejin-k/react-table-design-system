@@ -1,8 +1,8 @@
 import type { ReactNode, TextareaHTMLAttributes } from "react";
-import type { InputSize } from "../Input";
+import type { InputSizeType } from "../Input";
 import type { AllowedCharacterType } from "../_internal/filterAllowedCharacters";
 
-export type TextAreaVariant = "default" | "filled";
+export type TextAreaVariantType = "default" | "filled";
 
 export interface TextAreaAutoSize {
   minRows?: number;
@@ -15,8 +15,8 @@ export interface TextAreaProps extends Omit<
 > {
   value?: string;
   width?: number;
-  size?: InputSize;
-  variant?: TextAreaVariant;
+  size?: InputSizeType;
+  variant?: TextAreaVariantType;
   label?: ReactNode;
   errorMessage?: ReactNode;
   autoSize?: boolean | TextAreaAutoSize;

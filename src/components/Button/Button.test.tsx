@@ -59,14 +59,13 @@ describe("Button", () => {
     const buttonClick = vi.fn();
     render(
       <Button
-        aria-label="추가"
         iconOnly
         prefixIcon={<span data-testid="icon" onClick={iconClick} />}
         onClick={buttonClick}
       />,
     );
 
-    const button = screen.getByRole("button", { name: "추가" });
+    const button = screen.getByRole("button");
     expect(button).toHaveClass("w-[30px]", "px-0");
     await user.click(screen.getByTestId("icon"));
     expect(buttonClick).toHaveBeenCalledOnce();
@@ -74,11 +73,38 @@ describe("Button", () => {
   });
 
   it("keeps icon-only buttons square while loading", () => {
-    render(<Button aria-label="추가" iconOnly loading prefixIcon={<span />} />);
+    render(<Button iconOnly loading prefixIcon={<span />} />);
 
-    const button = screen.getByRole("button", { name: "추가" });
+    const button = screen.getByRole("button");
     expect(button).toHaveClass("h-[30px]", "w-[30px]", "px-0");
     expect(button.style.width).toBe("");
+  });
+
+  it("applies a border radius equal to each button height when rounded", () => {
+    const { rerender } = render(
+      <Button rounded size="lg">
+        Large
+      </Button>,
+    );
+
+    expect(screen.getByRole("button", { name: "Large" })).toHaveClass("h-10", "rounded-[40px]");
+
+    rerender(
+      <Button rounded size="md">
+        Medium
+      </Button>,
+    );
+    expect(screen.getByRole("button", { name: "Medium" })).toHaveClass(
+      "h-[30px]",
+      "rounded-[30px]",
+    );
+
+    rerender(
+      <Button rounded size="sm">
+        Small
+      </Button>,
+    );
+    expect(screen.getByRole("button", { name: "Small" })).toHaveClass("h-5", "rounded-[20px]");
   });
 
   it("replaces the expected icon slot while loading and blocks clicks", async () => {

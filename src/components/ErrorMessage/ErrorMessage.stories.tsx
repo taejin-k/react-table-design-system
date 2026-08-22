@@ -7,7 +7,6 @@ const meta = {
   title: "Components/ErrorMessage",
   component: ErrorMessage,
   tags: ["autodocs"],
-  args: { errorMessage: "입력한 내용을 다시 확인해 주세요." },
   argTypes: {
     errorMessage: { name: "오류 문구", control: "text" },
     className: { control: false, table: { disable: true } },
@@ -43,6 +42,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Message: Story = {
+  args: { errorMessage: "입력한 내용을 다시 확인해 주세요." },
   parameters: {
     docs: { description: { story: storyDescriptions["components-errormessage--message"] } },
     controls: { disable: false },

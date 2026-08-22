@@ -71,7 +71,45 @@ export const PaginationHideOnSinglePage: Story = {
     docs: {
       ...storyDescription("components-table-pagination--pagination-hide-on-single-page").docs,
       source: {
-        code: withStoryImports(`function PaginationHideOnSinglePageTable() {
+        code: withStoryImports(`const members = [
+  {
+    id: 'M-1001',
+    name: '김민준',
+    role: 'Product Designer',
+    team: 'Design',
+    projects: 8,
+  },
+  // ...나머지 3개 항목
+];
+
+const columns = [
+  {
+    key: 'name',
+    dataIndex: 'name',
+    title: '이름',
+    width: 150,
+  },
+  {
+    key: 'role',
+    dataIndex: 'role',
+    title: '직무',
+    minWidth: 190,
+  },
+  {
+    key: 'team',
+    dataIndex: 'team',
+    title: '팀',
+    width: 120,
+  },
+  {
+    key: 'projects',
+    dataIndex: 'projects',
+    title: '프로젝트',
+    width: 110,
+  },
+];
+
+function PaginationHideOnSinglePageTable() {
   const [hideOnSinglePage, setHideOnSinglePage] = useState(true);
 
   return (
@@ -107,7 +145,11 @@ function PaginationHideOnSinglePageTable() {
       >
         hideOnSinglePage: {String(hideOnSinglePage)}
       </Button>
-      <Table dataSource={members.slice(0, 4)} columns={columns} pagination={{ hideOnSinglePage }} />
+      <Table
+        dataSource={members.slice(0, 4)}
+        columns={columns}
+        pagination={{ hideOnSinglePage }}
+      />
     </div>
   );
 }

@@ -34,7 +34,7 @@ const storyDescription = (id: string) => ({
 
 const tableStoryDataSource = `const members = [
   {
-    key: 'M-1001',
+    id: 'M-1001',
     name: '김민준',
     role: 'Product Designer',
     team: 'Design',
@@ -72,7 +72,7 @@ const columns = [
 
 const dragColumnStoryDataSource = `const members = [
   {
-    key: 'M-1001',
+    id: 'M-1001',
     name: '김민준',
     role: 'Product Designer',
     team: 'Design',
@@ -115,7 +115,7 @@ const checkboxFixedColumns: ColumnsType<Member> = [
   },
   {
     key: "memberKey",
-    dataIndex: "key",
+    dataIndex: "id",
     title: "구성원 ID",
     width: 180,
   },
@@ -217,7 +217,7 @@ export const Basic: Story = {
 };
 
 export const Size: Story = {
-  args: { size: "small" },
+  args: { size: "sm" },
   parameters: storyDescription("components-table--size"),
 };
 
@@ -269,7 +269,7 @@ export const Sorter: Story = {
       ...storyDescription("components-table--sorter").docs,
       source: {
         code: withStoryImports(`const members = [
-  { key: 'M-1001', name: '김민준', role: 'Product Designer', team: 'Design', projects: 8 },
+  { id: 'M-1001', name: '김민준', role: 'Product Designer', team: 'Design', projects: 8 },
   // ...나머지 4개 항목
 ];
 
@@ -310,7 +310,13 @@ const columns = [
 ];
 
 function SorterTable() {
-  return <Table dataSource={members} columns={columns} pagination={false} />;
+  return (
+    <Table
+      dataSource={members}
+      columns={columns}
+      pagination={false}
+    />
+  );
 }`),
       },
     },
@@ -327,7 +333,7 @@ export const Filter: Story = {
       source: {
         code: withStoryImports(`const members = [
   {
-    key: 'M-1001',
+    id: 'M-1001',
     name: '김민준',
     role: 'Product Designer',
     team: 'Design',
@@ -437,7 +443,13 @@ const columns = [
 ];
 
 function FilterTable() {
-  return <Table dataSource={members} columns={columns} pagination={false} />;
+  return (
+    <Table
+      dataSource={members}
+      columns={columns}
+      pagination={false}
+    />
+  );
 }`),
       },
     },
@@ -502,8 +514,7 @@ export const CheckboxFixed: Story = {
   parameters: storyDescription("components-table--checkbox-fixed"),
   args: {
     columns: checkboxFixedColumns,
-    rowSelection: { type: "checkbox", fixed: true },
-    scroll: { x: "max-content" },
+    rowSelection: { type: "checkbox", fixed: "left" },
   },
 };
 

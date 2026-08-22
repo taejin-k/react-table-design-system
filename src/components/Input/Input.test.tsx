@@ -29,39 +29,41 @@ function EmailInputHarness() {
 }
 
 describe("Input", () => {
-  it("connects required and error semantics to the native input", () => {
+  it("applies required state and displays an error", () => {
     render(
       <Input label="이메일" value="invalid" required errorMessage="올바른 이메일을 입력하세요" />,
     );
 
-    const input = screen.getByRole("textbox", { name: "이메일" });
-    const error = screen.getByRole("alert");
+    const input = screen.getByLabelText(/이메일/);
     expect(input).toBeRequired();
-    expect(input).toHaveAttribute("aria-invalid", "true");
-    expect(input).toHaveAttribute("aria-describedby", error.id);
+    expect(screen.getByText("올바른 이메일을 입력하세요")).toBeInTheDocument();
   });
 
   it("clears the error while typing and validates again on blur", async () => {
     const user = userEvent.setup();
     render(<EmailInputHarness />);
 
-    const input = screen.getByRole("textbox", { name: "이메일" });
-    expect(input).toHaveAttribute("aria-invalid", "true");
+    const input = screen.getByLabelText(/이메일/);
+    expect(screen.getByText("올바른 이메일을 입력하세요")).toBeInTheDocument();
 
     await user.clear(input);
     await user.type(input, "user@example.com");
-    expect(input).not.toHaveAttribute("aria-invalid");
+    await waitFor(() =>
+      expect(screen.queryByText("올바른 이메일을 입력하세요")).not.toBeInTheDocument(),
+    );
 
     await user.tab();
-    expect(input).not.toHaveAttribute("aria-invalid");
+    expect(screen.queryByText("올바른 이메일을 입력하세요")).not.toBeInTheDocument();
 
     await user.click(input);
     await user.clear(input);
     await user.type(input, "invalid");
-    expect(input).not.toHaveAttribute("aria-invalid");
+    await waitFor(() =>
+      expect(screen.queryByText("올바른 이메일을 입력하세요")).not.toBeInTheDocument(),
+    );
 
     await user.tab();
-    expect(input).toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByText("올바른 이메일을 입력하세요")).toBeInTheDocument();
   });
 
   it("handles asynchronous validation internally and clears its error while typing", async () => {
@@ -69,10 +71,9 @@ describe("Input", () => {
     const validate = vi.fn(async (nextValue: string) =>
       nextValue === "used@example.com" ? "이미 가입된 이메일이에요." : "",
     );
-    render(<Input aria-label="이메일" defaultValue="used@example.com" validate={validate} />);
+    render(<Input placeholder="이메일" defaultValue="used@example.com" validate={validate} />);
 
-    const input = screen.getByRole("textbox", { name: "이메일" });
-    expect(input).not.toHaveAttribute("aria-invalid");
+    const input = screen.getByPlaceholderText("이메일");
 
     await user.click(input);
     await user.tab();
@@ -86,14 +87,16 @@ describe("Input", () => {
     );
 
     await user.tab();
-    await waitFor(() => expect(input).not.toHaveAttribute("aria-invalid"));
+    await waitFor(() =>
+      expect(screen.queryByText("이미 가입된 이메일이에요.")).not.toBeInTheDocument(),
+    );
   });
 
   it("clears the value and restores focus to the input", async () => {
     const user = userEvent.setup();
-    render(<InputHarness />);
+    const { container } = render(<InputHarness />);
 
-    await user.click(screen.getByRole("button"));
+    await user.click(container.querySelector("svg") as SVGSVGElement);
 
     expect(screen.getByRole("textbox", { name: "검색" })).toHaveValue("");
     expect(screen.getByRole("textbox", { name: "검색" })).toHaveFocus();
@@ -101,18 +104,18 @@ describe("Input", () => {
 
   it("clears an uncontrolled default value", async () => {
     const user = userEvent.setup();
-    render(<UncontrolledInputHarness />);
+    const { container } = render(<UncontrolledInputHarness />);
 
-    await user.click(screen.getByRole("button"));
+    await user.click(container.querySelector("svg") as SVGSVGElement);
 
     expect(screen.getByRole("textbox", { name: "검색" })).toHaveValue("");
   });
 
   it("keeps a read-only value focusable without showing the clear action", async () => {
     const user = userEvent.setup();
-    render(<Input aria-label="읽기 전용" defaultValue="입력값" readOnly allowClear />);
+    render(<Input defaultValue="입력값" readOnly allowClear />);
 
-    const input = screen.getByRole("textbox", { name: "읽기 전용" });
+    const input = screen.getByDisplayValue("입력값");
     expect(input).toHaveAttribute("readonly");
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
 
@@ -130,27 +133,27 @@ describe("Input", () => {
   });
 
   it("applies className to the root", () => {
-    const { container } = render(<Input aria-label="스타일 입력" className="custom-root" />);
+    const { container } = render(<Input className="custom-root" />);
 
     expect(container.firstElementChild).toHaveClass("custom-root");
   });
 
   it("fills the parent by default and applies a custom width to the root", () => {
-    const { container, rerender } = render(<Input aria-label="너비 입력" />);
+    const { container, rerender } = render(<Input />);
 
     expect(container.firstElementChild).toHaveClass("w-full");
 
-    rerender(<Input aria-label="너비 입력" width={320} />);
+    rerender(<Input width={320} />);
     expect(container.firstElementChild).toHaveStyle({ width: "320px" });
 
-    rerender(<Input aria-label="너비 입력" width={240} />);
+    rerender(<Input width={240} />);
     expect(container.firstElementChild).toHaveStyle({ width: "240px" });
   });
 
   it("does not reserve error spacing when there is no error message", () => {
-    const { container } = render(<Input aria-label="간격 입력" />);
+    const { container } = render(<Input />);
     const root = container.firstElementChild;
-    const errorRoot = container.querySelector('[role="alert"]')?.parentElement?.parentElement;
+    const errorRoot = root?.lastElementChild;
 
     expect(root).not.toHaveClass("gap-[4px]");
     expect(errorRoot).not.toHaveClass("mt-0.5");
@@ -159,26 +162,26 @@ describe("Input", () => {
   it("allows only the configured character type", () => {
     render(
       <>
-        <Input aria-label="한글" allowOnly="korean" />
-        <Input aria-label="영어" allowOnly="english" />
-        <Input aria-label="숫자" allowOnly="number" />
+        <Input placeholder="한글" allowOnly="korean" />
+        <Input placeholder="영어" allowOnly="english" />
+        <Input placeholder="숫자" allowOnly="number" />
       </>,
     );
 
-    fireEvent.change(screen.getByRole("textbox", { name: "한글" }), {
+    fireEvent.change(screen.getByPlaceholderText("한글"), {
       target: { value: "한글abc123" },
     });
-    fireEvent.change(screen.getByRole("textbox", { name: "영어" }), {
+    fireEvent.change(screen.getByPlaceholderText("영어"), {
       target: { value: "한글abc123" },
     });
-    fireEvent.change(screen.getByRole("textbox", { name: "숫자" }), {
+    fireEvent.change(screen.getByPlaceholderText("숫자"), {
       target: { value: "한글abc123" },
     });
 
-    expect(screen.getByRole("textbox", { name: "한글" })).toHaveValue("한글");
-    expect(screen.getByRole("textbox", { name: "영어" })).toHaveValue("abc");
-    expect(screen.getByRole("textbox", { name: "숫자" })).toHaveValue("123");
-    expect(screen.getByRole("textbox", { name: "숫자" })).toHaveAttribute("inputmode", "numeric");
+    expect(screen.getByPlaceholderText("한글")).toHaveValue("한글");
+    expect(screen.getByPlaceholderText("영어")).toHaveValue("abc");
+    expect(screen.getByPlaceholderText("숫자")).toHaveValue("123");
+    expect(screen.getByPlaceholderText("숫자")).toHaveAttribute("inputmode", "numeric");
   });
 
   it("applies the filled background without retaining the default background", () => {
@@ -204,9 +207,9 @@ describe("Input", () => {
   it("calls onEnter when Enter is pressed", async () => {
     const user = userEvent.setup();
     const handleEnter = vi.fn();
-    render(<Input aria-label="검색어" defaultValue="검색어" onEnter={handleEnter} />);
+    render(<Input defaultValue="검색어" onEnter={handleEnter} />);
 
-    await user.type(screen.getByRole("textbox", { name: "검색어" }), "{Enter}");
+    await user.type(screen.getByDisplayValue("검색어"), "{Enter}");
 
     expect(handleEnter).toHaveBeenCalledOnce();
   });
@@ -214,9 +217,9 @@ describe("Input", () => {
   it("passes the native focus event to onBlur", async () => {
     const user = userEvent.setup();
     const handleBlur = vi.fn();
-    render(<Input aria-label="검색어" onBlur={handleBlur} />);
+    render(<Input placeholder="검색어" onBlur={handleBlur} />);
 
-    const input = screen.getByRole("textbox", { name: "검색어" });
+    const input = screen.getByPlaceholderText("검색어");
     await user.click(input);
     await user.tab();
 
@@ -226,15 +229,15 @@ describe("Input", () => {
 
   it("toggles a password value between hidden and visible", async () => {
     const user = userEvent.setup();
-    render(<Input label="비밀번호" defaultValue="password" password />);
+    const { container } = render(<Input label="비밀번호" defaultValue="password" password />);
 
     const input = screen.getByLabelText("비밀번호");
     expect(input).toHaveAttribute("type", "password");
 
-    await user.click(screen.getByRole("button"));
+    await user.click(container.querySelector("svg") as SVGSVGElement);
     expect(input).toHaveAttribute("type", "text");
 
-    await user.click(screen.getByRole("button"));
+    await user.click(container.querySelector("svg") as SVGSVGElement);
     expect(input).toHaveAttribute("type", "password");
   });
 });

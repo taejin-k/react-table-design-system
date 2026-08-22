@@ -65,6 +65,16 @@ arrayMove([], 0, 0);`);
 
     expect(source).toContain("import { message } from '@taejin-k/wizard-design';");
   });
+
+  it("imports DropdownItem as a component type", () => {
+    const source = withStoryImports(`const items: DropdownItem[] = [];
+
+function DropdownExample() {
+  return <Dropdown menu={{ items }} />;
+}`);
+
+    expect(source).toContain("import type { DropdownItem } from '@taejin-k/wizard-design';");
+  });
 });
 
 describe("formatTooltipStorySource", () => {

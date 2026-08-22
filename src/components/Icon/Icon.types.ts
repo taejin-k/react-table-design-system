@@ -1,6 +1,7 @@
-import type { SVGProps } from "react";
+import type { CSSProperties, SVGProps } from "react";
+import type { IconGalleryName } from "./Icon.names";
 
-export type IconName =
+export type IconNameType =
   | "add"
   | "arrow-down"
   | "arrow-left"
@@ -48,12 +49,13 @@ export type IconName =
   | "upload"
   | "user"
   | "users"
-  | "warning";
+  | "warning"
+  | IconGalleryName;
 
 export interface IconProps extends Omit<SVGProps<SVGSVGElement>, "color" | "name"> {
-  icon: IconName;
+  icon: IconNameType;
   size?: number;
-  color?: string;
+  color?: CSSProperties["color"];
   /** true면 클릭과 hover 동작을 비활성화한다. */
   disabled?: boolean;
   /** true면 기존 아이콘 대신 로딩 아이콘을 표시하고 동작을 막는다. */

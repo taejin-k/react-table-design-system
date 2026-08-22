@@ -3,8 +3,8 @@ import type { AllowedCharacterType } from "../_internal/filterAllowedCharacters"
 
 export type { AllowedCharacterType } from "../_internal/filterAllowedCharacters";
 
-export type InputSize = "lg" | "md" | "sm";
-export type InputVariant = "default" | "filled" | "borderless" | "underlined";
+export type InputSizeType = "lg" | "md" | "sm";
+export type InputVariantType = "default" | "filled" | "borderless" | "underlined";
 
 export interface InputProps extends Omit<
   InputHTMLAttributes<HTMLInputElement>,
@@ -12,8 +12,8 @@ export interface InputProps extends Omit<
 > {
   value?: string;
   width?: number;
-  size?: InputSize;
-  variant?: InputVariant;
+  size?: InputSizeType;
+  variant?: InputVariantType;
   label?: ReactNode;
   errorMessage?: ReactNode;
   required?: boolean;

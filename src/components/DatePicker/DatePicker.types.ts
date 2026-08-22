@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import type { InputSize } from "../Input";
+import type { InputSizeType } from "../Input";
 import type { DisabledTime, TimePickerCellInfo } from "../TimePicker";
 
 export type DatePickerValue = string;
@@ -41,7 +41,7 @@ export interface DatePickerProps {
   picker?: DatePickerMode;
   placeholder?: string;
   format?: string | ((value: DatePickerValue) => string);
-  size?: InputSize;
+  size?: InputSizeType;
   variant?: DatePickerVariant;
   label?: ReactNode;
   errorMessage?: ReactNode;

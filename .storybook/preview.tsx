@@ -101,7 +101,6 @@ const preview: Preview = {
       },
     },
     controls: {
-      exclude: /^aria-/,
       matchers: {
         color: /(background|color)$/i,
       },

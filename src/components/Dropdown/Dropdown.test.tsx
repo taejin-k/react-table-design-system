@@ -125,7 +125,7 @@ describe("Dropdown", () => {
     );
 
     const trigger = screen.getByRole("button", { name: "메뉴" });
-    expect(trigger.parentElement).toHaveClass("cursor-not-allowed", "[&>*]:pointer-events-none");
+    expect(trigger.parentElement).not.toHaveClass("cursor-not-allowed", "opacity-50");
 
     await user.click(trigger);
     expect(screen.queryByRole("button", { name: "수정" })).not.toBeInTheDocument();

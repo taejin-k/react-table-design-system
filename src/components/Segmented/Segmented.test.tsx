@@ -7,8 +7,10 @@ describe("Segmented", () => {
   it("fits its content by default", () => {
     const { container } = render(<Segmented options={[{ label: "일", value: "day" }]} />);
 
-    expect(container.firstElementChild).toHaveClass("w-fit");
+    expect(container.firstElementChild).toHaveClass("w-fit", "rounded-lg");
     expect(container.firstElementChild).not.toHaveClass("w-full");
+    expect(container.querySelector("label")).toHaveClass("rounded-md");
+    expect(container.querySelector("[data-segmented-thumb]")).toHaveClass("rounded-md");
   });
 
   it("does not apply hover styling to disabled items", () => {

@@ -1,30 +1,30 @@
 import type { FocusEvent, KeyboardEvent, ReactNode, UIEvent } from "react";
-import type { InputSize } from "../Input";
-import type { TagColor } from "../Tag";
+import type { InputSizeType } from "../Input";
+import type { TagColorType } from "../Tag";
 
-export type SelectValue = string | number;
-export type SelectMode = "multiple" | "tags";
-export type SelectPlacement = "bottomLeft" | "bottomRight" | "topLeft" | "topRight";
-export type SelectVariant = "default" | "filled";
+export type SelectModeType = "multiple" | "tags";
+export type SelectSizeType = InputSizeType;
+export type SelectPlacementType = "bottomLeft" | "bottomRight" | "topLeft" | "topRight";
+export type SelectVariantType = "default" | "filled";
 
-export interface SelectLabeledValue {
-  value: SelectValue;
+export interface SelectBasicProps {
+  value: string | number;
   label: ReactNode;
 }
 
 export interface SelectOption {
   label?: ReactNode;
-  value?: SelectValue;
-  color?: TagColor;
+  value?: string | number;
+  color?: TagColorType;
   disabled?: boolean;
   options?: SelectOption[];
   [key: string]: unknown;
 }
 
-export interface SelectTagRenderProps {
+export interface SelectTagProps {
   label: ReactNode;
-  value: SelectValue;
-  color?: TagColor;
+  value: string | number;
+  color?: TagColorType;
   closable: boolean;
   onClose: () => void;
 }
@@ -34,14 +34,11 @@ export interface SelectRef {
   blur: () => void;
 }
 
-export interface SelectProps {
+interface SelectCommonProps {
   options: SelectOption[];
-  value?: SelectValue | SelectValue[] | SelectLabeledValue | SelectLabeledValue[];
-  defaultValue?: SelectValue | SelectValue[] | SelectLabeledValue | SelectLabeledValue[];
-  mode?: SelectMode;
   placeholder?: ReactNode;
-  size?: InputSize;
-  variant?: SelectVariant;
+  size?: SelectSizeType;
+  variant?: SelectVariantType;
   width?: number;
   label?: ReactNode;
   errorMessage?: ReactNode;
@@ -51,7 +48,7 @@ export interface SelectProps {
   allowClear?: boolean;
   showSearch?: boolean;
   searchValue?: string;
-  filterOption?: boolean | ((inputValue: string, option: SelectOption) => boolean);
+  filterOption?: (inputValue: string, option: SelectOption) => boolean;
   optionsSort?: (
     optionA: SelectOption,
     optionB: SelectOption,
@@ -61,31 +58,25 @@ export interface SelectProps {
   optionLabelProp?: string;
   open?: boolean;
   defaultOpen?: boolean;
-  placement?: SelectPlacement;
+  placement?: SelectPlacementType;
   notFoundContent?: ReactNode;
-  labelInValue?: boolean;
   listHeight?: number;
   loading?: boolean;
   maxSelectedCount?: number;
   maxVisibleTagCount?: number | "responsive";
-  hiddenTagsPlaceholder?: ReactNode | ((omittedValues: SelectLabeledValue[]) => ReactNode);
   maxTagTextLength?: number;
   closable?: boolean;
-  popupMatchSelectWidth?: boolean | number;
+  popupMatchWidth?: boolean | number;
   tagSeparators?: string[] | ((input: string) => string[]);
   virtual?: boolean;
   optionRender?: (option: SelectOption, info: { index: number }) => ReactNode;
   popupRender?: (originNode: ReactNode) => ReactNode;
-  tagRender?: (props: SelectTagRenderProps) => ReactNode;
-  labelRender?: (props: SelectLabeledValue) => ReactNode;
+  tagRender?: (props: SelectTagProps) => ReactNode;
+  labelRender?: (props: SelectBasicProps) => ReactNode;
   className?: string;
-  onChange?: (
-    value: SelectValue | SelectValue[] | SelectLabeledValue | SelectLabeledValue[] | undefined,
-    option: SelectOption | SelectOption[] | undefined,
-  ) => void;
   onSearch?: (value: string) => void;
-  onSelect?: (value: SelectValue | SelectLabeledValue, option: SelectOption) => void;
-  onDeselect?: (value: SelectValue | SelectLabeledValue, option: SelectOption) => void;
+  onSelect?: (value: string | number, option: SelectOption) => void;
+  onDeselect?: (value: string | number, option: SelectOption) => void;
   onClear?: () => void;
   onOpenChange?: (open: boolean) => void;
   onFocus?: (event: FocusEvent<HTMLButtonElement | HTMLInputElement | HTMLDivElement>) => void;
@@ -95,3 +86,19 @@ export interface SelectProps {
   ) => void;
   onPopupScroll?: (event: UIEvent<HTMLDivElement>) => void;
 }
+
+interface SelectSingleValueProps {
+  mode?: undefined;
+  value?: string | number;
+  defaultValue?: string | number;
+  onChange?: (value: string | number | undefined, option: SelectOption | undefined) => void;
+}
+
+interface SelectMultipleValueProps {
+  mode: SelectModeType;
+  value?: (string | number)[];
+  defaultValue?: (string | number)[];
+  onChange?: (value: (string | number)[], option: SelectOption[]) => void;
+}
+
+export type SelectProps = SelectCommonProps & (SelectSingleValueProps | SelectMultipleValueProps);

@@ -401,10 +401,10 @@ function ConfirmModal({
   const [loading, setLoading] = useState(false);
   const iconName =
     config.type === "success"
-      ? "check-circle"
+      ? "check-circle-outlined"
       : config.type === "error" || config.type === "warning"
         ? "warning"
-        : "info";
+        : "info-circle-outlined";
   const iconColor =
     config.type === "success"
       ? "#52c41a"

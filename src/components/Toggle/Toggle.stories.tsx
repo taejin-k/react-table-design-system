@@ -1,21 +1,20 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ComponentType } from "react";
 import { Description, Markdown, Stories, Title } from "@storybook/addon-docs/blocks";
 import type { Meta, StoryObj } from "@storybook/react";
 import { storyDescriptions } from "../../storybook/story-descriptions";
 import { withStoryImports } from "../../storybook/story-source";
 import { Toggle } from "./Toggle";
-import type { ToggleProps } from "./Toggle.types";
+import type { ToggleProps, ToggleSizeType } from "./Toggle.types";
 
-const sizes = ["lg", "md", "sm"] as const;
+const sizes: ToggleSizeType[] = ["lg", "md", "sm"];
 const storyDescription = (id: string) => ({
   docs: { description: { story: storyDescriptions[id] } },
 });
 
 const meta = {
   title: "Components/Toggle",
-  component: Toggle,
+  component: Toggle as ComponentType<Partial<ToggleProps>>,
   tags: ["autodocs"],
-  args: { checked: false },
   argTypes: {
     checked: { name: "선택", control: "boolean" },
     size: { name: "크기", control: "select", options: sizes },
@@ -42,22 +41,39 @@ const meta = {
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
 | \`checked\` | 켜짐 상태를 설정해요. | \`boolean\` | - |
-| \`size\` | Toggle의 크기를 설정해요. | \`lg \\| md \\| sm\` | \`md\` |
+| \`size\` | Toggle의 크기를 설정해요. | [\`ToggleSizeType\`](#toggle-size) | \`md\` |
 | \`loading\` | thumb 안에 로딩을 표시하고 전환 동작을 막아요. | \`boolean\` | \`false\` |
 | \`disabled\` | Toggle을 비활성화하고 전환 동작을 막아요. | \`boolean\` | \`false\` |
 | \`className\` | 최상위 요소에 Tailwind 클래스를 추가해요. | \`string\` | - |
 | \`onChange\` | 상태가 바뀔 때 실행할 함수예요. 변경된 상태를 인자로 받아요. | \`(checked: boolean) => void\` | - |
           `}</Markdown>
+          <h2 className="component-docs-types-heading">Types</h2>
+          <h3 id="toggle-size">ToggleSizeType</h3>
+          <p>Toggle의 크기를 선택해요.</p>
+          <div className="flex flex-wrap gap-2">
+            {sizes.map((size) => (
+              <ToggleSizeCode key={size} size={size} />
+            ))}
+          </div>
         </div>
       ),
     },
   },
-} satisfies Meta<typeof Toggle>;
+} satisfies Meta<Partial<ToggleProps>>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+function ToggleSizeCode({ size }: { size: ToggleSizeType }) {
+  return (
+    <code className="rounded-full border border-[#e3e8ef] bg-[#f8fafc] px-3 py-1.5 text-[13px] text-[#4a5667]">
+      {size}
+    </code>
+  );
+}
+
 export const Sizes: Story = {
+  args: { checked: false },
   parameters: {
     ...storyDescription("components-toggle--sizes"),
     controls: { disable: false, include: ["크기"] },
@@ -93,6 +109,7 @@ export const Sizes: Story = {
 };
 
 export const States: Story = {
+  args: { checked: false },
   parameters: {
     ...storyDescription("components-toggle--states"),
     controls: { disable: false, include: ["선택", "비활성"] },
@@ -167,11 +184,11 @@ export const Loading: Story = {
   render: (args) => <LoadingToggle args={args} />,
 };
 
-function LoadingToggle({ args }: { args: ToggleProps }) {
-  const [checked, setChecked] = useState(args.checked);
+function LoadingToggle({ args }: { args: Partial<ToggleProps> }) {
+  const [checked, setChecked] = useState(args.checked ?? false);
   const [pendingChecked, setPendingChecked] = useState<boolean | null>(null);
 
-  useEffect(() => setChecked(args.checked), [args.checked]);
+  useEffect(() => setChecked(args.checked ?? false), [args.checked]);
   useEffect(() => {
     if (pendingChecked === null) return;
     const timeout = setTimeout(() => {
@@ -195,8 +212,8 @@ function LoadingToggle({ args }: { args: ToggleProps }) {
   );
 }
 
-function ControlledToggle(args: ToggleProps) {
-  const [checked, setChecked] = useState(args.checked);
-  useEffect(() => setChecked(args.checked), [args.checked]);
+function ControlledToggle(args: Partial<ToggleProps>) {
+  const [checked, setChecked] = useState(args.checked ?? false);
+  useEffect(() => setChecked(args.checked ?? false), [args.checked]);
   return <Toggle {...args} checked={checked} onChange={setChecked} />;
 }

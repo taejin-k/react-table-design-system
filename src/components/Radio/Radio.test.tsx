@@ -13,9 +13,9 @@ describe("Radio", () => {
   });
 
   it("applies className to the root label", () => {
-    render(<Radio aria-label="옵션" className="custom-radio" />);
+    render(<Radio className="custom-radio" />);
 
-    const radio = screen.getByRole("radio", { name: "옵션" });
+    const radio = screen.getByRole("radio");
     expect(radio).not.toHaveClass("custom-radio");
     expect(radio.closest("label")).toHaveClass("custom-radio");
   });

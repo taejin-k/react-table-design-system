@@ -5,9 +5,16 @@ import { storyDescriptions } from "../../storybook/story-descriptions";
 import { withStoryImports } from "../../storybook/story-source";
 import { Icon } from "../Icon";
 import { Input } from "./Input";
-import type { InputProps } from "./Input.types";
+import type {
+  AllowedCharacterType,
+  InputProps,
+  InputSizeType,
+  InputVariantType,
+} from "./Input.types";
 
-const sizes = ["lg", "md", "sm"] as const;
+const sizes: InputSizeType[] = ["lg", "md", "sm"];
+const variants: InputVariantType[] = ["default", "filled", "borderless", "underlined"];
+const allowedCharacterTypes: AllowedCharacterType[] = ["korean", "english", "number"];
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const createLimitedValue = (value: string, maxLength?: number) => {
   const nextValue = `${value}1`;
@@ -31,15 +38,12 @@ const meta = {
   title: "Components/Input",
   component: Input,
   tags: ["autodocs"],
-  args: {
-    placeholder: "입력하세요",
-  },
   argTypes: {
     size: { name: "크기", control: "select", options: sizes },
     variant: {
       name: "표현 방식",
       control: "select",
-      options: ["default", "filled", "borderless", "underlined"],
+      options: variants,
     },
     value: { name: "입력값", control: "text" },
     label: { name: "레이블", control: "text" },
@@ -49,7 +53,7 @@ const meta = {
     allowOnly: {
       name: "입력 문자",
       control: "select",
-      options: ["korean", "english", "number"],
+      options: allowedCharacterTypes,
     },
     allowClear: { name: "지우기", control: "boolean" },
     showCount: { name: "글자 수", control: "boolean" },
@@ -83,8 +87,8 @@ const meta = {
 
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
-| \`size\` | Input의 크기를 설정해요. | \`lg \\| md \\| sm\` | \`md\` |
-| \`variant\` | 배경과 테두리 표현 방식을 설정해요. | \`default \\| filled \\| borderless \\| underlined\` | \`default\` |
+| \`size\` | Input의 크기를 설정해요. | [\`InputSizeType\`](#input-size) | \`md\` |
+| \`variant\` | 배경과 테두리 표현 방식을 설정해요. | [\`InputVariantType\`](#input-variant) | \`default\` |
 | \`value\` | 외부에서 관리하는 입력값이에요. | \`string\` | - |
 | \`defaultValue\` | 처음 표시할 입력값이에요. | \`string\` | - |
 | \`placeholder\` | 값이 없을 때 안내 문구를 표시해요. | \`string\` | - |
@@ -94,7 +98,7 @@ const meta = {
 | \`errorMessage\` | Input 아래에 오류 문구를 표시해요. | \`ReactNode\` | - |
 | \`required\` | 레이블에 필수 표시를 추가해요. | \`boolean\` | \`false\` |
 | \`password\` | 입력값을 가리고 눈 아이콘으로 표시 상태를 전환해요. | \`boolean\` | \`false\` |
-| \`allowOnly\` | 입력할 수 있는 문자 종류를 제한해요. | \`korean \\| english \\| number\` | - |
+| \`allowOnly\` | 입력할 수 있는 문자 종류를 제한해요. | [\`AllowedCharacterType\`](#allowed-character-type) | - |
 | \`allowClear\` | 입력값을 지우는 버튼을 표시해요. | \`boolean\` | \`false\` |
 | \`showCount\` | 현재 글자 수를 표시해요. | \`boolean\` | \`false\` |
 | \`readOnly\` | 입력값을 읽기 전용으로 표시해요. | \`boolean\` | \`false\` |
@@ -105,6 +109,28 @@ const meta = {
 | \`onChange\` | 입력값이 바뀌면 변경값을 전달해요. | \`(value: string) => void\` | - |
 | \`onEnter\` | Enter를 누를 때 실행할 함수예요. | \`() => void\` | - |
           `}</Markdown>
+          <h2 className="component-docs-types-heading">Types</h2>
+          <h3 id="input-size">InputSizeType</h3>
+          <p>Input의 크기를 선택해요.</p>
+          <div className="flex flex-wrap gap-2">
+            {sizes.map((size) => (
+              <InputTypeCode key={size} value={size} />
+            ))}
+          </div>
+          <h3 id="input-variant">InputVariantType</h3>
+          <p>Input의 배경과 테두리 표현 방식을 선택해요.</p>
+          <div className="flex flex-wrap gap-2">
+            {variants.map((variant) => (
+              <InputTypeCode key={variant} value={variant} />
+            ))}
+          </div>
+          <h3 id="allowed-character-type">AllowedCharacterType</h3>
+          <p>입력을 허용할 문자 종류를 선택해요.</p>
+          <div className="flex flex-wrap gap-2">
+            {allowedCharacterTypes.map((type) => (
+              <InputTypeCode key={type} value={type} />
+            ))}
+          </div>
         </div>
       ),
     },
@@ -114,7 +140,20 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+function InputTypeCode({
+  value,
+}: {
+  value: AllowedCharacterType | InputSizeType | InputVariantType;
+}) {
+  return (
+    <code className="rounded-full border border-[#e3e8ef] bg-[#f8fafc] px-3 py-1.5 text-[13px] text-[#4a5667]">
+      {value}
+    </code>
+  );
+}
+
 export const Sizes: Story = {
+  args: { placeholder: "입력하세요" },
   parameters: {
     ...storyDescription("components-input--sizes"),
     controls: { disable: false, include: ["placeholder", "크기", "가로 길이"] },
@@ -173,6 +212,7 @@ export const Widths: Story = {
 };
 
 export const Variants: Story = {
+  args: { placeholder: "기본" },
   parameters: {
     ...storyDescription("components-input--variants"),
     controls: { disable: false, include: ["placeholder", "표현 방식"] },
@@ -202,6 +242,7 @@ export const Variants: Story = {
 };
 
 export const States: Story = {
+  args: { placeholder: "기본" },
   parameters: {
     ...storyDescription("components-input--states"),
     controls: { disable: false, include: ["placeholder", "읽기 전용", "비활성"] },
@@ -308,24 +349,49 @@ export const IconsAndCount: Story = {
   const [limitedKeyword, setLimitedKeyword] = useState('검색어1');
 
   return (
-    <div className="grid max-w-xl gap-4">
-      <Input
-        allowClear
-        showCount
-        prefixIcon={<Icon icon="setting" />}
-        suffixIcon={<Icon icon="edit" />}
-        value={keyword}
-        onChange={setKeyword}
-      />
-      <Input
-        allowClear
-        showCount
-        maxLength={5}
-        prefixIcon={<Icon icon="setting" />}
-        suffixIcon={<Icon icon="edit" />}
-        value={limitedKeyword}
-        onChange={setLimitedKeyword}
-      />
+    <div className="grid max-w-xl gap-6">
+      <div className="grid gap-3">
+        <span className="text-sm font-medium text-[#666]">default</span>
+        <Input
+          allowClear
+          showCount
+          prefixIcon={<Icon icon="setting" />}
+          suffixIcon={<Icon icon="edit" />}
+          value={keyword}
+          onChange={setKeyword}
+        />
+        <Input
+          allowClear
+          showCount
+          maxLength={5}
+          prefixIcon={<Icon icon="setting" />}
+          suffixIcon={<Icon icon="edit" />}
+          value={limitedKeyword}
+          onChange={setLimitedKeyword}
+        />
+      </div>
+      <div className="grid gap-3">
+        <span className="text-sm font-medium text-[#666]">filled</span>
+        <Input
+          allowClear
+          showCount
+          prefixIcon={<Icon icon="setting" />}
+          suffixIcon={<Icon icon="edit" />}
+          variant="filled"
+          value={keyword}
+          onChange={setKeyword}
+        />
+        <Input
+          allowClear
+          showCount
+          maxLength={5}
+          prefixIcon={<Icon icon="setting" />}
+          suffixIcon={<Icon icon="edit" />}
+          variant="filled"
+          value={limitedKeyword}
+          onChange={setLimitedKeyword}
+        />
+      </div>
     </div>
   );
 }`),
@@ -353,24 +419,51 @@ function CountExamples({
   );
 
   return (
-    <div className="grid max-w-xl gap-4">
-      <Input
-        {...inputProps}
-        value={keyword}
-        onChange={(nextValue) => {
-          setKeyword(nextValue);
-          onChange?.(nextValue);
-        }}
-      />
-      <Input
-        {...inputProps}
-        maxLength={maxLength}
-        value={limitedKeyword}
-        onChange={(nextValue) => {
-          setLimitedKeyword(nextValue);
-          onChange?.(nextValue);
-        }}
-      />
+    <div className="grid max-w-xl gap-6">
+      <div className="grid gap-3">
+        <span className="text-sm font-medium text-[#666]">default</span>
+        <Input
+          {...inputProps}
+          variant="default"
+          value={keyword}
+          onChange={(nextValue) => {
+            setKeyword(nextValue);
+            onChange?.(nextValue);
+          }}
+        />
+        <Input
+          {...inputProps}
+          maxLength={maxLength}
+          variant="default"
+          value={limitedKeyword}
+          onChange={(nextValue) => {
+            setLimitedKeyword(nextValue);
+            onChange?.(nextValue);
+          }}
+        />
+      </div>
+      <div className="grid gap-3">
+        <span className="text-sm font-medium text-[#666]">filled</span>
+        <Input
+          {...inputProps}
+          variant="filled"
+          value={keyword}
+          onChange={(nextValue) => {
+            setKeyword(nextValue);
+            onChange?.(nextValue);
+          }}
+        />
+        <Input
+          {...inputProps}
+          maxLength={maxLength}
+          variant="filled"
+          value={limitedKeyword}
+          onChange={(nextValue) => {
+            setLimitedKeyword(nextValue);
+            onChange?.(nextValue);
+          }}
+        />
+      </div>
     </div>
   );
 }

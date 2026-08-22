@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ComponentType } from "react";
 import { Description, Markdown, Stories, Title } from "@storybook/addon-docs/blocks";
 import type { Meta, StoryObj } from "@storybook/react";
 import { storyDescriptions } from "../../storybook/story-descriptions";
@@ -7,7 +7,20 @@ import { Button } from "../Button";
 import { Icon } from "../Icon";
 import { Tag } from "../Tag";
 import { Select } from "./Select";
-import type { SelectLabeledValue, SelectOption } from "./Select.types";
+import type {
+  SelectModeType,
+  SelectOption,
+  SelectPlacementType,
+  SelectProps,
+  SelectSizeType,
+  SelectVariantType,
+} from "./Select.types";
+
+const modes: SelectModeType[] = ["multiple", "tags"];
+const sizes: SelectSizeType[] = ["lg", "md", "sm"];
+const variants: SelectVariantType[] = ["default", "filled"];
+const placements: SelectPlacementType[] = ["topLeft", "topRight", "bottomLeft", "bottomRight"];
+const tagColorTypeHref = `${typeof window === "undefined" ? "" : window.location.origin}/iframe.html?id=components-tag--documentation&viewMode=docs#tag-color`;
 
 const memberOptions: SelectOption[] = [
   { label: "김민준", value: "kim" },
@@ -15,7 +28,20 @@ const memberOptions: SelectOption[] = [
   { label: "박지호", value: "park" },
 ];
 
+const StorySelect = Select as ComponentType<Partial<SelectProps>>;
+
 const sizeMemberOptions = memberOptions.slice(0, 2);
+
+const multipleMemberOptions: SelectOption[] = [
+  { label: "김민준", value: "kim" },
+  { label: "이서연", value: "lee" },
+  { label: "박지호", value: "park" },
+  { label: "최유진", value: "choi" },
+  { label: "정도윤", value: "jung" },
+  { label: "한지민", value: "han" },
+  { label: "윤서준", value: "yoon" },
+  { label: "오하늘", value: "oh" },
+];
 
 const searchSortOptions: SelectOption[] = [
   { label: "이서연", value: "lee" },
@@ -78,19 +104,18 @@ const storySource = (id: string, code: string) => ({
 
 const meta = {
   title: "Components/Select",
-  component: Select,
+  component: Select as ComponentType<Partial<SelectProps>>,
   tags: ["autodocs"],
-  args: { options: memberOptions, placeholder: "구성원을 선택하세요" },
   argTypes: {
     options: { control: false },
     value: { control: false },
     defaultValue: { control: false },
     mode: { control: false },
-    size: { name: "크기", control: "select", options: ["lg", "md", "sm"] },
+    size: { name: "크기", control: "select", options: sizes },
     variant: {
       name: "표현 방식",
       control: "select",
-      options: ["default", "filled"],
+      options: variants,
     },
     width: { name: "가로 길이", control: { type: "number", min: 1 } },
     placeholder: { name: "안내 문구", control: "text" },
@@ -125,17 +150,17 @@ const meta = {
 
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
-| \`options\` | 선택할 항목과 그룹을 설정해요. | \`SelectOption[]\` | - |
-| \`mode\` | 셀렉트의 동작 방식을 설정해요. | \`multiple \\| tags\` | - |
-| \`value\` | 선택값을 외부에서 관리해요. | \`SelectValue \\| SelectValue[] \\| SelectLabeledValue \\| SelectLabeledValue[]\` | - |
-| \`defaultValue\` | 처음 선택할 값을 설정해요. | \`SelectValue \\| SelectValue[] \\| SelectLabeledValue \\| SelectLabeledValue[]\` | - |
+| \`options\` | 선택할 항목과 그룹을 설정해요. | [\`SelectOption[]\`](#selectoption) | - |
+| \`mode\` | 셀렉트의 동작 방식을 설정해요. | [\`SelectModeType\`](#select-mode-type) | - |
+| \`value\` | 선택값을 외부에서 관리해요. | \`string \\| number \\| (string \\| number)[]\` | - |
+| \`defaultValue\` | 처음 선택할 값을 설정해요. | \`string \\| number \\| (string \\| number)[]\` | - |
 | \`placeholder\` | 선택 전 안내할 내용을 표시해요. | \`ReactNode\` | \`선택하세요\` |
-| \`size\` | Select의 크기를 설정해요. | \`lg \\| md \\| sm\` | \`md\` |
-| \`variant\` | 배경과 테두리 표현 방식을 설정해요. | \`default \\| filled\` | \`default\` |
+| \`size\` | Select의 크기를 설정해요. | [\`SelectSizeType\`](#select-size-type) | \`md\` |
+| \`variant\` | 배경과 테두리 표현 방식을 설정해요. | [\`SelectVariantType\`](#select-variant-type) | \`default\` |
 | \`width\` | Select의 가로 길이를 px 단위로 설정해요. | \`number\` | \`100%\` |
 | \`showSearch\` | 검색 기능을 설정해요. | \`boolean\` | tags만 \`true\` |
 | \`searchValue\` | 검색어를 외부에서 관리해요. | \`string\` | - |
-| \`filterOption\` | 검색어와 항목의 일치 조건을 설정해요. | \`boolean \\| (input, option) => boolean\` | \`true\` |
+| \`filterOption\` | 검색어와 항목의 일치 조건을 설정해요. | \`(input, option) => boolean\` | 기본 label 검색 |
 | \`optionsSort\` | 드롭다운 항목의 정렬 방법을 설정해요. | \`(a, b, info) => number\` | - |
 | \`optionFilterProp\` | 검색에 사용할 항목 속성을 설정해요. | \`string \\| string[]\` | \`label\` |
 | \`optionLabelProp\` | 선택 영역에 표시할 항목 속성을 설정해요. | \`string\` | \`label\` |
@@ -145,21 +170,19 @@ const meta = {
 | \`loading\` | 로딩 상태를 표시하고 선택 동작을 막아요. | \`boolean\` | \`false\` |
 | \`open\` | 목록 표시 상태를 외부에서 관리해요. | \`boolean\` | - |
 | \`defaultOpen\` | 처음 목록을 표시할지 설정해요. | \`boolean\` | \`false\` |
-| \`placement\` | 목록이 표시될 위치를 설정해요. | \`topLeft \\| topRight \\| bottomLeft \\| bottomRight\` | \`bottomLeft\` |
-| \`labelInValue\` | value와 label을 객체로 함께 반환해요. | \`boolean\` | \`false\` |
+| \`placement\` | 목록이 표시될 위치를 설정해요. | [\`SelectPlacementType\`](#select-placement-type) | \`bottomLeft\` |
 | \`maxSelectedCount\` | 선택할 수 있는 최대 항목 수를 설정해요. | \`number\` | - |
 | \`maxVisibleTagCount\` | 화면에 표시할 최대 태그 수를 설정해요. | \`number \\| responsive\` | - |
-| \`hiddenTagsPlaceholder\` | 숨겨진 태그 대신 표시할 내용을 설정해요. | \`ReactNode \\| (omitted) => ReactNode\` | - |
 | \`maxTagTextLength\` | 태그 레이블의 최대 글자 수를 설정해요. | \`number\` | - |
 | \`closable\` | 선택 태그의 삭제 아이콘을 표시해요. | \`boolean\` | \`true\` |
 | \`tagSeparators\` | 입력값을 태그로 나눌 구분자를 설정해요. | \`string[] \\| (input) => string[]\` | - |
 | \`listHeight\` | 목록의 최대 세로 길이를 설정해요. | \`number\` | \`256\` |
-| \`popupMatchSelectWidth\` | 목록 너비를 선택 영역과 맞추거나 지정해요. | \`boolean \\| number\` | \`true\` |
+| \`popupMatchWidth\` | 목록 너비를 선택 영역과 맞추거나 지정해요. | \`boolean \\| number\` | \`true\` |
 | \`virtual\` | 많은 항목을 가상 목록으로 표시해요. | \`boolean\` | \`true\` |
 | \`notFoundContent\` | 항목이 없을 때 안내할 내용을 설정해요. | \`ReactNode\` | \`검색 결과가 없어요\` |
 | \`optionRender\` | 목록 항목의 내용을 직접 구성해요. | \`(option, info) => ReactNode\` | - |
-| \`tagRender\` | 선택 태그의 내용을 직접 구성해요. | \`(props) => ReactNode\` | - |
-| \`labelRender\` | 선택된 레이블을 직접 구성해요. | \`(props) => ReactNode\` | - |
+| \`tagRender\` | 선택 태그의 내용을 직접 구성해요. | [\`(props: SelectTagProps) => ReactNode\`](#selecttagprops) | - |
+| \`labelRender\` | 선택된 레이블을 직접 구성해요. | [\`(props: SelectBasicProps) => ReactNode\`](#selectbasicprops) | - |
 | \`popupRender\` | 목록 전체에 추가 내용을 구성해요. | \`(menu) => ReactNode\` | - |
 | \`label\` | Select 위에 레이블을 표시해요. | \`ReactNode\` | - |
 | \`errorMessage\` | Select 아래에 오류 문구를 표시해요. | \`ReactNode\` | - |
@@ -182,18 +205,76 @@ const meta = {
 | --- | --- | --- | --- |
 | \`label\` | 목록과 선택 영역에 표시할 내용을 설정해요. | \`ReactNode\` | - |
 | \`value\` | 항목을 구분하고 반환할 값을 설정해요. | \`string \\| number\` | - |
-| \`color\` | 선택된 기본 Tag의 색상을 설정해요. | \`TagColor\` | - |
+| \`color\` | 선택된 기본 Tag의 색상을 설정해요. | [\`TagColorType\`](${tagColorTypeHref}) | - |
 | \`disabled\` | 해당 항목을 선택할 수 없게 해요. | \`boolean\` | \`false\` |
-| \`options\` | 하위 항목을 전달해 그룹을 구성해요. | \`SelectOption[]\` | - |
+| \`options\` | 하위 항목을 전달해 그룹을 구성해요. | [\`SelectOption[]\`](#selectoption) | - |
+
+### SelectBasicProps
+
+| Name | Description | Type | Default |
+| --- | --- | --- | --- |
+| \`value\` | 선택값을 전달해요. | \`string \\| number\` | - |
+| \`label\` | 선택 레이블을 전달해요. | \`ReactNode\` | - |
+
+### SelectTagProps
+
+| Name | Description | Type | Default |
+| --- | --- | --- | --- |
+| \`label\` | 태그에 표시할 내용이에요. | \`ReactNode\` | - |
+| \`value\` | 태그가 나타내는 값이에요. | \`string \\| number\` | - |
+| \`color\` | 태그의 색상이에요. | [\`TagColorType\`](${tagColorTypeHref}) | - |
+| \`closable\` | 태그를 지울 수 있는 상태인지 나타내요. | \`boolean\` | - |
+| \`onClose\` | 태그를 지울 때 실행할 함수예요. | \`() => void\` | - |
           `}</Markdown>
+          <h2 className="component-docs-types-heading">Types</h2>
+          <h3 id="select-mode-type">SelectModeType</h3>
+          <p>Select에서 여러 값을 선택하거나 직접 태그를 입력할 방식을 선택해요.</p>
+          <div className="flex flex-wrap gap-2">
+            {modes.map((mode) => (
+              <SelectTypeCode key={mode} value={mode} />
+            ))}
+          </div>
+          <h3 id="select-size-type">SelectSizeType</h3>
+          <p>Select의 크기를 선택해요.</p>
+          <div className="flex flex-wrap gap-2">
+            {sizes.map((size) => (
+              <SelectTypeCode key={size} value={size} />
+            ))}
+          </div>
+          <h3 id="select-variant-type">SelectVariantType</h3>
+          <p>Select의 배경과 테두리 표현 방식을 선택해요.</p>
+          <div className="flex flex-wrap gap-2">
+            {variants.map((variant) => (
+              <SelectTypeCode key={variant} value={variant} />
+            ))}
+          </div>
+          <h3 id="select-placement-type">SelectPlacementType</h3>
+          <p>선택 영역을 기준으로 목록이 표시될 위치를 선택해요.</p>
+          <div className="flex flex-wrap gap-2">
+            {placements.map((placement) => (
+              <SelectTypeCode key={placement} value={placement} />
+            ))}
+          </div>
         </div>
       ),
     },
   },
-} satisfies Meta<typeof Select>;
+} satisfies Meta<Partial<SelectProps>>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
+
+function SelectTypeCode({
+  value,
+}: {
+  value: SelectModeType | SelectSizeType | SelectVariantType | SelectPlacementType;
+}) {
+  return (
+    <code className="rounded-full border border-[#e3e8ef] bg-[#f8fafc] px-3 py-1.5 text-[13px] text-[#4a5667]">
+      {value}
+    </code>
+  );
+}
 
 export const Sizes: Story = {
   args: { variant: "default" },
@@ -218,15 +299,16 @@ export const Sizes: Story = {
   },
   render: (args) => (
     <div className="grid max-w-sm gap-3">
-      <Select {...args} options={sizeMemberOptions} size="lg" />
-      <Select {...args} options={sizeMemberOptions} size="md" />
-      <Select {...args} options={sizeMemberOptions} size="sm" />
+      <StorySelect {...args} options={sizeMemberOptions} size="lg" />
+      <StorySelect {...args} options={sizeMemberOptions} size="md" />
+      <StorySelect {...args} options={sizeMemberOptions} size="sm" />
     </div>
   ),
 };
 
 export const Widths: Story = {
   args: {
+    options: memberOptions,
     placeholder: "가로 길이 320px",
     size: "md",
     variant: "default",
@@ -257,7 +339,7 @@ export const Widths: Story = {
         <Select options={memberOptions} width={320} placeholder="가로 길이 320px" />
       </div>
     ) : (
-      <Select {...args} />
+      <StorySelect {...args} />
     ),
 };
 
@@ -283,8 +365,8 @@ export const Variants: Story = {
   },
   render: (args) => (
     <div className="grid max-w-sm gap-3">
-      <Select {...args} options={sizeMemberOptions} placeholder="기본" />
-      <Select {...args} options={sizeMemberOptions} variant="filled" placeholder="채움" />
+      <StorySelect {...args} options={sizeMemberOptions} placeholder="기본" />
+      <StorySelect {...args} options={sizeMemberOptions} variant="filled" placeholder="채움" />
     </div>
   ),
 };
@@ -312,9 +394,26 @@ export const States: Story = {
   },
   render: (args) => (
     <div className="grid max-w-sm gap-3">
-      <Select {...args} options={sizeMemberOptions} placeholder="기본" />
-      <Select {...args} options={sizeMemberOptions} readOnly defaultValue="lee" />
-      <Select {...args} options={sizeMemberOptions} disabled defaultValue="kim" />
+      <Select
+        size={args.size}
+        variant={args.variant}
+        options={sizeMemberOptions}
+        placeholder="기본"
+      />
+      <Select
+        size={args.size}
+        variant={args.variant}
+        options={sizeMemberOptions}
+        readOnly
+        defaultValue="lee"
+      />
+      <Select
+        size={args.size}
+        variant={args.variant}
+        options={sizeMemberOptions}
+        disabled
+        defaultValue="kim"
+      />
     </div>
   ),
 };
@@ -324,13 +423,23 @@ export const Multiple: Story = {
   parameters: {
     ...storySource(
       "components-select--multiple",
-      `<div className="max-w-md">
+      `const multipleMemberOptions = [
+  { label: '김민준', value: 'kim' },
+  { label: '이서연', value: 'lee' },
+  { label: '박지호', value: 'park' },
+  { label: '최유진', value: 'choi' },
+  { label: '정도윤', value: 'jung' },
+  { label: '한지민', value: 'han' },
+  { label: '윤서준', value: 'yoon' },
+  { label: '오하늘', value: 'oh' },
+];
+
+<div className="max-w-md">
   <Select
     mode="multiple"
-    options={memberOptions}
+    options={multipleMemberOptions}
     defaultValue={['kim', 'lee']}
     placeholder="구성원을 선택하세요"
-    showSearch={false}
   />
 </div>`,
     ),
@@ -343,10 +452,9 @@ export const Multiple: Story = {
         variant={args.variant}
         closable={args.closable}
         mode="multiple"
-        options={memberOptions}
+        options={multipleMemberOptions}
         defaultValue={["kim", "lee"]}
         placeholder="구성원을 선택하세요"
-        showSearch={false}
       />
     </div>
   ),
@@ -442,7 +550,8 @@ export const TagRender: Story = {
   render: (args) => (
     <div className="max-w-md">
       <Select
-        {...args}
+        size={args.size}
+        variant={args.variant}
         mode="multiple"
         options={memberOptions}
         defaultValue={["kim", "lee"]}
@@ -490,7 +599,9 @@ export const OptionColors: Story = {
     return (
       <div className="max-w-md">
         <Select
-          {...args}
+          closable={args.closable}
+          size={args.size}
+          variant={args.variant}
           mode="multiple"
           options={statusOptions}
           defaultValue={["active", "leave", "error"]}
@@ -535,7 +646,7 @@ export const LabelAndError: Story = {
   },
   render: (args) => (
     <div className="max-w-sm">
-      <Select {...args} options={sizeMemberOptions} />
+      <StorySelect {...args} options={sizeMemberOptions} />
     </div>
   ),
 };
@@ -561,7 +672,7 @@ export const Search: Story = {
   },
   render: (args) => (
     <div className="max-w-sm">
-      <Select
+      <StorySelect
         {...args}
         options={memberOptions}
         showSearch
@@ -600,7 +711,7 @@ export const FilterOption: Story = {
   },
   render: (args) => (
     <div className="max-w-sm">
-      <Select
+      <StorySelect
         {...args}
         options={filterOptions}
         showSearch
@@ -638,7 +749,8 @@ export const OptionLabelProp: Story = {
   render: (args) => (
     <div className="max-w-sm">
       <Select
-        {...args}
+        size={args.size}
+        variant={args.variant}
         options={optionLabelOptions}
         optionLabelProp="shortLabel"
         defaultValue="kim"
@@ -649,10 +761,10 @@ export const OptionLabelProp: Story = {
 
 export const MultipleAndSearch: Story = {
   name: "Multiple Search",
-  args: { closable: true, variant: "default" },
+  args: { closable: true },
   parameters: {
     ...storyDescription("components-select--multiple-and-search"),
-    controls: { disable: false, include: ["표현 방식", "태그 닫기"] },
+    controls: { disable: false, include: ["태그 닫기"] },
     docs: {
       ...storyDescription("components-select--multiple-and-search").docs,
       source: {
@@ -673,67 +785,48 @@ export const MultipleAndSearch: Story = {
   },
 ];
 
-<div className="grid max-w-md gap-3">
-  <Select
-    mode="multiple"
-    options={groupedOptions}
-    showSearch
-    size="lg"
-    defaultValue={['design']}
-    allowClear
-  />
-  <Select
-    mode="multiple"
-    options={groupedOptions}
-    showSearch
-    size="md"
-    defaultValue={['design']}
-    allowClear
-  />
-  <Select
-    mode="multiple"
-    options={groupedOptions}
-    showSearch
-    size="sm"
-    defaultValue={['design']}
-    allowClear
-  />
+<div className="grid max-w-md gap-6">
+  {(['default', 'filled'] as const).map((variant) => (
+    <div key={variant} className="grid gap-3">
+      <span className="text-sm font-medium text-[#666]">{variant}</span>
+      {(['lg', 'md', 'sm'] as const).map((size) => (
+        <Select
+          key={size}
+          allowClear
+          defaultValue={['design']}
+          mode="multiple"
+          options={groupedOptions}
+          showSearch
+          size={size}
+          variant={variant}
+        />
+      ))}
+    </div>
+  ))}
 </div>`),
       },
     },
   },
   render: (args) => (
-    <div className="grid max-w-md gap-3">
-      <Select
-        closable={args.closable}
-        variant={args.variant}
-        mode="multiple"
-        options={groupedOptions}
-        showSearch
-        size="lg"
-        defaultValue={["design"]}
-        allowClear
-      />
-      <Select
-        closable={args.closable}
-        variant={args.variant}
-        mode="multiple"
-        options={groupedOptions}
-        showSearch
-        size="md"
-        defaultValue={["design"]}
-        allowClear
-      />
-      <Select
-        closable={args.closable}
-        variant={args.variant}
-        mode="multiple"
-        options={groupedOptions}
-        showSearch
-        size="sm"
-        defaultValue={["design"]}
-        allowClear
-      />
+    <div className="grid max-w-md gap-6">
+      {(["default", "filled"] as const).map((variant) => (
+        <div key={variant} className="grid gap-3">
+          <span className="text-sm font-medium text-[#666]">{variant}</span>
+          {(["lg", "md", "sm"] as const).map((size) => (
+            <Select
+              key={size}
+              allowClear
+              closable={args.closable}
+              defaultValue={["design"]}
+              mode="multiple"
+              options={groupedOptions}
+              showSearch
+              size={size}
+              variant={variant}
+            />
+          ))}
+        </div>
+      ))}
     </div>
   ),
 };
@@ -763,7 +856,7 @@ export const OptionsSort: Story = {
   },
   render: (args) => (
     <div className="max-w-sm">
-      <Select
+      <StorySelect
         {...args}
         options={searchSortOptions}
         optionsSort={(a, b) => String(a.label).localeCompare(String(b.label))}
@@ -816,12 +909,24 @@ export const SelectionLimits: Story = {
       source: {
         code: withStoryImports(`<div className="grid max-w-lg gap-3">
   <Select mode="multiple" options={memberOptions} maxSelectedCount={2} />
+  <Select mode="tags" options={memberOptions} maxSelectedCount={2} />
   <Select
     mode="multiple"
     options={memberOptions}
     defaultValue={['kim', 'lee', 'park']}
     maxVisibleTagCount={1}
-    hiddenTagsPlaceholder={(omitted) => '외 ' + omitted.length + '명'}
+  />
+  <Select
+    mode="tags"
+    options={memberOptions}
+    defaultValue={['kim', 'lee', 'park']}
+    maxVisibleTagCount={1}
+  />
+  <Select
+    mode="multiple"
+    options={memberOptions}
+    defaultValue={['kim', 'lee', 'park']}
+    maxVisibleTagCount="responsive"
   />
   <Select
     mode="tags"
@@ -831,6 +936,12 @@ export const SelectionLimits: Story = {
   />
   <Select
     mode="multiple"
+    options={memberOptions}
+    defaultValue={['kim', 'lee']}
+    maxTagTextLength={2}
+  />
+  <Select
+    mode="tags"
     options={memberOptions}
     defaultValue={['kim', 'lee']}
     maxTagTextLength={2}
@@ -853,11 +964,36 @@ export const SelectionLimits: Story = {
         closable={args.closable}
         size={args.size}
         variant={args.variant}
+        mode="tags"
+        options={memberOptions}
+        maxSelectedCount={2}
+      />
+      <Select
+        closable={args.closable}
+        size={args.size}
+        variant={args.variant}
         mode="multiple"
         options={memberOptions}
         defaultValue={["kim", "lee", "park"]}
         maxVisibleTagCount={1}
-        hiddenTagsPlaceholder={(omitted) => `외 ${omitted.length}명`}
+      />
+      <Select
+        closable={args.closable}
+        size={args.size}
+        variant={args.variant}
+        mode="tags"
+        options={memberOptions}
+        defaultValue={["kim", "lee", "park"]}
+        maxVisibleTagCount={1}
+      />
+      <Select
+        closable={args.closable}
+        size={args.size}
+        variant={args.variant}
+        mode="multiple"
+        options={memberOptions}
+        defaultValue={["kim", "lee", "park"]}
+        maxVisibleTagCount="responsive"
       />
       <Select
         closable={args.closable}
@@ -877,82 +1013,17 @@ export const SelectionLimits: Story = {
         defaultValue={["kim", "lee"]}
         maxTagTextLength={2}
       />
+      <Select
+        closable={args.closable}
+        size={args.size}
+        variant={args.variant}
+        mode="tags"
+        options={memberOptions}
+        defaultValue={["kim", "lee"]}
+        maxTagTextLength={2}
+      />
     </div>
   ),
-};
-
-export const LabelInValue: Story = {
-  args: { size: "md", variant: "default" },
-  parameters: {
-    ...storyDescription("components-select--label-in-value"),
-    controls: { disable: false, include: ["크기", "표현 방식"] },
-    docs: {
-      ...storyDescription("components-select--label-in-value").docs,
-      source: {
-        code: withStoryImports(`function LabeledSelect() {
-  const [member, setMember] = useState<SelectLabeledValue>({
-    value: 'kim',
-    label: '김민준',
-  });
-
-  return (
-    <div className="grid max-w-sm gap-3">
-      <Select
-        options={memberOptions}
-        labelInValue
-        value={member}
-        onChange={(nextMember) => {
-          if (nextMember && !Array.isArray(nextMember) && typeof nextMember === 'object') {
-            setMember(nextMember);
-          }
-        }}
-      />
-      <div className="rounded-md bg-[#f5f5f5] p-3 text-sm">
-        <p className="m-0 mb-2 font-medium">onChange 반환값</p>
-        <div className="grid grid-cols-[56px_1fr] gap-x-3 gap-y-1">
-          <span className="text-[#777]">label</span>
-          <span>{member.label}</span>
-          <span className="text-[#777]">value</span>
-          <span>{member.value}</span>
-        </div>
-      </div>
-    </div>
-  );
-}`),
-      },
-    },
-  },
-  render: function LabeledSelectStory(args) {
-    const [member, setMember] = useState<SelectLabeledValue>({
-      value: "kim",
-      label: "김민준",
-    });
-    return (
-      <div className="grid max-w-sm gap-3">
-        <Select
-          size={args.size}
-          variant={args.variant}
-          options={memberOptions}
-          labelInValue
-          value={member}
-          onChange={(nextMember) => {
-            if (nextMember && !Array.isArray(nextMember) && typeof nextMember === "object") {
-              setMember(nextMember);
-            }
-          }}
-        />
-        <div className="rounded-md bg-[#f5f5f5] p-3 text-sm">
-          <p className="m-0 mb-2 font-medium">onChange 반환값</p>
-          <div className="grid grid-cols-[56px_1fr] gap-x-3 gap-y-1">
-            <span className="text-[#777]">label</span>
-            <span>{member.label}</span>
-            <span className="text-[#777]">value</span>
-            <span>{member.value}</span>
-          </div>
-        </div>
-      </div>
-    );
-  },
 };
 
 export const CustomRendering: Story = {
@@ -983,7 +1054,8 @@ export const CustomRendering: Story = {
   render: (args) => (
     <div className="max-w-sm">
       <Select
-        {...args}
+        size={args.size}
+        variant={args.variant}
         options={memberOptions}
         defaultValue="kim"
         optionRender={(option) => <strong>{option.label}</strong>}
@@ -1008,19 +1080,19 @@ export const PopupWidthAndPlacement: Story = {
       ...storyDescription("components-select--popup-width-and-placement").docs,
       source: {
         code: withStoryImports(`<div className="grid max-w-sm gap-3">
-  <Select options={memberOptions} popupMatchSelectWidth={420} placement="topLeft" />
-  <Select options={memberOptions} popupMatchSelectWidth={false} placement="bottomRight" />
+  <Select options={memberOptions} popupMatchWidth={420} placement="topLeft" />
+  <Select options={memberOptions} popupMatchWidth={false} placement="bottomRight" />
 </div>`),
       },
     },
   },
   render: (args) => (
     <div className="grid max-w-sm gap-3">
-      <Select {...args} options={memberOptions} popupMatchSelectWidth={420} placement="topLeft" />
-      <Select
+      <StorySelect {...args} options={memberOptions} popupMatchWidth={420} placement="topLeft" />
+      <StorySelect
         {...args}
         options={memberOptions}
-        popupMatchSelectWidth={false}
+        popupMatchWidth={false}
         placement="bottomRight"
       />
     </div>
@@ -1044,8 +1116,8 @@ export const LoadingAndEmpty: Story = {
   },
   render: (args) => (
     <div className="grid max-w-sm gap-3">
-      <Select {...args} options={memberOptions} loading />
-      <Select {...args} options={[]} notFoundContent="검색 결과가 없어요" />
+      <StorySelect {...args} options={memberOptions} loading />
+      <StorySelect {...args} options={[]} notFoundContent="검색 결과가 없어요" />
     </div>
   ),
 };
@@ -1135,7 +1207,7 @@ export const VirtualList: Story = {
   },
   render: (args) => (
     <div className="max-w-sm">
-      <Select
+      <StorySelect
         {...args}
         options={Array.from({ length: 1000 }, (_, index) => ({
           label: `항목 ${index + 1}`,

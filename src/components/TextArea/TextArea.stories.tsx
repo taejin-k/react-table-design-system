@@ -3,7 +3,13 @@ import { Description, Markdown, Stories, Title } from "@storybook/addon-docs/blo
 import type { Meta, StoryObj } from "@storybook/react";
 import { storyDescriptions } from "../../storybook/story-descriptions";
 import { withStoryImports } from "../../storybook/story-source";
+import type { AllowedCharacterType, InputSizeType } from "../Input";
 import { TextArea } from "./TextArea";
+import type { TextAreaVariantType } from "./TextArea.types";
+
+const sizes: InputSizeType[] = ["lg", "md", "sm"];
+const variants: TextAreaVariantType[] = ["default", "filled"];
+const allowedCharacterTypes: AllowedCharacterType[] = ["korean", "english", "number"];
 
 const storyDescription = (id: string) => ({
   docs: { description: { story: storyDescriptions[id] } },
@@ -20,14 +26,13 @@ const meta = {
   title: "Components/TextArea",
   component: TextArea,
   tags: ["autodocs"],
-  args: { placeholder: "내용을 입력하세요" },
   argTypes: {
     defaultValue: { name: "초기값", control: "text" },
-    size: { name: "크기", control: "select", options: ["lg", "md", "sm"] },
+    size: { name: "크기", control: "select", options: sizes },
     variant: {
       name: "표현 방식",
       control: "select",
-      options: ["default", "filled"],
+      options: variants,
     },
     placeholder: { name: "placeholder", control: "text" },
     label: { name: "레이블", control: "text" },
@@ -37,7 +42,7 @@ const meta = {
     allowOnly: {
       name: "입력 문자",
       control: "select",
-      options: ["korean", "english", "number"],
+      options: allowedCharacterTypes,
     },
     resize: { name: "크기 조절", control: "boolean" },
     showCount: { name: "글자 수", control: "boolean" },
@@ -73,10 +78,10 @@ const meta = {
 | \`defaultValue\` | 처음 표시할 입력값을 설정해요. | \`string\` | - |
 | \`placeholder\` | 값이 없을 때 안내 문구를 표시해요. | \`string\` | - |
 | \`width\` | TextArea의 가로 길이를 px 단위로 설정해요. | \`number\` | \`100%\` |
-| \`size\` | TextArea의 크기를 설정해요. | \`lg \\| md \\| sm\` | \`md\` |
-| \`variant\` | 배경과 테두리 표현 방식을 설정해요. | \`default \\| filled\` | \`default\` |
-| \`autoSize\` | 입력 내용에 맞춰 높이를 조절해요. | \`boolean \\| { minRows, maxRows }\` | \`false\` |
-| \`allowOnly\` | 입력할 수 있는 문자 종류를 제한해요. | \`korean \\| english \\| number\` | - |
+| \`size\` | TextArea의 크기를 설정해요. | [\`InputSizeType\`](#textarea-input-size-type) | \`md\` |
+| \`variant\` | 배경과 테두리 표현 방식을 설정해요. | [\`TextAreaVariantType\`](#textarea-variant-type) | \`default\` |
+| \`autoSize\` | 입력 내용에 맞춰 높이를 조절해요. | \`boolean \\|\` [\`TextAreaAutoSize\`](#textarea-auto-size) | \`false\` |
+| \`allowOnly\` | 입력할 수 있는 문자 종류를 제한해요. | [\`AllowedCharacterType\`](#textarea-allowed-character-type) | - |
 | \`resize\` | 우측 하단 크기 조절 핸들을 표시해요. | \`boolean\` | \`true\` |
 | \`showCount\` | 현재 글자 수를 표시해요. | \`boolean\` | \`false\` |
 | \`maxLength\` | 입력할 수 있는 최대 글자 수를 설정해요. | \`number\` | - |
@@ -89,8 +94,37 @@ const meta = {
 | \`className\` | 최상위 요소에 Tailwind 클래스를 추가해요. | \`string\` | - |
 | \`onChange\` | 입력값이 바뀔 때 실행할 함수예요. | \`(value: string) => void\` | - |
 | \`onEnter\` | Shift 없이 Enter를 누를 때 실행할 함수예요. | \`() => void\` | - |
-
           `}</Markdown>
+          <h3 id="textarea-auto-size">TextAreaAutoSize</h3>
+          <p>자동 높이에서 사용할 최소·최대 행 수를 설정해요.</p>
+          <Markdown>{`
+| Name | Description | Type | Default |
+| --- | --- | --- | --- |
+| \`minRows\` | 자동 높이의 최소 행 수를 설정해요. | \`number\` | \`1\` |
+| \`maxRows\` | 자동 높이의 최대 행 수를 설정해요. | \`number\` | - |
+          `}</Markdown>
+          <h2 className="component-docs-types-heading">Types</h2>
+          <h3 id="textarea-input-size-type">InputSizeType</h3>
+          <p>TextArea의 크기를 선택해요.</p>
+          <div className="flex flex-wrap gap-2">
+            {sizes.map((size) => (
+              <TextAreaTypeCode key={size} value={size} />
+            ))}
+          </div>
+          <h3 id="textarea-variant-type">TextAreaVariantType</h3>
+          <p>TextArea의 배경과 테두리 표현 방식을 선택해요.</p>
+          <div className="flex flex-wrap gap-2">
+            {variants.map((variant) => (
+              <TextAreaTypeCode key={variant} value={variant} />
+            ))}
+          </div>
+          <h3 id="textarea-allowed-character-type">AllowedCharacterType</h3>
+          <p>입력을 허용할 문자 종류를 선택해요.</p>
+          <div className="flex flex-wrap gap-2">
+            {allowedCharacterTypes.map((type) => (
+              <TextAreaTypeCode key={type} value={type} />
+            ))}
+          </div>
         </div>
       ),
     },
@@ -100,7 +134,20 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+function TextAreaTypeCode({
+  value,
+}: {
+  value: AllowedCharacterType | InputSizeType | TextAreaVariantType;
+}) {
+  return (
+    <code className="rounded-full border border-[#e3e8ef] bg-[#f8fafc] px-3 py-1.5 text-[13px] text-[#4a5667]">
+      {value}
+    </code>
+  );
+}
+
 export const Sizes: Story = {
+  args: { placeholder: "내용을 입력하세요" },
   parameters: {
     ...storyDescription("components-textarea--sizes"),
     controls: { disable: false, include: ["placeholder", "크기", "가로 길이"] },
@@ -159,6 +206,7 @@ export const Widths: Story = {
 };
 
 export const Variants: Story = {
+  args: { placeholder: "기본" },
   parameters: {
     ...storyDescription("components-textarea--variants"),
     controls: { disable: false, include: ["표현 방식"] },
@@ -184,6 +232,7 @@ export const Variants: Story = {
 };
 
 export const States: Story = {
+  args: { placeholder: "기본" },
   parameters: {
     ...storyDescription("components-textarea--states"),
     controls: { disable: false, include: ["읽기 전용", "비활성"] },
@@ -242,7 +291,7 @@ export const AllowedCharacters: Story = {
 };
 
 export const AutoSize: Story = {
-  args: { autoSize: true },
+  args: { autoSize: true, placeholder: "내용을 입력하세요" },
   parameters: {
     ...storyDescription("components-textarea--auto-size"),
     controls: { disable: false, include: ["자동 높이"] },
@@ -274,7 +323,7 @@ export const AutoSize: Story = {
 };
 
 export const Resize: Story = {
-  args: { resize: true },
+  args: { resize: true, placeholder: "내용을 입력하세요" },
   parameters: {
     ...storyDescription("components-textarea--resize"),
     controls: { disable: false, include: ["크기 조절"] },

@@ -324,7 +324,7 @@ function PeriodSegmented() {
 }
 ```
 
-`size`, `shape`, `block`, `disabled`, `vertical`을 지원하며 각 객체 옵션에는 `label`, `icon`, `disabled`, `tooltip`을 설정할 수 있습니다.
+`size`, `block`, `disabled`, `vertical`을 지원하며 각 객체 옵션에는 `label`, `icon`, `disabled`, `tooltip`을 설정할 수 있습니다.
 
 ### Modal
 

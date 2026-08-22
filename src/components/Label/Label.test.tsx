@@ -24,7 +24,7 @@ describe("Label", () => {
     expect(screen.queryByText("*")).not.toBeInTheDocument();
 
     rerender(<Label label="이름" required />);
-    expect(screen.getByText("*")).toHaveAttribute("aria-hidden", "true");
+    expect(screen.getByText("*")).toBeInTheDocument();
   });
 
   it("applies size and an external class", () => {

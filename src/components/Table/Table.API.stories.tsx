@@ -20,7 +20,7 @@ const meta: Meta<TableProps<Member>> = {
       source: { transform: formatTableStorySource },
       description: {
         component:
-          "Ant Design과 같은 방식으로 Table API를 사용할 수 있어요.  \n선언 방식·ref·semantic 스타일·locale과 네이티브 속성을 확인할 수 있어요.",
+          "Wizard 디자인 시스템 컨벤션으로 Table API를 사용할 수 있어요.  \n열 너비·ref·locale과 네이티브 속성을 확인할 수 있어요.",
       },
     },
   },
@@ -57,7 +57,7 @@ const fixedColumns: ColumnsType<Member> = [
   { key: "team", dataIndex: "team", title: "팀", width: 220 },
   { key: "status", dataIndex: "status", title: "상태", width: 180 },
   { key: "joinedAt", dataIndex: "joinedAt", title: "합류일", width: 200 },
-  { key: "memberKey", dataIndex: "key", title: "구성원 ID", width: 180 },
+  { key: "memberId", dataIndex: "id", title: "구성원 ID", width: 180 },
   {
     key: "projects",
     dataIndex: "projects",
@@ -88,7 +88,7 @@ export const FixedTableHeight: Story = {
 export const StickyHeader: Story = {
   name: "Sticky Header",
   parameters: storyDescription("components-table-api-compatibility--sticky-header"),
-  args: { dataSource: members, columns, pagination: false, sticky: true },
+  args: { dataSource: members, columns, pagination: false, stickyHeader: true },
 };
 
 export const FixedColumns: Story = {
@@ -96,11 +96,9 @@ export const FixedColumns: Story = {
     ...storyDescription("components-table-api-compatibility--fixed-columns"),
     tableColumnsComment:
       "고정 열의 위치를 정확하게 계산하려면 fixed를 설정한 column.width가 필요해요.",
-    tableScrollXComment: "컬럼 너비와 콘텐츠에 필요한 만큼 가로 스크롤 영역을 만들어요.",
   },
   args: {
     columns: fixedColumns,
-    scroll: { x: "max-content" },
   },
 };
 
@@ -109,13 +107,11 @@ export const StickyScrollbar: Story = {
   parameters: {
     ...storyDescription("components-table-api-compatibility--sticky-scrollbar"),
     tableColumnsComment: "가로 스크롤을 확인할 수 있도록 컬럼 너비를 지정해요.",
-    tableScrollXComment: "컬럼 너비와 콘텐츠에 필요한 만큼 가로 스크롤 영역을 만들어요.",
   },
   args: {
     dataSource: largeData.slice(0, 20),
     columns: fixedColumns,
     stickyScrollBar: true,
-    scroll: { x: "max-content" },
   },
 };
 
@@ -150,7 +146,7 @@ export const ImperativeScrollTo: Story = {
 ];
 
 const members = Array.from({ length: 100 }, (_, index) => ({
-  key: \`M-\${index + 1}\`,
+  id: \`M-\${index + 1}\`,
   name: \`구성원 \${String(index + 1).padStart(3, '0')}\`,
   role: 'Product Designer',
   team: 'Design',

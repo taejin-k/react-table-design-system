@@ -4,37 +4,23 @@ import { twMerge } from "tailwind-merge";
 import type { BreadcrumbProps } from "./Breadcrumb.types";
 
 export const Breadcrumb = forwardRef<HTMLElement, BreadcrumbProps>(
-  ({ items = [], className, "aria-label": ariaLabel = "Breadcrumb", ...rest }, ref) => (
+  ({ items = [], className, ...rest }, ref) => (
     <nav
       ref={ref}
-      aria-label={ariaLabel}
       className={twMerge("font-pretendard text-[14px] leading-[22px]", className)}
       {...rest}
     >
       <ol className="m-0 flex min-w-0 list-none flex-wrap items-center gap-y-1 p-0">
         {items.map(
           (
-            {
-              key,
-              title,
-              href,
-              onClick,
-              icon,
-              color,
-              className: itemClassName,
-              style,
-              ...linkProps
-            },
+            { title, href, onClick, icon, color, className: itemClassName, style, ...linkProps },
             index,
           ) => {
             const isCurrent = index === items.length - 1;
             const content = (
               <>
                 {icon ? (
-                  <span
-                    className="inline-flex size-4 shrink-0 items-center justify-center"
-                    aria-hidden
-                  >
+                  <span className="inline-flex size-4 shrink-0 items-center justify-center">
                     {icon}
                   </span>
                 ) : null}
@@ -45,12 +31,9 @@ export const Breadcrumb = forwardRef<HTMLElement, BreadcrumbProps>(
             );
 
             return (
-              <li key={key ?? index} className="inline-flex min-w-0 items-center">
+              <li key={index} className="inline-flex min-w-0 items-center">
                 {index > 0 ? (
-                  <span
-                    className="mx-2 inline-flex shrink-0 items-center text-[#aaa] max-[575px]:mx-1.5"
-                    aria-hidden
-                  >
+                  <span className="mx-2 inline-flex shrink-0 items-center text-[#aaa] max-[575px]:mx-1.5">
                     /
                   </span>
                 ) : null}
@@ -59,7 +42,6 @@ export const Breadcrumb = forwardRef<HTMLElement, BreadcrumbProps>(
                     {...linkProps}
                     href={href}
                     onClick={onClick}
-                    aria-current={isCurrent ? "page" : undefined}
                     className={twMerge(
                       contentVariants({ interactive: true, current: isCurrent }),
                       itemClassName,
@@ -72,7 +54,6 @@ export const Breadcrumb = forwardRef<HTMLElement, BreadcrumbProps>(
                   <button
                     type="button"
                     onClick={onClick}
-                    aria-current={isCurrent ? "page" : undefined}
                     className={twMerge(
                       contentVariants({ interactive: true, current: isCurrent }),
                       "appearance-none border-0 bg-transparent [font:inherit]",
@@ -84,7 +65,6 @@ export const Breadcrumb = forwardRef<HTMLElement, BreadcrumbProps>(
                   </button>
                 ) : (
                   <span
-                    aria-current={isCurrent ? "page" : undefined}
                     className={twMerge(contentVariants({ current: isCurrent }), itemClassName)}
                     style={{ color, ...style }}
                   >

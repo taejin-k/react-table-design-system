@@ -7,7 +7,7 @@ import { Breadcrumb } from "./Breadcrumb";
 describe("Breadcrumb", () => {
   it("renders one item and four or more items without extra separators", () => {
     const { rerender } = render(<Breadcrumb items={[{ title: "홈" }]} />);
-    expect(screen.getByRole("navigation", { name: "Breadcrumb" })).toHaveTextContent("홈");
+    expect(screen.getByRole("navigation")).toHaveTextContent("홈");
     expect(screen.getByRole("list").children).toHaveLength(1);
 
     rerender(

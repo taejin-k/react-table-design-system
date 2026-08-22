@@ -1,4 +1,4 @@
-import type { Breakpoint, ColumnType, ColumnsType, DataIndex, FilterItem } from "./Table.types";
+import type { BreakpointType, ColumnType, ColumnsType, DataIndex, FilterItem } from "./Table.types";
 
 export const getValue = <T extends object>(record: T, dataIndex?: DataIndex): unknown => {
   if (dataIndex === undefined) return undefined;
@@ -36,7 +36,7 @@ export const leafCount = <T extends object>(column: ColumnType<T>): number =>
 export const flatFilterItems = (items: FilterItem[] = []): FilterItem[] =>
   items.flatMap((item) => (item.children?.length ? flatFilterItems(item.children) : [item]));
 
-export const breakpointWidths: Record<Breakpoint, number> = {
+export const breakpointWidths: Record<BreakpointType, number> = {
   xs: 0,
   sm: 640,
   md: 768,

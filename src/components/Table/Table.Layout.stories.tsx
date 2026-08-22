@@ -61,7 +61,7 @@ export const VirtualThousandRows: Story = {
       ...storyDescription("components-table-layout--virtual-thousand-rows").docs,
       source: {
         code: withStoryImports(`const members = Array.from({ length: 1000 }, (_, index) => ({
-  key: \`M-\${index + 1}\`,
+  id: \`M-\${index + 1}\`,
   name: \`구성원 \${index + 1}\`,
   role: 'Product Designer',
   team: 'Design',

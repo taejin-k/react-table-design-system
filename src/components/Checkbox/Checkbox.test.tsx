@@ -28,9 +28,9 @@ describe("Checkbox", () => {
   });
 
   it("applies the error variant to the input and an external class to the root", () => {
-    render(<Checkbox aria-label="오류 선택" className="custom-checkbox" error />);
+    render(<Checkbox className="custom-checkbox" error />);
 
-    const checkbox = screen.getByRole("checkbox", { name: "오류 선택" });
+    const checkbox = screen.getByRole("checkbox");
     expect(checkbox.className).toContain("border-[#fe5150]");
     expect(checkbox).not.toHaveClass("custom-checkbox");
     expect(checkbox.closest("label")).toHaveClass("custom-checkbox");
@@ -46,8 +46,8 @@ describe("Checkbox", () => {
   });
 
   it("displays the partially checked state", () => {
-    render(<Checkbox aria-label="부분 선택" partiallyChecked />);
+    render(<Checkbox partiallyChecked />);
 
-    expect(screen.getByRole("checkbox", { name: "부분 선택" })).toBePartiallyChecked();
+    expect(screen.getByRole("checkbox")).toBePartiallyChecked();
   });
 });

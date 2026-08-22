@@ -64,11 +64,7 @@ export function Dropdown({
     <>
       <span
         ref={floating.triggerRef}
-        className={twMerge(
-          "inline-flex min-w-0",
-          disabled && "cursor-not-allowed opacity-50 [&>*]:pointer-events-none",
-          className,
-        )}
+        className={twMerge("inline-flex min-w-0", className)}
         {...floating.triggerProps}
       >
         {children}

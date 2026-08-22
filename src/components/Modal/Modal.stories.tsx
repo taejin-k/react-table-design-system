@@ -43,7 +43,7 @@ const meta = {
 | \`confirmLoading\` | 확인 버튼의 로딩 상태를 표시해요. | \`boolean\` | \`false\` |
 | \`okText\` | 확인 버튼 내용을 설정해요. | \`ReactNode\` | \`확인\` |
 | \`cancelText\` | 취소 버튼 내용을 설정해요. | \`ReactNode\` | \`취소\` |
-| \`okType\` | 확인 버튼 종류를 설정해요. | \`ButtonVariant\` | \`primary\` |
+| \`okType\` | 확인 버튼 종류를 설정해요. | \`ButtonVariantType\` | \`primary\` |
 | \`okButtonProps\` | 확인 Button의 속성을 설정해요. | \`ButtonProps\` | - |
 | \`cancelButtonProps\` | 취소 Button의 속성을 설정해요. | \`ButtonProps\` | - |
 | \`keyboard\` | Escape로 닫을 수 있게 해요. | \`boolean\` | \`true\` |

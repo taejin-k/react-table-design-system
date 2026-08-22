@@ -14,8 +14,6 @@ export const Toggle = forwardRef<HTMLButtonElement, ToggleProps>(
         ref={ref}
         {...rest}
         type="button"
-        role="switch"
-        aria-checked={checked}
         disabled={disabled}
         onClick={(event: MouseEvent<HTMLButtonElement>) => {
           if (loading) {

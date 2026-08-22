@@ -417,11 +417,11 @@ export const PrefixAndSuffix: Story = {
     `<TimePicker
   width={320}
   prefix={<span>시작</span>}
-  suffixIcon={<Icon icon="clock" />}
+  suffixIcon={<Icon icon="clock-outlined" />}
 />`,
   ),
   render: () => (
-    <TimePicker width={320} prefix={<span>시작</span>} suffixIcon={<Icon icon="clock" />} />
+    <TimePicker width={320} prefix={<span>시작</span>} suffixIcon={<Icon icon="clock-outlined" />} />
   ),
 };
 

@@ -29,27 +29,6 @@ function JustifyExample({ value }: { value: FlexProps["justify"] }) {
   );
 }
 
-function AlignExample({ value }: { value: FlexProps["align"] }) {
-  const isStretch = value === "stretch";
-  const isBaseline = value === "baseline";
-
-  return (
-    <div className="grid gap-2">
-      <p className={label}>{value}</p>
-      <Flex align={value} gap={8} className="h-32 rounded border border-[#ddd] p-3">
-        <span className={`${alignItem} ${isStretch ? "h-auto" : ""}`}>
-          {isBaseline ? "작은 글자" : "첫 요소"}
-        </span>
-        <span
-          className={`${alignItem} ${isStretch ? "h-auto" : "h-20"} ${isBaseline ? "text-xl" : ""}`}
-        >
-          {isBaseline ? "큰 글자" : "두 번째 요소"}
-        </span>
-      </Flex>
-    </div>
-  );
-}
-
 function GapExample({ value }: { value: number }) {
   return (
     <div className="grid gap-2">
@@ -116,16 +95,16 @@ export const Vertical: Story = {
         <p className="m-0 text-sm font-medium text-[#555]">vertical=false</p>
         <Flex vertical={false} gap={8}>
           <Button>첫 번째</Button>
-          <Button variant="secondary">두 번째</Button>
-          <Button variant="tertiary">세 번째</Button>
+          <Button>두 번째</Button>
+          <Button>세 번째</Button>
         </Flex>
       </div>
       <div className="grid gap-2">
         <p className="m-0 text-sm font-medium text-[#555]">vertical=true</p>
-        <Flex vertical gap={8} className="items-start">
+        <Flex vertical gap={8} align="flex-start">
           <Button>첫 번째</Button>
-          <Button variant="secondary">두 번째</Button>
-          <Button variant="tertiary">세 번째</Button>
+          <Button>두 번째</Button>
+          <Button>세 번째</Button>
         </Flex>
       </div>
     </div>
@@ -140,16 +119,16 @@ export const Vertical: Story = {
         <p className={label}>vertical=false</p>
         <Flex vertical={false} gap={8}>
           <Button>첫 번째</Button>
-          <Button variant="secondary">두 번째</Button>
-          <Button variant="tertiary">세 번째</Button>
+          <Button>두 번째</Button>
+          <Button>세 번째</Button>
         </Flex>
       </div>
       <div className="grid gap-2">
         <p className={label}>vertical=true</p>
-        <Flex vertical gap={8} className="items-start">
+        <Flex vertical gap={8} align="flex-start">
           <Button>첫 번째</Button>
-          <Button variant="secondary">두 번째</Button>
-          <Button variant="tertiary">세 번째</Button>
+          <Button>두 번째</Button>
+          <Button>세 번째</Button>
         </Flex>
       </div>
     </div>
@@ -319,33 +298,48 @@ export const Align: Story = {
         code: withStoryImports(`const itemClass = "flex h-12 w-20 min-w-0 items-center justify-center rounded bg-[#e6f4ff] px-2 text-center text-sm text-[#0062df]";
 const labelClass = "m-0 text-sm font-medium text-[#555]";
 
-function AlignItem({ value }) {
-  const isStretch = value === "stretch";
-  const isBaseline = value === "baseline";
-
-  return (
-    <div className="grid gap-2">
-      <p className={labelClass}>{value}</p>
-      <Flex align={value} gap={8} className="h-32 rounded border border-[#ddd] p-3">
-        <span className={itemClass + (isStretch ? " h-auto" : "")}>
-          {isBaseline ? "작은 글자" : "첫 요소"}
-        </span>
-        <span className={itemClass + (isStretch ? " h-auto" : " h-20") + (isBaseline ? " text-xl" : "")}>
-          {isBaseline ? "큰 글자" : "두 번째 요소"}
-        </span>
-      </Flex>
-    </div>
-  );
-}
-
 function FlexAlign() {
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
-      <AlignItem value="flex-start" />
-      <AlignItem value="center" />
-      <AlignItem value="flex-end" />
-      <AlignItem value="stretch" />
-      <AlignItem value="baseline" />
+      <div className="grid gap-2">
+        <p className={labelClass}>flex-start</p>
+        <Flex align="flex-start" gap={8} className="h-32 rounded border border-[#ddd] p-3">
+          <span className={itemClass}>첫 요소</span>
+          <span className={itemClass + " h-20"}>두 번째 요소</span>
+        </Flex>
+      </div>
+
+      <div className="grid gap-2">
+        <p className={labelClass}>center</p>
+        <Flex align="center" gap={8} className="h-32 rounded border border-[#ddd] p-3">
+          <span className={itemClass}>첫 요소</span>
+          <span className={itemClass + " h-20"}>두 번째 요소</span>
+        </Flex>
+      </div>
+
+      <div className="grid gap-2">
+        <p className={labelClass}>flex-end</p>
+        <Flex align="flex-end" gap={8} className="h-32 rounded border border-[#ddd] p-3">
+          <span className={itemClass}>첫 요소</span>
+          <span className={itemClass + " h-20"}>두 번째 요소</span>
+        </Flex>
+      </div>
+
+      <div className="grid gap-2">
+        <p className={labelClass}>stretch</p>
+        <Flex align="stretch" gap={8} className="h-32 rounded border border-[#ddd] p-3">
+          <span className={itemClass + " h-auto"}>첫 요소</span>
+          <span className={itemClass + " h-auto"}>두 번째 요소</span>
+        </Flex>
+      </div>
+
+      <div className="grid gap-2">
+        <p className={labelClass}>baseline</p>
+        <Flex align="baseline" gap={8} className="h-32 rounded border border-[#ddd] p-3">
+          <span className={itemClass}>작은 글자</span>
+          <span className={itemClass + " h-20 text-xl"}>큰 글자</span>
+        </Flex>
+      </div>
     </div>
   );
 }`),
@@ -354,11 +348,41 @@ function FlexAlign() {
   },
   render: () => (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
-      <AlignExample value="flex-start" />
-      <AlignExample value="center" />
-      <AlignExample value="flex-end" />
-      <AlignExample value="stretch" />
-      <AlignExample value="baseline" />
+      <div className="grid gap-2">
+        <p className={label}>flex-start</p>
+        <Flex align="flex-start" gap={8} className="h-32 rounded border border-[#ddd] p-3">
+          <span className={alignItem}>첫 요소</span>
+          <span className={`${alignItem} h-20`}>두 번째 요소</span>
+        </Flex>
+      </div>
+      <div className="grid gap-2">
+        <p className={label}>center</p>
+        <Flex align="center" gap={8} className="h-32 rounded border border-[#ddd] p-3">
+          <span className={alignItem}>첫 요소</span>
+          <span className={`${alignItem} h-20`}>두 번째 요소</span>
+        </Flex>
+      </div>
+      <div className="grid gap-2">
+        <p className={label}>flex-end</p>
+        <Flex align="flex-end" gap={8} className="h-32 rounded border border-[#ddd] p-3">
+          <span className={alignItem}>첫 요소</span>
+          <span className={`${alignItem} h-20`}>두 번째 요소</span>
+        </Flex>
+      </div>
+      <div className="grid gap-2">
+        <p className={label}>stretch</p>
+        <Flex align="stretch" gap={8} className="h-32 rounded border border-[#ddd] p-3">
+          <span className={`${alignItem} h-auto`}>첫 요소</span>
+          <span className={`${alignItem} h-auto`}>두 번째 요소</span>
+        </Flex>
+      </div>
+      <div className="grid gap-2">
+        <p className={label}>baseline</p>
+        <Flex align="baseline" gap={8} className="h-32 rounded border border-[#ddd] p-3">
+          <span className={alignItem}>작은 글자</span>
+          <span className={`${alignItem} h-20 text-xl`}>큰 글자</span>
+        </Flex>
+      </div>
     </div>
   ),
 };

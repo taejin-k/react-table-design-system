@@ -3,6 +3,7 @@
 @import "../theme.css" layer(theme);
 @import "../src/styles/table-scrollbar.css";
 @import "../src/styles/motion.css";
+@import "../src/styles/interactive.css";
 
 html,
 body {
@@ -13,9 +14,8 @@ body.sb-show-main {
   overflow-y: scroll;
 }
 
-.table-docs .docs-story,
-.sbdocs-preview:has([data-table-sticky-header]),
-.docs-story:has([data-table-sticky-header]) {
+.docs-story,
+.sbdocs-preview:has([data-table-sticky-header]) {
   overflow: visible !important;
 }
 
@@ -113,6 +113,10 @@ body.sb-show-main {
   margin-bottom: 12px;
 }
 
+.component-docs > .component-docs-types-heading {
+  margin-top: 48px;
+}
+
 .component-docs > h2:last-of-type ~ h3,
 .component-docs > h2:last-of-type ~ div > h3 {
   margin-top: 32px;
@@ -156,6 +160,105 @@ body.sb-show-main {
   overflow-wrap: anywhere;
 }
 
+.component-docs table td:nth-child(3) a,
+.component-docs table td:nth-child(3) a code {
+  text-decoration: none;
+}
+
+.table-docs table td:nth-child(3) a,
+.table-docs table td:nth-child(3) a code {
+  text-decoration: none !important;
+}
+
+.button-docs a[href$="#button-variant"],
+.button-docs a[href$="#button-variant"] code,
+.button-docs a[href$="#button-size"],
+.button-docs a[href$="#button-size"] code,
+.icon-docs a[href$="#icon-name"],
+.icon-docs a[href$="#icon-name"] code {
+  text-decoration: none;
+}
+
+.tag-docs a[href$="#tag-color"],
+.tag-docs a[href$="#tag-color"] code,
+.tag-docs a[href$="#tag-variant"],
+.tag-docs a[href$="#tag-variant"] code {
+  text-decoration: none;
+}
+
+.toggle-docs a[href$="#toggle-size"],
+.toggle-docs a[href$="#toggle-size"] code {
+  text-decoration: none;
+}
+
+.label-docs a[href$="#label-size"],
+.label-docs a[href$="#label-size"] code {
+  text-decoration: none;
+}
+
+.breadcrumb-docs a[href$="#breadcrumb-item"],
+.breadcrumb-docs a[href$="#breadcrumb-item"] code {
+  text-decoration: none;
+}
+
+.input-docs a[href$="#input-size"],
+.input-docs a[href$="#input-size"] code,
+.input-docs a[href$="#input-variant"],
+.input-docs a[href$="#input-variant"] code,
+.input-docs a[href$="#allowed-character-type"],
+.input-docs a[href$="#allowed-character-type"] code {
+  text-decoration: none;
+}
+
+.textarea-docs a[href$="#textarea-auto-size"],
+.textarea-docs a[href$="#textarea-auto-size"] code,
+.textarea-docs a[href$="#textarea-input-size-type"],
+.textarea-docs a[href$="#textarea-input-size-type"] code,
+.textarea-docs a[href$="#textarea-variant-type"],
+.textarea-docs a[href$="#textarea-variant-type"] code,
+.textarea-docs a[href$="#textarea-allowed-character-type"],
+.textarea-docs a[href$="#textarea-allowed-character-type"] code {
+  text-decoration: none;
+}
+
+.tooltip-docs a[href$="#tooltip-placement-type"],
+.tooltip-docs a[href$="#tooltip-placement-type"] code,
+.tooltip-docs a[href$="#tooltip-trigger-type"],
+.tooltip-docs a[href$="#tooltip-trigger-type"] code {
+  text-decoration: none;
+}
+
+.dropdown-docs a[href$="#dropdown-placement-type"],
+.dropdown-docs a[href$="#dropdown-placement-type"] code,
+.dropdown-docs a[href$="#dropdown-trigger-type"],
+.dropdown-docs a[href$="#dropdown-trigger-type"] code,
+.dropdown-docs a[href$="#dropdown-item-type"],
+.dropdown-docs a[href$="#dropdown-item-type"] code,
+.dropdown-docs a[href$="#dropdownmenu"],
+.dropdown-docs a[href$="#dropdownmenu"] code,
+.dropdown-docs a[href$="#dropdownitem"],
+.dropdown-docs a[href$="#dropdownitem"] code,
+.popover-docs a[href$="#popover-placement-type"],
+.popover-docs a[href$="#popover-placement-type"] code,
+.popover-docs a[href$="#popover-trigger-type"],
+.popover-docs a[href$="#popover-trigger-type"] code {
+  text-decoration: none;
+}
+
+.segmented-docs a[href$="#segmenteditem"],
+.segmented-docs a[href$="#segmenteditem"] code,
+.segmented-docs a[href$="#segmented-size-type"],
+.segmented-docs a[href$="#segmented-size-type"] code {
+  text-decoration: none;
+}
+
+.illustrations-docs a[href$="#illustration-type"],
+.illustrations-docs a[href$="#illustration-type"] code,
+.illustrations-docs a[href$="#illustration-size-type"],
+.illustrations-docs a[href$="#illustration-size-type"] code {
+  text-decoration: none;
+}
+
 .button-docs table :is(th, td):nth-child(1) {
   width: 14%;
 }
@@ -170,6 +273,28 @@ body.sb-show-main {
 
 .button-docs table :is(th, td):nth-child(4) {
   width: 12%;
+}
+
+.tag-docs table :is(th, td):nth-child(1) {
+  width: 14%;
+}
+
+.tag-docs table :is(th, td):nth-child(2) {
+  width: 28%;
+}
+
+.tag-docs table :is(th, td):nth-child(3) {
+  width: 46%;
+}
+
+.tag-docs table :is(th, td):nth-child(4) {
+  width: 12%;
+}
+
+.tag-docs table :is(th, td):nth-child(3),
+.tag-docs table td:nth-child(3) code {
+  white-space: nowrap;
+  overflow-wrap: normal;
 }
 
 .chip-docs table :is(th, td):nth-child(1) {
@@ -300,6 +425,14 @@ body.sb-show-main {
   width: 14%;
 }
 
+.icon-docs table :is(th, td):nth-child(1) {
+  width: 12%;
+}
+
+.icon-docs table :is(th, td):nth-child(2) {
+  width: 41%;
+}
+
 .icon-docs table :is(th, td):nth-child(3) {
   width: 32%;
 }
@@ -313,11 +446,11 @@ body.sb-show-main {
 }
 
 .tooltip-docs table :is(th, td):nth-child(2) {
-  width: 41%;
+  width: 36%;
 }
 
 .tooltip-docs table :is(th, td):nth-child(3) {
-  width: 31.5%;
+  width: 36.5%;
 }
 
 .tooltip-docs table :is(th, td):nth-child(4) {
@@ -368,7 +501,7 @@ body.sb-show-main {
 }
 
 .popover-docs table :is(th, td):nth-child(2) {
-  width: 37%;
+  width: 32%;
 }
 
 .popover-docs table :is(th, td):nth-child(4) {
@@ -376,20 +509,23 @@ body.sb-show-main {
 }
 
 .dropdown-docs table :is(th, td):nth-child(1) {
-  width: 19.5%;
+  width: 21%;
 }
 
 .dropdown-docs table :is(th, td):nth-child(2) {
-  width: 34.5%;
+  width: 27.5%;
 }
 
 .dropdown-docs table :is(th, td):nth-child(4) {
-  width: 13%;
+  width: 12.5%;
 }
 
-.dropdown-docs table :is(th, td):nth-child(3),
+.dropdown-docs table :is(th, td):nth-child(3) {
+  width: 39%;
+}
+
 .popover-docs table :is(th, td):nth-child(3) {
-  width: 33%;
+  width: 38%;
 }
 
 .dropdown-docs table :is(th, td),
@@ -401,7 +537,7 @@ body.sb-show-main {
 }
 
 .select-docs table :is(th, td):nth-child(1) {
-  width: 20.5%;
+  width: 19.5%;
 }
 
 .select-docs table :is(th, td):nth-child(2) {
@@ -409,7 +545,7 @@ body.sb-show-main {
 }
 
 .select-docs table :is(th, td):nth-child(3) {
-  width: 36%;
+  width: 37%;
 }
 
 .select-docs table :is(th, td):nth-child(4) {

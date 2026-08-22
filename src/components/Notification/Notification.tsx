@@ -317,10 +317,10 @@ function NotificationCard({
 }
 
 function NotificationIcon({ type }: { type: NotificationType }) {
-  if (type === "success") return <Icon icon="check-circle" color="#52c41a" size={20} />;
-  if (type === "error") return <Icon icon="close-circle" color="#ff4d4f" size={20} />;
+  if (type === "success") return <Icon icon="check-circle-outlined" color="#52c41a" size={20} />;
+  if (type === "error") return <Icon icon="close-circle-outlined" color="#ff4d4f" size={20} />;
   if (type === "warning") return <Icon icon="warning" color="#faad14" size={20} />;
-  return <Icon icon="info" color="#0062df" size={20} />;
+  return <Icon icon="info-circle-outlined" color="#0062df" size={20} />;
 }
 
 function notificationHiddenTransform(placement: NotificationPlacement) {

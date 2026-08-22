@@ -1,15 +1,15 @@
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Table } from "./Table";
 import type { ColumnsType } from "./Table.types";
 
-type Row = { key: string; name: string; team: string };
-const data: Row[] = [{ key: "1", name: "김민준", team: "Design" }];
+type Row = { id: string; name: string; team: string };
+const data: Row[] = [{ id: "1", name: "김민준", team: "Design" }];
 const rows: Row[] = [
-  { key: "1", name: "김민준", team: "Design" },
-  { key: "2", name: "이서연", team: "Platform" },
-  { key: "3", name: "박지호", team: "Design" },
+  { id: "1", name: "김민준", team: "Design" },
+  { id: "2", name: "이서연", team: "Platform" },
+  { id: "3", name: "박지호", team: "Design" },
 ];
 
 afterEach(() => vi.unstubAllGlobals());
@@ -67,6 +67,43 @@ describe("Table regressions", () => {
     expect(container.querySelector("table")).toHaveStyle({ tableLayout: "auto" });
   });
 
+  it("applies lg, md, and sm table sizes", () => {
+    const { container, rerender } = render(
+      <Table
+        columns={[{ title: "이름", dataIndex: "name" }]}
+        dataSource={data}
+        pagination={false}
+      />,
+    );
+
+    expect(container.querySelector("thead th")).toHaveClass("p-4");
+    expect(container.querySelector("tbody td")).toHaveClass("p-4");
+
+    rerender(
+      <Table
+        columns={[{ title: "이름", dataIndex: "name" }]}
+        dataSource={data}
+        pagination={false}
+        size="md"
+      />,
+    );
+
+    expect(container.querySelector("thead th")).toHaveClass("px-2", "py-3");
+    expect(container.querySelector("tbody td")).toHaveClass("px-2", "py-3");
+
+    rerender(
+      <Table
+        columns={[{ title: "이름", dataIndex: "name" }]}
+        dataSource={data}
+        pagination={false}
+        size="sm"
+      />,
+    );
+
+    expect(container.querySelector("thead th")).toHaveClass("p-2");
+    expect(container.querySelector("tbody td")).toHaveClass("p-2");
+  });
+
   it("keeps the configured selection column width fixed", () => {
     const { container } = render(
       <Table
@@ -105,6 +142,134 @@ describe("Table regressions", () => {
     expect(container.querySelector("table")).toHaveStyle({ minWidth: "440px" });
   });
 
+  it("resolves grouped flexible columns from the measured table viewport", async () => {
+    const clientWidth = vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockReturnValue(823);
+
+    try {
+      const { container } = render(
+        <Table
+          columns={[
+            {
+              title: "구성원",
+              children: [
+                { title: "이름", dataIndex: "name", width: 150 },
+                { title: "직무", dataIndex: "team", minWidth: 190 },
+              ],
+            },
+            {
+              title: "업무 정보",
+              children: [
+                { title: "팀", dataIndex: "team", width: 120 },
+                { title: "프로젝트", dataIndex: "projects", width: 110 },
+              ],
+            },
+          ]}
+          dataSource={data}
+          pagination={false}
+        />,
+      );
+
+      await waitFor(() => {
+        const columns = container.querySelectorAll<HTMLTableColElement>("col");
+        expect(columns[0]).toHaveStyle({ width: "150px" });
+        expect(columns[1]).toHaveStyle({ width: "443px", minWidth: "190px" });
+        expect(columns[2]).toHaveStyle({ width: "120px" });
+        expect(columns[3]).toHaveStyle({ width: "110px" });
+      });
+    } finally {
+      clientWidth.mockRestore();
+    }
+  });
+
+  it("updates flexible widths before checking overflow during a container resize", async () => {
+    let viewportWidth = 900;
+    const resizeCallbacks: ResizeObserverCallback[] = [];
+    const clientWidth = vi
+      .spyOn(HTMLElement.prototype, "clientWidth", "get")
+      .mockImplementation(function (this: HTMLElement): number {
+        return this.hasAttribute("data-table-scroll-container") ? viewportWidth : 0;
+      });
+    const scrollWidth = vi
+      .spyOn(HTMLElement.prototype, "scrollWidth", "get")
+      .mockImplementation(function (this: HTMLElement): number {
+        if (!this.hasAttribute("data-table-scroll-container")) return 0;
+        return Array.from(this.querySelectorAll<HTMLTableColElement>("col")).reduce(
+          (total, column) => total + (Number.parseFloat(column.style.width) || 0),
+          0,
+        );
+      });
+    vi.stubGlobal("CSS", { supports: () => true });
+    vi.stubGlobal("requestAnimationFrame", (callback: FrameRequestCallback) => {
+      callback(0);
+      return 1;
+    });
+    vi.stubGlobal("cancelAnimationFrame", () => undefined);
+    vi.stubGlobal(
+      "ResizeObserver",
+      class ResizeObserver {
+        constructor(callback: ResizeObserverCallback) {
+          resizeCallbacks.push(callback);
+        }
+        observe() {}
+        disconnect() {}
+        unobserve() {}
+      },
+    );
+
+    try {
+      const { container } = render(
+        <Table
+          columns={[
+            { title: "이름", dataIndex: "name", width: 150 },
+            { title: "직무", dataIndex: "team", minWidth: 190 },
+            { title: "팀", dataIndex: "team", width: 120 },
+            { title: "프로젝트", dataIndex: "projects", width: 110 },
+          ]}
+          dataSource={data}
+          pagination={false}
+          scroll={{ x: "max-content" }}
+        />,
+      );
+
+      await waitFor(() =>
+        expect(container.querySelectorAll<HTMLTableColElement>("col")[1]).toHaveStyle({
+          width: "520px",
+        }),
+      );
+
+      viewportWidth = 800;
+      act(() => {
+        resizeCallbacks.forEach((callback) => callback([], {} as globalThis.ResizeObserver));
+      });
+
+      await waitFor(() => {
+        expect(container.querySelectorAll<HTMLTableColElement>("col")[1]).toHaveStyle({
+          width: "420px",
+        });
+        expect(
+          container.querySelector("[data-table-horizontal-scrollbar-track]"),
+        ).not.toBeInTheDocument();
+      });
+
+      viewportWidth = 500;
+      act(() => {
+        resizeCallbacks.forEach((callback) => callback([], {} as globalThis.ResizeObserver));
+      });
+
+      await waitFor(() => {
+        expect(container.querySelectorAll<HTMLTableColElement>("col")[1]).toHaveStyle({
+          width: "190px",
+        });
+        expect(
+          container.querySelector("[data-table-horizontal-scrollbar-track]"),
+        ).toBeInTheDocument();
+      });
+    } finally {
+      clientWidth.mockRestore();
+      scrollWidth.mockRestore();
+    }
+  });
+
   it("uses minWidth as the lower bound when an explicit numeric width is smaller", () => {
     const { container } = render(
       <Table
@@ -122,27 +287,151 @@ describe("Table regressions", () => {
     expect(columns[1]).toHaveStyle({ width: "calc(100% - 160px)" });
   });
 
-  it("preserves minWidth in a max-content table with a fixed selection column", () => {
+  it("keeps fixed widths and lets a max-content minWidth column fill the viewport", async () => {
+    const clientWidth = vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockReturnValue(800);
+
+    try {
+      const { container } = render(
+        <Table
+          columns={[
+            { title: "이름", dataIndex: "name", width: 220 },
+            { title: "직무", dataIndex: "team", minWidth: 190 },
+            { title: "프로젝트", dataIndex: "projects", width: 220 },
+          ]}
+          dataSource={data}
+          pagination={false}
+          rowSelection={{ type: "checkbox", fixed: "left" }}
+          scroll={{ x: "max-content" }}
+        />,
+      );
+
+      await waitFor(() => {
+        const columns = container.querySelectorAll<HTMLTableColElement>("col");
+        expect(columns[0]).toHaveStyle({ width: "48px", minWidth: "48px", maxWidth: "48px" });
+        expect(columns[1]).toHaveStyle({ width: "220px" });
+        expect(columns[2]).toHaveStyle({ width: "312px", minWidth: "190px" });
+        expect(columns[3]).toHaveStyle({ width: "220px" });
+        expect(container.querySelector("table")).toHaveStyle({ minWidth: "678px" });
+      });
+    } finally {
+      clientWidth.mockRestore();
+    }
+  });
+
+  it("applies the same leaf widths to grouped headers and body cells", () => {
     const { container } = render(
       <Table
         columns={[
-          { title: "이름", dataIndex: "name", width: 220 },
-          { title: "직무", dataIndex: "team", minWidth: 190 },
-          { title: "프로젝트", dataIndex: "projects", width: 220 },
+          {
+            title: "구성원",
+            children: [
+              { title: "이름", dataIndex: "name", width: 150 },
+              { title: "팀", dataIndex: "team", minWidth: 190 },
+            ],
+          },
+          { title: "업무", children: [{ title: "프로젝트", dataIndex: "projects", width: 100 }] },
         ]}
         dataSource={data}
         pagination={false}
-        rowSelection={{ type: "checkbox", fixed: true }}
-        scroll={{ x: "max-content" }}
       />,
     );
 
     const columns = container.querySelectorAll<HTMLTableColElement>("col");
-    expect(columns[0]).toHaveStyle({ width: "48px", minWidth: "48px", maxWidth: "48px" });
-    expect(columns[1]).toHaveStyle({ width: "220px" });
-    expect(columns[2]).toHaveStyle({ width: "190px" });
-    expect(columns[3]).toHaveStyle({ width: "220px" });
-    expect(container.querySelector("table")).toHaveStyle({ minWidth: "max-content" });
+    expect(columns[0]).toHaveStyle({ width: "150px" });
+    expect(columns[1]).toHaveStyle({ width: "calc(100% - 250px)" });
+    expect(columns[2]).toHaveStyle({ width: "100px" });
+    expect(screen.getByRole("columnheader", { name: "이름" })).toHaveStyle({ width: "150px" });
+    expect(screen.getByText("김민준").closest("td")).toHaveStyle({ width: "150px" });
+  });
+
+  it("applies custom row keys and native row, header, cell, and scroll props", () => {
+    const onScroll = vi.fn();
+    const onRow = vi.fn(() => ({ className: "custom-row" }));
+    const onHeaderRow = vi.fn(() => ({ className: "custom-header-row" }));
+    const { container } = render(
+      <Table
+        columns={[
+          {
+            title: "이름",
+            dataIndex: "name",
+            onCell: () => ({ colSpan: 2, scope: "row" }),
+          },
+          { title: "팀", dataIndex: "team" },
+        ]}
+        dataSource={data}
+        pagination={false}
+        rowKey="name"
+        rowHoverable={false}
+        onRow={onRow}
+        onHeaderRow={onHeaderRow}
+        onScroll={onScroll}
+      />,
+    );
+
+    const row = container.querySelector<HTMLTableRowElement>("tbody tr[data-row-key]");
+    expect(row).toHaveAttribute("data-row-key", "김민준");
+    expect(row).toHaveClass("custom-row");
+    expect(row).not.toHaveClass("hover:[&>td]:bg-[#f5f5f5]");
+    expect(container.querySelector("thead tr")).toHaveClass("custom-header-row");
+    expect(screen.getByText("김민준").closest("td")).toHaveAttribute("colspan", "2");
+    expect(screen.getByText("김민준").closest("td")).toHaveAttribute("scope", "row");
+
+    fireEvent.scroll(container.querySelector("[data-table-scroll-container]") as HTMLElement);
+    expect(onScroll).toHaveBeenCalledOnce();
+    expect(onRow).toHaveBeenCalledWith(data[0], 0);
+    expect(onHeaderRow).toHaveBeenCalled();
+  });
+
+  it("supports controlled sorting and filtering", () => {
+    render(
+      <Table
+        columns={[
+          {
+            title: "이름",
+            dataIndex: "name",
+            sorter: (left, right) => left.name.localeCompare(right.name),
+            sortOrder: "descend",
+          },
+          {
+            title: "팀",
+            dataIndex: "team",
+            filters: [{ text: "Design", value: "Design" }],
+            filteredValue: ["Design"],
+            onFilter: (value, record) => record.team === value,
+          },
+        ]}
+        dataSource={rows}
+        pagination={false}
+      />,
+    );
+
+    expect(screen.queryByText("Platform")).not.toBeInTheDocument();
+    expect(screen.getAllByRole("row")[1]).toHaveTextContent("박지호");
+    expect(screen.getByRole("button", { name: "팀 필터" })).toHaveClass("text-[#0062df]");
+  });
+
+  it("renders filter popups in the requested container", async () => {
+    const user = userEvent.setup();
+    const popupContainer = document.createElement("div");
+    document.body.append(popupContainer);
+    render(
+      <Table
+        columns={[
+          {
+            title: "팀",
+            dataIndex: "team",
+            filters: [{ text: "Design", value: "Design" }],
+          },
+        ]}
+        dataSource={data}
+        getPopupContainer={() => popupContainer}
+        pagination={false}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "팀 필터" }));
+    expect(popupContainer.querySelector("[data-table-filter-motion]")).toBeInTheDocument();
+    popupContainer.remove();
   });
 
   it("keeps ellipsis content inside the cell when the shared tooltip is enabled", () => {
@@ -154,7 +443,7 @@ describe("Table regressions", () => {
           { title: "이름", dataIndex: "name", width: 120 },
           { title: "직무", dataIndex: "team", width: 160, ellipsis: true },
         ]}
-        dataSource={[{ key: "1", name: "김민준", team: longRole }]}
+        dataSource={[{ id: "1", name: "김민준", team: longRole }]}
         pagination={false}
       />,
     );
@@ -362,16 +651,64 @@ describe("Table regressions", () => {
     expect(screen.queryByText("김민준 상세 정보")).not.toBeInTheDocument();
   });
 
+  it("shows a pointer cursor only on rows that expand by click", async () => {
+    const user = userEvent.setup();
+    render(
+      <Table
+        columns={[{ title: "이름", dataIndex: "name" }]}
+        dataSource={rows}
+        expandable={{
+          expandRowByClick: true,
+          expandedRowRender: (record) => `${record.name} 상세 정보`,
+          rowExpandable: (record) => record.id === "1",
+        }}
+        pagination={false}
+      />,
+    );
+
+    const expandableRow = screen.getByText("김민준").closest("tr");
+    const staticRow = screen.getByText("이서연").closest("tr");
+    expect(expandableRow).toHaveClass("cursor-pointer");
+    expect(staticRow).not.toHaveClass("cursor-pointer");
+
+    await user.click(screen.getByText("김민준"));
+    expect(screen.getByText("김민준 상세 정보")).toBeInTheDocument();
+  });
+
+  it("supports controlled expanded rows and expansion callbacks", async () => {
+    const user = userEvent.setup();
+    const onExpand = vi.fn();
+    const onExpandedRowsChange = vi.fn();
+    render(
+      <Table
+        columns={[{ title: "이름", dataIndex: "name" }]}
+        dataSource={data}
+        expandable={{
+          expandedRowKeys: ["1"],
+          expandedRowRender: (record) => `${record.name} 상세 정보`,
+          onExpand,
+          onExpandedRowsChange,
+        }}
+        pagination={false}
+      />,
+    );
+
+    expect(screen.getByText("김민준 상세 정보")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "행 접기" }));
+    expect(onExpand).toHaveBeenCalledWith(false, data[0]);
+    expect(onExpandedRowsChange).toHaveBeenCalledWith([]);
+  });
+
   it("uses the expanded background for child tree rows", () => {
     render(
       <Table
         columns={[{ title: "이름", dataIndex: "name" }]}
         dataSource={[
           {
-            key: "parent",
+            id: "parent",
             name: "상위 구성원",
             team: "Design",
-            children: [{ key: "child", name: "하위 구성원", team: "Design" }],
+            children: [{ id: "child", name: "하위 구성원", team: "Design" }],
           },
         ]}
         expandable={{ defaultExpandAllRows: true }}
@@ -407,6 +744,39 @@ describe("Table regressions", () => {
     );
   });
 
+  it("preserves selected rows that temporarily leave the data source", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    const { rerender } = render(
+      <Table
+        columns={[{ title: "이름", dataIndex: "name" }]}
+        dataSource={rows}
+        pagination={false}
+        rowSelection={{
+          defaultSelectedRowKeys: ["1"],
+          preserveSelectedRowKeys: true,
+          onChange,
+        }}
+      />,
+    );
+
+    rerender(
+      <Table
+        columns={[{ title: "이름", dataIndex: "name" }]}
+        dataSource={rows.slice(1)}
+        pagination={false}
+        rowSelection={{ preserveSelectedRowKeys: true, onChange }}
+      />,
+    );
+    await user.click(screen.getByRole("checkbox", { name: "2 행 선택" }));
+
+    expect(onChange).toHaveBeenLastCalledWith(
+      ["1", "2"],
+      [rows[0], rows[1]],
+      expect.objectContaining({ type: "multiple" }),
+    );
+  });
+
   it("calculates the header checkbox state from selectable table rows", async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
@@ -417,7 +787,7 @@ describe("Table regressions", () => {
         pagination={false}
         rowSelection={{
           defaultSelectedRowKeys: ["1"],
-          getCheckboxProps: (record) => ({ disabled: record.key === "3" }),
+          getCheckboxProps: (record) => ({ disabled: record.id === "3" }),
           onChange,
         }}
       />,
@@ -493,7 +863,7 @@ describe("Table regressions", () => {
         columns={[{ title: "이름", dataIndex: "name" }]}
         dataSource={rows}
         pagination={false}
-        sticky
+        stickyHeader
       />,
     );
 
@@ -535,6 +905,43 @@ describe("Table regressions", () => {
     fireEvent.scroll(scrollRegion);
 
     expect(headerRegion?.scrollLeft).toBe(80);
+  });
+
+  it("keeps separated header and virtual body column sizing identical after scrolling", () => {
+    const virtualRows = Array.from({ length: 40 }, (_, index) => ({
+      id: String(index),
+      name: `구성원 ${index}`,
+      team: "Design",
+    }));
+    const { container } = render(
+      <Table
+        columns={[
+          { title: "이름", dataIndex: "name", width: 150 },
+          { title: "팀", dataIndex: "team", minWidth: 190 },
+          { title: "프로젝트", dataIndex: "projects", width: 100 },
+        ]}
+        dataSource={virtualRows}
+        pagination={false}
+        virtual
+        scroll={{ y: 120 }}
+      />,
+    );
+
+    const tables = container.querySelectorAll("table");
+    expect(tables).toHaveLength(2);
+    const widthList = (table: HTMLTableElement) =>
+      Array.from(table.querySelectorAll<HTMLTableColElement>("col")).map(
+        (column) => column.style.width,
+      );
+    expect(widthList(tables[0])).toEqual(widthList(tables[1]));
+    expect(tables[0]).toHaveStyle({ minWidth: "440px" });
+    expect(tables[1]).toHaveStyle({ minWidth: "440px" });
+
+    const scrollRegion = screen.getByRole("region", { name: "테이블 스크롤 영역" });
+    Object.defineProperty(scrollRegion, "scrollTop", { configurable: true, value: 500 });
+    fireEvent.scroll(scrollRegion);
+
+    expect(widthList(tables[0])).toEqual(widthList(tables[1]));
   });
 
   it("renders an arrowless custom horizontal scrollbar and synchronizes its thumb", () => {
@@ -625,7 +1032,7 @@ describe("Table regressions", () => {
         ]}
         dataSource={rows}
         pagination={false}
-        stickyScrollBar
+        stickyScrollBar={{ offsetScroll: 20 }}
         scroll={{ x: 600 }}
       />,
     );
@@ -661,7 +1068,7 @@ describe("Table regressions", () => {
     expect(stickyTrack).toHaveStyle({
       left: "40px",
       opacity: "1",
-      top: `${window.innerHeight - 14}px`,
+      top: `${window.innerHeight - 34}px`,
       width: "400px",
     });
     expect(container.querySelector("[data-table-horizontal-scrollbar-track]")).toBeInTheDocument();
@@ -672,7 +1079,13 @@ describe("Table regressions", () => {
       document.body.querySelector<HTMLElement>("[data-table-sticky-scrollbar-thumb]"),
     ).toHaveStyle({ transform: "translateX(50px)", width: "200px" });
 
-    bottom = window.innerHeight - 14;
+    bottom = window.innerHeight - 25;
+    fireEvent.scroll(window);
+    expect(document.body.querySelector<HTMLElement>("[data-table-sticky-scrollbar]")).toHaveStyle({
+      opacity: "1",
+    });
+
+    bottom = window.innerHeight - 26;
     fireEvent.scroll(window);
     expect(document.body.querySelector<HTMLElement>("[data-table-sticky-scrollbar]")).toHaveStyle({
       opacity: "0",
@@ -742,8 +1155,57 @@ describe("Table regressions", () => {
       />,
     );
 
-    expect(screen.getByRole("navigation", { name: "페이지네이션" })).toHaveClass(
-      "pagination-class",
+    expect(screen.getByRole("navigation")).toHaveClass("pagination-class");
+  });
+
+  it("uses compact pagination in a narrow table container", () => {
+    vi.stubGlobal(
+      "ResizeObserver",
+      class ResizeObserver {
+        constructor(private readonly callback: ResizeObserverCallback) {}
+        observe(target: Element) {
+          Object.defineProperty(target, "clientWidth", { configurable: true, value: 420 });
+          this.callback([], this as unknown as globalThis.ResizeObserver);
+        }
+        disconnect() {}
+        unobserve() {}
+      },
+    );
+
+    render(
+      <Table
+        columns={[{ title: "이름", dataIndex: "name" }]}
+        dataSource={rows}
+        pagination={{ pageSize: 1 }}
+      />,
+    );
+
+    expect(screen.getByRole("navigation")).toHaveAttribute("data-pagination-compact");
+    expect(screen.getByRole("textbox", { name: "현재 페이지" })).toBeInTheDocument();
+  });
+
+  it("keeps page buttons static and transitions only previous and next buttons", () => {
+    render(
+      <Table
+        columns={[{ title: "이름", dataIndex: "name" }]}
+        dataSource={rows}
+        pagination={{ pageSize: 1 }}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "1 페이지" })).toHaveClass(
+      "transition-none",
+      "duration-0",
+    );
+    expect(screen.getByRole("button", { name: "이전 페이지" })).toHaveClass(
+      "transition-colors",
+      "duration-200",
+      "ease-out",
+    );
+    expect(screen.getByRole("button", { name: "다음 페이지" })).toHaveClass(
+      "transition-colors",
+      "duration-200",
+      "ease-out",
     );
   });
 });

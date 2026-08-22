@@ -236,10 +236,10 @@ function MessageCard({
 
 function TypeIcon({ type }: { type: MessageTypeName }) {
   if (type === "loading") return <Icon icon="loading" color="#0062df" />;
-  if (type === "success") return <Icon icon="check-circle" color="#52c41a" />;
-  if (type === "error") return <Icon icon="close-circle" color="#ff4d4f" />;
+  if (type === "success") return <Icon icon="check-circle-outlined" color="#52c41a" />;
+  if (type === "error") return <Icon icon="close-circle-outlined" color="#ff4d4f" />;
   if (type === "warning") return <Icon icon="warning" color="#faad14" />;
-  return <Icon icon="info" color="#0062df" />;
+  return <Icon icon="info-circle-outlined" color="#0062df" />;
 }
 
 let root: Root | null = null;
