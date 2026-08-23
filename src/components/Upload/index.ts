@@ -3,7 +3,7 @@ export type {
   UploadChangeParam,
   UploadComponent,
   UploadFile,
-  UploadFileStatus,
+  UploadFileStatusType,
   UploadListType,
   UploadProps,
   UploadRequestOption,

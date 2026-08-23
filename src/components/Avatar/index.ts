@@ -3,6 +3,7 @@ export type {
   AvatarComponent,
   AvatarGroupProps,
   AvatarProps,
-  AvatarShape,
-  AvatarSize,
+  AvatarShapeType,
+  AvatarSizeType,
+  AvatarTypeType,
 } from "./Avatar.types";

@@ -9,7 +9,7 @@ describe("Collapse", () => {
     render(
       <Collapse items={[{ key: "one", label: "제목", children: "내용" }]} onChange={onChange} />,
     );
-    await userEvent.click(screen.getByRole("button", { name: "제목" }));
+    await userEvent.click(screen.getByText("제목").closest("[tabindex]")!);
     expect(screen.getByText("내용")).toBeVisible();
     expect(onChange).toHaveBeenCalledWith(["one"]);
   });
@@ -25,7 +25,9 @@ describe("Collapse", () => {
         ]}
       />,
     );
-    await userEvent.click(screen.getByRole("button", { name: "둘" }));
-    expect(screen.getByRole("button", { name: "하나" })).toHaveAttribute("aria-expanded", "false");
+    await userEvent.click(screen.getByText("둘").closest("[tabindex]")!);
+    expect(screen.getByText("하나").closest("section")?.querySelector(".grid")).toHaveStyle({
+      gridTemplateRows: "0fr",
+    });
   });
 });

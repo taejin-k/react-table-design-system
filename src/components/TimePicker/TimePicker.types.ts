@@ -1,9 +1,10 @@
 import type { ReactNode } from "react";
 import type { InputSizeType } from "../Input";
 
-export type TimePickerValue = string;
-export type TimePickerPlacement = "bottomLeft" | "bottomRight" | "topLeft" | "topRight";
-export type TimePickerVariant = "default" | "outlined" | "filled" | "borderless" | "underlined";
+export type TimePickerValueType = string;
+export type TimePickerSizeType = InputSizeType;
+export type TimePickerPlacementType = "bottomLeft" | "bottomRight" | "topLeft" | "topRight";
+export type TimePickerVariantType = "default" | "outlined" | "filled";
 
 export interface DisabledTime {
   disabledHours?: () => number[];
@@ -18,12 +19,12 @@ export interface TimePickerCellInfo {
 }
 
 export interface TimePickerProps {
-  value?: TimePickerValue | null;
-  defaultValue?: TimePickerValue;
+  value?: TimePickerValueType | null;
+  defaultValue?: TimePickerValueType;
   placeholder?: string;
   format?: string;
-  size?: InputSizeType;
-  variant?: TimePickerVariant;
+  size?: TimePickerSizeType;
+  variant?: TimePickerVariantType;
   label?: ReactNode;
   errorMessage?: ReactNode;
   required?: boolean;
@@ -48,26 +49,26 @@ export interface TimePickerProps {
   cellRender?: (current: number | string, info: TimePickerCellInfo) => ReactNode;
   open?: boolean;
   defaultOpen?: boolean;
-  placement?: TimePickerPlacement;
+  placement?: TimePickerPlacementType;
   className?: string;
-  onChange?: (value: TimePickerValue | null, timeString: string) => void;
+  onChange?: (value: TimePickerValueType | null, timeString: string) => void;
   onClear?: () => void;
   onOpenChange?: (open: boolean) => void;
 }
 
 export interface TimeRangePickerProps extends Omit<
   TimePickerProps,
-  "defaultValue" | "onChange" | "placeholder" | "value"
+  "defaultOpen" | "defaultValue" | "onChange" | "onOpenChange" | "open" | "placeholder" | "value"
 > {
-  value?: [TimePickerValue | null, TimePickerValue | null];
-  defaultValue?: [TimePickerValue | null, TimePickerValue | null];
+  value?: [TimePickerValueType | null, TimePickerValueType | null];
+  defaultValue?: [TimePickerValueType | null, TimePickerValueType | null];
   placeholder?: [string, string];
   onChange?: (
-    value: [TimePickerValue | null, TimePickerValue | null],
+    value: [TimePickerValueType | null, TimePickerValueType | null],
     timeStrings: [string, string],
   ) => void;
   onCalendarChange?: (
-    value: [TimePickerValue | null, TimePickerValue | null],
+    value: [TimePickerValueType | null, TimePickerValueType | null],
     timeStrings: [string, string],
     info: { range: "start" | "end" },
   ) => void;

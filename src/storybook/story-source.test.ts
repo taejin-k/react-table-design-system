@@ -75,6 +75,40 @@ function DropdownExample() {
 
     expect(source).toContain("import type { DropdownItem } from '@taejin-k/wizard-design';");
   });
+
+  it("imports SelectOption as a component type", () => {
+    const source = withStoryImports(`const options: SelectOption[] = [];
+
+function SelectExample() {
+  return <Select options={options} />;
+}`);
+
+    expect(source).toContain("import type { SelectOption } from '@taejin-k/wizard-design';");
+  });
+
+  it("imports UploadFile used by a copyable upload example", () => {
+    const source = withStoryImports(`const files: UploadFile[] = [];
+
+function UploadExample() {
+  return <Upload defaultFileList={files} />;
+}`);
+
+    expect(source).toContain("import { Upload } from '@taejin-k/wizard-design';");
+    expect(source).toContain("import type { UploadFile } from '@taejin-k/wizard-design';");
+  });
+
+  it("imports Table public types used by copyable examples", () => {
+    const source = withStoryImports(`function TableExample() {
+  const ref = useRef<TableRef>(null);
+  const [selectedKeys] = useState<Key[]>([]);
+
+  return <Table ref={ref} rowSelection={{ selectedKeys }} />;
+}`);
+
+    expect(source).toContain("import { useRef, useState } from 'react';");
+    expect(source).toContain("import { Table } from '@taejin-k/wizard-design';");
+    expect(source).toContain("import type { Key, TableRef } from '@taejin-k/wizard-design';");
+  });
 });
 
 describe("formatTooltipStorySource", () => {

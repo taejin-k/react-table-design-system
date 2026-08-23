@@ -1,10 +1,10 @@
 export { Drawer } from "./Drawer";
 export type {
-  DrawerClosable,
-  DrawerMask,
-  DrawerPlacement,
+  DrawerClosableType,
+  DrawerMaskType,
+  DrawerPlacementType,
   DrawerProps,
   DrawerResizableConfig,
-  DrawerSemanticName,
-  DrawerSize,
+  DrawerSemanticNameType,
+  DrawerSizeType,
 } from "./Drawer.types";

@@ -71,9 +71,11 @@ function BaseTimePicker({
   const selectedValue = value === undefined ? innerValue : value;
   const [pending, setPending] = useState<TimeParts>(() => parseTime(selectedValue));
   const [preview, setPreview] = useState<TimeParts | null>(null);
+  const resolvedShowSecond = showSecond && format !== "HH:mm" && format !== "hh:mm A";
   const floating = useFloatingLayer({
     placement,
     trigger: "click",
+    targetGap: 2,
     disabled: disabled || readOnly,
     open,
     defaultOpen,
@@ -84,9 +86,7 @@ function BaseTimePicker({
   });
 
   const commitTime = (parts: TimeParts | null) => {
-    const nextValue = parts
-      ? formatTime(parts, showSecond && format !== "HH:mm" && format !== "hh:mm A")
-      : null;
+    const nextValue = parts ? formatTime(parts, resolvedShowSecond) : null;
     if (value === undefined) setInnerValue(nextValue);
     onChange?.(nextValue, nextValue ?? "");
   };
@@ -98,8 +98,8 @@ function BaseTimePicker({
 
   const displayedValue = selectedValue
     ? use12Hours
-      ? formatTwelveHours(selectedValue, showSecond)
-      : formatTime(parseTime(selectedValue), showSecond && format !== "HH:mm")
+      ? formatTwelveHours(selectedValue, resolvedShowSecond)
+      : formatTime(parseTime(selectedValue), resolvedShowSecond)
     : null;
 
   return (
@@ -109,7 +109,6 @@ function BaseTimePicker({
         <button
           type="button"
           disabled={disabled}
-          aria-readonly={readOnly || undefined}
           className={timePickerRootVariants({
             size,
             variant,
@@ -122,8 +121,8 @@ function BaseTimePicker({
           <span className={twMerge("min-w-0 flex-1 truncate", !displayedValue && "text-[#999]")}>
             {preview && previewValue === "hover"
               ? use12Hours
-                ? formatTwelveHours(formatTime(preview, showSecond), showSecond)
-                : formatTime(preview, showSecond)
+                ? formatTwelveHours(formatTime(preview, resolvedShowSecond), resolvedShowSecond)
+                : formatTime(preview, resolvedShowSecond)
               : (displayedValue ?? placeholder)}
           </span>
           {allowClear && selectedValue && !disabled && !readOnly ? (
@@ -161,14 +160,17 @@ function BaseTimePicker({
                 top: floating.position?.top ?? 0,
                 zIndex: 1050,
                 visibility: floating.position ? "visible" : "hidden",
-                ...getPopupMotionStyle(floating.position?.placement, floating.isMotionVisible),
+                ...getPopupMotionStyle(
+                  floating.position?.placement ?? placement,
+                  floating.isMotionVisible && Boolean(floating.position),
+                ),
               }}
               {...floating.popupProps}
             >
               <TimePanel
                 value={formatTime(pending, true)}
                 use12Hours={use12Hours}
-                showSecond={showSecond}
+                showSecond={resolvedShowSecond}
                 hourStep={hourStep}
                 minuteStep={minuteStep}
                 secondStep={secondStep}
@@ -182,38 +184,43 @@ function BaseTimePicker({
               {renderExtraFooter ? (
                 <div className="border-t border-[#f0f0f0] p-2">{renderExtraFooter()}</div>
               ) : null}
-              <div className="flex items-center justify-end gap-2 border-t border-[#f0f0f0] p-2">
-                {showNow ? (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => {
-                      const now = new Date();
-                      const next = {
-                        hour: now.getHours(),
-                        minute: now.getMinutes(),
-                        second: now.getSeconds(),
-                      };
-                      setPending(next);
-                      commitTime(next);
-                      floating.changeOpen(false, "menu");
-                    }}
-                  >
-                    지금
-                  </Button>
-                ) : null}
-                {needConfirm ? (
-                  <Button
-                    size="sm"
-                    onClick={() => {
-                      commitTime(pending);
-                      floating.changeOpen(false, "menu");
-                    }}
-                  >
-                    확인
-                  </Button>
-                ) : null}
-              </div>
+              {showNow || needConfirm ? (
+                <div className="flex min-h-10 items-center justify-between gap-2 border-t border-[#f0f0f0] px-2 py-1">
+                  {showNow ? (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-auto bg-transparent px-0 text-[#0062df] hover:bg-transparent hover:text-[#227cef]"
+                      onClick={() => {
+                        const now = new Date();
+                        const next = {
+                          hour: now.getHours(),
+                          minute: now.getMinutes(),
+                          second: now.getSeconds(),
+                        };
+                        setPending(next);
+                        commitTime(next);
+                        floating.changeOpen(false, "menu");
+                      }}
+                    >
+                      지금
+                    </Button>
+                  ) : (
+                    <span />
+                  )}
+                  {needConfirm ? (
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        commitTime(pending);
+                        floating.changeOpen(false, "menu");
+                      }}
+                    >
+                      확인
+                    </Button>
+                  ) : null}
+                </div>
+              ) : null}
             </div>,
             document.body,
           )
@@ -255,13 +262,21 @@ export function TimePanel({
 }: TimePanelProps) {
   const selected = parseTime(value);
   const disabledConfig = disabledTime?.(new Date()) ?? {};
+  const disabledHours = disabledConfig.disabledHours?.() ?? [];
+  const isPm = selected.hour >= 12;
 
   return (
     <div className={twMerge("flex h-56 divide-x divide-[#f0f0f0]", className)}>
       <TimeColumn
-        values={numberSteps(use12Hours ? 12 : 24, hourStep, use12Hours ? 1 : 0)}
+        values={numberSteps(use12Hours ? 13 : 24, hourStep, use12Hours ? 1 : 0)}
         selected={use12Hours ? twelveHour(selected.hour) : selected.hour}
-        disabledValues={disabledConfig.disabledHours?.() ?? []}
+        disabledValues={
+          use12Hours
+            ? numberSteps(13, hourStep, 1).filter((hour) =>
+                disabledHours.includes(toTwentyFourHour(hour, isPm)),
+              )
+            : disabledHours
+        }
         hideDisabledOptions={hideDisabledOptions}
         changeOnScroll={changeOnScroll}
         cellRender={cellRender}
@@ -476,16 +491,14 @@ export const TimePicker = Object.assign(BaseTimePicker, {
 }) as TimePickerComponent;
 
 const timePickerRootVariants = cva(
-  "flex w-full cursor-pointer items-center gap-2 rounded border border-solid bg-white px-2.5 text-left font-pretendard font-medium text-[#111] transition-colors hover:border-[#0062df] focus-visible:border-[#0062df] focus-visible:outline-none",
+  "flex w-full cursor-pointer items-center gap-2 rounded border border-solid px-2.5 text-left font-pretendard font-medium text-[#111] transition-colors hover:border-[#0062df] focus-visible:border-[#0062df] focus-visible:outline-none",
   {
     variants: {
       size: { lg: "h-10 text-base", md: "h-[30px] text-sm", sm: "h-5 text-xs" },
       variant: {
-        default: "border-[#ddd]",
-        outlined: "border-[#ddd]",
+        default: "border-[#ddd] bg-white",
+        outlined: "border-[#ddd] bg-white",
         filled: "border-[#f5f5f5] bg-[#f5f5f5]",
-        borderless: "border-transparent",
-        underlined: "rounded-none border-x-0 border-t-0 border-b-[#ddd] px-0",
       },
       error: { true: "border-[#fe5150]", false: "" },
       readOnly: {

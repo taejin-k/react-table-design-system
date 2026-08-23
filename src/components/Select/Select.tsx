@@ -546,17 +546,10 @@ export const Select = forwardRef<SelectRef, SelectProps>(
         const key = element.dataset.selectLayoutKey;
         if (key === "search" || key === "omitted") return;
         const nextRect = key ? nextRects.get(key) : undefined;
-        const ownPreviousRect = key
-          ? (renderedRects.get(key) ?? previousRects.get(key))
-          : undefined;
-        const previousRect =
-          ownPreviousRect ?? (key?.startsWith("tag:") ? previousRects.get("search") : undefined);
+        const previousRect = key ? (renderedRects.get(key) ?? previousRects.get(key)) : undefined;
         if (!key || !nextRect || !previousRect || typeof element.animate !== "function") return;
 
-        // A newly committed tag starts on the previous input row. Keeping its
-        // final horizontal position avoids a long diagonal sweep when it opens
-        // a new flex row; only the row movement follows the Select height.
-        const translateX = ownPreviousRect ? previousRect.left - nextRect.left : 0;
+        const translateX = previousRect.left - nextRect.left;
         const translateY = previousRect.top - nextRect.top;
         if (Math.abs(translateX) < 0.5 && Math.abs(translateY) < 0.5) return;
 
@@ -577,13 +570,40 @@ export const Select = forwardRef<SelectRef, SelectProps>(
           }
         });
       });
-    }, [
-      isSearchInputFocused,
-      isSearchInputWrapped,
-      mode,
-      selectedOptions.length,
-      visibleTags.length,
-    ]);
+    }, [isSearchInputFocused, mode, selectedOptions.length, visibleTags.length]);
+
+    useLayoutEffect(() => {
+      if (!mode) return;
+
+      const container = tagContainerRef.current;
+      if (!container || typeof ResizeObserver === "undefined") return;
+      let previousWidth = container.getBoundingClientRect().width;
+
+      const syncLayoutAfterWidthChange = () => {
+        const containerRect = container.getBoundingClientRect();
+        if (Math.abs(previousWidth - containerRect.width) < 0.5) return;
+        previousWidth = containerRect.width;
+
+        layoutAnimationsRef.current.forEach(({ animation }) => animation.cancel());
+        layoutAnimationsRef.current.clear();
+
+        const nextRects = new Map<string, SelectLayoutPosition>();
+        container.querySelectorAll<HTMLElement>("[data-select-layout-key]").forEach((element) => {
+          const key = element.dataset.selectLayoutKey;
+          if (!key) return;
+          const rect = element.getBoundingClientRect();
+          nextRects.set(key, {
+            left: rect.left - containerRect.left,
+            top: rect.top - containerRect.top,
+          });
+        });
+        previousLayoutRectsRef.current = nextRects;
+      };
+
+      const observer = new ResizeObserver(syncLayoutAfterWidthChange);
+      observer.observe(container);
+      return () => observer.disconnect();
+    }, [mode]);
 
     useEffect(
       () => () => {

@@ -1,5 +1,6 @@
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { StrictMode } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { Segmented } from "./Segmented";
 
@@ -58,17 +59,26 @@ describe("Segmented", () => {
   });
 
   it("moves the selection thumb with the Ant Design motion curve", async () => {
+    let enableAnimation: FrameRequestCallback | undefined;
+    vi.spyOn(window, "requestAnimationFrame").mockImplementation((callback) => {
+      enableAnimation = callback;
+      return 1;
+    });
     const { container } = render(
-      <Segmented
-        options={[
-          { label: "짧게", value: "short" },
-          { label: "더 긴 선택지", value: "long" },
-        ]}
-      />,
+      <StrictMode>
+        <Segmented
+          options={[
+            { label: "짧게", value: "short" },
+            { label: "더 긴 선택지", value: "long" },
+          ]}
+        />
+      </StrictMode>,
     );
     const thumb = container.querySelector("[data-segmented-thumb]");
 
     expect(thumb).toHaveClass("transition-none");
+
+    act(() => enableAnimation?.(0));
 
     await userEvent.click(screen.getByText("더 긴 선택지"));
 

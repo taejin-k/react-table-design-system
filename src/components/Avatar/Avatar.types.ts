@@ -1,33 +1,27 @@
 import type { CSSProperties, ImgHTMLAttributes, ReactNode } from "react";
 
-export type AvatarSize =
-  | number
-  | "large"
-  | "medium"
-  | "small"
-  | Partial<Record<"xs" | "sm" | "md" | "lg" | "xl" | "xxl", number>>;
-export type AvatarShape = "circle" | "square";
+export type AvatarSizeType = "large" | "medium" | "small";
+export type AvatarShapeType = "circle" | "square";
+export type AvatarTypeType = "default" | "label";
 
 export interface AvatarProps extends Omit<
   ImgHTMLAttributes<HTMLImageElement>,
   "size" | "src" | "onError"
 > {
-  src?: string | ReactNode;
+  src?: ReactNode;
   icon?: ReactNode;
-  size?: AvatarSize;
-  shape?: AvatarShape;
-  gap?: number;
+  color?: CSSProperties["backgroundColor"];
+  type?: AvatarTypeType;
+  size?: AvatarSizeType;
+  shape?: AvatarShapeType;
   children?: ReactNode;
-  onError?: () => boolean;
 }
 
 export interface AvatarGroupProps {
   children?: ReactNode;
-  max?: { count?: number; style?: CSSProperties };
   maxCount?: number;
-  maxStyle?: CSSProperties;
-  size?: AvatarSize;
-  shape?: AvatarShape;
+  size?: AvatarSizeType;
+  shape?: AvatarShapeType;
   className?: string;
   style?: CSSProperties;
 }

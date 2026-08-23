@@ -41,7 +41,14 @@ const componentExports = [
 const apiExports = ["message", "notification"] as const;
 
 const reactExports = ["useCallback", "useEffect", "useMemo", "useRef", "useState"] as const;
-const componentTypeExports = ["DrawerPlacement", "DropdownItem"] as const;
+const componentTypeExports = [
+  "DrawerPlacementType",
+  "DropdownItem",
+  "Key",
+  "SelectOption",
+  "TableRef",
+  "UploadFile",
+] as const;
 const dndCoreExports = [
   "closestCenter",
   "DndContext",

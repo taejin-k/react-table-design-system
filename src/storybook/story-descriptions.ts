@@ -107,7 +107,7 @@ export const storyDescriptions: Record<string, string> = {
   "components-datepicker--basic": "달력에서 날짜를 선택하고 선택값을 확인하거나 지울 수 있어요.",
   "components-datepicker--picker-types":
     "날짜, 주, 월, 분기와 연도 중 필요한 선택 단위를 사용할 수 있어요.",
-  "components-datepicker--range": "하나의 달력에서 시작일과 종료일을 순서대로 선택할 수 있어요.",
+  "components-datepicker--range": "이어진 두 달력에서 시작일과 종료일을 순서대로 선택할 수 있어요.",
   "components-datepicker--disabled-date":
     "disabledDate 조건에 맞는 날짜를 비활성화해 선택할 수 없게 해요.",
   "components-datepicker--format": "선택한 날짜를 원하는 문자열 형식으로 변환해 표시할 수 있어요.",
@@ -242,10 +242,9 @@ export const storyDescriptions: Record<string, string> = {
   "components-modal--basic":
     "버튼으로 Modal을 열고 본문을 확인한 뒤 작업을 실행하거나 취소할 수 있어요.",
   "components-modal--async": "비동기 작업이 끝날 때까지 확인 버튼을 로딩 상태로 표시해요.",
-  "components-modal--footer-loading": "footer를 구성하거나 본문 로딩 상태를 표시해요.",
+  "components-modal--footer": "footer의 콘텐츠와 기본 버튼을 함께 구성해요.",
   "components-modal--static-methods":
     "정적 메서드를 호출해 안내, 성공, 오류와 확인 용도의 Modal을 바로 열 수 있어요.",
-  "components-modal--hook": "useModal과 contextHolder로 현재 Context를 유지해요.",
   "components-modal--position-width":
     "Modal의 화면 내 세로 위치와 px·문자열 단위 가로 길이를 설정할 수 있어요.",
 
@@ -261,17 +260,16 @@ export const storyDescriptions: Record<string, string> = {
 
   "components-message--types":
     "정보, 성공, 경고, 오류와 로딩 상태에 맞는 전역 메시지를 화면에 표시해요.",
-  "components-message--hook": "useMessage와 contextHolder로 현재 Context를 유지해요.",
   "components-message--duration-update": "지속 시간을 설정하고 같은 key의 내용을 갱신해요.",
-  "components-message--promise-stack": "닫힘을 기다리거나 여러 메시지를 스택으로 표시해요.",
+  "components-message--promise": "메시지가 닫힌 뒤 다음 메시지를 표시해요.",
 
-  "components-notification--types-actions": "상태별 알림에 제목, 설명과 작업 버튼을 표시해요.",
+  "components-notification--types": "성공, 오류, 정보와 경고 상태의 알림을 비교해요.",
+  "components-notification--actions": "알림 아래에 작업 버튼을 추가해 후속 동작을 실행해요.",
   "components-notification--placements":
     "화면의 상단과 하단을 기준으로 여섯 가지 위치에 알림을 표시할 수 있어요.",
-  "components-notification--progress-stack": "남은 시간을 표시하고 여러 알림을 스택으로 쌓아요.",
+  "components-notification--progress": "자동으로 닫히기까지 남은 시간을 진행 바로 표시해요.",
   "components-notification--update":
     "같은 key를 사용해 이미 열린 알림의 제목과 설명을 새 내용으로 갱신할 수 있어요.",
-  "components-notification--hook": "useNotification과 contextHolder로 현재 Context를 유지해요.",
 
   "components-illustrations--types":
     "빈 화면, 오류와 완료 등 상태와 안내 목적에 맞는 열두 가지 이미지를 선택할 수 있어요.",
@@ -295,7 +293,7 @@ export const storyDescriptions: Record<string, string> = {
   "components-table--checkbox-fixed": "가로 스크롤 중 선택 체크박스 컬럼을 왼쪽에 고정해요.",
   "components-table--all-checkbox-hidden":
     "개별 행 선택은 유지하면서 헤더의 전체 선택 체크박스만 숨길 수 있어요.",
-  "components-table--checkbox-default": "defaultSelectedRowKeys로 처음 선택된 행을 지정해요.",
+  "components-table--checkbox-default": "defaultSelectedKeys로 처음 선택된 행을 지정해요.",
   "components-table--radio": "하나의 행을 선택하고 onChange로 선택한 key를 관리해요.",
   "components-table--drag-row-sorting":
     "행을 드래그하거나 키보드로 이동하며 주변 행이 애니메이션으로 재배치돼요.",
@@ -309,11 +307,13 @@ export const storyDescriptions: Record<string, string> = {
   "components-table-api-compatibility--fixed-table-height":
     "scroll.y로 테이블 본문의 최대 세로 높이를 정하고, 내용이 넘치면 본문 안에서 스크롤해요.",
   "components-table-api-compatibility--sticky-header":
-    "sticky=true로 페이지를 내려도 테이블 헤더가 화면 상단을 따라오게 해요.",
+    "stickyHeader=true로 페이지를 내려도 테이블 헤더가 화면 상단을 따라오게 해요.",
   "components-table-api-compatibility--fixed-columns":
     "이름은 왼쪽, 프로젝트는 오른쪽에 고정하고 가운데 열만 가로 스크롤해요.",
   "components-table-api-compatibility--sticky-scrollbar":
     "페이지를 상하로 이동해도 가로 스크롤바가 화면 아래를 따라와요.",
+  "components-table-api-compatibility--sticky-offsets":
+    "숫자를 입력해 고정 헤더와 가로 스크롤바의 위치를 조정해요.",
   "components-table-api-compatibility--loading":
     "데이터를 불러오는 동안 로딩 상태와 안내 문구를 표시해요.",
   "components-table-api-compatibility--empty":
@@ -338,6 +338,8 @@ export const storyDescriptions: Record<string, string> = {
     "숫자 페이지, 이전·다음 이동과 기본 페이지네이션을 사용해요.",
   "components-table-pagination--pagination-page-controls":
     "페이지당 행 수를 바꾸거나 번호를 직접 입력하고 현재 범위와 전체 건수를 확인해요.",
+  "components-table-pagination--controlled-pagination":
+    "외부 상태로 page와 pageSize를 제어하고 변경된 값을 onChange로 받아요.",
   "components-table-pagination--pagination-placement":
     "같은 페이지네이션을 상단 시작점과 하단 끝점에 배치하고 상태를 동기화해요.",
   "components-table-pagination--pagination-simple":
@@ -363,27 +365,45 @@ export const storyDescriptions: Record<string, string> = {
 
   "components-colorpicker--basic":
     "색상 패널에서 색조·채도·명도·투명도를 조절하고 프리셋 색상을 선택해요.",
+  "components-colorpicker--allow-clear": "선택한 색상을 초기화 버튼으로 지울 수 있어요.",
   "components-colorpicker--sizes": "세 가지 트리거 크기를 나란히 비교해요.",
-  "components-colorpicker--without-alpha": "투명도 조절을 숨기고 불투명 색상만 선택해요.",
+  "components-colorpicker--formats": "HEX·RGB·HSB 형식으로 색상 값을 표시하고 입력해요.",
+  "components-colorpicker--transparency":
+    "같은 색상의 서로 다른 투명도를 비교하고 패널에서 조절해요.",
+  "components-colorpicker--presets":
+    "자주 사용하는 브랜드·상태 색상을 그룹으로 등록해 빠르게 선택해요.",
+  "components-colorpicker--triggers": "클릭 또는 hover로 색상 패널을 열어요.",
+  "components-colorpicker--controlled": "value와 onChange로 선택 색상을 외부 상태에서 제어해요.",
+  "components-colorpicker--custom-trigger":
+    "children으로 ColorPicker 트리거 내용을 원하는 형태로 구성해요.",
 
   "components-upload--basic":
     "버튼으로 파일을 선택하고 업로드 전에 파일 목록과 제거 동작을 확인해요.",
   "components-upload--picture-card":
     "이미지 파일을 카드 썸네일 목록으로 표시하고 최대 파일 수를 제한해요.",
+  "components-upload--list-types":
+    "텍스트·사진·카드·원형 목록에서 같은 파일 상태가 어떻게 보이는지 비교해요.",
   "components-upload--drag-and-drop": "영역을 클릭하거나 파일을 드래그해 여러 파일을 추가해요.",
+  "components-upload--upload-progress":
+    "사용자 정의 요청에서 전달한 진행률과 완료 상태를 표시해요.",
+  "components-upload--file-states": "완료·업로드 중·오류 파일의 목록 상태와 동작을 비교해요.",
 
   "components-avatar--basic": "텍스트, 아이콘과 서로 다른 크기·모양의 아바타를 비교해요.",
+  "components-avatar--text": "여러 글자를 입력해도 아바타에는 첫 글자만 표시해요.",
+  "components-avatar--image": "이미지 주소를 전달해 아바타로 표시해요.",
+  "components-avatar--image-error":
+    "이미지를 불러오지 못했을 때 세 가지 크기로 기본 사용자 아이콘을 표시해요.",
+  "components-avatar--sizes": "세 가지 기본 크기의 아바타를 비교해요.",
+  "components-avatar--types-sizes-and-shapes": "기본형과 라벨형 아바타의 크기와 모양을 비교해요.",
   "components-avatar--group":
     "여러 아바타를 겹쳐 표시하고 최대 개수를 넘는 사용자를 숫자로 요약해요.",
 
-  "components-badge--count": "아바타 위에 알림 개수를 표시하고 overflowCount를 넘으면 축약해요.",
-  "components-badge--dot": "내용 위에 작은 점을 표시해 새로운 상태가 있음을 알려요.",
-  "components-badge--statuses": "성공, 처리 중, 오류와 경고 상태를 색상과 텍스트로 구분해요.",
-  "components-badge--ribbon": "콘텐츠 모서리에 강조 문구를 담은 리본을 배치해요.",
+  "components-badge--statuses": "성공, 처리 중, 기본, 오류와 경고 상태를 구분해요.",
+  "components-badge--process": "상태 점이 퍼지는 애니메이션으로 진행 중인 상태를 강조해요.",
 
   "components-calendar--fullscreen":
     "월간 달력을 전체 너비로 표시하고 날짜와 이전·다음 달을 탐색해요.",
-  "components-calendar--card": "작은 카드형 달력에서 주차와 날짜를 함께 확인해요.",
+  "components-calendar--card": "작은 카드형 달력에서 날짜를 확인하고 선택해요.",
   "components-calendar--year": "한 해의 열두 달을 한 화면에서 선택해요.",
 
   "components-collapse--basic": "여러 패널을 독립적으로 열고 닫으며 비활성 패널의 동작을 제한해요.",

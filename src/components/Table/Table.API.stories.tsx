@@ -1,7 +1,9 @@
-import { useRef, type ComponentType } from "react";
+import { useRef, useState, type ComponentType } from "react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { storyDescriptions } from "../../storybook/story-descriptions";
 import { Illustrations } from "../Illustrations";
+import { Flex } from "../Flex";
+import { Input } from "../Input";
 import { withStoryImports } from "../../storybook/story-source";
 import { formatTableStorySource } from "../../storybook/table-story-source";
 import { Button } from "../Button/Button";
@@ -115,9 +117,127 @@ export const StickyScrollbar: Story = {
   },
 };
 
+export const StickyOffsets: Story = {
+  name: "Sticky Offsets",
+  parameters: {
+    ...storyDescription("components-table-api-compatibility--sticky-offsets"),
+    tableSource: false,
+    docs: {
+      ...storyDescription("components-table-api-compatibility--sticky-offsets").docs,
+      source: {
+        code: withStoryImports(`const members = [
+  {
+    id: 'M-1001',
+    name: '김민준',
+    role: 'Product Designer',
+    team: 'Design',
+    status: '활성',
+    projects: 8,
+    joinedAt: '2023-02-14',
+  },
+  // ...나머지 19개 항목
+];
+
+const columns = [
+  { key: 'name', dataIndex: 'name', title: '이름', width: 220, fixed: 'left' },
+  { key: 'role', dataIndex: 'role', title: '직무', minWidth: 190 },
+  { key: 'team', dataIndex: 'team', title: '팀', width: 220 },
+  { key: 'status', dataIndex: 'status', title: '상태', width: 180 },
+  { key: 'joinedAt', dataIndex: 'joinedAt', title: '합류일', width: 200 },
+  { key: 'memberId', dataIndex: 'id', title: '구성원 ID', width: 180 },
+  {
+    key: 'projects',
+    dataIndex: 'projects',
+    title: '프로젝트',
+    width: 220,
+    fixed: 'right',
+  },
+];
+
+function StickyOffsetsTable() {
+  const [headerOffset, setHeaderOffset] = useState('64');
+  const [scrollBarOffset, setScrollBarOffset] = useState('32');
+
+  return (
+    <>
+      <Flex gap={12} wrap>
+        <Input
+          type="number"
+          min={0}
+          label="Header offset"
+          value={headerOffset}
+          width={180}
+          onChange={setHeaderOffset}
+        />
+        <Input
+          type="number"
+          min={0}
+          label="Scrollbar offset"
+          value={scrollBarOffset}
+          width={180}
+          onChange={setScrollBarOffset}
+        />
+      </Flex>
+      <Table
+        className="mt-4"
+        dataSource={members}
+        columns={columns}
+        pagination={false}
+        stickyHeader
+        stickyHeaderOffset={Number(headerOffset) || 0}
+        stickyScrollBar
+        stickyScrollBarOffset={Number(scrollBarOffset) || 0}
+      />
+    </>
+  );
+}`),
+      },
+    },
+  },
+  render: () => <StickyOffsetsTable />,
+};
+
+function StickyOffsetsTable() {
+  const [headerOffset, setHeaderOffset] = useState("64");
+  const [scrollBarOffset, setScrollBarOffset] = useState("32");
+
+  return (
+    <>
+      <Flex gap={12} wrap>
+        <Input
+          type="number"
+          min={0}
+          label="Header offset"
+          value={headerOffset}
+          width={180}
+          onChange={setHeaderOffset}
+        />
+        <Input
+          type="number"
+          min={0}
+          label="Scrollbar offset"
+          value={scrollBarOffset}
+          width={180}
+          onChange={setScrollBarOffset}
+        />
+      </Flex>
+      <Table
+        className="mt-4"
+        dataSource={largeData.slice(0, 20)}
+        columns={fixedColumns}
+        pagination={false}
+        stickyHeader
+        stickyHeaderOffset={Number(headerOffset) || 0}
+        stickyScrollBar
+        stickyScrollBarOffset={Number(scrollBarOffset) || 0}
+      />
+    </>
+  );
+}
+
 export const Loading: Story = {
   parameters: storyDescription("components-table-api-compatibility--loading"),
-  args: { columns, loading: { tip: "구성원을 불러오는 중" } },
+  args: { columns, loading: { text: "구성원을 불러오는 중" } },
 };
 export const Empty: Story = {
   parameters: storyDescription("components-table-api-compatibility--empty"),
@@ -154,7 +274,7 @@ const members = Array.from({ length: 100 }, (_, index) => ({
 }));
 
 function ImperativeScrollTable() {
-  const tableRef = useRef(null);
+  const tableRef = useRef<TableRef>(null);
 
   return (
     <>

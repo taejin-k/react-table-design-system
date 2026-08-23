@@ -1,11 +1,13 @@
 import type { CSSProperties, MouseEvent, ReactNode } from "react";
 import type { ButtonProps, ButtonVariantType } from "../Button";
 
-export type ModalSemanticName = "root" | "mask" | "wrapper" | "header" | "body" | "footer";
-export type ModalWidth =
+export type ModalSemanticNameType =
+  "root" | "mask" | "wrapper" | "panel" | "header" | "body" | "footer";
+export type ModalWidthType =
   number | string | Partial<Record<"xs" | "sm" | "md" | "lg" | "xl" | "xxl", number | string>>;
-export type ModalClosable = boolean | { closeIcon?: ReactNode; disabled?: boolean };
-export type ModalMask = boolean | { enabled?: boolean; blur?: boolean; closable?: boolean };
+export type ModalClosableType = boolean | { closeIcon?: ReactNode; disabled?: boolean };
+export type ModalMaskType = boolean | { enabled?: boolean; blur?: boolean; closable?: boolean };
+export type ModalStatusType = "info" | "success" | "error" | "warning" | "confirm";
 
 export interface ModalProps {
   open?: boolean;
@@ -17,11 +19,9 @@ export interface ModalProps {
         originNode: ReactNode,
         extra: { OkBtn: () => ReactNode; CancelBtn: () => ReactNode },
       ) => ReactNode);
-  closable?: ModalClosable;
-  closeIcon?: ReactNode;
+  closable?: ModalClosableType;
   centered?: boolean;
-  width?: ModalWidth;
-  loading?: boolean;
+  width?: ModalWidthType;
   confirmLoading?: boolean;
   okText?: ReactNode;
   cancelText?: ReactNode;
@@ -29,22 +29,17 @@ export interface ModalProps {
   okButtonProps?: ButtonProps;
   cancelButtonProps?: ButtonProps;
   keyboard?: boolean;
-  mask?: ModalMask;
-  maskClosable?: boolean;
+  mask?: ModalMaskType;
   scrollLock?: boolean;
   forceRender?: boolean;
   destroyOnHidden?: boolean;
-  destroyOnClose?: boolean;
   focusable?: { trap?: boolean; focusTriggerAfterClose?: boolean };
-  focusTriggerAfterClose?: boolean;
   getContainer?: HTMLElement | (() => HTMLElement) | string | false;
   zIndex?: number;
   style?: CSSProperties;
   className?: string;
-  rootClassName?: string;
-  wrapClassName?: string;
-  classNames?: Partial<Record<ModalSemanticName, string>>;
-  styles?: Partial<Record<ModalSemanticName, CSSProperties>>;
+  classNames?: Partial<Record<ModalSemanticNameType, string>>;
+  styles?: Partial<Record<ModalSemanticNameType, CSSProperties>>;
   modalRender?: (node: ReactNode) => ReactNode;
   afterClose?: () => void;
   afterOpenChange?: (open: boolean) => void;
@@ -58,7 +53,7 @@ export interface ModalFuncConfig extends Omit<
 > {
   content?: ReactNode;
   icon?: ReactNode;
-  type?: "info" | "success" | "error" | "warning" | "confirm";
+  type?: ModalStatusType;
   onOk?: (close: () => void) => void | Promise<void>;
   onCancel?: (close: () => void) => void | Promise<void>;
 }
@@ -79,5 +74,4 @@ export interface ModalStaticFunctions {
 
 export interface ModalComponent extends ModalStaticFunctions {
   (props: ModalProps): ReactNode;
-  useModal: () => [Omit<ModalStaticFunctions, "destroyAll">, ReactNode];
 }

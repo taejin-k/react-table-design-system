@@ -1,6 +1,8 @@
+import { CSSMotionList } from "@rc-component/motion";
 import { useEffect, useRef, useState } from "react";
 import { twMerge } from "tailwind-merge";
 import { Icon } from "../Icon";
+import { message } from "../Message";
 import type {
   UploadChangeParam,
   UploadComponent,
@@ -26,6 +28,17 @@ function isImage(file: UploadFile) {
     file.thumbUrl ||
     file.url?.match(/\.(png|jpe?g|gif|webp|svg|bmp)$/i),
   );
+}
+
+function acceptsFile(file: File, accept?: string) {
+  if (!accept) return true;
+  return accept.split(",").some((rule) => {
+    const value = rule.trim().toLowerCase();
+    if (!value) return false;
+    if (value.startsWith(".")) return file.name.toLowerCase().endsWith(value);
+    if (value.endsWith("/*")) return file.type.toLowerCase().startsWith(value.slice(0, -1));
+    return file.type.toLowerCase() === value;
+  });
 }
 
 function UploadBase({
@@ -146,35 +159,53 @@ function UploadBase({
     emit(uploadFile, nextList);
     if (!action && !customRequest) return;
     update(uploadFile, { status: "uploading", percent: 0 });
-    const resolvedAction = typeof action === "function" ? await action(candidate) : (action ?? "");
-    const resolvedData = typeof data === "function" ? await data(uploadFile) : data;
-    const options: UploadRequestOption = {
-      action: resolvedAction,
-      filename: name,
-      file: candidate,
-      data: resolvedData,
-      headers,
-      method,
-      withCredentials,
-      onProgress: (event) =>
-        update(uploadFile, { status: "uploading", percent: event.percent }, event),
-      onSuccess: (body) => {
-        requests.current.delete(uploadFile.uid);
-        update(uploadFile, { status: "done", percent: 100, response: body });
-      },
-      onError: (error, body) => {
-        requests.current.delete(uploadFile.uid);
-        update(uploadFile, { status: "error", error, response: body });
-      },
-    };
-    const request = customRequest?.(options) ?? defaultRequest(options);
-    if (request) requests.current.set(uploadFile.uid, request);
+    try {
+      const resolvedAction =
+        typeof action === "function" ? await action(candidate) : (action ?? "");
+      const resolvedData = typeof data === "function" ? await data(uploadFile) : data;
+      const options: UploadRequestOption = {
+        action: resolvedAction,
+        filename: name,
+        file: candidate,
+        data: resolvedData,
+        headers,
+        method,
+        withCredentials,
+        onProgress: (event) =>
+          update(uploadFile, { status: "uploading", percent: event.percent }, event),
+        onSuccess: (body) => {
+          requests.current.delete(uploadFile.uid);
+          update(uploadFile, { status: "done", percent: 100, response: body });
+        },
+        onError: (error, body) => {
+          requests.current.delete(uploadFile.uid);
+          update(uploadFile, { status: "error", error, response: body });
+        },
+      };
+      const request = customRequest ? customRequest(options) : defaultRequest(options);
+      const latest = fileListRef.current.find((file) => file.uid === uploadFile.uid);
+      if (request && latest?.status === "uploading") requests.current.set(uploadFile.uid, request);
+    } catch (error) {
+      requests.current.delete(uploadFile.uid);
+      update(uploadFile, {
+        status: "error",
+        error: error instanceof Error ? error : new Error("파일 업로드에 실패했습니다."),
+      });
+    }
   };
   const processFiles = (input: FileList | File[]) => {
-    const files = Array.from(input);
+    const files = Array.from(input).filter((file) => acceptsFile(file, accept));
     const accepted = maxCount
-      ? files.slice(0, Math.max(0, maxCount - (maxCount === 1 ? 0 : fileListRef.current.length)))
+      ? maxCount === 1
+        ? files.slice(-1)
+        : files.slice(0, Math.max(0, maxCount - fileListRef.current.length))
       : files;
+    if (maxCount && files.length > accepted.length) {
+      message.warning({
+        key: `upload-max-count-${maxCount}`,
+        content: `${maxCount}개까지 등록할 수 있어요.`,
+      });
+    }
     accepted.forEach((file) => void uploadOne(file, files));
   };
   const remove = async (file: UploadFile) => {
@@ -225,24 +256,100 @@ function UploadBase({
   );
   const showConfig = typeof showUploadList === "object" ? showUploadList : {};
   const renderFile = (file: UploadFile) => {
-    const origin = (
+    const isPictureCard = listType === "picture-card" || listType === "picture-circle";
+    const previewSource = file.thumbUrl ?? file.url;
+    const showPreviewAction = showConfig.showPreviewIcon ?? true;
+    const showDownloadAction =
+      (showConfig.showDownloadIcon ?? true) && file.status === "done" && Boolean(file.url);
+    const showRemoveAction = (showConfig.showRemoveIcon ?? true) && !disabled;
+    const origin = isPictureCard ? (
+      <div
+        data-upload-picture-item
+        className={twMerge(
+          "group relative flex size-24 min-w-0 items-center justify-center overflow-hidden rounded-md border border-[#d9d9d9] bg-[#fafafa] text-sm",
+          file.status === "error" && "border-[#ff4d4f] text-[#ff4d4f]",
+          listType === "picture-circle" && "rounded-full",
+        )}
+      >
+        {isImageUrl(file) && previewSource ? (
+          <img
+            src={previewSource}
+            alt=""
+            crossOrigin={file.crossOrigin || undefined}
+            className="absolute inset-0 size-full object-cover"
+          />
+        ) : (
+          <span className="inline-flex text-[#666]">
+            {iconRender?.(file, listType) ?? <Icon icon="file-outlined" size={28} />}
+          </span>
+        )}
+        {file.status === "uploading" ? (
+          <span className="relative z-[1] rounded bg-white/90 px-1.5 py-0.5 text-xs text-[#666]">
+            {Math.round(file.percent ?? 0)}%
+          </span>
+        ) : null}
+        {file.status !== "uploading" &&
+        (showPreviewAction || showDownloadAction || showRemoveAction) ? (
+          <div
+            data-upload-picture-actions
+            className="absolute inset-0 z-[1] flex items-center justify-center gap-2 bg-black/45 opacity-0 transition-opacity duration-200 group-hover:opacity-100"
+          >
+            {showPreviewAction ? (
+              <button
+                data-upload-preview
+                type="button"
+                className="inline-flex size-7 items-center justify-center text-white/90 transition-colors hover:text-white"
+                onClick={() => void preview(file)}
+              >
+                <Icon icon="eye" size={18} />
+              </button>
+            ) : null}
+            {showDownloadAction ? (
+              <button
+                data-upload-download
+                type="button"
+                className="inline-flex size-7 items-center justify-center text-white/90 transition-colors hover:text-white"
+                onClick={() => download(file)}
+              >
+                <Icon icon="download" size={18} />
+              </button>
+            ) : null}
+            {showRemoveAction ? (
+              <button
+                data-upload-remove
+                type="button"
+                className="inline-flex size-7 items-center justify-center text-white/90 transition-colors hover:text-white"
+                onClick={() => void remove(file)}
+              >
+                <Icon icon="delete-outlined" size={18} />
+              </button>
+            ) : null}
+          </div>
+        ) : null}
+        {file.status === "uploading" ? (
+          <span className="absolute right-2 bottom-2 left-2 z-[1] h-0.5 overflow-hidden rounded bg-white/50">
+            <span
+              className="block h-full bg-[#0062df] transition-[width]"
+              style={{ width: `${file.percent ?? 0}%` }}
+            />
+          </span>
+        ) : null}
+      </div>
+    ) : (
       <div
         className={twMerge(
           "group relative flex min-w-0 items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-[#f5f5f5]",
           file.status === "error" && "text-[#ff4d4f]",
-          (listType === "picture-card" || listType === "picture-circle") &&
-            "size-24 flex-col justify-center border border-[#d9d9d9] p-2",
-          listType === "picture-circle" && "overflow-hidden rounded-full",
         )}
       >
-        {isImageUrl(file) ? (
+        {isImageUrl(file) && previewSource ? (
           <img
-            src={file.thumbUrl ?? file.url ?? undefined}
+            src={previewSource}
             alt=""
+            crossOrigin={file.crossOrigin || undefined}
             className={twMerge(
               "size-8 shrink-0 rounded object-cover",
-              (listType === "picture-card" || listType === "picture-circle") &&
-                "absolute inset-0 size-full",
+              listType === "picture" && "size-12",
             )}
           />
         ) : (
@@ -250,34 +357,32 @@ function UploadBase({
             {iconRender?.(file, listType) ?? <Icon icon="file-outlined" />}
           </span>
         )}
-        <button
-          type="button"
-          className={twMerge(
-            "min-w-0 flex-1 truncate text-left hover:text-[#0062df]",
-            (listType === "picture-card" || listType === "picture-circle") &&
-              "z-[1] mt-auto bg-white/90 px-1 text-center text-xs opacity-0 group-hover:opacity-100",
-          )}
-          onClick={() => void preview(file)}
-        >
-          {file.name}
-        </button>
+        {(showConfig.showPreviewIcon ?? true) ? (
+          <button
+            type="button"
+            className="min-w-0 flex-1 truncate text-left hover:text-[#0062df]"
+            onClick={() => void preview(file)}
+          >
+            {file.name}
+          </button>
+        ) : (
+          <span className="min-w-0 flex-1 truncate">{file.name}</span>
+        )}
         {file.status === "uploading" ? (
           <span className="shrink-0 text-xs text-[#999]">{Math.round(file.percent ?? 0)}%</span>
         ) : null}
-        {(showConfig.showDownloadIcon ?? true) && file.status === "done" && file.url ? (
+        {showDownloadAction ? (
           <button
             type="button"
-            aria-label={`${file.name} 다운로드`}
             className="inline-flex shrink-0 text-[#666] hover:text-[#0062df]"
             onClick={() => download(file)}
           >
             <Icon icon="download" />
           </button>
         ) : null}
-        {(showConfig.showRemoveIcon ?? true) && !disabled ? (
+        {showRemoveAction ? (
           <button
             type="button"
-            aria-label={`${file.name} 삭제`}
             className="inline-flex shrink-0 text-[#666] hover:text-[#ff4d4f]"
             onClick={() => void remove(file)}
           >
@@ -305,7 +410,13 @@ function UploadBase({
   return (
     <span
       ref={rootRef}
-      className={twMerge("inline-flex min-w-0 flex-col gap-2 font-pretendard", className)}
+      className={twMerge(
+        "inline-flex min-w-0 gap-2 font-pretendard",
+        listType === "picture-card" || listType === "picture-circle"
+          ? "flex-row flex-wrap items-start"
+          : "flex-col",
+        className,
+      )}
       style={style}
       tabIndex={pastable ? 0 : undefined}
       onPaste={(event) => {
@@ -334,11 +445,12 @@ function UploadBase({
         }}
       />
       <span
-        role="button"
         tabIndex={disabled ? -1 : 0}
-        aria-disabled={disabled}
         className={twMerge(
           "inline-flex",
+          (listType === "picture-card" || listType === "picture-circle") &&
+            "size-24 shrink-0 cursor-pointer items-center justify-center rounded-md border border-dashed border-[#d9d9d9] bg-[#fafafa] transition-colors hover:border-[#0062df]",
+          listType === "picture-circle" && "rounded-full",
           disabled && "cursor-not-allowed opacity-50 [&>*]:pointer-events-none",
         )}
         onClick={() => !disabled && openFileDialogOnClick && inputRef.current?.click()}
@@ -352,16 +464,26 @@ function UploadBase({
         {children}
       </span>
       {showUploadList ? (
-        <div
+        <CSSMotionList
+          keys={currentFiles.map((file) => ({ key: file.uid, file }))}
+          component="div"
+          motionName="wizard-upload-motion"
+          motionAppear={false}
+          motionDeadline={250}
           className={twMerge(
-            (listType === "picture-card" || listType === "picture-circle") &&
-              "flex flex-wrap gap-2",
+            (listType === "picture-card" || listType === "picture-circle") && "contents",
           )}
         >
-          {currentFiles.map((file) => (
-            <div key={file.uid}>{renderFile(file)}</div>
-          ))}
-        </div>
+          {({ file, className: motionClassName, style: motionStyle }, motionRef) => (
+            <div
+              ref={motionRef}
+              className={twMerge("wizard-upload-motion-item", motionClassName)}
+              style={motionStyle}
+            >
+              <div>{renderFile(file as UploadFile)}</div>
+            </div>
+          )}
+        </CSSMotionList>
       ) : null}
     </span>
   );

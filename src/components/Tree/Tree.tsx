@@ -54,6 +54,17 @@ export function Tree({
     return normalize(treeData);
   }, [treeData, fieldNames]);
   const allKeys = useMemo(() => normalized.flatMap(descendants), [normalized]);
+  const keyMap = useMemo(() => {
+    const map = new Map<string, React.Key>();
+    const walk = (nodes: TreeDataNode[]) =>
+      nodes.forEach((node) => {
+        map.set(id(node.key), node.key);
+        walk(node.children ?? []);
+      });
+    walk(normalized);
+    return map;
+  }, [normalized]);
+  const restoreKeys = (keys: string[]) => keys.map((key) => keyMap.get(key) ?? key);
   const [innerExpanded, setInnerExpanded] = useState<string[]>(
     defaultExpandAll ? allKeys : defaultExpandedKeys.map(id),
   );
@@ -69,6 +80,7 @@ export function Tree({
   const checked = checkedKeys
     ? (Array.isArray(checkedKeys) ? checkedKeys : checkedKeys.checked).map(id)
     : innerChecked;
+  const loaded = loadedKeys ? loadedKeys.map(id) : innerLoaded;
   const parentMap = useMemo(() => {
     const map = new Map<string, TreeDataNode>();
     const walk = (nodes: TreeDataNode[]) =>
@@ -101,26 +113,20 @@ export function Tree({
   const toggleExpand = async (node: TreeDataNode, event: React.MouseEvent) => {
     const key = id(node.key),
       nextOpen = !expanded.includes(key);
-    if (
-      nextOpen &&
-      loadData &&
-      !node.isLeaf &&
-      !node.children?.length &&
-      !innerLoaded.includes(key)
-    ) {
+    if (nextOpen && loadData && !node.isLeaf && !node.children?.length && !loaded.includes(key)) {
       setLoading((keys) => [...keys, key]);
       try {
         await loadData(node);
-        const nextLoaded = [...innerLoaded, key];
-        setInnerLoaded(nextLoaded);
-        onLoad?.(nextLoaded, { event: "load", node });
+        const nextLoaded = [...loaded, key];
+        if (!loadedKeys) setInnerLoaded(nextLoaded);
+        onLoad?.(restoreKeys(nextLoaded), { event: "load", node });
       } finally {
         setLoading((keys) => keys.filter((value) => value !== key));
       }
     }
     const next = nextOpen ? [...expanded, key] : expanded.filter((value) => value !== key);
     if (!expandedKeys) setInnerExpanded(next);
-    onExpand?.(next, eventInfo("expand", node, event, { expanded: nextOpen }));
+    onExpand?.(restoreKeys(next), eventInfo("expand", node, event, { expanded: nextOpen }));
   };
   const select = (node: TreeDataNode, event: React.MouseEvent) => {
     if (!selectable || node.selectable === false || disabled || node.disabled) return;
@@ -134,7 +140,7 @@ export function Tree({
         ? []
         : [key];
     if (!selectedKeys) setInnerSelected(next);
-    onSelect?.(next, eventInfo("select", node, event, { selected: !already }));
+    onSelect?.(restoreKeys(next), eventInfo("select", node, event, { selected: !already }));
   };
   const check = (node: TreeDataNode, event: React.ChangeEvent<HTMLInputElement>) => {
     if (disabled || node.disabled || node.disableCheckbox) return;
@@ -159,13 +165,25 @@ export function Tree({
       }
     }
     if (!checkedKeys) setInnerChecked(next);
-    const output = checkStrictly ? { checked: next, halfChecked } : next;
+    const output = checkStrictly
+      ? { checked: restoreKeys(next), halfChecked: restoreKeys(halfChecked) }
+      : restoreKeys(next);
     onCheck?.(output, eventInfo("check", node, event, { checked: nextChecked }));
   };
   const renderNodes = (nodes: TreeDataNode[], level = 0) => (
     <ul
-      role={level === 0 ? "tree" : "group"}
-      className={twMerge("m-0 list-none p-0", level > 0 && "overflow-hidden")}
+      className={twMerge(
+        "m-0 list-none p-0",
+        level > 0 && "relative overflow-hidden",
+        showLine &&
+          level > 0 &&
+          "before:pointer-events-none before:absolute before:top-0 before:bottom-0 before:left-[var(--wizard-tree-line-left)] before:border-l before:border-solid before:border-[#d9d9d9]",
+      )}
+      style={
+        showLine && level > 0
+          ? ({ "--wizard-tree-line-left": `${16 + (level - 1) * 24}px` } as React.CSSProperties)
+          : undefined
+      }
     >
       {nodes.map((node) => {
         const key = id(node.key),
@@ -191,21 +209,7 @@ export function Tree({
                 )
               ) : null));
         return (
-          <li
-            key={key}
-            role="treeitem"
-            aria-expanded={hasChildren ? open : undefined}
-            aria-selected={isSelected}
-            aria-disabled={nodeDisabled}
-            className={twMerge(
-              "relative",
-              showLine &&
-                level > 0 &&
-                "before:absolute before:top-0 before:bottom-0 before:left-3 before:border-l before:border-dashed before:border-[#d9d9d9]",
-              node.className,
-            )}
-            style={node.style}
-          >
+          <li key={key} className={twMerge("relative", node.className)} style={node.style}>
             <div
               className={twMerge(
                 "relative flex min-h-8 items-center gap-1 rounded-md px-1 text-sm transition-colors hover:bg-[#f5f5f5]",
@@ -219,8 +223,8 @@ export function Tree({
               {hasChildren ? (
                 <button
                   type="button"
+                  data-tree-switcher={key}
                   tabIndex={-1}
-                  aria-label={open ? "접기" : "펼치기"}
                   disabled={nodeDisabled}
                   className="inline-flex size-6 shrink-0 items-center justify-center rounded transition-transform duration-200"
                   style={{
@@ -234,15 +238,17 @@ export function Tree({
                   {switcher}
                 </button>
               ) : (
-                <span aria-hidden className="size-6 shrink-0" />
+                <span className="size-6 shrink-0" />
               )}
               {checkable || node.checkable ? (
-                <span onClick={(event) => event.stopPropagation()}>
+                <span
+                  className="inline-flex shrink-0 items-center"
+                  onClick={(event) => event.stopPropagation()}
+                >
                   <Checkbox
                     checked={isChecked}
                     partiallyChecked={half}
                     disabled={nodeDisabled || node.disableCheckbox}
-                    aria-label={`${String(node.title)} 선택`}
                     onChange={(event) => check(node, event)}
                   />
                 </span>
@@ -250,7 +256,12 @@ export function Tree({
               {showIcon && node.icon ? (
                 <span className="inline-flex shrink-0">{node.icon}</span>
               ) : null}
-              <span className={twMerge("min-w-0 cursor-pointer py-1", blockNode && "flex-1")}>
+              <span
+                className={twMerge(
+                  "flex min-h-6 min-w-0 cursor-pointer items-center leading-6",
+                  blockNode && "flex-1",
+                )}
+              >
                 {titleRender?.(node) ?? node.title}
               </span>
             </div>

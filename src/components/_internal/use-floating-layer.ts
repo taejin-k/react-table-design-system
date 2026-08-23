@@ -1,6 +1,7 @@
 import {
   useCallback,
   useEffect,
+  useId,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -49,6 +50,7 @@ export function useFloatingLayer({
   closeOnScroll = true,
   onOpenChange,
 }: UseFloatingLayerOptions) {
+  const floatingId = useId();
   const triggerRef = useRef<HTMLSpanElement>(null);
   const popupRef = useRef<HTMLDivElement>(null);
   const onOpenChangeRef = useRef(onOpenChange);
@@ -64,7 +66,7 @@ export function useFloatingLayer({
     rendered: isRendered,
     phase: motionPhase,
     motionVisible: isMotionVisible,
-  } = useMotionPresence(isOpen, MOTION_DURATION_MID);
+  } = useMotionPresence(isOpen, MOTION_DURATION_MID, popupRef);
 
   const clearTimers = useCallback(() => {
     if (openTimerRef.current) clearTimeout(openTimerRef.current);
@@ -102,7 +104,7 @@ export function useFloatingLayer({
       ? createPointRect(contextMenuPointRef.current.x, contextMenuPointRef.current.y)
       : triggerRef.current.getBoundingClientRect();
     setPosition(
-      calculateFloatingPosition(targetRect, popupRef.current.getBoundingClientRect(), placement, {
+      calculateFloatingPosition(targetRect, getLayoutRect(popupRef.current), placement, {
         autoAdjustOverflow,
         targetGap,
       }),
@@ -110,10 +112,9 @@ export function useFloatingLayer({
   }, [autoAdjustOverflow, placement, targetGap]);
 
   useLayoutEffect(() => {
-    if (!isRendered) return;
+    if (!isRendered || !isOpen) return;
 
     updatePosition();
-    if (!isOpen) return;
     const handleScroll = (event: Event) => {
       if (
         event.target instanceof Node &&
@@ -151,6 +152,16 @@ export function useFloatingLayer({
       if (!(event.target instanceof Node)) return;
       if (triggerRef.current?.contains(event.target) || popupRef.current?.contains(event.target))
         return;
+      if (event.target instanceof Element) {
+        const nestedPopup = event.target.closest<HTMLElement>("[data-wizard-floating-id]");
+        const nestedId = nestedPopup?.dataset.wizardFloatingId;
+        const nestedTrigger = nestedId
+          ? Array.from(
+              document.querySelectorAll<HTMLElement>("[data-wizard-floating-trigger]"),
+            ).find((element) => element.dataset.wizardFloatingTrigger === nestedId)
+          : null;
+        if (nestedTrigger && popupRef.current?.contains(nestedTrigger)) return;
+      }
       clearTimers();
       changeOpen(false, "outside");
     };
@@ -169,6 +180,7 @@ export function useFloatingLayer({
   }, [changeOpen, clearTimers, isOpen]);
 
   const triggerProps = {
+    "data-wizard-floating-trigger": floatingId,
     onBlur: ((event) => {
       if (triggers.has("focus") && !event.currentTarget.contains(event.relatedTarget))
         scheduleClose();
@@ -203,6 +215,7 @@ export function useFloatingLayer({
   };
 
   const popupProps = {
+    "data-wizard-floating-id": floatingId,
     onPointerEnter: (() => {
       if (!triggers.has("hover")) return;
       if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
@@ -225,6 +238,24 @@ export function useFloatingLayer({
     changeOpen,
     clearTimers,
     updatePosition,
+  };
+}
+
+function getLayoutRect(element: HTMLElement): DOMRect {
+  const rect = element.getBoundingClientRect();
+  const width = element.offsetWidth || rect.width;
+  const height = element.offsetHeight || rect.height;
+
+  return {
+    x: rect.left,
+    y: rect.top,
+    top: rect.top,
+    left: rect.left,
+    width,
+    height,
+    right: rect.left + width,
+    bottom: rect.top + height,
+    toJSON: () => ({}),
   };
 }
 

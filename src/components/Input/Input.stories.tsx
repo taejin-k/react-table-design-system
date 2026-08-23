@@ -509,7 +509,7 @@ export const ClientError: Story = {
     docs: {
       description: { story: storyDescriptions["components-input--client-error"] },
       source: {
-        code: withStoryImports(`const validateEmail = (value) => {
+        code: withStoryImports(`const validateEmail = (value: string) => {
   if (!value.trim()) return '이메일을 입력해 주세요.';
   if (value.length > 50) return '이메일은 50자 이하로 입력해 주세요.';
   if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(value)) {
@@ -561,7 +561,7 @@ export const ServerError: Story = {
     docs: {
       ...storyDescription("components-input--server-error").docs,
       source: {
-        code: withStoryImports(`const checkEmailAvailability = async (value) => {
+        code: withStoryImports(`const checkEmailAvailability = async (value: string) => {
   await new Promise((resolve) => setTimeout(resolve, 600));
   return value === 'member@example.com' ? '이미 가입된 이메일이에요.' : '';
 };

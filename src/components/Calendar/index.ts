@@ -1,7 +1,7 @@
 export { Calendar } from "./Calendar";
 export type {
   CalendarCellInfo,
-  CalendarMode,
+  CalendarModeType,
   CalendarProps,
-  CalendarSelectSource,
+  CalendarSelectSourceType,
 } from "./Calendar.types";

@@ -469,6 +469,53 @@ describe("Select", () => {
     expect(search).not.toHaveClass("h-0", "min-w-0", "opacity-0", "-mt-[5px]", "-ml-[5px]");
   });
 
+  it("renders a newly visible tag at its final position", () => {
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (
+      this: HTMLElement,
+    ) {
+      const top = this.dataset.selectLayoutKey === "search" ? 24 : 0;
+      return {
+        bottom: top + 32,
+        height: 32,
+        left: 0,
+        right: 320,
+        top,
+        width: 320,
+        x: 0,
+        y: top,
+        toJSON: () => ({}),
+      };
+    });
+    const originalAnimate = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "animate");
+    const animate = vi.fn(
+      () =>
+        ({
+          addEventListener: vi.fn(),
+          cancel: vi.fn(),
+        }) as unknown as Animation,
+    );
+    Object.defineProperty(HTMLElement.prototype, "animate", {
+      configurable: true,
+      value: animate,
+    });
+
+    const { rerender } = render(
+      <Select mode="tags" options={options} value={["design"]} searchValue="" />,
+    );
+
+    rerender(
+      <Select mode="tags" options={options} value={["design", "platform"]} searchValue="" />,
+    );
+
+    expect(animate).not.toHaveBeenCalled();
+
+    if (originalAnimate) {
+      Object.defineProperty(HTMLElement.prototype, "animate", originalAnimate);
+    } else {
+      Reflect.deleteProperty(HTMLElement.prototype, "animate");
+    }
+  });
+
   it("keeps the tags search focused while pressing inside the Select", () => {
     render(<Select mode="tags" options={options} defaultValue={["design"]} />);
 

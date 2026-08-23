@@ -4,7 +4,7 @@ export type {
   NotificationArgsProps,
   NotificationGlobalConfig,
   NotificationInstance,
-  NotificationPlacement,
-  NotificationSemanticName,
-  NotificationType,
+  NotificationPlacementType,
+  NotificationSemanticNameType,
+  NotificationStatusType,
 } from "./Notification.types";

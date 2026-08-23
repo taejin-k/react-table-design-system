@@ -34,37 +34,115 @@ export default meta;
 type Story = StoryObj<TableProps<Member>>;
 
 export const Pagination: Story = {
+  name: "Pagination Basic",
   parameters: storyDescription("components-table-pagination--pagination"),
 };
 
 export const PaginationPageControls: Story = {
+  name: "Pagination Controls",
   parameters: storyDescription("components-table-pagination--pagination-page-controls"),
   args: {
     pagination: {
-      showSizeChanger: true, // 기본값: 전체 데이터가 50개를 초과하면 true
-      pageSizeOptions: [10, 20, 50], // 기본값: [10, 20, 50, 100]
+      showSizeChanger: true, // 기본값: 전체 데이터가 50개 이상이면 true
+      pageSizeOptions: [10, 20, 50], // 기본값: [10, 20, 50]
       showQuickJumper: true,
       showTotal: (total, range) => `${range[0]}-${range[1]} / 총 ${total}명`,
     },
   },
 };
 
+export const ControlledPagination: Story = {
+  name: "Pagination Controlled Page And Size",
+  parameters: {
+    ...storyDescription("components-table-pagination--controlled-pagination"),
+    tableSource: false,
+    docs: {
+      ...storyDescription("components-table-pagination--controlled-pagination").docs,
+      source: {
+        code: withStoryImports(`const members = [
+  {
+    id: 'M-1001',
+    name: '김민준',
+    role: 'Product Designer',
+    team: 'Design',
+    projects: 8,
+  },
+  // ...나머지 184개 항목
+];
+
+const columns = [
+  {
+    key: 'name',
+    dataIndex: 'name',
+    title: '이름',
+    width: 150,
+  },
+  {
+    key: 'role',
+    dataIndex: 'role',
+    title: '직무',
+    minWidth: 190,
+  },
+  {
+    key: 'team',
+    dataIndex: 'team',
+    title: '팀',
+    width: 120,
+  },
+  {
+    key: 'projects',
+    dataIndex: 'projects',
+    title: '프로젝트',
+    width: 110,
+  },
+];
+
+function ControlledPaginationTable() {
+  const [page, setPage] = useState(2);
+  const [pageSize, setPageSize] = useState(20);
+
+  return (
+    <Table
+      dataSource={members}
+      columns={columns}
+      pagination={{
+        page,
+        pageSize,
+        showSizeChanger: true,
+        onChange: (nextPage, nextPageSize) => {
+          setPage(nextPage);
+          setPageSize(nextPageSize);
+        },
+      }}
+    />
+  );
+}`),
+      },
+    },
+  },
+  render: () => <ControlledPaginationTable />,
+};
+
 export const PaginationPlacement: Story = {
+  name: "Pagination Placement",
   parameters: storyDescription("components-table-pagination--pagination-placement"),
   args: { pagination: { placement: ["topStart", "bottomEnd"] } },
 };
 
 export const PaginationSimple: Story = {
+  name: "Pagination Simple",
   args: { pagination: { simple: true } },
   parameters: storyDescription("components-table-pagination--pagination-simple"),
 };
 
 export const PaginationDisabled: Story = {
+  name: "Pagination Disabled",
   parameters: storyDescription("components-table-pagination--pagination-disabled"),
   args: { pagination: { disabled: true } },
 };
 
 export const PaginationHideOnSinglePage: Story = {
+  name: "Pagination Hide On Single Page",
   parameters: {
     ...storyDescription("components-table-pagination--pagination-hide-on-single-page"),
     tableSource: false,
@@ -145,11 +223,28 @@ function PaginationHideOnSinglePageTable() {
       >
         hideOnSinglePage: {String(hideOnSinglePage)}
       </Button>
-      <Table
-        dataSource={members.slice(0, 4)}
-        columns={columns}
-        pagination={{ hideOnSinglePage }}
-      />
+      <Table dataSource={members.slice(0, 4)} columns={columns} pagination={{ hideOnSinglePage }} />
     </div>
+  );
+}
+
+function ControlledPaginationTable() {
+  const [page, setPage] = useState(2);
+  const [pageSize, setPageSize] = useState(20);
+
+  return (
+    <Table
+      dataSource={largeData.slice(0, 185)}
+      columns={columns}
+      pagination={{
+        page,
+        pageSize,
+        showSizeChanger: true,
+        onChange: (nextPage, nextPageSize) => {
+          setPage(nextPage);
+          setPageSize(nextPageSize);
+        },
+      }}
+    />
   );
 }

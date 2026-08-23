@@ -43,13 +43,18 @@ const filteringColumns: ColumnsType<Member> = [
   { key: "projects", dataIndex: "projects", title: "프로젝트", width: 110 },
 ];
 
-const serverColumns: ColumnsType<Member> = filteringColumns.map((column) =>
-  column.key === "name"
-    ? { ...column, sorter: true }
-    : column.key === "status"
-      ? { ...column, filters: statusFilters }
-      : column,
-);
+const projectFilters = [
+  { text: "5개 이하", value: "low" },
+  { text: "6~9개", value: "middle" },
+  { text: "10개 이상", value: "high" },
+];
+
+const serverColumns: ColumnsType<Member> = filteringColumns.map((column) => {
+  if (column.key === "name" || column.key === "team") return { ...column, sorter: true };
+  if (column.key === "status") return { ...column, filters: statusFilters };
+  if (column.key === "projects") return { ...column, filters: projectFilters };
+  return column;
+});
 
 export const ServerTable: Story = {
   parameters: {
@@ -69,33 +74,42 @@ const statusFilters = [
   { text: '대기', value: '대기' },
 ];
 
+const projectFilters = [
+  { text: '5개 이하', value: 'low' },
+  { text: '6~9개', value: 'middle' },
+  { text: '10개 이상', value: 'high' },
+];
+
 const columns = [
   { key: 'name', dataIndex: 'name', title: '이름', minWidth: 150, sorter: true },
-  { key: 'team', dataIndex: 'team', title: '팀', width: 120 },
+  { key: 'team', dataIndex: 'team', title: '팀', width: 120, sorter: true },
   { key: 'status', dataIndex: 'status', title: '상태', width: 100, filters: statusFilters },
-  { key: 'projects', dataIndex: 'projects', title: '프로젝트', width: 110 },
+  {
+    key: 'projects',
+    dataIndex: 'projects',
+    title: '프로젝트',
+    width: 110,
+    filters: projectFilters,
+  },
 ];
 
 type RequestParams = {
   page: number;
-  perPage: number;
-  sort: {
-    column: string | null;
-    order: 'ascend' | 'descend' | null;
-  };
-  filter: Record<string, string[]>;
+  pageSize: number;
+  field?: string;
+  order?: 'ascend' | 'descend';
+  filters: Record<string, unknown>;
 };
 
 function ServerTable() {
   const [requestParams, setRequestParams] = useState<RequestParams>({
     page: 1,
-    perPage: 2,
-    sort: {
-      column: null,
-      order: null,
-    },
-    filter: {
+    pageSize: 2,
+    field: undefined,
+    order: undefined,
+    filters: {
       status: [],
+      projects: [],
     },
   });
 
@@ -111,20 +125,13 @@ function ServerTable() {
           showSizeChanger: true,
         }}
         onChange={(pagination, filters, sorter) => {
-          const currentSorter = Array.isArray(sorter) ? sorter[0] : sorter;
+          const currentSorter = sorter[0];
           const nextParams = {
-            page: pagination.current ?? 1,
-            perPage: pagination.pageSize ?? 2,
-            sort: {
-              column: currentSorter.field ? String(currentSorter.field) : null,
-              order: currentSorter.order ?? null,
-            },
-            filter: Object.fromEntries(
-              Object.entries(filters).map(([column, values]) => [
-                column,
-                (values ?? []).map(String),
-              ]),
-            ),
+            page: pagination.page,
+            pageSize: pagination.pageSize,
+            field: currentSorter?.field ? String(currentSorter.field) : undefined,
+            order: currentSorter?.order,
+            filters,
           };
 
           setRequestParams(nextParams);
@@ -152,14 +159,13 @@ function ServerTable() {
 function ServerTableStory(args: TableProps<Member>) {
   const [requestParams, setRequestParams] = useState({
     page: 1,
-    perPage: 2,
-    sort: {
-      column: null as string | null,
-      order: null as string | null,
-    },
-    filter: {
+    pageSize: 2,
+    field: undefined as string | undefined,
+    order: undefined as "ascend" | "descend" | undefined,
+    filters: {
       status: [] as string[],
-    } as Record<string, string[]>,
+      projects: [] as string[],
+    } as Record<string, unknown>,
   });
 
   return (
@@ -170,20 +176,13 @@ function ServerTableStory(args: TableProps<Member>) {
       <Table<Member>
         {...args}
         onChange={(pagination, filters, sorter) => {
-          const currentSorter = Array.isArray(sorter) ? sorter[0] : sorter;
+          const currentSorter = sorter[0];
           const nextParams = {
-            page: pagination.current ?? 1,
-            perPage: pagination.pageSize ?? 2,
-            sort: {
-              column: currentSorter.field ? String(currentSorter.field) : null,
-              order: currentSorter.order ?? null,
-            },
-            filter: Object.fromEntries(
-              Object.entries(filters).map(([column, values]) => [
-                column,
-                (values ?? []).map(String),
-              ]),
-            ),
+            page: pagination.page,
+            pageSize: pagination.pageSize,
+            field: currentSorter?.field ? String(currentSorter.field) : undefined,
+            order: currentSorter?.order,
+            filters,
           };
 
           setRequestParams(nextParams);

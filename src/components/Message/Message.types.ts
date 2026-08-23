@@ -1,20 +1,20 @@
 import type { CSSProperties, ReactNode } from "react";
 
-export type MessageTypeName = "success" | "error" | "info" | "warning" | "loading";
-export type MessageKey = string | number;
-export type MessageSemanticName = "root" | "content" | "icon";
+export type MessageStatusType = "success" | "error" | "info" | "warning" | "loading";
+export type MessageKeyType = string | number;
+export type MessageSemanticNameType = "root" | "content" | "icon";
 
 export interface MessageArgsProps {
   content: ReactNode;
-  type?: MessageTypeName;
+  type?: MessageStatusType;
   duration?: number;
   icon?: ReactNode;
-  key?: MessageKey;
+  key?: MessageKeyType;
   pauseOnHover?: boolean;
   className?: string;
-  classNames?: Partial<Record<MessageSemanticName, string>>;
+  classNames?: Partial<Record<MessageSemanticNameType, string>>;
   style?: CSSProperties;
-  styles?: Partial<Record<MessageSemanticName, CSSProperties>>;
+  styles?: Partial<Record<MessageSemanticNameType, CSSProperties>>;
   onClick?: () => void;
   onClose?: () => void;
 }
@@ -23,9 +23,7 @@ export interface MessageGlobalConfig {
   duration?: number;
   getContainer?: () => HTMLElement;
   maxCount?: number;
-  prefixCls?: string;
   rtl?: boolean;
-  stack?: boolean | { threshold?: number };
   top?: number;
 }
 
@@ -60,10 +58,9 @@ export interface MessageInstance {
     duration?: number,
     onClose?: () => void,
   ) => MessageType;
-  destroy: (key?: MessageKey) => void;
+  destroy: (key?: MessageKeyType) => void;
 }
 
 export interface MessageApi extends MessageInstance {
   config: (config: MessageGlobalConfig) => void;
-  useMessage: (config?: MessageGlobalConfig) => [MessageInstance, ReactNode];
 }

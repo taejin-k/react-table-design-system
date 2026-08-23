@@ -3,9 +3,13 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { useState } from "react";
 import { storyDescriptions } from "../../storybook/story-descriptions";
 import { withStoryImports } from "../../storybook/story-source";
+import { TypeTokens } from "../../storybook/type-tokens";
 import { Button } from "../Button";
 import { Drawer } from "./Drawer";
-import type { DrawerPlacement } from "./Drawer.types";
+import type { DrawerPlacementType, DrawerSizeType } from "./Drawer.types";
+
+const drawerPlacements: DrawerPlacementType[] = ["top", "right", "bottom", "left"];
+const drawerSizes = ["default", "large", "number", "string"] satisfies readonly DrawerSizeType[];
 
 const storyDescription = (id: string) => ({
   docs: { description: { story: storyDescriptions[id] } },
@@ -35,34 +39,38 @@ const meta = {
 | --- | --- | --- | --- |
 | \`open\` | Drawer 표시 상태를 설정해요. | \`boolean\` | \`false\` |
 | \`title\` | header 제목을 설정해요. | \`ReactNode\` | - |
-| \`placement\` | 열리는 방향을 설정해요. | \`top \\| right \\| bottom \\| left\` | \`right\` |
-| \`size\` | 기본·큰 크기 또는 직접 크기를 설정해요. | \`default \\| large \\| number \\| string\` | \`default\` |
+| \`placement\` | 열리는 방향을 설정해요. | [\`DrawerPlacementType\`](#drawer-placement-type) | \`right\` |
+| \`size\` | 기본·큰 크기 또는 직접 크기를 설정해요. | [\`DrawerSizeType\`](#drawer-size-type) | \`default\` |
 | \`width\` | 좌우 Drawer 너비를 설정해요. | \`number \\| string\` | - |
 | \`height\` | 상하 Drawer 높이를 설정해요. | \`number \\| string\` | - |
-| \`closable\` | 닫기 버튼의 표시·위치·비활성을 설정해요. | \`boolean \\| DrawerClosable\` | \`true\` |
+| \`closable\` | 닫기 버튼의 표시·위치·비활성을 설정해요. | \`DrawerClosableType\` | \`true\` |
 | \`extra\` | header 오른쪽에 작업을 추가해요. | \`ReactNode\` | - |
 | \`footer\` | footer 내용을 설정해요. | \`ReactNode\` | - |
 | \`loading\` | 본문 로딩 상태를 표시해요. | \`boolean\` | \`false\` |
 | \`keyboard\` | Escape로 닫을 수 있게 해요. | \`boolean\` | \`true\` |
-| \`mask\` | 배경 마스크·블러·닫기 동작을 설정해요. | \`boolean \\| DrawerMask\` | \`true\` |
-| \`maskClosable\` | 배경을 눌러 닫을지 설정해요. | \`boolean\` | \`true\` |
+| \`mask\` | 배경 마스크·블러·닫기 동작을 설정해요. | \`DrawerMaskType\` | \`true\` |
 | \`scrollLock\` | 열려 있는 동안 문서 스크롤을 잠가요. | \`boolean\` | \`true\` |
 | \`forceRender\` | 닫힌 상태에서도 내용을 미리 렌더링해요. | \`boolean\` | \`false\` |
 | \`destroyOnHidden\` | 닫힌 뒤 내용을 제거해요. | \`boolean\` | \`false\` |
 | \`push\` | 중첩 Drawer가 열릴 때 이동 거리를 설정해요. | \`boolean \\| { distance }\` | \`{ distance: 180 }\` |
 | \`resizable\` | 가장자리 드래그와 크기 제한을 설정해요. | \`boolean \\| DrawerResizableConfig\` | \`false\` |
-| \`maxSize\` | 리사이즈 최대 크기를 설정해요. | \`number\` | - |
 | \`focusable\` | 포커스 순환과 원래 요소 복귀를 설정해요. | \`object\` | - |
 | \`getContainer\` | Drawer를 렌더링할 컨테이너를 설정해요. | \`HTMLElement \\| () => HTMLElement \\| string \\| false\` | \`document.body\` |
 | \`zIndex\` | 겹치는 순서를 설정해요. | \`number\` | \`1000\` |
 | \`classNames\` | 각 영역의 클래스를 설정해요. | \`Record<SemanticName, string>\` | - |
 | \`styles\` | 각 영역의 스타일을 설정해요. | \`Record<SemanticName, CSSProperties>\` | - |
-| \`rootClassName\` | 최상위 요소에 Tailwind 클래스를 추가해요. | \`string\` | - |
-| \`className\` | 패널에 Tailwind 클래스를 추가해요. | \`string\` | - |
+| \`className\` | 최상위 요소에 Tailwind 클래스를 추가해요. | \`string\` | - |
 | \`drawerRender\` | 전체 패널을 감싸서 렌더링해요. | \`(node) => ReactNode\` | - |
 | \`afterOpenChange\` | 열림 상태 전환이 끝나면 실행해요. | \`(open) => void\` | - |
 | \`onClose\` | 닫기 동작이 발생하면 실행해요. | \`(event) => void\` | - |
       `}</Markdown>
+          <h2 className="component-docs-types-heading">Types</h2>
+          <h3 id="drawer-placement-type">DrawerPlacementType</h3>
+          <p>Drawer가 열리는 방향을 선택해요.</p>
+          <TypeTokens values={drawerPlacements} />
+          <h3 id="drawer-size-type">DrawerSizeType</h3>
+          <p>기본 크기, px 숫자 또는 CSS 길이를 사용해요.</p>
+          <TypeTokens values={drawerSizes} />
         </div>
       ),
     },
@@ -114,25 +122,31 @@ export const Placements: Story = {
     docs: {
       ...storyDescription("components-drawer--placements").docs,
       source: {
-        code: withStoryImports(`const placements: DrawerPlacement[] = ['top', 'right', 'bottom', 'left'];
+        code: withStoryImports(`const placements: DrawerPlacementType[] = ['top', 'right', 'bottom', 'left'];
 
 function DrawerPlacements() {
-  const [placement, setPlacement] = useState<DrawerPlacement | null>(null);
+  const [open, setOpen] = useState(false);
+  const [placement, setPlacement] = useState<DrawerPlacementType>('right');
+
+  const showDrawer = (nextPlacement: DrawerPlacementType) => {
+    setPlacement(nextPlacement);
+    setOpen(true);
+  };
 
   return (
     <>
       <div className="flex flex-wrap gap-2">
         {placements.map((item) => (
-          <Button key={item} variant="secondary" onClick={() => setPlacement(item)}>
+          <Button key={item} variant="secondary" onClick={() => showDrawer(item)}>
             {item}
           </Button>
         ))}
       </div>
       <Drawer
-        open={placement !== null}
-        placement={placement ?? 'right'}
+        open={open}
+        placement={placement}
         title={placement}
-        onClose={() => setPlacement(null)}
+        onClose={() => setOpen(false)}
       >
         선택한 방향에서 열려요.
       </Drawer>
@@ -146,22 +160,24 @@ function DrawerPlacements() {
 };
 
 function PlacementExample() {
-  const [placement, setPlacement] = useState<DrawerPlacement | null>(null);
+  const [open, setOpen] = useState(false);
+  const [placement, setPlacement] = useState<DrawerPlacementType>("right");
+
+  const showDrawer = (nextPlacement: DrawerPlacementType) => {
+    setPlacement(nextPlacement);
+    setOpen(true);
+  };
+
   return (
     <>
       <div className="flex flex-wrap gap-2">
         {(["top", "right", "bottom", "left"] as const).map((item) => (
-          <Button key={item} variant="secondary" onClick={() => setPlacement(item)}>
+          <Button key={item} variant="secondary" onClick={() => showDrawer(item)}>
             {item}
           </Button>
         ))}
       </div>
-      <Drawer
-        open={placement !== null}
-        placement={placement ?? "right"}
-        title={placement}
-        onClose={() => setPlacement(null)}
-      >
+      <Drawer open={open} placement={placement} title={placement} onClose={() => setOpen(false)}>
         선택한 방향에서 열려요.
       </Drawer>
     </>

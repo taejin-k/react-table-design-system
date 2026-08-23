@@ -9,6 +9,61 @@
   }
 }
 
+.wizard-image-preview-motion-enter,
+.wizard-image-preview-motion-appear,
+.wizard-image-preview-motion-leave {
+  pointer-events: none;
+}
+
+.wizard-image-preview-motion-enter,
+.wizard-image-preview-motion-appear,
+.wizard-image-preview-motion-leave-active {
+  opacity: 0;
+}
+
+.wizard-image-preview-motion-enter-active,
+.wizard-image-preview-motion-appear-active,
+.wizard-image-preview-motion-leave-active {
+  transition: opacity 300ms cubic-bezier(0.78, 0.14, 0.15, 0.86);
+}
+
+.wizard-image-preview-motion-enter-active,
+.wizard-image-preview-motion-appear-active {
+  opacity: 1;
+}
+
+.wizard-upload-motion-enter,
+.wizard-upload-motion-appear,
+.wizard-upload-motion-leave-active {
+  opacity: 0;
+  grid-template-rows: 0fr;
+}
+
+.wizard-upload-motion-item {
+  display: grid;
+  grid-template-rows: 1fr;
+  min-width: 0;
+}
+
+.wizard-upload-motion-item > div {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.wizard-upload-motion-enter-active,
+.wizard-upload-motion-appear-active,
+.wizard-upload-motion-leave-active {
+  transition:
+    opacity 200ms cubic-bezier(0.08, 0.82, 0.17, 1),
+    grid-template-rows 200ms cubic-bezier(0.645, 0.045, 0.355, 1);
+}
+
+.wizard-upload-motion-enter-active,
+.wizard-upload-motion-appear-active {
+  opacity: 1;
+  grid-template-rows: 1fr;
+}
+
 @keyframes wizard-zoom-big-fast-out {
   0% {
     transform: scale(1);
@@ -121,6 +176,18 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .wizard-image-preview-motion-enter-active,
+  .wizard-image-preview-motion-appear-active,
+  .wizard-image-preview-motion-leave-active,
+  .wizard-image-preview-motion-enter-active .wizard-image-preview-image,
+  .wizard-image-preview-motion-appear-active .wizard-image-preview-image,
+  .wizard-image-preview-motion-leave-active .wizard-image-preview-image,
+  .wizard-upload-motion-enter-active,
+  .wizard-upload-motion-appear-active,
+  .wizard-upload-motion-leave-active {
+    transition-duration: 0s;
+  }
+
   .wizard-zoom-big-fast-enter,
   .wizard-zoom-big-fast-leave,
   .wizard-slide-up-enter,
@@ -128,5 +195,369 @@
   .wizard-slide-down-enter,
   .wizard-slide-down-leave {
     animation-duration: 0s;
+  }
+}
+
+/* Modal separates the mask fade from the click-origin panel zoom. */
+.wizard-modal-mask-motion-appear,
+.wizard-modal-mask-motion-enter,
+.wizard-modal-mask-motion-appear-start,
+.wizard-modal-mask-motion-enter-start,
+.wizard-modal-mask-motion-leave-active {
+  opacity: 0;
+}
+
+.wizard-modal-mask-motion-appear-start,
+.wizard-modal-mask-motion-enter-start,
+.wizard-modal-mask-motion-leave-start {
+  transition: none;
+}
+
+.wizard-modal-mask-motion-appear-active,
+.wizard-modal-mask-motion-enter-active {
+  opacity: 1;
+}
+
+.wizard-modal-mask-motion-appear-active,
+.wizard-modal-mask-motion-enter-active,
+.wizard-modal-mask-motion-leave-active {
+  transition: opacity 0.2s linear;
+}
+
+.wizard-modal-motion-appear,
+.wizard-modal-motion-enter,
+.wizard-modal-motion-appear-start,
+.wizard-modal-motion-enter-start {
+  opacity: 0;
+}
+
+.wizard-modal-motion-appear .wizard-modal-panel,
+.wizard-modal-motion-enter .wizard-modal-panel,
+.wizard-modal-motion-appear-start .wizard-modal-panel,
+.wizard-modal-motion-enter-start .wizard-modal-panel {
+  transform: scale(0.2);
+}
+
+.wizard-modal-motion-appear-prepare .wizard-modal-panel,
+.wizard-modal-motion-enter-prepare .wizard-modal-panel {
+  transform: none;
+}
+
+.wizard-modal-motion-appear-start,
+.wizard-modal-motion-enter-start,
+.wizard-modal-motion-leave-start,
+.wizard-modal-motion-appear-start .wizard-modal-panel,
+.wizard-modal-motion-enter-start .wizard-modal-panel,
+.wizard-modal-motion-leave-start .wizard-modal-panel {
+  transition: none;
+}
+
+.wizard-modal-motion-appear-active,
+.wizard-modal-motion-enter-active {
+  opacity: 1;
+  transition: opacity 0.2s linear;
+}
+
+.wizard-modal-motion-appear-active .wizard-modal-panel,
+.wizard-modal-motion-enter-active .wizard-modal-panel {
+  transform: scale(1);
+  transition: transform 0.2s cubic-bezier(0.08, 0.82, 0.17, 1);
+}
+
+.wizard-modal-motion-leave {
+  opacity: 1;
+}
+
+.wizard-modal-motion-leave .wizard-modal-panel {
+  transform: scale(1);
+}
+
+.wizard-modal-motion-leave-active {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s linear;
+}
+
+.wizard-modal-motion-leave-active .wizard-modal-panel {
+  transform: scale(0.2);
+  transition: transform 0.2s cubic-bezier(0.78, 0.14, 0.15, 0.86);
+}
+
+.wizard-modal-panel {
+  backface-visibility: hidden;
+  will-change: transform;
+}
+
+/* Drawer keeps mask fade and edge panel motion in independent lifecycles. */
+.wizard-drawer-mask-motion-appear,
+.wizard-drawer-mask-motion-enter,
+.wizard-drawer-mask-motion-appear-start,
+.wizard-drawer-mask-motion-enter-start,
+.wizard-drawer-mask-motion-leave-active {
+  opacity: 0;
+}
+
+.wizard-drawer-mask-motion-appear-start,
+.wizard-drawer-mask-motion-enter-start,
+.wizard-drawer-mask-motion-leave-start {
+  transition: none;
+}
+
+.wizard-drawer-mask-motion-appear-active,
+.wizard-drawer-mask-motion-enter-active {
+  opacity: 1;
+}
+
+.wizard-drawer-mask-motion-appear-active,
+.wizard-drawer-mask-motion-enter-active,
+.wizard-drawer-mask-motion-leave-active {
+  transition: opacity 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
+}
+
+.wizard-drawer-motion-appear[data-placement="left"],
+.wizard-drawer-motion-enter[data-placement="left"],
+.wizard-drawer-motion-appear-start[data-placement="left"],
+.wizard-drawer-motion-enter-start[data-placement="left"] {
+  transform: translate3d(-100%, 0, 0);
+}
+
+.wizard-drawer-motion-appear[data-placement="right"],
+.wizard-drawer-motion-enter[data-placement="right"],
+.wizard-drawer-motion-appear-start[data-placement="right"],
+.wizard-drawer-motion-enter-start[data-placement="right"] {
+  transform: translate3d(100%, 0, 0);
+}
+
+.wizard-drawer-motion-appear[data-placement="top"],
+.wizard-drawer-motion-enter[data-placement="top"],
+.wizard-drawer-motion-appear-start[data-placement="top"],
+.wizard-drawer-motion-enter-start[data-placement="top"] {
+  transform: translate3d(0, -100%, 0);
+}
+
+.wizard-drawer-motion-appear[data-placement="bottom"],
+.wizard-drawer-motion-enter[data-placement="bottom"],
+.wizard-drawer-motion-appear-start[data-placement="bottom"],
+.wizard-drawer-motion-enter-start[data-placement="bottom"] {
+  transform: translate3d(0, 100%, 0);
+}
+
+.wizard-drawer-motion-appear,
+.wizard-drawer-motion-enter,
+.wizard-drawer-motion-appear-start,
+.wizard-drawer-motion-enter-start {
+  opacity: 0.7;
+}
+
+.wizard-drawer-motion-appear-start,
+.wizard-drawer-motion-enter-start,
+.wizard-drawer-motion-leave-start {
+  transition: none;
+}
+
+.wizard-drawer-motion-appear-active,
+.wizard-drawer-motion-enter-active,
+.wizard-drawer-motion-leave {
+  opacity: 1;
+}
+
+.wizard-drawer-motion-leave-active {
+  opacity: 0.7;
+}
+
+.wizard-drawer-motion-appear-active[data-placement],
+.wizard-drawer-motion-enter-active[data-placement],
+.wizard-drawer-motion-leave[data-placement] {
+  transform: translate3d(0, 0, 0);
+}
+
+.wizard-drawer-motion-leave-active[data-placement="left"] {
+  transform: translate3d(-100%, 0, 0);
+}
+
+.wizard-drawer-motion-leave-active[data-placement="right"] {
+  transform: translate3d(100%, 0, 0);
+}
+
+.wizard-drawer-motion-leave-active[data-placement="top"] {
+  transform: translate3d(0, -100%, 0);
+}
+
+.wizard-drawer-motion-leave-active[data-placement="bottom"] {
+  transform: translate3d(0, 100%, 0);
+}
+
+.wizard-drawer-motion-appear-active,
+.wizard-drawer-motion-enter-active,
+.wizard-drawer-motion-leave-active {
+  transition: all 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
+}
+
+.wizard-drawer-motion {
+  backface-visibility: hidden;
+  will-change: transform;
+}
+
+.wizard-drawer-panel {
+  transition: transform 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
+  will-change: transform;
+}
+
+/* Message and Notification use the same 64 px placement offset as Ant Design. */
+.wizard-message-list-content {
+  will-change: height;
+  transition: none;
+}
+
+.wizard-message-list-content-decrease {
+  transition: height 0.6s cubic-bezier(0.645, 0.045, 0.355, 1) 0.2s;
+}
+
+.wizard-message-card.wizard-message-motion-appear,
+.wizard-message-card.wizard-message-motion-enter,
+.wizard-message-card.wizard-message-motion-appear-start,
+.wizard-message-card.wizard-message-motion-enter-start {
+  opacity: 0;
+  transform: var(--wizard-message-hidden-transform, translate3d(-50%, -64px, 0));
+}
+
+.wizard-message-card.wizard-message-motion-appear-active,
+.wizard-message-card.wizard-message-motion-enter-active {
+  opacity: 1;
+  transform: var(--wizard-message-visible-transform, translate3d(0, 0, 0));
+  transition:
+    opacity 0.2s cubic-bezier(0.645, 0.045, 0.355, 1),
+    transform 0.2s cubic-bezier(0.645, 0.045, 0.355, 1);
+}
+
+.wizard-message-card.wizard-message-motion-leave,
+.wizard-message-card.wizard-message-motion-leave-start {
+  opacity: 1;
+  transform: var(--wizard-message-visible-transform, translate3d(0, 0, 0));
+}
+
+.wizard-message-card {
+  transform: var(--wizard-message-visible-transform, translate3d(0, 0, 0));
+  transition:
+    transform 0.2s cubic-bezier(0.645, 0.045, 0.355, 1),
+    inset 0.2s cubic-bezier(0.645, 0.045, 0.355, 1),
+    opacity 0.2s cubic-bezier(0.645, 0.045, 0.355, 1);
+}
+
+.wizard-message-card.wizard-message-motion-leave-active {
+  opacity: 0;
+  pointer-events: none;
+  transform: var(--wizard-message-hidden-transform, translate3d(-50%, -64px, 0));
+  transition:
+    opacity 0.2s cubic-bezier(0.645, 0.045, 0.355, 1),
+    transform 0.2s cubic-bezier(0.645, 0.045, 0.355, 1);
+}
+
+.wizard-notification-motion {
+  backface-visibility: hidden;
+  will-change: transform, opacity;
+}
+
+.wizard-notification-list {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.wizard-notification-list::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+@keyframes wizard-notification-progress {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
+.wizard-notification-list-content {
+  will-change: height;
+  transition: none;
+}
+
+.wizard-notification-list-content-decrease {
+  transition: height 0.6s cubic-bezier(0.645, 0.045, 0.355, 1) 0.2s;
+}
+
+.wizard-notification-card.wizard-notification-motion-appear,
+.wizard-notification-card.wizard-notification-motion-enter,
+.wizard-notification-card.wizard-notification-motion-appear-start,
+.wizard-notification-card.wizard-notification-motion-enter-start {
+  opacity: 0;
+  transform: var(--wizard-notification-hidden-transform);
+}
+
+.wizard-notification-card.wizard-notification-motion-appear-prepare,
+.wizard-notification-card.wizard-notification-motion-enter-prepare {
+  transition: none;
+}
+
+.wizard-notification-card.wizard-notification-motion-appear-active,
+.wizard-notification-card.wizard-notification-motion-enter-active {
+  opacity: 1;
+  transform: var(--wizard-notification-visible-transform, translate3d(0, 0, 0));
+}
+
+.wizard-notification-card.wizard-notification-motion-leave,
+.wizard-notification-card.wizard-notification-motion-leave-start {
+  opacity: 1;
+  transform: var(--wizard-notification-visible-transform, translate3d(0, 0, 0));
+}
+
+.wizard-notification-card {
+  transform: var(
+    --wizard-notification-visible-transform,
+    translate3d(0, 0, 0) scale(var(--wizard-notification-scale, 1))
+  );
+  transition:
+    transform 0.2s cubic-bezier(0.645, 0.045, 0.355, 1),
+    inset 0.2s cubic-bezier(0.645, 0.045, 0.355, 1),
+    clip-path 0.2s cubic-bezier(0.645, 0.045, 0.355, 1),
+    opacity 0.2s cubic-bezier(0.645, 0.045, 0.355, 1);
+}
+
+.wizard-notification-card.wizard-notification-stack-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.wizard-notification-card.wizard-notification-motion-leave-active {
+  opacity: 0;
+  pointer-events: none;
+  transform: var(--wizard-notification-hidden-transform);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wizard-modal-motion-appear-active,
+  .wizard-modal-motion-enter-active,
+  .wizard-modal-motion-leave-active,
+  .wizard-modal-motion-appear-active .wizard-modal-panel,
+  .wizard-modal-motion-enter-active .wizard-modal-panel,
+  .wizard-modal-motion-leave-active .wizard-modal-panel,
+  .wizard-modal-mask-motion-appear-active,
+  .wizard-modal-mask-motion-enter-active,
+  .wizard-modal-mask-motion-leave-active,
+  .wizard-drawer-motion-appear-active,
+  .wizard-drawer-motion-enter-active,
+  .wizard-drawer-motion-leave-active,
+  .wizard-drawer-panel,
+  .wizard-drawer-mask-motion-appear-active,
+  .wizard-drawer-mask-motion-enter-active,
+  .wizard-drawer-mask-motion-leave-active,
+  .wizard-message-motion-appear-active,
+  .wizard-message-motion-enter-active,
+  .wizard-message-motion-leave-active,
+  .wizard-notification-motion-appear-active,
+  .wizard-notification-motion-enter-active,
+  .wizard-notification-motion-leave-active {
+    transition-duration: 0s;
   }
 }

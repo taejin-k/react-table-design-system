@@ -412,7 +412,7 @@ export const ClientError: Story = {
   parameters: {
     ...storySource(
       "components-textarea--client-error",
-      `const validateRequest = (value) => {
+      `const validateRequest = (value: string) => {
   if (!value.trim()) return '요청 내용을 입력해 주세요.';
   if (value.trim().length < 10) return '요청 내용은 10자 이상 입력해 주세요.';
   return '';
@@ -453,7 +453,7 @@ export const ServerError: Story = {
   parameters: {
     ...storySource(
       "components-textarea--server-error",
-      `const checkRequestAvailability = async (value) => {
+      `const checkRequestAvailability = async (value: string) => {
   await new Promise((resolve) => setTimeout(resolve, 600));
   return value.trim() === '이미 등록된 요청' ? '이미 등록된 요청이에요.' : '';
 };

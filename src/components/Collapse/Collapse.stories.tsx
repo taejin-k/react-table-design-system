@@ -2,20 +2,29 @@ import { Description, Markdown, Stories, Title } from "@storybook/addon-docs/blo
 import type { Meta, StoryObj } from "@storybook/react";
 import { storyDescriptions } from "../../storybook/story-descriptions";
 import { withStoryImports } from "../../storybook/story-source";
+import { TypeTokens } from "../../storybook/type-tokens";
 import { Collapse } from "./Collapse";
+import type {
+  CollapseCollapsibleType,
+  CollapseExpandIconPlacementType,
+  CollapseSizeType,
+} from "./Collapse.types";
+
+const collapseSizes: CollapseSizeType[] = ["large", "medium", "small"];
+const collapseModes: CollapseCollapsibleType[] = ["header", "icon", "disabled"];
+const collapseIconPlacements: CollapseExpandIconPlacementType[] = ["start", "end"];
 
 const items = [
   {
     key: "one",
     label: "디자인 시스템이란 무엇인가요?",
-    children: "제품 전반에서 일관된 사용자 경험을 만들기 위한 원칙과 컴포넌트 모음입니다.",
+    children: "일관된 사용자 경험을 위한 원칙과 컴포넌트 모음입니다.",
   },
   {
     key: "two",
     label: "여러 패널을 열 수 있나요?",
     children: "기본 모드에서는 여러 패널을 동시에 열 수 있습니다.",
   },
-  { key: "three", label: "비활성 패널", children: "", collapsible: "disabled" as const },
 ];
 const itemsSource = `const items = [
   {
@@ -36,7 +45,6 @@ const meta = {
   title: "Components/Collapse",
   component: Collapse,
   tags: ["autodocs"],
-  args: { items, defaultActiveKey: ["one"] },
   parameters: {
     controls: { disable: true },
     docs: {
@@ -54,16 +62,18 @@ const meta = {
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
 | \`items\` | 패널 헤더와 콘텐츠를 구성해요. | \`CollapseItem[]\` | \`[]\` |
-| \`activeKey\` | 펼친 패널을 제어해요. | \`CollapseKey \\| CollapseKey[]\` | - |
-| \`defaultActiveKey\` | 처음 펼칠 패널을 정해요. | \`CollapseKey \\| CollapseKey[]\` | \`[]\` |
+| \`activeKey\` | 펼친 패널을 제어해요. | \`CollapseKeyType \\| CollapseKeyType[]\` | - |
+| \`defaultActiveKey\` | 처음 펼칠 패널을 정해요. | \`CollapseKeyType \\| CollapseKeyType[]\` | \`[]\` |
 | \`accordion\` | 한 번에 하나의 패널만 펼쳐요. | \`boolean\` | \`false\` |
 | \`bordered\` | 외곽선과 패널 구분선을 표시해요. | \`boolean\` | \`true\` |
 | \`ghost\` | 배경과 테두리를 제거해요. | \`boolean\` | \`false\` |
-| \`size\` | 패널 헤더와 본문의 여백을 정해요. | \`'large' \\| 'medium' \\| 'small'\` | \`'medium'\` |
-| \`collapsible\` | 헤더·아이콘만 클릭하거나 전체를 비활성화해요. | \`'header' \\| 'icon' \\| 'disabled'\` | \`'header'\` |
-| \`expandIconPlacement\` | 펼침 아이콘을 시작 또는 끝에 배치해요. | \`'start' \\| 'end'\` | \`'start'\` |
+| \`size\` | 패널 헤더와 본문의 여백을 정해요. | [\`CollapseSizeType\`](#collapse-size-type) | \`medium\` |
+| \`collapsible\` | 헤더·아이콘만 클릭하거나 전체를 비활성화해요. | [\`CollapseCollapsibleType\`](#collapse-collapsible-type) | \`header\` |
+| \`expandIcon\` | 펼침 아이콘을 직접 구성해요. | \`(panel) => ReactNode\` | 기본 화살표 |
+| \`expandIconPlacement\` | 펼침 아이콘을 시작 또는 끝에 배치해요. | [\`CollapseExpandIconPlacementType\`](#collapse-expand-icon-placement-type) | \`start\` |
 | \`destroyOnHidden\` | 접힌 패널 콘텐츠를 DOM에서 제거해요. | \`boolean\` | \`false\` |
 | \`onChange\` | 펼친 패널이 바뀔 때 실행해요. | \`(key) => void\` | - |
+| \`className\` | 최상위 요소에 Tailwind 클래스를 추가해요. | \`string\` | - |
 
 ### CollapseItem
 
@@ -75,6 +85,16 @@ const meta = {
 | \`extra\` | 헤더 반대편에 추가 콘텐츠를 배치해요. | \`ReactNode\` | - |
 | \`showArrow\` | 펼침 아이콘 표시 여부를 정해요. | \`boolean\` | \`true\` |
           `}</Markdown>
+          <h2 className="component-docs-types-heading">Types</h2>
+          <h3 id="collapse-size-type">CollapseSizeType</h3>
+          <p>패널 크기를 선택해요.</p>
+          <TypeTokens values={collapseSizes} />
+          <h3 id="collapse-collapsible-type">CollapseCollapsibleType</h3>
+          <p>패널을 여는 영역을 선택해요.</p>
+          <TypeTokens values={collapseModes} />
+          <h3 id="collapse-expand-icon-placement-type">CollapseExpandIconPlacementType</h3>
+          <p>펼침 아이콘 위치를 선택해요.</p>
+          <TypeTokens values={collapseIconPlacements} />
         </div>
       ),
     },
@@ -85,6 +105,7 @@ type Story = StoryObj<typeof meta>;
 
 const basicSource = `<Collapse defaultActiveKey={['one']} items={[\n  { key: 'one', label: '디자인 시스템이란 무엇인가요?', children: '일관된 사용자 경험을 위한 원칙과 컴포넌트 모음입니다.' },\n  { key: 'two', label: '여러 패널을 열 수 있나요?', children: '기본 모드에서는 여러 패널을 동시에 열 수 있습니다.' },\n]} />`;
 export const Basic: Story = {
+  args: { items, defaultActiveKey: ["one"] },
   parameters: {
     ...storyDescription("components-collapse--basic"),
     docs: {
@@ -94,7 +115,7 @@ export const Basic: Story = {
   },
 };
 export const Accordion: Story = {
-  args: { accordion: true },
+  args: { items, accordion: true, defaultActiveKey: "one" },
   parameters: {
     ...storyDescription("components-collapse--accordion"),
     docs: {
@@ -109,7 +130,7 @@ export const Accordion: Story = {
   },
 };
 export const Ghost: Story = {
-  args: { ghost: true, bordered: false },
+  args: { items, ghost: true, bordered: false, defaultActiveKey: ["one"] },
   parameters: {
     ...storyDescription("components-collapse--ghost"),
     docs: {

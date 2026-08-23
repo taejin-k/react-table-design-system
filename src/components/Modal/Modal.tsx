@@ -8,16 +8,13 @@ import {
   type MouseEvent,
   type ReactNode,
 } from "react";
+import CSSMotion from "@rc-component/motion";
 import { createRoot, type Root } from "react-dom/client";
 import { createPortal } from "react-dom";
 import { twMerge } from "tailwind-merge";
 import { Button } from "../Button";
 import { Icon } from "../Icon";
-import {
-  MOTION_DURATION_MID,
-  MOTION_EASE_IN_OUT_CIRC,
-  MOTION_EASE_OUT_CIRC,
-} from "../_internal/motion";
+import { MOTION_DURATION_MID } from "../_internal/motion";
 import { lockBodyScroll } from "../_internal/body-scroll-lock";
 import type {
   ModalComponent,
@@ -25,12 +22,29 @@ import type {
   ModalFuncResult,
   ModalProps,
   ModalStaticFunctions,
-  ModalWidth,
+  ModalWidthType,
 } from "./Modal.types";
 
 const breakpointWidth = { xs: 480, sm: 576, md: 768, lg: 992, xl: 1200, xxl: 1600 };
 
-function resolveWidth(width: ModalWidth | undefined) {
+let latestPointerPosition: { x: number; y: number; time: number } | null = null;
+let pointerListenerAttached = false;
+
+function ensurePointerListener() {
+  if (pointerListenerAttached || typeof document === "undefined") return;
+  pointerListenerAttached = true;
+  document.addEventListener(
+    "click",
+    (event) => {
+      latestPointerPosition = { x: event.clientX, y: event.clientY, time: Date.now() };
+    },
+    true,
+  );
+}
+
+ensurePointerListener();
+
+function resolveWidth(width: ModalWidthType | undefined) {
   if (!width || typeof width !== "object") return width ?? 520;
   if (typeof window === "undefined") return width.xs ?? 520;
   return Object.entries(breakpointWidth).reduce<number | string>((current, [key, minWidth]) => {
@@ -52,10 +66,8 @@ function ModalBase({
   children,
   footer,
   closable = true,
-  closeIcon,
   centered = false,
   width = 520,
-  loading = false,
   confirmLoading = false,
   okText = "확인",
   cancelText = "취소",
@@ -64,19 +76,14 @@ function ModalBase({
   cancelButtonProps,
   keyboard = true,
   mask = true,
-  maskClosable,
   scrollLock = true,
   forceRender = false,
   destroyOnHidden = false,
-  destroyOnClose = false,
   focusable,
-  focusTriggerAfterClose,
   getContainer,
   zIndex = 1000,
   style,
   className,
-  rootClassName,
-  wrapClassName,
   classNames,
   styles,
   modalRender,
@@ -85,83 +92,37 @@ function ModalBase({
   onOk,
   onCancel,
 }: ModalProps) {
-  const [rendered, setRendered] = useState(open || forceRender);
-  const [closing, setClosing] = useState(false);
-  const [motionVisible, setMotionVisible] = useState(false);
-  const motionFrameRef = useRef<number | undefined>(undefined);
-  const didMountRef = useRef(false);
-  const renderedRef = useRef(open || forceRender);
-  const lifecycleRef = useRef({
-    afterClose,
-    afterOpenChange,
-    focusTriggerAfterClose,
-    focusable,
-    forceRender,
-    shouldDestroy: destroyOnHidden || destroyOnClose,
-  });
-  lifecycleRef.current = {
-    afterClose,
-    afterOpenChange,
-    focusTriggerAfterClose,
-    focusable,
-    forceRender,
-    shouldDestroy: destroyOnHidden || destroyOnClose,
-  };
+  const [rootVisible, setRootVisible] = useState(open);
   const panelRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLElement | null>(null);
-  const resolvedCloseIcon =
-    typeof closable === "object" ? (closable.closeIcon ?? closeIcon) : closeIcon;
+  const transformOriginRef = useRef("center center");
+  const resolvedCloseIcon = typeof closable === "object" ? closable.closeIcon : undefined;
   const closeDisabled = typeof closable === "object" && closable.disabled;
   const showClose = closable !== false;
   const maskEnabled = typeof mask === "object" ? mask.enabled !== false : mask;
-  const canCloseMask = maskClosable ?? (typeof mask === "object" ? mask.closable !== false : true);
+  const canCloseMask = typeof mask === "object" ? mask.closable !== false : true;
   const blurMask = typeof mask === "object" && mask.blur;
+
   useEffect(() => {
-    if (!didMountRef.current) {
-      didMountRef.current = true;
-      if (!open) return;
-    }
-    if (open) {
-      triggerRef.current = document.activeElement as HTMLElement;
-      renderedRef.current = true;
-      setRendered(true);
-      setClosing(false);
-      window.cancelAnimationFrame(motionFrameRef.current ?? 0);
-      motionFrameRef.current = window.requestAnimationFrame(() => {
-        motionFrameRef.current = window.requestAnimationFrame(() => setMotionVisible(true));
-      });
-      const timer = window.setTimeout(
-        () => lifecycleRef.current.afterOpenChange?.(true),
-        MOTION_DURATION_MID,
-      );
-      return () => {
-        window.cancelAnimationFrame(motionFrameRef.current ?? 0);
-        window.clearTimeout(timer);
-      };
-    }
-    if (!renderedRef.current) return;
-    setClosing(true);
-    setMotionVisible(false);
-    const timer = window.setTimeout(() => {
-      setClosing(false);
-      if (lifecycleRef.current.shouldDestroy && !lifecycleRef.current.forceRender) {
-        renderedRef.current = false;
-        setRendered(false);
-      }
-      lifecycleRef.current.afterOpenChange?.(false);
-      lifecycleRef.current.afterClose?.();
-      if (
-        lifecycleRef.current.focusable?.focusTriggerAfterClose ??
-        lifecycleRef.current.focusTriggerAfterClose ??
-        true
-      )
-        triggerRef.current?.focus();
-    }, MOTION_DURATION_MID);
-    return () => {
-      window.cancelAnimationFrame(motionFrameRef.current ?? 0);
-      window.clearTimeout(timer);
-    };
+    if (open) setRootVisible(true);
   }, [open]);
+
+  useEffect(() => {
+    if (open) triggerRef.current = document.activeElement as HTMLElement;
+  }, [open]);
+
+  const prepareTransformOrigin = useCallback(() => {
+    if (!panelRef.current) return;
+    const point = latestPointerPosition;
+    if (!point || Date.now() - point.time > 500) {
+      transformOriginRef.current = "center center";
+      panelRef.current.style.transformOrigin = transformOriginRef.current;
+      return;
+    }
+    const rect = panelRef.current.getBoundingClientRect();
+    transformOriginRef.current = `${point.x - rect.left}px ${point.y - rect.top}px`;
+    panelRef.current.style.transformOrigin = transformOriginRef.current;
+  }, []);
 
   useEffect(() => {
     if (!open || !keyboard) return;
@@ -197,8 +158,6 @@ function ModalBase({
     return lockBodyScroll();
   }, [open, scrollLock]);
 
-  if (!rendered && !open) return null;
-
   const close = (event: MouseEvent<HTMLButtonElement | HTMLDivElement>) => onCancel?.(event);
   const CancelBtn = () => (
     <Button variant="secondary" {...cancelButtonProps} onClick={(event) => close(event)}>
@@ -209,10 +168,10 @@ function ModalBase({
     <Button
       variant={okType}
       {...okButtonProps}
-      disabled={confirmLoading || okButtonProps?.disabled}
+      loading={confirmLoading}
+      disabled={okButtonProps?.disabled}
       onClick={onOk}
     >
-      {confirmLoading ? <Icon icon="loading" /> : null}
       {okText}
     </Button>
   );
@@ -233,57 +192,48 @@ function ModalBase({
       ref={panelRef}
       data-modal-panel
       className={twMerge(
-        "relative max-h-[calc(100vh-48px)] overflow-hidden rounded-lg bg-white font-pretendard text-sm text-[#111] shadow-[0_12px_32px_rgba(0,0,0,0.18)] transition-[opacity,transform] duration-200 motion-reduce:transition-none",
-        motionVisible ? "scale-100 opacity-100" : "scale-[0.8] opacity-0",
-        className,
+        "wizard-modal-panel relative max-h-[calc(100vh-48px)] overflow-hidden rounded-lg bg-white px-6 py-5 font-pretendard text-sm leading-[22px] text-[#111] shadow-[0_6px_16px_rgba(0,0,0,0.08),0_3px_6px_-4px_rgba(0,0,0,0.12),0_9px_28px_8px_rgba(0,0,0,0.05)]",
+        "pointer-events-auto",
+        classNames?.panel,
       )}
       style={{
         width: resolveWidth(width),
         maxWidth: "calc(100vw - 32px)",
-        transitionTimingFunction: motionVisible ? MOTION_EASE_OUT_CIRC : MOTION_EASE_IN_OUT_CIRC,
-        ...style,
+        transformOrigin: transformOriginRef.current,
+        ...styles?.panel,
       }}
     >
       {title !== undefined ? (
         <div
-          className={twMerge(
-            "flex min-h-14 items-center px-6 pr-14 text-base font-semibold",
-            classNames?.header,
-          )}
+          className={twMerge("mb-2 text-base leading-6 font-semibold", classNames?.header)}
           style={styles?.header}
         >
           {title}
         </div>
       ) : null}
       {showClose ? (
-        <button
-          type="button"
+        <Button
+          variant="ghost"
+          size="md"
+          iconOnly
+          prefixIcon={
+            <span className="inline-flex">
+              {resolvedCloseIcon ?? <Icon icon="close" size={16} />}
+            </span>
+          }
           disabled={closeDisabled}
-          className="absolute top-4 right-4 inline-flex size-6 cursor-pointer items-center justify-center rounded text-[#666] hover:bg-[#f5f5f5] disabled:cursor-not-allowed disabled:opacity-40"
+          className="absolute top-3 right-3 size-7 text-[#666]"
           onClick={close}
-        >
-          {resolvedCloseIcon ?? <Icon icon="close" />}
-        </button>
+        />
       ) : null}
       <div
-        className={twMerge("max-h-[calc(100vh-176px)] overflow-auto px-6 py-5", classNames?.body)}
+        className={twMerge("max-h-[calc(100vh-152px)] overflow-auto", classNames?.body)}
         style={styles?.body}
       >
-        {loading ? (
-          <div className="grid gap-3 py-2">
-            <div className="h-4 w-2/3 animate-pulse rounded bg-[#eee]" />
-            <div className="h-4 animate-pulse rounded bg-[#eee]" />
-            <div className="h-4 w-5/6 animate-pulse rounded bg-[#eee]" />
-          </div>
-        ) : (
-          children
-        )}
+        {children}
       </div>
       {footerNode !== null ? (
-        <div
-          className={twMerge("border-t border-[#f0f0f0] px-6 py-4", classNames?.footer)}
-          style={styles?.footer}
-        >
+        <div className={twMerge("mt-3", classNames?.footer)} style={styles?.footer}>
           {footerNode}
         </div>
       ) : null}
@@ -293,52 +243,101 @@ function ModalBase({
     <div
       data-modal-root
       className={twMerge(
-        "fixed inset-0 font-pretendard",
-        open || closing ? "pointer-events-auto visible" : "pointer-events-none invisible",
-        rootClassName,
+        "pointer-events-none fixed inset-0 font-pretendard",
+        className,
         classNames?.root,
       )}
-      style={{ zIndex, ...styles?.root }}
+      style={{
+        zIndex,
+        ...style,
+        ...styles?.root,
+        display: open || rootVisible ? undefined : "none",
+      }}
     >
       {maskEnabled ? (
-        <div
-          data-modal-mask
-          className={twMerge(
-            "absolute inset-0 bg-black/45 transition-opacity duration-200 motion-reduce:transition-none",
-            blurMask && "backdrop-blur-sm",
-            motionVisible ? "opacity-100" : "opacity-0",
-            classNames?.mask,
+        <CSSMotion
+          visible={open}
+          motionName="wizard-modal-mask-motion"
+          motionDeadline={MOTION_DURATION_MID + 50}
+          removeOnLeave
+        >
+          {({ className: maskMotionClassName, style: maskMotionStyle }, maskRef) => (
+            <div
+              ref={maskRef}
+              data-modal-mask
+              className={twMerge(
+                "pointer-events-auto absolute inset-0 bg-black/45",
+                blurMask && "backdrop-blur-sm",
+                maskMotionClassName,
+                classNames?.mask,
+              )}
+              style={{ ...styles?.mask, ...maskMotionStyle }}
+              onClick={canCloseMask ? close : undefined}
+            />
           )}
-          style={styles?.mask}
-          onClick={canCloseMask ? close : undefined}
-        />
+        </CSSMotion>
       ) : null}
-      <div
-        className={twMerge(
-          "absolute inset-0 flex overflow-auto px-4 py-6",
-          centered ? "items-center justify-center" : "items-start justify-center pt-[100px]",
-          wrapClassName,
-          classNames?.wrapper,
-        )}
-        style={styles?.wrapper}
+      <CSSMotion
+        visible={open}
+        motionName="wizard-modal-motion"
+        motionDeadline={MOTION_DURATION_MID + 50}
+        forceRender={forceRender || !destroyOnHidden}
+        removeOnLeave={destroyOnHidden}
+        onAppearPrepare={prepareTransformOrigin}
+        onEnterPrepare={prepareTransformOrigin}
+        onVisibleChanged={(visible) => {
+          setRootVisible(visible);
+          afterOpenChange?.(visible);
+          if (visible) return;
+          afterClose?.();
+          if (focusable?.focusTriggerAfterClose !== false) triggerRef.current?.focus();
+        }}
       >
-        {modalRender ? modalRender(panel) : panel}
-      </div>
+        {({ className: motionClassName, style: motionStyle }, motionRef) => (
+          <div
+            ref={motionRef}
+            data-modal-motion
+            className={twMerge(
+              "pointer-events-none absolute inset-0 flex overflow-auto px-4 py-6",
+              centered ? "items-center justify-center" : "items-start justify-center pt-[100px]",
+              motionClassName,
+              classNames?.wrapper,
+            )}
+            style={{ ...styles?.wrapper, ...motionStyle }}
+          >
+            {modalRender ? modalRender(panel) : panel}
+          </div>
+        )}
+      </CSSMotion>
     </div>
   );
   const container = resolveContainer(getContainer);
   return container ? createPortal(content, container) : content;
 }
 
-type ManagedModal = { key: string; config: ModalFuncConfig; resolve: (value: boolean) => void };
+type ManagedModal = {
+  key: string;
+  config: ModalFuncConfig;
+  open: boolean;
+  result?: boolean;
+  resolve: (value: boolean) => void;
+};
 
 function useModalHolder(): [Omit<ModalStaticFunctions, "destroyAll">, ReactNode] {
   const [items, setItems] = useState<ManagedModal[]>([]);
   const resolvers = useRef(new Map<string, (value: boolean) => void>());
   const close = useCallback((key: string, value: boolean) => {
-    resolvers.current.get(key)?.(value);
-    resolvers.current.delete(key);
-    setItems((current) => current.filter((item) => item.key !== key));
+    setItems((current) =>
+      current.map((item) => (item.key === key ? { ...item, open: false, result: value } : item)),
+    );
+  }, []);
+  const remove = useCallback((key: string) => {
+    setItems((current) => {
+      const target = current.find((item) => item.key === key);
+      if (target) resolvers.current.get(key)?.(target.result ?? false);
+      resolvers.current.delete(key);
+      return current.filter((item) => item.key !== key);
+    });
   }, []);
   const open = useCallback(
     (type: ModalFuncConfig["type"], initial: ModalFuncConfig) => {
@@ -350,7 +349,7 @@ function useModalHolder(): [Omit<ModalStaticFunctions, "destroyAll">, ReactNode]
       resolvers.current.set(key, resolvePromise);
       setItems((current) => [
         ...current,
-        { key, config: { ...initial, type }, resolve: resolvePromise },
+        { key, config: { ...initial, type }, open: true, resolve: resolvePromise },
       ]);
       const result: ModalFuncResult = {
         // oxlint-disable-next-line unicorn/no-thenable -- Ant Design-compatible awaitable modal API.
@@ -385,32 +384,44 @@ function useModalHolder(): [Omit<ModalStaticFunctions, "destroyAll">, ReactNode]
     }),
     [open],
   );
-  const holder = items.map(({ key, config }) => (
-    <ConfirmModal key={key} config={config} onClose={(value) => close(key, value)} />
+  const holder = items.map(({ key, config, open: itemOpen }) => (
+    <ConfirmModal
+      key={key}
+      config={config}
+      open={itemOpen}
+      onClose={(value) => close(key, value)}
+      onAfterClose={() => remove(key)}
+    />
   ));
   return [api, holder];
 }
 
 function ConfirmModal({
   config,
+  open,
   onClose,
+  onAfterClose,
 }: {
   config: ModalFuncConfig;
+  open: boolean;
   onClose: (value: boolean) => void;
+  onAfterClose: () => void;
 }) {
   const [loading, setLoading] = useState(false);
   const iconName =
     config.type === "success"
-      ? "check-circle-outlined"
-      : config.type === "error" || config.type === "warning"
-        ? "warning"
-        : "info-circle-outlined";
+      ? "check-circle-filled"
+      : config.type === "error"
+        ? "close-circle-filled"
+        : config.type === "warning" || config.type === "confirm"
+          ? "warning-circle-filled"
+          : "info-circle-filled";
   const iconColor =
     config.type === "success"
       ? "#52c41a"
       : config.type === "error"
         ? "#ff4d4f"
-        : config.type === "warning"
+        : config.type === "warning" || config.type === "confirm"
           ? "#faad14"
           : "#0062df";
   const run = async (
@@ -418,29 +429,88 @@ function ConfirmModal({
     value: boolean,
   ) => {
     setLoading(true);
-    try {
-      await action?.(() => onClose(value));
+    let closed = false;
+    const closeOnce = () => {
+      if (closed) return;
+      closed = true;
       onClose(value);
+    };
+    try {
+      await action?.(closeOnce);
+      closeOnce();
     } finally {
       setLoading(false);
     }
   };
+  const CancelBtn = () => (
+    <Button
+      variant="secondary"
+      {...config.cancelButtonProps}
+      onClick={() => void run(config.onCancel, false)}
+    >
+      {config.cancelText ?? "취소"}
+    </Button>
+  );
+  const OkBtn = () => (
+    <Button
+      variant={config.okType ?? "primary"}
+      {...config.okButtonProps}
+      loading={loading}
+      onClick={() => void run(config.onOk, true)}
+    >
+      {config.okText ?? "확인"}
+    </Button>
+  );
+  const defaultFooter = (
+    <div className="flex justify-end gap-2">
+      {config.type === "confirm" ? <CancelBtn /> : null}
+      <OkBtn />
+    </div>
+  );
+  const footerNode =
+    typeof config.footer === "function"
+      ? config.footer(defaultFooter, { OkBtn, CancelBtn })
+      : config.footer === undefined
+        ? defaultFooter
+        : config.footer;
+  const staticMask =
+    typeof config.mask === "object"
+      ? config.mask
+      : config.mask === false
+        ? false
+        : { enabled: true, closable: false };
+
   return (
     <ModalBase
       {...config}
-      open
+      open={open}
       width={config.width ?? 416}
-      confirmLoading={loading}
-      title={config.title}
-      footer={config.footer}
+      title={undefined}
+      footer={footerNode}
+      closable={config.closable ?? false}
+      mask={staticMask}
+      afterClose={onAfterClose}
       onCancel={() => void run(config.onCancel, false)}
-      onOk={() => void run(config.onOk, true)}
+      onOk={undefined}
     >
-      <div className="flex gap-3">
-        {config.icon === null
-          ? null
-          : (config.icon ?? <Icon icon={iconName} color={iconColor} size={22} />)}
-        <div className="min-w-0 flex-1">{config.content}</div>
+      <div className="flex items-start">
+        {config.icon === null ? null : (
+          <span className="mt-px mr-3 inline-flex size-[22px] shrink-0 items-center justify-center leading-none">
+            {config.icon ?? <Icon icon={iconName} color={iconColor} size={22} />}
+          </span>
+        )}
+        <div className="min-w-0 flex-1">
+          {config.title !== undefined ? (
+            <div className="text-base leading-6 font-semibold">{config.title}</div>
+          ) : null}
+          {config.content !== undefined ? (
+            <div
+              className={twMerge("text-sm leading-[22px]", config.title !== undefined && "mt-2")}
+            >
+              {config.content}
+            </div>
+          ) : null}
+        </div>
       </div>
     </ModalBase>
   );
@@ -475,18 +545,28 @@ function callStatic(
   ensureStaticHost();
   if (staticApi) return staticApi[method](config);
   let result: ModalFuncResult | undefined;
-  queued.push((api) => {
-    result = api[method](config);
-  });
+  let destroyRequested = false;
+  const pendingUpdates: Array<ModalFuncConfig | ((previous: ModalFuncConfig) => ModalFuncConfig)> =
+    [];
   const pending = new Promise<boolean>((resolve) => {
-    queued.push(() => result?.then(resolve));
+    queued.push((api) => {
+      result = api[method](config);
+      pendingUpdates.splice(0).forEach((next) => result?.update(next));
+      if (destroyRequested) result.destroy();
+      result.then(resolve);
+    });
   });
   return {
     // oxlint-disable-next-line unicorn/no-thenable -- Ant Design-compatible awaitable modal API.
     then: pending.then.bind(pending),
-    destroy: () => result?.destroy(),
-    update: (next: ModalFuncConfig | ((previous: ModalFuncConfig) => ModalFuncConfig)) =>
-      result?.update(next),
+    destroy: () => {
+      if (result) result.destroy();
+      else destroyRequested = true;
+    },
+    update: (next: ModalFuncConfig | ((previous: ModalFuncConfig) => ModalFuncConfig)) => {
+      if (result) result.update(next);
+      else pendingUpdates.push(next);
+    },
   };
 }
 
@@ -505,6 +585,4 @@ const staticFunctions: ModalStaticFunctions = {
   },
 };
 
-export const Modal = Object.assign(ModalBase, staticFunctions, {
-  useModal: useModalHolder,
-}) as ModalComponent;
+export const Modal = Object.assign(ModalBase, staticFunctions) as ModalComponent;

@@ -1,8 +1,17 @@
 import { Description, Markdown, Stories, Title } from "@storybook/addon-docs/blocks";
 import type { Meta, StoryObj } from "@storybook/react";
+import { useState } from "react";
 import { storyDescriptions } from "../../storybook/story-descriptions";
 import { withStoryImports } from "../../storybook/story-source";
+import { TypeTokens } from "../../storybook/type-tokens";
+import { Button } from "../Button";
 import { Skeleton } from "./Skeleton";
+import type { SkeletonShapeType, SkeletonSizeType } from "./Skeleton.types";
+
+const skeletonSizes = ["large", "medium", "small", "number"] satisfies readonly (
+  SkeletonSizeType | "number"
+)[];
+const skeletonShapes: SkeletonShapeType[] = ["circle", "round", "square", "default"];
 
 const storyDescription = (id: string) => ({
   docs: { description: { story: storyDescriptions[id] } },
@@ -11,7 +20,6 @@ const meta = {
   title: "Components/Skeleton",
   component: Skeleton,
   tags: ["autodocs"],
-  args: { active: true, avatar: true, paragraph: { rows: 3 } },
   parameters: {
     controls: { disable: true },
     docs: {
@@ -36,6 +44,7 @@ const meta = {
 | \`title\` | 제목 자리 표시자를 표시하고 너비를 정해요. | \`boolean \\| { width?: string \\| number }\` | \`true\` |
 | \`paragraph\` | 문단의 행 수와 각 행 너비를 정해요. | \`boolean \\| { rows?: number; width?: string \\| number \\| Array }\` | \`true\` |
 | \`round\` | 제목과 문단 모서리를 더 둥글게 표시해요. | \`boolean\` | \`false\` |
+| \`className\` | 최상위 요소에 Tailwind 클래스를 추가해요. | \`string\` | - |
 
 ### Skeleton Element
 
@@ -44,10 +53,20 @@ const meta = {
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
 | \`active\` | 흐르는 애니메이션을 적용해요. | \`boolean\` | \`false\` |
-| \`block\` | 부모 너비를 모두 채워요. | \`boolean\` | \`false\` |
-| \`size\` | 요소 크기를 정해요. | \`number \\| 'large' \\| 'medium' \\| 'small'\` | \`'medium'\` |
-| \`shape\` | 요소 모양을 정해요. | \`'circle' \\| 'round' \\| 'square' \\| 'default'\` | 요소별 기본값 |
+| \`fullWidth\` | 부모 너비를 모두 채워요. | \`boolean\` | \`false\` |
+| \`width\` | 요소 너비를 정해요. | \`CSSProperties['width']\` | 요소별 기본값 |
+| \`height\` | 요소 높이를 정해요. | \`CSSProperties['height']\` | 요소별 기본값 |
+| \`size\` | 요소 크기를 정해요. | [\`SkeletonSizeType\`](#skeleton-size-type) | \`medium\` |
+| \`shape\` | 요소 모양을 정해요. | [\`SkeletonShapeType\`](#skeleton-shape-type) | 요소별 기본값 |
+| \`className\` | 최상위 요소에 Tailwind 클래스를 추가해요. | \`string\` | - |
           `}</Markdown>
+          <h2 className="component-docs-types-heading">Types</h2>
+          <h3 id="skeleton-size-type">SkeletonSizeType</h3>
+          <p>미리 정한 크기 또는 px 숫자를 사용해요.</p>
+          <TypeTokens values={skeletonSizes} />
+          <h3 id="skeleton-shape-type">SkeletonShapeType</h3>
+          <p>자리 표시자 모양을 선택해요.</p>
+          <TypeTokens values={skeletonShapes} />
         </div>
       ),
     },
@@ -57,6 +76,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Basic: Story = {
+  args: { active: true, avatar: true, paragraph: { rows: 3 } },
   parameters: {
     ...storyDescription("components-skeleton--basic"),
     docs: {
@@ -76,7 +96,7 @@ export const Elements: Story = {
       source: {
         type: "code",
         code: withStoryImports(
-          `<div className="flex items-center gap-3">\n  <Skeleton.Avatar active />\n  <Skeleton.Button active />\n  <Skeleton.Input active style={{ width: 180 }} />\n  <Skeleton.Image active />\n</div>`,
+          `<div className="flex items-center gap-3">\n  <Skeleton.Avatar active />\n  <Skeleton.Button active />\n  <Skeleton.Input active width={180} />\n  <Skeleton.Image active />\n</div>`,
         ),
       },
     },
@@ -85,13 +105,12 @@ export const Elements: Story = {
     <div className="flex items-center gap-3">
       <Skeleton.Avatar active />
       <Skeleton.Button active />
-      <Skeleton.Input active style={{ width: 180 }} />
+      <Skeleton.Input active width={180} />
       <Skeleton.Image active />
     </div>
   ),
 };
 export const Loaded: Story = {
-  args: { loading: false, children: <div>불러온 콘텐츠</div> },
   parameters: {
     ...storyDescription("components-skeleton--loaded"),
     docs: {
@@ -99,9 +118,43 @@ export const Loaded: Story = {
       source: {
         type: "code",
         code: withStoryImports(
-          `<Skeleton loading={false} active>\n  <div>불러온 콘텐츠</div>\n</Skeleton>`,
+          `function LoadingContent() {
+  const [loading, setLoading] = useState(true);
+
+  return (
+    <div className="grid gap-4">
+      <Button className="w-fit" onClick={() => setLoading((current) => !current)}>
+        {loading ? '불러오기 완료' : '다시 불러오기'}
+      </Button>
+      <Skeleton loading={loading} active avatar paragraph={{ rows: 2 }}>
+        <div className="rounded-lg border border-[#eee] p-4">
+          <strong>프로젝트 현황</strong>
+          <p className="mt-2 text-[#666]">최신 데이터를 모두 불러왔어요.</p>
+        </div>
+      </Skeleton>
+    </div>
+  );
+}`,
         ),
       },
     },
   },
+  render: () => <LoadingContent />,
 };
+
+function LoadingContent() {
+  const [loading, setLoading] = useState(true);
+  return (
+    <div className="grid gap-4">
+      <Button className="w-fit" onClick={() => setLoading((current) => !current)}>
+        {loading ? "불러오기 완료" : "다시 불러오기"}
+      </Button>
+      <Skeleton loading={loading} active avatar paragraph={{ rows: 2 }}>
+        <div className="rounded-lg border border-[#eee] p-4">
+          <strong>프로젝트 현황</strong>
+          <p className="mt-2 text-[#666]">최신 데이터를 모두 불러왔어요.</p>
+        </div>
+      </Skeleton>
+    </div>
+  );
+}

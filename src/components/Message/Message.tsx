@@ -5,90 +5,66 @@ import {
   useMemo,
   useRef,
   useState,
+  type CSSProperties,
+  type Ref,
   type ReactNode,
 } from "react";
+import { CSSMotionList } from "@rc-component/motion";
 import { createRoot, type Root } from "react-dom/client";
 import { createPortal } from "react-dom";
 import { twMerge } from "tailwind-merge";
 import { Icon } from "../Icon";
-import {
-  MOTION_DURATION_MID,
-  MOTION_EASE_IN_OUT_CIRC,
-  MOTION_EASE_OUT_CIRC,
-} from "../_internal/motion";
+import { MOTION_DURATION_MID } from "../_internal/motion";
 import type {
   MessageApi,
   MessageArgsProps,
   MessageGlobalConfig,
   MessageInstance,
-  MessageKey,
+  MessageKeyType,
   MessageType,
-  MessageTypeName,
+  MessageStatusType,
 } from "./Message.types";
 
 interface MessageItem extends MessageArgsProps {
-  key: MessageKey;
+  key: MessageKeyType;
   resolve: (value: boolean) => void;
-  closing?: boolean;
 }
 
-const globalConfig: MessageGlobalConfig = { duration: 3, stack: false, top: 8 };
+const globalConfig: MessageGlobalConfig = { duration: 3, top: 8 };
 
 function normalize(
-  type: MessageTypeName,
+  type: MessageStatusType,
   content: ReactNode | MessageArgsProps,
   duration?: number,
   onClose?: () => void,
 ): MessageArgsProps {
   return typeof content === "object" && content !== null && "content" in content
-    ? { ...content, type: content.type ?? type }
+    ? { ...content, type: content.type ?? type, duration: content.duration ?? duration }
     : { content, type, duration, onClose };
 }
 
 function useMessageHolder(config: MessageGlobalConfig = {}): [MessageInstance, ReactNode] {
   const resolvedConfig = { ...globalConfig, ...config };
   const [items, setItems] = useState<MessageItem[]>([]);
-  const resolvers = useRef(new Map<MessageKey, (value: boolean) => void>());
-  const onCloseCallbacks = useRef(new Map<MessageKey, (() => void) | undefined>());
-  const closeTimers = useRef(new Map<MessageKey, number>());
-  const close = useCallback((key?: MessageKey) => {
-    setItems((current) =>
-      current.map((item) =>
-        (key === undefined || item.key === key) && !item.closing
-          ? { ...item, closing: true }
-          : item,
-      ),
-    );
-    const keys = key === undefined ? Array.from(resolvers.current.keys()) : [key];
-    keys.forEach((targetKey) => {
-      if (closeTimers.current.has(targetKey)) return;
-      closeTimers.current.set(
-        targetKey,
-        window.setTimeout(() => {
-          onCloseCallbacks.current.get(targetKey)?.();
-          onCloseCallbacks.current.delete(targetKey);
-          setItems((current) => current.filter((item) => item.key !== targetKey));
-          resolvers.current.get(targetKey)?.(true);
-          resolvers.current.delete(targetKey);
-          closeTimers.current.delete(targetKey);
-        }, MOTION_DURATION_MID),
-      );
-    });
+  const resolvers = useRef(new Map<MessageKeyType, Array<(value: boolean) => void>>());
+  const onCloseCallbacks = useRef(new Map<MessageKeyType, (() => void) | undefined>());
+  const close = useCallback((key?: MessageKeyType) => {
+    setItems((current) => (key === undefined ? [] : current.filter((item) => item.key !== key)));
   }, []);
-  useEffect(() => () => closeTimers.current.forEach((timer) => window.clearTimeout(timer)), []);
+  const finishClose = useCallback((key: MessageKeyType) => {
+    onCloseCallbacks.current.get(key)?.();
+    onCloseCallbacks.current.delete(key);
+    resolvers.current.get(key)?.forEach((resolve) => resolve(true));
+    resolvers.current.delete(key);
+  }, []);
   const open = useCallback(
     (input: MessageArgsProps) => {
       const key = input.key ?? `message-${Date.now()}-${Math.random()}`;
-      const closeTimer = closeTimers.current.get(key);
-      if (closeTimer !== undefined) {
-        window.clearTimeout(closeTimer);
-        closeTimers.current.delete(key);
-      }
       let resolvePromise: (value: boolean) => void = () => undefined;
       const promise = new Promise<boolean>((resolve) => {
         resolvePromise = resolve;
       });
-      resolvers.current.set(key, resolvePromise);
+      resolvers.current.set(key, [...(resolvers.current.get(key) ?? []), resolvePromise]);
       onCloseCallbacks.current.set(key, input.onClose);
       setItems((current) => {
         const nextItem = {
@@ -101,7 +77,8 @@ function useMessageHolder(config: MessageGlobalConfig = {}): [MessageInstance, R
         const next = exists
           ? current.map((item) => (item.key === key ? nextItem : item))
           : [...current, nextItem];
-        return resolvedConfig.maxCount ? next.slice(-resolvedConfig.maxCount) : next;
+        if (!resolvedConfig.maxCount || next.length <= resolvedConfig.maxCount) return next;
+        return next.slice(-resolvedConfig.maxCount);
       });
       const result = (() => close(key)) as MessageType;
       // oxlint-disable-next-line unicorn/no-thenable -- Ant Design-compatible awaitable message API.
@@ -125,7 +102,14 @@ function useMessageHolder(config: MessageGlobalConfig = {}): [MessageInstance, R
     }),
     [close, open],
   );
-  const holder = <MessageHolder items={items} config={resolvedConfig} onClose={close} />;
+  const holder = (
+    <MessageHolder
+      items={items}
+      config={resolvedConfig}
+      onClose={close}
+      onAfterClose={finishClose}
+    />
+  );
   return [api, holder];
 }
 
@@ -133,93 +117,208 @@ function MessageHolder({
   items,
   config,
   onClose,
+  onAfterClose,
 }: {
   items: MessageItem[];
   config: MessageGlobalConfig;
-  onClose: (key?: MessageKey) => void;
+  onClose: (key?: MessageKeyType) => void;
+  onAfterClose: (key: MessageKeyType) => void;
 }) {
-  const threshold = typeof config.stack === "object" ? (config.stack.threshold ?? 3) : 3;
-  const stacked = Boolean(config.stack) && items.length > threshold;
-  const visibleItems = stacked ? items.slice(-threshold) : items;
+  const { positions, totalHeight, setNodeSize } = useMessageLayout(items);
+  const previousHeightRef = useRef(totalHeight);
+  const decreasing = totalHeight < previousHeightRef.current;
+  previousHeightRef.current = totalHeight;
+  const positionCacheRef = useRef(new Map<MessageKeyType, number>());
+  const keys = items.map((item) => {
+    positionCacheRef.current.set(item.key, positions.get(item.key) ?? 0);
+    return { key: item.key, item };
+  });
   const content = (
     <div
-      className={twMerge(
-        "pointer-events-none fixed inset-x-0 flex flex-col items-center gap-2 px-4 font-pretendard",
-        config.prefixCls,
-      )}
+      className="pointer-events-none fixed inset-x-0 px-4 font-pretendard"
       dir={config.rtl ? "rtl" : undefined}
       style={{ top: config.top ?? 8, zIndex: 2010 }}
     >
-      {visibleItems.map((item, index) => (
-        <MessageCard
-          key={item.key}
-          item={item}
-          stacked={stacked}
-          index={index}
-          count={visibleItems.length}
-          onClose={() => onClose(item.key)}
-        />
-      ))}
+      <div
+        className={twMerge(
+          "wizard-message-list-content relative w-full",
+          decreasing && "wizard-message-list-content-decrease",
+        )}
+        style={{ height: totalHeight }}
+      >
+        <CSSMotionList
+          component={false}
+          keys={keys}
+          motionAppear
+          motionName="wizard-message-motion"
+          motionDeadline={MOTION_DURATION_MID + 50}
+          onVisibleChanged={(visible, info) => {
+            if (!visible) onAfterClose(info.key as MessageKeyType);
+          }}
+        >
+          {({ item, visible, className: motionClassName, style: motionStyle }, motionRef) => (
+            <MessageCard
+              key={item.key}
+              item={item}
+              visible={visible}
+              offset={positions.get(item.key) ?? positionCacheRef.current.get(item.key) ?? 0}
+              motionClassName={motionClassName}
+              motionStyle={motionStyle}
+              motionRef={motionRef as Ref<HTMLDivElement>}
+              onMeasure={setNodeSize}
+              onClose={() => onClose(item.key)}
+            />
+          )}
+        </CSSMotionList>
+      </div>
     </div>
   );
   if (typeof document === "undefined") return null;
   return createPortal(content, config.getContainer?.() ?? document.body);
 }
 
+function useMessageLayout(items: MessageItem[]) {
+  const [sizes, setSizes] = useState<Record<string, number>>({});
+  const observersRef = useRef(new Map<string, ResizeObserver>());
+
+  const setNodeSize = useCallback((key: MessageKeyType, node: HTMLDivElement | null) => {
+    const stringKey = String(key);
+    observersRef.current.get(stringKey)?.disconnect();
+    observersRef.current.delete(stringKey);
+    if (!node) return;
+
+    const measure = () => {
+      const height = node.offsetHeight || node.getBoundingClientRect().height;
+      if (!height) return;
+      setSizes((current) =>
+        current[stringKey] === height ? current : { ...current, [stringKey]: height },
+      );
+    };
+
+    measure();
+    if (typeof ResizeObserver !== "undefined") {
+      const observer = new ResizeObserver(measure);
+      observer.observe(node);
+      observersRef.current.set(stringKey, observer);
+    }
+  }, []);
+
+  useEffect(() => {
+    const activeKeys = new Set(items.map((item) => String(item.key)));
+    setSizes((current) => {
+      const next = Object.fromEntries(
+        Object.entries(current).filter(([key]) => activeKeys.has(key)),
+      );
+      return Object.keys(next).length === Object.keys(current).length ? current : next;
+    });
+    observersRef.current.forEach((observer, key) => {
+      if (!activeKeys.has(key)) {
+        observer.disconnect();
+        observersRef.current.delete(key);
+      }
+    });
+  }, [items]);
+
+  useEffect(
+    () => () => {
+      observersRef.current.forEach((observer) => observer.disconnect());
+      observersRef.current.clear();
+    },
+    [],
+  );
+
+  return useMemo(() => {
+    const positions = new Map<MessageKeyType, number>();
+    let offset = 0;
+    let totalHeight = 0;
+
+    items.forEach((item) => {
+      const height = sizes[String(item.key)] ?? 0;
+      positions.set(item.key, offset);
+      totalHeight = Math.max(totalHeight, offset + height);
+      offset += height + 8;
+    });
+
+    return { positions, totalHeight, setNodeSize };
+  }, [items, setNodeSize, sizes]);
+}
+
 function MessageCard({
   item,
-  stacked,
-  index,
-  count,
+  visible,
+  offset,
+  motionClassName,
+  motionStyle,
+  motionRef,
+  onMeasure,
   onClose,
 }: {
   item: MessageItem;
-  stacked: boolean;
-  index: number;
-  count: number;
+  visible?: boolean;
+  offset: number;
+  motionClassName?: string;
+  motionStyle?: CSSProperties;
+  motionRef: Ref<HTMLDivElement>;
+  onMeasure: (key: MessageKeyType, node: HTMLDivElement | null) => void;
   onClose: () => void;
 }) {
   const timer = useRef<number | undefined>(undefined);
-  const [entered, setEntered] = useState(false);
-  useEffect(() => {
-    const frame = window.requestAnimationFrame(() => setEntered(true));
-    return () => window.cancelAnimationFrame(frame);
-  }, []);
-  const startTimer = useCallback(() => {
+  const onCloseRef = useRef(onClose);
+  const remainingRef = useRef(0);
+  const startedAtRef = useRef(0);
+  const combinedRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      if (typeof motionRef === "function") motionRef(node);
+      else if (motionRef) motionRef.current = node;
+      onMeasure(item.key, node);
+    },
+    [item.key, motionRef, onMeasure],
+  );
+  onCloseRef.current = onClose;
+  const resumeTimer = useCallback(() => {
     window.clearTimeout(timer.current);
-    if (item.closing) return;
-    if (item.duration && item.duration > 0)
-      timer.current = window.setTimeout(onClose, item.duration * 1000);
-  }, [item.closing, item.duration, onClose]);
+    if (visible === false) return;
+    if (remainingRef.current <= 0) return;
+    startedAtRef.current = Date.now();
+    timer.current = window.setTimeout(() => onCloseRef.current(), remainingRef.current);
+  }, [visible]);
   useEffect(() => {
-    startTimer();
+    remainingRef.current = item.duration && item.duration > 0 ? item.duration * 1000 : 0;
+    resumeTimer();
     return () => window.clearTimeout(timer.current);
-  }, [startTimer]);
+  }, [item.duration, item.key, resumeTimer]);
   const icon = item.icon ?? <TypeIcon type={item.type ?? "info"} />;
   return (
     <div
+      ref={combinedRef}
       className={twMerge(
-        "pointer-events-auto flex min-h-10 max-w-[calc(100vw-32px)] items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm text-[#111] shadow-[0_6px_18px_rgba(0,0,0,0.14)] transition-[transform,opacity] duration-200 motion-reduce:transition-none",
-        item.closing && "pointer-events-none",
+        "wizard-message-card pointer-events-auto absolute left-1/2 flex min-h-10 max-w-[calc(100vw-32px)] items-center gap-1.5 rounded-lg bg-white px-3 py-2.5 text-sm text-[#111] shadow-[0_6px_16px_rgba(0,0,0,0.08),0_3px_6px_-4px_rgba(0,0,0,0.12),0_9px_28px_8px_rgba(0,0,0,0.05)]",
+        motionClassName,
+        visible === false && "pointer-events-none",
         item.classNames?.root,
         item.className,
       )}
-      style={{
-        opacity: entered && !item.closing ? 1 : 0,
-        transform:
-          entered && !item.closing
-            ? stacked
-              ? `translateY(${(count - index - 1) * -4}px) scale(${1 - (count - index - 1) * 0.03})`
-              : "translateY(0)"
-            : "translateY(-100%)",
-        transitionTimingFunction:
-          entered && !item.closing ? MOTION_EASE_OUT_CIRC : MOTION_EASE_IN_OUT_CIRC,
-        ...item.style,
-        ...item.styles?.root,
-      }}
+      style={
+        {
+          "--wizard-message-hidden-transform": "translate3d(-50%, -64px, 0)",
+          "--wizard-message-visible-transform": "translate3d(-50%, 0, 0)",
+          top: offset,
+          transformOrigin: "center top",
+          ...item.style,
+          ...item.styles?.root,
+          ...motionStyle,
+        } as CSSProperties
+      }
       onClick={item.onClick}
-      onMouseEnter={() => item.pauseOnHover !== false && window.clearTimeout(timer.current)}
-      onMouseLeave={() => item.pauseOnHover !== false && startTimer()}
+      onMouseEnter={() => {
+        if (item.pauseOnHover === false || !timer.current) return;
+        remainingRef.current = Math.max(
+          0,
+          remainingRef.current - (Date.now() - startedAtRef.current),
+        );
+        window.clearTimeout(timer.current);
+      }}
+      onMouseLeave={() => item.pauseOnHover !== false && resumeTimer()}
     >
       <span
         className={twMerge("inline-flex shrink-0", item.classNames?.icon)}
@@ -234,12 +333,12 @@ function MessageCard({
   );
 }
 
-function TypeIcon({ type }: { type: MessageTypeName }) {
-  if (type === "loading") return <Icon icon="loading" color="#0062df" />;
-  if (type === "success") return <Icon icon="check-circle-outlined" color="#52c41a" />;
-  if (type === "error") return <Icon icon="close-circle-outlined" color="#ff4d4f" />;
-  if (type === "warning") return <Icon icon="warning" color="#faad14" />;
-  return <Icon icon="info-circle-outlined" color="#0062df" />;
+function TypeIcon({ type }: { type: MessageStatusType }) {
+  if (type === "loading") return <Icon icon="loading" color="#0062df" size={20} />;
+  if (type === "success") return <Icon icon="check-circle-filled" color="#52c41a" size={20} />;
+  if (type === "error") return <Icon icon="close-circle-filled" color="#ff4d4f" size={20} />;
+  if (type === "warning") return <Icon icon="warning-circle-filled" color="#faad14" size={20} />;
+  return <Icon icon="info-circle-filled" color="#0062df" size={20} />;
 }
 
 let root: Root | null = null;
@@ -266,17 +365,27 @@ function ensureHost() {
 
 function invoke(method: keyof Omit<MessageInstance, "destroy">, ...args: unknown[]) {
   ensureHost();
+  if (staticInstance)
+    return (staticInstance[method] as (...values: unknown[]) => MessageType)(...args);
+
   let result: MessageType | undefined;
-  const run = (api: MessageInstance) => {
-    result = (api[method] as (...values: unknown[]) => MessageType)(...args);
-  };
-  if (staticInstance) run(staticInstance);
-  else queue.push(run);
-  const pending = new Promise<boolean>((resolve) => queue.push(() => result?.then(resolve)));
-  const handle = (() => result?.()) as MessageType;
+  let closeRequested = false;
+  let resolvePending: (value: boolean) => void = () => undefined;
+  const pending = new Promise<boolean>((resolve) => {
+    resolvePending = resolve;
+  });
+  const handle = (() => {
+    if (result) result();
+    else closeRequested = true;
+  }) as MessageType;
   // oxlint-disable-next-line unicorn/no-thenable -- Ant Design-compatible awaitable message API.
   handle.then = pending.then.bind(pending);
-  return result ?? handle;
+  queue.push((api) => {
+    result = (api[method] as (...values: unknown[]) => MessageType)(...args);
+    result.then(resolvePending);
+    if (closeRequested) result();
+  });
+  return handle;
 }
 
 export const message: MessageApi = {
@@ -291,5 +400,4 @@ export const message: MessageApi = {
     Object.assign(globalConfig, next);
     if (root) root.render(createElement(StaticMessageHost));
   },
-  useMessage: useMessageHolder,
 };

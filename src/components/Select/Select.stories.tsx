@@ -467,6 +467,7 @@ export const Tags: Story = {
       "components-select--tags",
       `<div className="grid max-w-md gap-3">
   <Select
+    allowClear
     defaultValue={['kim']}
     mode="tags"
     options={memberOptions}
@@ -474,12 +475,14 @@ export const Tags: Story = {
     placeholder="이름을 입력하고 Enter를 눌러요"
   />
   <Select
+    allowClear
     defaultValue={['kim']}
     mode="tags"
     options={memberOptions}
     placeholder="이름을 입력하고 Enter를 눌러요"
   />
   <Select
+    allowClear
     defaultValue={['kim']}
     mode="tags"
     options={memberOptions}
@@ -493,6 +496,7 @@ export const Tags: Story = {
   render: (args) => (
     <div className="grid max-w-md gap-3">
       <Select
+        allowClear
         closable={args.closable}
         variant={args.variant}
         defaultValue={["kim"]}
@@ -502,6 +506,7 @@ export const Tags: Story = {
         placeholder="이름을 입력하고 Enter를 눌러요"
       />
       <Select
+        allowClear
         closable={args.closable}
         variant={args.variant}
         defaultValue={["kim"]}
@@ -510,6 +515,7 @@ export const Tags: Story = {
         placeholder="이름을 입력하고 Enter를 눌러요"
       />
       <Select
+        allowClear
         closable={args.closable}
         variant={args.variant}
         defaultValue={["kim"]}
@@ -573,7 +579,7 @@ export const OptionColors: Story = {
   parameters: {
     ...storySource(
       "components-select--option-colors",
-      `const statusOptions = [
+      `const statusOptions: SelectOption[] = [
   { label: '활성', value: 'active', color: 'green' },
   { label: '휴가', value: 'leave', color: 'blue' },
   { label: '오류', value: 'error', color: 'red' },

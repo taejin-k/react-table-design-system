@@ -1,9 +1,12 @@
 import type { CSSProperties, ReactNode } from "react";
 import type { FloatingPlacement } from "../_internal/floating-position";
 
-export type ColorFormat = "hex" | "rgb" | "hsb";
-export type ColorValue = string | Color | { color: string; percent: number }[];
-export type ColorPickerMode = "single" | "gradient";
+export type ColorFormatType = "hex" | "rgb" | "hsb";
+export type ColorValueType = string | Color;
+export type ColorGradientType = { color: string; percent: number }[];
+export type ColorPickerSizeType = "large" | "medium" | "small";
+export type ColorPickerTriggerType = "click" | "hover";
+export type ColorPickerPlacementType = FloatingPlacement;
 
 export interface HsbColor {
   h: number;
@@ -30,26 +33,23 @@ export interface Color {
 
 export interface ColorPreset {
   label: ReactNode;
-  colors: ColorValue[];
+  colors: Array<ColorValueType | ColorGradientType>;
   defaultOpen?: boolean;
   key?: React.Key;
 }
 
 export interface ColorPickerProps {
-  value?: ColorValue;
-  defaultValue?: ColorValue;
-  format?: ColorFormat;
-  defaultFormat?: ColorFormat;
-  mode?: ColorPickerMode | ColorPickerMode[];
-  defaultMode?: ColorPickerMode;
-  size?: "large" | "medium" | "small";
+  value?: ColorValueType;
+  defaultValue?: ColorValueType;
+  format?: ColorFormatType;
+  defaultFormat?: ColorFormatType;
+  size?: ColorPickerSizeType;
   disabled?: boolean;
-  disabledAlpha?: boolean;
   allowClear?: boolean;
   open?: boolean;
   defaultOpen?: boolean;
-  trigger?: "click" | "hover";
-  placement?: FloatingPlacement;
+  trigger?: ColorPickerTriggerType;
+  placement?: ColorPickerPlacementType;
   showText?: boolean | ((color: Color) => ReactNode);
   presets?: ColorPreset[];
   children?: ReactNode;
@@ -61,7 +61,7 @@ export interface ColorPickerProps {
   style?: CSSProperties;
   onChange?: (value: Color, css: string) => void;
   onChangeComplete?: (value: Color) => void;
-  onFormatChange?: (format: ColorFormat) => void;
+  onFormatChange?: (format: ColorFormatType) => void;
   onOpenChange?: (open: boolean) => void;
   onClear?: () => void;
 }

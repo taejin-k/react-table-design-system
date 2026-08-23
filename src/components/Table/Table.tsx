@@ -52,11 +52,10 @@ import type {
   ColumnsType,
   FilterItem,
   FilterKey,
-  FilterValue,
+  FilterValueType,
   Key,
   PaginationConfig,
   PaginationPlacementType,
-  RowSelectMethodType,
   SortOrderType,
   SorterResult,
   TableProps,
@@ -109,6 +108,7 @@ const HIDDEN_STICKY_SCROLLBAR: StickyScrollbarState = {
 };
 const HORIZONTAL_SCROLLBAR_HEIGHT = 8;
 const STICKY_SCROLLBAR_BOTTOM_GAP = 6;
+const SORT_DIRECTIONS: readonly SortOrderType[] = ["ascend", "descend", null];
 
 // ---- 스타일 상수 (wizard-design cva/Tailwind 컨벤션, GROO 색상) ----
 
@@ -213,16 +213,15 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
     locale = {},
     showHeader = true,
     showSorterTooltip = true,
-    tableLayout = "fixed",
     rowHoverable = true,
     stickyHeader = false,
+    stickyHeaderOffset = 0,
     virtual = false,
     stickyScrollBar = false,
+    stickyScrollBarOffset = 0,
     scroll,
-    sortDirections = ["ascend", "descend"],
     className = "",
     style: rootStyle,
-    getPopupContainer = () => document.body,
     onChange,
     onRow,
     onHeaderRow,
@@ -266,9 +265,9 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
     startX: number;
     startScrollLeft: number;
   } | null>(null);
-  const stickyScrollBarEnabled = Boolean(stickyScrollBar);
-  const stickyOffsetScroll =
-    typeof stickyScrollBar === "object" ? (stickyScrollBar.offsetScroll ?? 0) : 0;
+  const stickyScrollBarEnabled = stickyScrollBar;
+  const normalizedStickyHeaderOffset = Math.max(0, stickyHeaderOffset);
+  const normalizedStickyScrollBarOffset = Math.max(0, stickyScrollBarOffset);
 
   useEffect(() => {
     setOverlayScrollbarSupported(
@@ -293,7 +292,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
 
   const columns = columnDragEnabled ? dragColumns : sourceColumnsResolved;
   const [internalPage, setInternalPage] = useState(
-    typeof pagination === "object" ? (pagination.defaultCurrent ?? 1) : 1,
+    typeof pagination === "object" ? (pagination.defaultPage ?? 1) : 1,
   );
   const [internalPageSize, setInternalPageSize] = useState(
     typeof pagination === "object" ? (pagination.defaultPageSize ?? pagination.pageSize ?? 10) : 10,
@@ -323,10 +322,10 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
   const [filterOpen, setFilterOpen] = useState<string | null>(null);
   const [filterDraft, setFilterDraft] = useState<Record<string, FilterKey[]>>({});
   const [selectedKeys, setSelectedKeys] = useState<Set<Key>>(
-    () => new Set(rowSelection?.defaultSelectedRowKeys ?? []),
+    () => new Set(rowSelection?.defaultSelectedKeys ?? []),
   );
   const [expandedKeys, setExpandedKeys] = useState<Set<Key>>(
-    () => new Set(expandable?.defaultExpandedRowKeys ?? []),
+    () => new Set(expandable?.defaultExpandedKeys ?? []),
   );
   const [scrollTop, setScrollTop] = useState(0);
   const [viewportWidth, setViewportWidth] = useState(() =>
@@ -400,11 +399,11 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
 
   const keyOf = useCallback((record: T): Key => record[rowKey] as Key, [rowKey]);
   const childrenName = expandable?.childrenColumnName ?? "children";
-  const controlledExpanded = expandable?.expandedRowKeys
-    ? new Set(expandable.expandedRowKeys)
+  const controlledExpanded = expandable?.expandedKeys
+    ? new Set(expandable.expandedKeys)
     : expandedKeys;
-  const controlledSelected = rowSelection?.selectedRowKeys
-    ? new Set(rowSelection.selectedRowKeys)
+  const controlledSelected = rowSelection?.selectedKeys
+    ? new Set(rowSelection.selectedKeys)
     : selectedKeys;
   const allDataRows = useMemo(() => {
     const result: T[] = [];
@@ -420,13 +419,13 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
 
   useEffect(() => {
     allDataRows.forEach((record) => selectionCache.current.set(keyOf(record), record));
-    if (!rowSelection?.preserveSelectedRowKeys && !rowSelection?.selectedRowKeys) {
+    if (!rowSelection?.preserveSelectedKeys && !rowSelection?.selectedKeys) {
       const available = new Set(allDataRows.map((record) => keyOf(record)));
       setSelectedKeys((current) => new Set([...current].filter((key) => available.has(key))));
     }
     // keyOf intentionally follows the current rowKey prop.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allDataRows, rowSelection?.preserveSelectedRowKeys, rowSelection?.selectedRowKeys]);
+  }, [allDataRows, rowSelection?.preserveSelectedKeys, rowSelection?.selectedKeys]);
 
   useEffect(() => {
     if (!expandable?.defaultExpandAllRows) return;
@@ -554,7 +553,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
   );
 
   const pageConfig = pagination === false ? null : pagination;
-  const page = pageConfig?.current ?? internalPage;
+  const page = pageConfig?.page ?? internalPage;
   const pageSize = pageConfig?.pageSize ?? internalPageSize;
   const total = pageConfig?.total ?? processed.length;
   const pageCount = Math.max(1, Math.ceil(total / pageSize));
@@ -675,20 +674,23 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
   );
 
   const emitChange = (
-    action: "paginate" | "sort" | "filter",
     nextPage = safePage,
     nextPageSize = pageSize,
     nextFilters = activeFilters,
     nextSorts = activeSorts,
   ) => {
-    const sorterInfo: SorterResult<T>[] = nextSorts
-      .filter((item) => item.order)
-      .map((item) => ({
-        column: item.column,
-        columnKey: item.key,
-        field: item.column.dataIndex as Key | readonly Key[] | undefined,
-        order: item.order,
-      }));
+    const sorterInfo: SorterResult<T>[] = nextSorts.flatMap((item) =>
+      item.order
+        ? [
+            {
+              column: item.column,
+              columnKey: item.key,
+              field: item.column.dataIndex as Key | readonly Key[] | undefined,
+              order: item.order,
+            },
+          ]
+        : [],
+    );
     const reportedFilters = Object.fromEntries(
       leafColumns.flatMap((item, index) => {
         const key = columnKey(item, index);
@@ -698,12 +700,11 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
           ? [[key, nextFilters[key]?.length ? nextFilters[key] : null]]
           : [];
       }),
-    ) as Record<string, FilterValue>;
+    ) as Record<string, FilterValueType>;
     onChange?.(
-      { ...pageConfig, current: nextPage, pageSize: nextPageSize, total },
+      { ...pageConfig, page: nextPage, pageSize: nextPageSize, total },
       reportedFilters,
-      sorterInfo.length > 1 ? sorterInfo : (sorterInfo[0] ?? {}),
-      { currentDataSource: processData(dataSource, nextFilters, nextSorts), action },
+      sorterInfo,
     );
   };
 
@@ -712,21 +713,16 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
     setInternalPage(bounded);
     setInternalPageSize(nextSize);
     pageConfig?.onChange?.(bounded, nextSize);
-    emitChange("paginate", bounded, nextSize);
-    if (
-      scroll?.scrollToFirstRowOnChange !== false &&
-      typeof scrollRef.current?.scrollTo === "function"
-    )
-      scrollRef.current.scrollTo({ top: 0 });
+    emitChange(bounded, nextSize);
+    if (typeof scrollRef.current?.scrollTo === "function") scrollRef.current.scrollTo({ top: 0 });
   };
 
   const toggleSort = (item: ColumnType<T>, index: number) => {
     if (!item.sorter || item.sortOrder !== undefined) return;
     const key = columnKey(item, index);
     const current = sortStates.find((state) => state.key === key)?.order ?? null;
-    const directions = item.sortDirections ?? sortDirections;
-    const cycle = directions.includes(null) ? directions : [...directions, null];
-    const nextOrder = cycle[(cycle.indexOf(current) + 1) % cycle.length];
+    const nextOrder =
+      SORT_DIRECTIONS[(SORT_DIRECTIONS.indexOf(current) + 1) % SORT_DIRECTIONS.length];
     const priority = typeof item.sorter === "object" ? (item.sorter.multiple ?? 0) : 0;
     const next = priority
       ? [
@@ -735,12 +731,8 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
         ]
       : [{ column: item, key, order: nextOrder, priority }];
     setSortStates(next.filter((state) => state.order));
-    emitChange("sort", safePage, pageSize, activeFilters, next);
-    if (
-      scroll?.scrollToFirstRowOnChange !== false &&
-      typeof scrollRef.current?.scrollTo === "function"
-    )
-      scrollRef.current.scrollTo({ top: 0 });
+    emitChange(safePage, pageSize, activeFilters, next);
+    if (typeof scrollRef.current?.scrollTo === "function") scrollRef.current.scrollTo({ top: 0 });
   };
 
   const applyFilter = (
@@ -757,12 +749,8 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
     }
     setInternalPage(1);
     pageConfig?.onChange?.(1, pageSize);
-    emitChange("filter", 1, pageSize, next);
-    if (
-      scroll?.scrollToFirstRowOnChange !== false &&
-      typeof scrollRef.current?.scrollTo === "function"
-    )
-      scrollRef.current.scrollTo({ top: 0 });
+    emitChange(1, pageSize, next);
+    if (typeof scrollRef.current?.scrollTo === "function") scrollRef.current.scrollTo({ top: 0 });
   };
 
   const closeFilter = (item: ColumnType<T>, index: number) => {
@@ -774,13 +762,13 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
     }
   };
 
-  const updateSelection = (next: Set<Key>, type: RowSelectMethodType) => {
-    if (!rowSelection?.selectedRowKeys) setSelectedKeys(next);
-    const source = rowSelection?.preserveSelectedRowKeys
+  const updateSelection = (next: Set<Key>) => {
+    if (!rowSelection?.selectedKeys) setSelectedKeys(next);
+    const source = rowSelection?.preserveSelectedKeys
       ? [...selectionCache.current.values()]
       : allDataRows;
     const selectedRows = source.filter((row) => next.has(keyOf(row)));
-    rowSelection?.onChange?.([...next], selectedRows, { type });
+    rowSelection?.onChange?.([...next], selectedRows);
     return selectedRows;
   };
 
@@ -797,7 +785,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
   const selectAll = (selected: boolean) => {
     const next = new Set(controlledSelected);
     changeableKeys.forEach((key) => (selected ? next.add(key) : next.delete(key)));
-    updateSelection(next, selected ? "all" : "none");
+    updateSelection(next);
   };
   const conductTreeSelection = (next: Set<Key>, record: T, selected: boolean) => {
     const key = keyOf(record);
@@ -844,7 +832,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
     const expanded = !next.has(key);
     if (expanded) next.add(key);
     else next.delete(key);
-    if (!expandable?.expandedRowKeys) setExpandedKeys(next);
+    if (!expandable?.expandedKeys) setExpandedKeys(next);
     expandable?.onExpand?.(expanded, record);
     expandable?.onExpandedRowsChange?.([...next]);
   };
@@ -853,8 +841,8 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
   const selectionWidth = rowSelection ? Number(rowSelection.columnWidth ?? 48) : 0;
   const expandWidth =
     expandable && expandable.showExpandColumn !== false ? Number(expandable.columnWidth ?? 48) : 0;
-  const selectionSide = fixedSide(rowSelection?.fixed);
-  const expandSide = fixedSide(expandable?.fixed);
+  const selectionFixed = rowSelection?.fixed === true;
+  const expandFixed = expandable?.fixed === true;
   const selectionColumnWidth = rowSelection?.columnWidth ?? 48;
   const selectionColumnWidthStyle: CSSProperties = {
     width: selectionColumnWidth,
@@ -871,16 +859,11 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
     minWidth: expandable?.columnWidth ?? 48,
     maxWidth: expandable?.columnWidth ?? 48,
   };
-  const effectiveLayout =
-    tableLayout === "fixed" || scroll?.x || leafColumns.some((item) => item.ellipsis || item.fixed)
-      ? "fixed"
-      : "auto";
   const flexibleColumnCount = leafColumns.filter((item) => item.width == null).length;
   const hasNumericColumnSizing = leafColumns.every(
     (item) => item.width == null || typeof item.width === "number",
   );
-  const canDistributeFixedWidth =
-    effectiveLayout === "fixed" && flexibleColumnCount > 0 && hasNumericColumnSizing;
+  const canDistributeFixedWidth = flexibleColumnCount > 0 && hasNumericColumnSizing;
   const fixedPixelWidth = hasNumericColumnSizing
     ? dragWidth +
       selectionWidth +
@@ -923,9 +906,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
   };
   const leftOffsets = useMemo(() => {
     let offset: ColumnOffset =
-      dragWidth +
-      (selectionSide === "left" ? selectionWidth : 0) +
-      (expandSide === "left" ? expandWidth : 0);
+      dragWidth + (selectionFixed ? selectionWidth : 0) + (expandFixed ? expandWidth : 0);
     const map: Record<string, ColumnOffset> = {};
     leafColumns.forEach((item, index) => {
       if (fixedSide(item.fixed) === "left") {
@@ -934,10 +915,9 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
       }
     });
     return map;
-  }, [dragWidth, expandSide, expandWidth, leafColumns, selectionSide, selectionWidth]);
+  }, [dragWidth, expandFixed, expandWidth, leafColumns, selectionFixed, selectionWidth]);
   const rightOffsets = useMemo(() => {
-    let offset: ColumnOffset =
-      (expandSide === "right" ? expandWidth : 0) + (selectionSide === "right" ? selectionWidth : 0);
+    let offset: ColumnOffset = 0;
     const map: Record<string, ColumnOffset> = {};
     [...leafColumns].reverse().forEach((item, reverseIndex) => {
       const index = leafColumns.length - reverseIndex - 1;
@@ -947,7 +927,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
       }
     });
     return map;
-  }, [expandSide, expandWidth, leafColumns, selectionSide, selectionWidth]);
+  }, [leafColumns]);
   const fixedStyle = (item: ColumnType<T>, index: number): CSSProperties => {
     const key = columnKey(item, index);
     if (key in leftOffsets) return { position: "sticky", left: leftOffsets[key], zIndex: 2 };
@@ -958,25 +938,19 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
     const style = fixedStyle(item, index);
     return style.position ? { ...style, zIndex: 6 } : style;
   };
-  const selectionFixedStyle: CSSProperties =
-    selectionSide === "left"
-      ? { position: "sticky", left: dragWidth, zIndex: 3 }
-      : selectionSide === "right"
-        ? { position: "sticky", right: expandSide === "right" ? expandWidth : 0, zIndex: 3 }
-        : {};
+  const selectionFixedStyle: CSSProperties = selectionFixed
+    ? { position: "sticky", left: dragWidth, zIndex: 3 }
+    : {};
   const selectionHeaderFixedStyle: CSSProperties = selectionFixedStyle.position
     ? { ...selectionFixedStyle, zIndex: 7 }
     : selectionFixedStyle;
-  const expandFixedStyle: CSSProperties =
-    expandSide === "left"
-      ? {
-          position: "sticky",
-          left: dragWidth + (selectionSide === "left" ? selectionWidth : 0),
-          zIndex: 3,
-        }
-      : expandSide === "right"
-        ? { position: "sticky", right: 0, zIndex: 3 }
-        : {};
+  const expandFixedStyle: CSSProperties = expandFixed
+    ? {
+        position: "sticky",
+        left: dragWidth + (selectionFixed ? selectionWidth : 0),
+        zIndex: 3,
+      }
+    : {};
   const expandHeaderFixedStyle: CSSProperties = expandFixedStyle.position
     ? { ...expandFixedStyle, zIndex: 7 }
     : expandFixedStyle;
@@ -1020,37 +994,25 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
     return "";
   };
   const selectionBoundaryClass =
-    selectionSide === "left" && expandSide !== "left" && lastLeftFixedIndex < 0
+    selectionFixed && !expandFixed && lastLeftFixedIndex < 0
       ? twMerge(
           fixedLeftLastShadowBaseClass,
           scrollBoundary.left && fixedLeftLastShadowVisibleClass,
           "sticky",
         )
-      : selectionSide === "right" && expandSide !== "right" && firstRightFixedIndex < 0
-        ? twMerge(
-            fixedRightFirstShadowBaseClass,
-            scrollBoundary.right && fixedRightFirstShadowVisibleClass,
-            "sticky",
-          )
-        : selectionSide
-          ? "sticky"
-          : "";
+      : selectionFixed
+        ? "sticky"
+        : "";
   const expandBoundaryClass =
-    expandSide === "left" && lastLeftFixedIndex < 0
+    expandFixed && lastLeftFixedIndex < 0
       ? twMerge(
           fixedLeftLastShadowBaseClass,
           scrollBoundary.left && fixedLeftLastShadowVisibleClass,
           "sticky",
         )
-      : expandSide === "right" && firstRightFixedIndex < 0
-        ? twMerge(
-            fixedRightFirstShadowBaseClass,
-            scrollBoundary.right && fixedRightFirstShadowVisibleClass,
-            "sticky",
-          )
-        : expandSide
-          ? "sticky"
-          : "";
+      : expandFixed
+        ? "sticky"
+        : "";
 
   useImperativeHandle(
     ref,
@@ -1097,10 +1059,8 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
     [allFlatRows, keyOf, rowHeight, viewportHeight, virtual],
   );
 
-  const nextSortLabel = (item: ColumnType<T>, order: SortOrderType) => {
-    const directions = item.sortDirections ?? sortDirections;
-    const cycle = directions.includes(null) ? directions : [...directions, null];
-    const next = cycle[(cycle.indexOf(order) + 1) % cycle.length];
+  const nextSortLabel = (order: SortOrderType) => {
+    const next = SORT_DIRECTIONS[(SORT_DIRECTIONS.indexOf(order) + 1) % SORT_DIRECTIONS.length];
     return next === "ascend"
       ? (locale.triggerAsc ?? "오름차순 정렬")
       : next === "descend"
@@ -1119,11 +1079,8 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
             const leafIndex = leafColumns.indexOf(item);
             const key = columnKey(item, leafIndex);
             const order = activeSorts.find((state) => state.key === key)?.order ?? null;
-            const tooltip = item.showSorterTooltip ?? showSorterTooltip;
-            const tooltipTitle =
-              typeof tooltip === "object" && tooltip.title
-                ? String(tooltip.title)
-                : (locale.sortTitle ?? nextSortLabel(item, order));
+            const sorterTooltipVisible = item.showSorterTooltip ?? showSorterTooltip;
+            const tooltipTitle = nextSortLabel(order);
             const headerProps = item.onHeaderCell?.(item, leafIndex) ?? {};
             const itemLeaves = item.children?.length ? flattenColumns(item.children) : [item];
             const isLeafColumn = !item.children?.length;
@@ -1154,7 +1111,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
                   />
                 }
                 className={iconButtonClass}
-                aria-label={`${String(item.title)} 정렬`}
+                data-table-sorter
                 onClick={(event) => {
                   event.stopPropagation();
                   toggleSort(item, leafIndex);
@@ -1162,10 +1119,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
               />
             );
             const sorterControl =
-              sorterButton &&
-              tooltip &&
-              typeof tooltip === "object" &&
-              tooltip.target === "sorter-icon" ? (
+              sorterButton && sorterTooltipVisible ? (
                 <Tooltip title={tooltipTitle}>{sorterButton}</Tooltip>
               ) : (
                 sorterButton
@@ -1201,9 +1155,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
                         }));
                         setFilterOpen(open ? key : null);
                       }}
-                      aria-label={`${String(item.title)} 필터`}
-                      aria-haspopup="dialog"
-                      aria-expanded={filterIsOpen}
+                      data-table-filter
                     />
                     <FilterMenu
                       open={filterIsOpen}
@@ -1211,10 +1163,6 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
                       values={filterDraft[key] ?? []}
                       locale={locale}
                       trigger={filterTriggers.current.get(key)}
-                      popupContainer={
-                        filterTriggers.current.get(key) &&
-                        getPopupContainer?.(filterTriggers.current.get(key)!)
-                      }
                       onValues={(values) =>
                         setFilterDraft((draft) => ({ ...draft, [key]: values }))
                       }
@@ -1225,14 +1173,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
                 ) : null}
               </span>
             );
-            const renderedHeaderContent =
-              tooltip &&
-              item.sorter &&
-              (typeof tooltip !== "object" || tooltip.target !== "sorter-icon") ? (
-                <Tooltip title={tooltipTitle}>{headerContent}</Tooltip>
-              ) : (
-                headerContent
-              );
+            const renderedHeaderContent = headerContent;
             cells.push(
               <RenderedHeaderCell
                 key={`${headerPath}-${key}-${level}`}
@@ -1270,7 +1211,6 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
       const selectionTitle =
         rowSelection && rowSelection.type !== "radio" && !rowSelection.hideSelectAll ? (
           <Checkbox
-            aria-label="모든 행 선택"
             checked={allChangeableSelected}
             disabled={changeableKeys.length === 0}
             partiallyChecked={someChangeableSelected}
@@ -1314,7 +1254,6 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
               )}
               style={{
                 ...selectionColumnWidthStyle,
-                textAlign: rowSelection.align,
                 ...selectionHeaderFixedStyle,
               }}
             >
@@ -1334,9 +1273,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
               )}
               style={{ ...expandColumnWidthStyle, ...expandHeaderFixedStyle }}
             >
-              {expandable.columnTitle ?? (
-                <span className="sr-only">{locale.expand ?? "행 펼치기"}</span>
-              )}
+              {expandable.columnTitle}
             </th>
           )}
           {cells}
@@ -1370,14 +1307,13 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
           ...checkboxProps,
           name: selection.type === "radio" ? selectionName : checkboxProps.name,
           checked,
-          "aria-label": checkboxProps["aria-label"] ?? `${String(key)} 행 선택`,
           onChange: (event: React.ChangeEvent<HTMLInputElement>) => {
             const next = selection.type === "radio" ? new Set<Key>() : new Set(controlledSelected);
             if (selection.checkStrictly === false && selection.type !== "radio")
               conductTreeSelection(next, record, event.target.checked);
             else if (event.target.checked) next.add(key);
             else next.delete(key);
-            updateSelection(next, selection.type === "radio" ? "single" : "multiple");
+            updateSelection(next);
           },
         }
       : null;
@@ -1445,7 +1381,6 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
               )}
               style={{
                 ...selectionColumnWidthStyle,
-                textAlign: rowSelection.align,
                 ...selectionFixedStyle,
               }}
             >
@@ -1462,10 +1397,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
               )}
               style={{ ...expandColumnWidthStyle, ...expandFixedStyle }}
             >
-              <span
-                className={expandIndentClass}
-                style={{ paddingInlineStart: 15 + depth * (expandable.indentSize ?? 15) }}
-              >
+              <span className={expandIndentClass} style={{ paddingInlineStart: 15 }}>
                 {canExpand ? (
                   <Button
                     variant="ghost"
@@ -1473,17 +1405,14 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
                     iconOnly
                     prefixIcon={<Icon icon={expanded ? "remove" : "add"} size={12} />}
                     className={expandButtonClass}
-                    aria-expanded={expanded}
-                    aria-label={
-                      expanded ? (locale.collapse ?? "행 접기") : (locale.expand ?? "행 펼치기")
-                    }
+                    data-table-expand
                     onClick={(event) => {
                       event.stopPropagation();
                       toggleExpand(record);
                     }}
                   />
                 ) : (
-                  <span className={expandPlaceholderClass} aria-hidden />
+                  <span className={expandPlaceholderClass} />
                 )}
               </span>
             </td>
@@ -1520,7 +1449,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
               )}
               colSpan={fullColSpan}
             >
-              {expandable.expandedRowRender(record, actualIndex, depth, expanded)}
+              {expandable.expandedRowRender(record, actualIndex)}
             </td>
           </tr>
         )}
@@ -1549,10 +1478,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
   const bottomPagination = placements
     .filter((item) => item.startsWith("bottom"))
     .map(renderPagination);
-  const emptyText =
-    typeof locale.emptyText === "function"
-      ? locale.emptyText()
-      : (locale.emptyText ?? <DefaultEmpty />);
+  const emptyText = locale.emptyText ?? <DefaultEmpty />;
   const loadingConfig = typeof loading === "object" ? loading : undefined;
   const wrapperMaxHeight = scroll?.y ?? (virtual ? viewportHeight : undefined);
   const hasVerticalViewport = Boolean(scroll?.y || virtual);
@@ -1637,8 +1563,12 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
 
       const maxScrollLeft = Math.max(0, node.scrollWidth - node.clientWidth);
       const bounds = node.getBoundingClientRect();
-      const viewportBottom = window.innerHeight - Math.max(0, stickyOffsetScroll);
-      const stickyTop = viewportBottom - HORIZONTAL_SCROLLBAR_HEIGHT - STICKY_SCROLLBAR_BOTTOM_GAP;
+      const viewportBottom = window.innerHeight;
+      const stickyTop =
+        viewportBottom -
+        HORIZONTAL_SCROLLBAR_HEIGHT -
+        STICKY_SCROLLBAR_BOTTOM_GAP -
+        normalizedStickyScrollBarOffset;
       const regularScrollbarTop = bounds.bottom - HORIZONTAL_SCROLLBAR_HEIGHT;
       const left = Math.max(0, bounds.left);
       const hiddenLeft = Math.max(0, -bounds.left);
@@ -1672,7 +1602,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
           : next,
       );
     },
-    [stickyOffsetScroll, stickyScrollBarEnabled],
+    [normalizedStickyScrollBarOffset, stickyScrollBarEnabled],
   );
 
   useLayoutEffect(() => {
@@ -1751,7 +1681,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
             : scroll.x
           : minimumFixedTableWidth || undefined;
   const tableStyle: CSSProperties = {
-    tableLayout: effectiveLayout,
+    tableLayout: "fixed",
     minWidth: configuredMinimumWidth,
   };
   const verticallyScrolledTableStyle = tableStyle;
@@ -1789,7 +1719,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
       >
         <tbody className={twMerge(bordered && "[&>tr:last-child>td]:border-b-0")}>
           {topPad > 0 && (
-            <tr aria-hidden>
+            <tr>
               <td
                 className={cellLastNoRightBorder}
                 colSpan={fullColSpan}
@@ -1799,7 +1729,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
           )}
           {renderedRows.map(renderRow)}
           {bottomPad > 0 && (
-            <tr aria-hidden>
+            <tr>
               <td
                 className={cellLastNoRightBorder}
                 colSpan={fullColSpan}
@@ -1826,14 +1756,10 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
     </>
   );
   const loadingElement = loadingVisible ? (
-    <div
-      className={twMerge(loadingOverlayClass, loadingConfig?.className)}
-      style={loadingConfig?.style}
-    >
+    <div className={loadingOverlayClass}>
       <div className={loadingContentClass}>
-        {loadingConfig?.indicator ?? <Icon icon="loading" size={24} />}
-        {loadingConfig?.tip && <span>{loadingConfig.tip}</span>}
-        <span className="sr-only">로딩 중</span>
+        <Icon icon="loading" size={24} />
+        {loadingConfig?.text && <span>{loadingConfig.text}</span>}
       </div>
     </div>
   ) : null;
@@ -2047,7 +1973,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
       style={{
         paddingRight: verticalScrollbarWidth,
         position: stickyHeader ? "sticky" : undefined,
-        top: stickyHeader ? 0 : undefined,
+        top: stickyHeader ? normalizedStickyHeaderOffset : undefined,
         zIndex: stickyHeader ? 40 : undefined,
       }}
     >
@@ -2073,7 +1999,6 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
         className,
       )}
       style={rootStyle}
-      aria-busy={loadingVisible}
     >
       {topPagination}
       <div
@@ -2099,8 +2024,6 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
                     hasVerticalViewport ? "overflow-y-auto" : "overflow-y-hidden",
                     !showHeader && "rounded-t-[inherit]",
                   )}
-                  role="region"
-                  aria-label="테이블 스크롤 영역"
                   tabIndex={0}
                   style={{ maxHeight: wrapperMaxHeight }}
                   onKeyDown={handleScrollKeyDown}
@@ -2149,8 +2072,6 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
                 data-table-scroll-container
                 data-table-overlay-scrollbar={overlayScrollbarSupported ? "" : undefined}
                 className="relative w-full overflow-x-auto overflow-y-hidden rounded-[inherit] bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0062df]"
-                role={hasHorizontalOverflow ? "region" : undefined}
-                aria-label={hasHorizontalOverflow ? "테이블 스크롤 영역" : undefined}
                 tabIndex={hasHorizontalOverflow ? 0 : undefined}
                 onKeyDown={handleScrollKeyDown}
                 onScroll={handleTableScroll}
@@ -2250,7 +2171,6 @@ function FilterMenu<T extends object>({
   values,
   locale,
   trigger,
-  popupContainer,
   className = "",
   onValues,
   onApply,
@@ -2261,7 +2181,6 @@ function FilterMenu<T extends object>({
   values: FilterKey[];
   locale: NonNullable<TableProps<T>["locale"]>;
   trigger?: HTMLElement;
-  popupContainer?: HTMLElement;
   className?: string;
   onValues: (values: FilterKey[]) => void;
   onApply: (values: FilterKey[], closeDropdown?: boolean) => void;
@@ -2308,34 +2227,36 @@ function FilterMenu<T extends object>({
 
   const confirm = () => onApply(values, true);
   const clearFilters = () => {
-    const next = item.filterResetToDefaultFilteredValue ? (item.defaultFilteredValue ?? []) : [];
+    const next = item.filterResetToDefault ? (item.defaultFilteredValue ?? []) : [];
     onValues(next);
   };
+  const hasVisibleFilters = Boolean(
+    item.filters?.some((filter) => matchesFilterSearch(filter, search)),
+  );
   const content = (
     <>
       {item.filterSearch && (
         <Input
           autoFocus
           className={filterSearchClass}
-          placeholder={locale.filterSearchPlaceholder ?? "필터 검색"}
+          placeholder={locale.filterPlaceholder ?? "키워드를 입력해요"}
           value={search}
           onChange={setSearch}
         />
       )}
       <div className={filterOptionsClass}>
-        {item.filters?.length ? (
+        {hasVisibleFilters ? (
           <FilterOptions
-            items={item.filters}
+            items={item.filters ?? []}
             values={values}
             search={search}
             multiple={item.filterMultiple !== false}
             radioName={radioName}
-            filterSearch={item.filterSearch}
             mode={item.filterMode ?? "menu"}
             onValues={onValues}
           />
         ) : (
-          <div className={filterEmptyClass}>{locale.filterEmptyText ?? "필터 없음"}</div>
+          <div className={filterEmptyClass}>{locale.filterEmptyText ?? "검색결과가 없어요"}</div>
         )}
       </div>
       <div className={filterActionsClass}>
@@ -2353,21 +2274,16 @@ function FilterMenu<T extends object>({
       </div>
     </>
   );
-  const portalStyle =
-    popupContainer && trigger
-      ? (() => {
-          const triggerRect = trigger.getBoundingClientRect();
-          const containerRect =
-            popupContainer === document.body
-              ? { top: 0, left: 0 }
-              : popupContainer.getBoundingClientRect();
-          return {
-            position: popupContainer === document.body ? ("fixed" as const) : ("absolute" as const),
-            top: triggerRect.bottom - containerRect.top + 4,
-            left: triggerRect.left - containerRect.left - 12,
-          };
-        })()
-      : undefined;
+  const portalStyle = trigger
+    ? (() => {
+        const triggerRect = trigger.getBoundingClientRect();
+        return {
+          position: "fixed" as const,
+          top: triggerRect.bottom + 4,
+          left: triggerRect.left - 12,
+        };
+      })()
+    : undefined;
   const menu = (
     <div
       ref={menuRef}
@@ -2377,17 +2293,22 @@ function FilterMenu<T extends object>({
         ...getPopupMotionStyle("bottomLeft", motion.motionVisible),
         pointerEvents: open ? undefined : "none",
       }}
-      role="dialog"
-      aria-label={locale.filterTitle ?? "필터 메뉴"}
       data-table-filter-motion
-      aria-hidden={!open}
       onClick={(event) => event.stopPropagation()}
     >
       {content}
     </div>
   );
   if (!motion.rendered) return null;
-  return popupContainer ? createPortal(menu, popupContainer) : menu;
+  return typeof document === "undefined" ? menu : createPortal(menu, document.body);
+}
+
+function matchesFilterSearch(item: FilterItem, search: string): boolean {
+  if (!search) return true;
+  const matchesCurrent = String(item.text).toLowerCase().includes(search.toLowerCase());
+  return (
+    matchesCurrent || Boolean(item.children?.some((child) => matchesFilterSearch(child, search)))
+  );
 }
 
 function FilterOptions({
@@ -2396,7 +2317,6 @@ function FilterOptions({
   search,
   multiple,
   radioName,
-  filterSearch,
   mode,
   onValues,
   depth = 0,
@@ -2406,21 +2326,11 @@ function FilterOptions({
   search: string;
   multiple: boolean;
   radioName: string;
-  filterSearch?: ColumnType<object>["filterSearch"];
   mode: NonNullable<ColumnType<object>["filterMode"]>;
   onValues: (values: FilterKey[]) => void;
   depth?: number;
 }) {
-  const visible = items.filter(
-    (item) =>
-      !search ||
-      (typeof filterSearch === "function"
-        ? filterSearch(search, item)
-        : String(item.text).toLowerCase().includes(search.toLowerCase()) ||
-          item.children?.some((child) =>
-            String(child.text).toLowerCase().includes(search.toLowerCase()),
-          )),
-  );
+  const visible = items.filter((item) => matchesFilterSearch(item, search));
   return (
     <>
       {visible.map((item) => (
@@ -2439,7 +2349,6 @@ function FilterOptions({
                 search={search}
                 multiple={multiple}
                 radioName={radioName}
-                filterSearch={filterSearch}
                 mode={mode}
                 onValues={onValues}
                 depth={depth + 1}
@@ -2481,7 +2390,7 @@ function FilterOptions({
 }
 
 function DefaultEmpty() {
-  return <Illustrations description="데이터가 없어요" />;
+  return <Illustrations description="검색결과가 없어요" />;
 }
 
 type TableComponent = {

@@ -25,13 +25,15 @@ export function Segmented({
   const rootRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef(new Map<string | number, HTMLLabelElement>());
   const hasMeasuredThumb = useRef(false);
-  const [thumb, setThumb] = useState({
-    animate: false,
-    height: 0,
-    left: 0,
-    top: 0,
-    width: 0,
-  });
+  const canAnimateThumb = useRef(false);
+  const animationFrameRef = useRef<number | null>(null);
+  const [thumb, setThumb] = useState<{
+    animate: boolean;
+    height: number;
+    left: number;
+    top: number;
+    width: number;
+  } | null>(null);
 
   const updateThumb = useCallback(() => {
     const selectedItem =
@@ -40,26 +42,40 @@ export function Segmented({
     if (!selectedItem) return;
 
     setThumb({
-      animate: hasMeasuredThumb.current,
+      animate: hasMeasuredThumb.current && canAnimateThumb.current,
       height: selectedItem.offsetHeight,
       left: selectedItem.offsetLeft,
       top: selectedItem.offsetTop,
       width: selectedItem.offsetWidth,
     });
     hasMeasuredThumb.current = true;
+
+    if (!canAnimateThumb.current && animationFrameRef.current === null) {
+      animationFrameRef.current = requestAnimationFrame(() => {
+        canAnimateThumb.current = true;
+        animationFrameRef.current = null;
+      });
+    }
   }, [selectedValue]);
 
   useLayoutEffect(() => {
     updateThumb();
 
     const root = rootRef.current;
-    if (!root || typeof ResizeObserver === "undefined") return;
+    const observer =
+      root && typeof ResizeObserver !== "undefined" ? new ResizeObserver(updateThumb) : null;
+    if (root && observer) {
+      observer.observe(root);
+      itemRefs.current.forEach((item) => observer.observe(item));
+    }
 
-    const observer = new ResizeObserver(updateThumb);
-    observer.observe(root);
-    itemRefs.current.forEach((item) => observer.observe(item));
-
-    return () => observer.disconnect();
+    return () => {
+      observer?.disconnect();
+      if (animationFrameRef.current !== null) {
+        cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = null;
+      }
+    };
   }, [normalized, direction, updateThumb]);
 
   return (
@@ -68,7 +84,7 @@ export function Segmented({
       className={twMerge(segmentedVariants({ fullWidth, direction }), className)}
       {...rest}
     >
-      {selectedValue !== undefined ? (
+      {selectedValue !== undefined && thumb ? (
         <span
           data-segmented-thumb=""
           className={twMerge(

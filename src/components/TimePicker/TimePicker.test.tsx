@@ -34,6 +34,9 @@ describe("TimePicker", () => {
     render(<TimePicker defaultValue="13:00:00" use12Hours />);
     expect(screen.getByText("01:00:00 PM")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: /01:00:00 PM/ }));
+    const popup = document.querySelector("[data-timepicker-popup]") as HTMLElement;
+    const hourColumn = popup.querySelector('[data-time-column="hour"]') as HTMLElement;
+    expect(within(hourColumn).getByRole("button", { name: "12" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "PM" })).toBeInTheDocument();
   });
 

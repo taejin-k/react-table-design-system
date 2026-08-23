@@ -16,15 +16,6 @@
   display: none;
 }
 
-@keyframes wizard-notification-progress {
-  from {
-    transform: scaleX(1);
-  }
-  to {
-    transform: scaleX(0);
-  }
-}
-
 @keyframes wizard-button-loading-in {
   from {
     opacity: 0;

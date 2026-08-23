@@ -1,6 +1,6 @@
 {
   "name": "@taejin-k/wizard-design",
-  "version": "0.10.0",
+  "version": "0.10.3",
   "description": "Wizard 디자인 시스템",
   "license": "UNLICENSED",
   "publishConfig": {
@@ -55,6 +55,7 @@
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
+    "@rc-component/motion": "^1.3.3",
     "class-variance-authority": "^0.7.1",
     "tailwind-merge": "^3.6.0"
   },

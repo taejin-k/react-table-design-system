@@ -7,8 +7,13 @@ import {
 import type { Meta, StoryObj } from "@storybook/react";
 import { storyDescriptions } from "../../storybook/story-descriptions";
 import { withStoryImports } from "../../storybook/story-source";
+import { TypeTokens } from "../../storybook/type-tokens";
 import { Badge } from "../Badge";
 import { Description } from "./Description";
+import type { DescriptionLayoutType, DescriptionSizeType } from "./Description.types";
+
+const descriptionLayouts: DescriptionLayoutType[] = ["horizontal", "vertical"];
+const descriptionSizes: DescriptionSizeType[] = ["large", "medium", "small"];
 
 const items = [
   { key: "name", label: "이름", children: "김태진" },
@@ -23,7 +28,6 @@ const meta = {
   title: "Components/Description",
   component: Description,
   tags: ["autodocs"],
-  args: { title: "사용자 정보", items },
   parameters: {
     controls: { disable: true },
     docs: {
@@ -48,8 +52,9 @@ const meta = {
 | \`bordered\` | 레이블과 값을 셀 테두리로 구분해요. | \`boolean\` | \`false\` |
 | \`colon\` | 가로 레이아웃의 레이블 뒤에 콜론을 표시해요. | \`boolean\` | \`true\` |
 | \`column\` | 한 행의 열 개수 또는 반응형 열 개수를 정해요. | \`number \\| ResponsiveColumns\` | \`3\` |
-| \`layout\` | 레이블과 값의 배치 방향을 정해요. | \`'horizontal' \\| 'vertical'\` | \`'horizontal'\` |
-| \`size\` | 셀의 여백과 글자 크기를 정해요. | \`'large' \\| 'medium' \\| 'small'\` | \`'medium'\` |
+| \`layout\` | 레이블과 값의 배치 방향을 정해요. | [\`DescriptionLayoutType\`](#description-layout-type) | \`horizontal\` |
+| \`size\` | 셀의 여백과 글자 크기를 정해요. | [\`DescriptionSizeType\`](#description-size-type) | \`medium\` |
+| \`className\` | 최상위 요소에 Tailwind 클래스를 추가해요. | \`string\` | - |
 
 ### Description.Item
 
@@ -61,6 +66,13 @@ const meta = {
 | \`labelStyle\` | 레이블에 인라인 스타일을 적용해요. | \`CSSProperties\` | - |
 | \`contentStyle\` | 값에 인라인 스타일을 적용해요. | \`CSSProperties\` | - |
           `}</Markdown>
+          <h2 className="component-docs-types-heading">Types</h2>
+          <h3 id="description-layout-type">DescriptionLayoutType</h3>
+          <p>레이블과 값의 배치 방향을 선택해요.</p>
+          <TypeTokens values={descriptionLayouts} />
+          <h3 id="description-size-type">DescriptionSizeType</h3>
+          <p>셀 크기를 선택해요.</p>
+          <TypeTokens values={descriptionSizes} />
         </div>
       ),
     },
@@ -71,6 +83,7 @@ type Story = StoryObj<typeof meta>;
 
 const source = `<Description title="사용자 정보" items={[\n  { key: 'name', label: '이름', children: '김태진' },\n  { key: 'status', label: '상태', children: <Badge status="success" text="사용 중" /> },\n  { key: 'phone', label: '전화번호', children: '010-1234-5678' },\n  { key: 'address', label: '주소', children: '서울특별시 강남구', span: 2 },\n]} />`;
 export const Basic: Story = {
+  args: { title: "사용자 정보", items },
   parameters: {
     ...storyDescription("components-description--basic"),
     docs: {
@@ -80,7 +93,7 @@ export const Basic: Story = {
   },
 };
 export const Bordered: Story = {
-  args: { bordered: true },
+  args: { title: "사용자 정보", items, bordered: true },
   parameters: {
     ...storyDescription("components-description--bordered"),
     docs: {
@@ -93,7 +106,7 @@ export const Bordered: Story = {
   },
 };
 export const Vertical: Story = {
-  args: { layout: "vertical" },
+  args: { title: "사용자 정보", items, layout: "vertical" },
   parameters: {
     ...storyDescription("components-description--vertical"),
     docs: {

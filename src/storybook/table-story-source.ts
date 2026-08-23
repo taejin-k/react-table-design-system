@@ -27,15 +27,13 @@ const tablePropOrder = [
   "locale",
   "showHeader",
   "showSorterTooltip",
-  "tableLayout",
   "rowHoverable",
   "stickyHeader",
+  "stickyHeaderOffset",
   "virtual",
   "stickyScrollBar",
+  "stickyScrollBarOffset",
   "scroll",
-  "sortDirections",
-  "rootClassName",
-  "components",
   "className",
 ];
 
@@ -57,16 +55,19 @@ const objectPropOrder = [
   "filterOnClose",
   "filteredValue",
   "defaultFilteredValue",
+  "filterResetToDefault",
+  "showSorterTooltip",
+  "sortOrder",
   "defaultSortOrder",
-  "sortDirections",
   "sorter",
+  "children",
   "render",
 ];
 
 const memberPropOrder = ["id", "name", "role", "team", "status", "projects", "joinedAt"];
 
 const functionProp = (name: string) =>
-  name.startsWith("on") || ["render", "sorter", "showTotal", "getPopupContainer"].includes(name);
+  name.startsWith("on") || ["render", "sorter", "showTotal"].includes(name);
 
 function sortKeys(keys: string[], preferred: string[]) {
   return [...keys].sort((left, right) => {

@@ -1,5 +1,5 @@
 import { createPortal } from "react-dom";
-import { useMemo, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { cva } from "class-variance-authority";
 import { twMerge } from "tailwind-merge";
 import { Button } from "../Button";
@@ -11,13 +11,19 @@ import { TimePanel } from "../TimePicker/TimePicker";
 import { getPopupMotionStyle } from "../_internal/motion";
 import { useFloatingLayer } from "../_internal/use-floating-layer";
 import type {
-  DatePickerMode,
+  DatePickerModeType,
   DatePickerProps,
-  DatePickerValue,
+  DatePickerValueType,
   DateRangePickerProps,
 } from "./DatePicker.types";
 
 const weekdays = ["일", "월", "화", "수", "목", "금", "토"];
+const multipleTagSizeClasses = {
+  lg: "h-8 text-xs",
+  md: "h-[22px]",
+  sm: "h-4 px-1 py-0 text-[10px] leading-none [&>span]:size-3",
+} as const;
+type DatePickerLayoutPosition = { left: number; top: number };
 
 function pad(value: number) {
   return String(value).padStart(2, "0");
@@ -31,7 +37,7 @@ function getWeek(date: Date) {
   return Math.ceil(((target.getTime() - yearStart.getTime()) / 86_400_000 + 1) / 7);
 }
 
-function formatDate(date: Date, picker: DatePickerMode, time?: string) {
+function formatDate(date: Date, picker: DatePickerModeType, time?: string) {
   let value: string;
   if (picker === "year") value = String(date.getFullYear());
   else if (picker === "quarter")
@@ -130,9 +136,18 @@ function BaseDatePicker({
     : defaultValue
       ? [defaultValue]
       : [];
-  const [innerValues, setInnerValues] = useState<DatePickerValue[]>(initialValues);
+  const [innerValues, setInnerValues] = useState<DatePickerValueType[]>(initialValues);
   const selectedValues =
     value === undefined ? innerValues : Array.isArray(value) ? value : value ? [value] : [];
+  const selectedValuesKey = selectedValues.join("\u0000");
+  const multipleTriggerRef = useRef<HTMLButtonElement>(null);
+  const multipleTagContainerRef = useRef<HTMLSpanElement>(null);
+  const previousMultipleHeightRef = useRef<number | null>(null);
+  const multipleHeightAnimationRef = useRef<Animation | null>(null);
+  const previousMultipleLayoutRectsRef = useRef(new Map<string, DatePickerLayoutPosition>());
+  const multipleLayoutAnimationsRef = useRef(
+    new Map<string, { element: HTMLElement; animation: Animation }>(),
+  );
   const [pendingValues, setPendingValues] = useState(selectedValues);
   const [selectedTime, setSelectedTime] = useState(
     (typeof showTime === "object" ? showTime.defaultOpenValue : undefined) ?? "00:00:00",
@@ -141,6 +156,9 @@ function BaseDatePicker({
   const showTimeSecond =
     showTimeConfig.showSecond ??
     (showTimeConfig.format !== "HH:mm" && showTimeConfig.format !== "hh:mm A");
+  const showTimePopupWidth = showTime
+    ? 308 + 56 * (2 + (showTimeSecond ? 1 : 0)) + (showTimeConfig.use12Hours ? 64 : 0)
+    : undefined;
   const selectedDate = parseDate(selectedValues[0]);
   const [innerPanelDate, setInnerPanelDate] = useState(
     () => parseDate(defaultPickerValue) ?? selectedDate ?? new Date(),
@@ -149,6 +167,7 @@ function BaseDatePicker({
   const floating = useFloatingLayer({
     placement,
     trigger: "click",
+    targetGap: 2,
     disabled: disabled || readOnly,
     open,
     defaultOpen,
@@ -165,6 +184,13 @@ function BaseDatePicker({
       onOpenChange?.(nextOpen);
     },
   });
+  const isDateDisabled = (date: Date) => {
+    const min = parseDate(minDate);
+    const max = parseDate(maxDate);
+    return (
+      Boolean(min && date < min) || Boolean(max && date > max) || Boolean(disabledDate?.(date))
+    );
+  };
 
   const emitValues = (nextValues: string[], close = false) => {
     const sorted = order ? [...nextValues].sort() : nextValues;
@@ -180,6 +206,7 @@ function BaseDatePicker({
   };
 
   const selectDate = (date: Date) => {
+    if (isDateDisabled(date)) return;
     const rawValue = formatDate(date, picker, showTime ? selectedTime : undefined);
     const currentValues = needConfirm ? pendingValues : selectedValues;
     const nextValues = multiple
@@ -211,43 +238,248 @@ function BaseDatePicker({
     setPendingValues((current) => current.map((item) => `${item.split(" ")[0]} ${nextTime}`));
   };
 
+  useLayoutEffect(() => {
+    if (!multiple) {
+      previousMultipleHeightRef.current = null;
+      multipleHeightAnimationRef.current?.cancel();
+      multipleHeightAnimationRef.current = null;
+      return;
+    }
+
+    const trigger = multipleTriggerRef.current;
+    if (!trigger) return;
+
+    const runningAnimation = multipleHeightAnimationRef.current;
+    const renderedHeight = runningAnimation ? trigger.getBoundingClientRect().height : null;
+    runningAnimation?.cancel();
+    multipleHeightAnimationRef.current = null;
+
+    const nextHeight = trigger.getBoundingClientRect().height;
+    const previousHeight = previousMultipleHeightRef.current;
+    previousMultipleHeightRef.current = nextHeight;
+
+    if (
+      previousHeight === null ||
+      Math.abs(previousHeight - nextHeight) < 0.5 ||
+      typeof trigger.animate !== "function" ||
+      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
+    ) {
+      return;
+    }
+
+    const animation = trigger.animate(
+      [
+        { height: `${renderedHeight ?? previousHeight}px`, overflow: "hidden" },
+        { height: `${nextHeight}px`, overflow: "hidden" },
+      ],
+      {
+        duration: 300,
+        easing: "cubic-bezier(0.645, 0.045, 0.355, 1)",
+      },
+    );
+    multipleHeightAnimationRef.current = animation;
+    animation.addEventListener("finish", () => {
+      if (multipleHeightAnimationRef.current === animation) {
+        multipleHeightAnimationRef.current = null;
+      }
+    });
+  }, [multiple, selectedValuesKey, size]);
+
+  useLayoutEffect(() => {
+    if (!multiple) {
+      previousMultipleLayoutRectsRef.current.clear();
+      multipleLayoutAnimationsRef.current.forEach(({ animation }) => animation.cancel());
+      multipleLayoutAnimationsRef.current.clear();
+      return;
+    }
+
+    const container = multipleTagContainerRef.current;
+    if (!container) return;
+
+    const elements = Array.from(
+      container.querySelectorAll<HTMLElement>("[data-datepicker-layout-key]"),
+    );
+    const renderedRects = new Map<string, DatePickerLayoutPosition>();
+    const renderedContainerRect = container.getBoundingClientRect();
+
+    multipleLayoutAnimationsRef.current.forEach(({ element, animation }, key) => {
+      if (element.isConnected) {
+        const rect = element.getBoundingClientRect();
+        renderedRects.set(key, {
+          left: rect.left - renderedContainerRect.left,
+          top: rect.top - renderedContainerRect.top,
+        });
+      }
+      animation.cancel();
+    });
+    multipleLayoutAnimationsRef.current.clear();
+
+    const nextRects = new Map<string, DatePickerLayoutPosition>();
+    const nextContainerRect = container.getBoundingClientRect();
+    elements.forEach((element) => {
+      const key = element.dataset.datepickerLayoutKey;
+      if (!key) return;
+      const rect = element.getBoundingClientRect();
+      nextRects.set(key, {
+        left: rect.left - nextContainerRect.left,
+        top: rect.top - nextContainerRect.top,
+      });
+    });
+
+    const previousRects = previousMultipleLayoutRectsRef.current;
+    previousMultipleLayoutRectsRef.current = nextRects;
+    if (
+      previousRects.size === 0 ||
+      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
+    ) {
+      return;
+    }
+
+    elements.forEach((element) => {
+      const key = element.dataset.datepickerLayoutKey;
+      const nextRect = key ? nextRects.get(key) : undefined;
+      const previousRect = key ? (renderedRects.get(key) ?? previousRects.get(key)) : undefined;
+      if (!key || !nextRect || !previousRect || typeof element.animate !== "function") return;
+
+      const translateX = previousRect.left - nextRect.left;
+      const translateY = previousRect.top - nextRect.top;
+      if (Math.abs(translateX) < 0.5 && Math.abs(translateY) < 0.5) return;
+
+      const animation = element.animate(
+        [
+          { transform: `translate(${translateX}px, ${translateY}px)` },
+          { transform: "translate(0, 0)" },
+        ],
+        {
+          duration: 300,
+          easing: "cubic-bezier(0.645, 0.045, 0.355, 1)",
+        },
+      );
+      multipleLayoutAnimationsRef.current.set(key, { element, animation });
+      animation.addEventListener("finish", () => {
+        if (multipleLayoutAnimationsRef.current.get(key)?.animation === animation) {
+          multipleLayoutAnimationsRef.current.delete(key);
+        }
+      });
+    });
+  }, [multiple, selectedValuesKey]);
+
+  useLayoutEffect(() => {
+    if (!multiple) return;
+
+    const container = multipleTagContainerRef.current;
+    if (!container || typeof ResizeObserver === "undefined") return;
+    let previousWidth = container.getBoundingClientRect().width;
+
+    const syncLayoutAfterWidthChange = () => {
+      const containerRect = container.getBoundingClientRect();
+      if (Math.abs(previousWidth - containerRect.width) < 0.5) return;
+      previousWidth = containerRect.width;
+
+      multipleLayoutAnimationsRef.current.forEach(({ animation }) => animation.cancel());
+      multipleLayoutAnimationsRef.current.clear();
+
+      const nextRects = new Map<string, DatePickerLayoutPosition>();
+      container.querySelectorAll<HTMLElement>("[data-datepicker-layout-key]").forEach((element) => {
+        const key = element.dataset.datepickerLayoutKey;
+        if (!key) return;
+        const rect = element.getBoundingClientRect();
+        nextRects.set(key, {
+          left: rect.left - containerRect.left,
+          top: rect.top - containerRect.top,
+        });
+      });
+      previousMultipleLayoutRectsRef.current = nextRects;
+    };
+
+    const observer = new ResizeObserver(syncLayoutAfterWidthChange);
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, [multiple]);
+
+  useEffect(
+    () => () => {
+      multipleHeightAnimationRef.current?.cancel();
+      multipleLayoutAnimationsRef.current.forEach(({ animation }) => animation.cancel());
+    },
+    [],
+  );
+
   return (
     <div className={twMerge("flex w-full flex-col gap-1", className)} style={{ width }}>
       {label ? <Label label={label} required={required} size={size} /> : null}
       <span ref={floating.triggerRef} className="block w-full" {...floating.triggerProps}>
         <button
+          ref={multipleTriggerRef}
           type="button"
           disabled={disabled}
-          aria-readonly={readOnly || undefined}
-          className={pickerRootVariants({
-            size,
-            variant,
-            error: Boolean(errorMessage),
-            disabled,
-            readOnly,
-          })}
+          className={twMerge(
+            pickerRootVariants({
+              size,
+              variant,
+              error: Boolean(errorMessage),
+              disabled,
+              readOnly,
+            }),
+            multiple &&
+              selectedValues.length > 0 && [
+                "items-start",
+                size === "sm" ? "pl-px" : "pl-[3px]",
+                size === "sm" ? "py-px" : "py-[3px]",
+              ],
+          )}
         >
-          <span
-            className={twMerge(
-              "flex min-w-0 flex-1 flex-wrap gap-1",
-              !selectedValues.length && "text-[#999]",
-            )}
-          >
-            {selectedValues.length
-              ? selectedValues.map((item) => (
-                  <Tag
-                    key={item}
-                    color="grey"
-                    variant="filled"
-                    className={twMerge(
-                      !multiple && "h-auto bg-transparent p-0 text-sm text-[#111]",
-                    )}
-                  >
-                    {formatDisplayValue(item, format)}
-                  </Tag>
-                ))
-              : (placeholder ?? pickerPlaceholder(picker))}
-          </span>
+          {multiple && selectedValues.length ? (
+            <span
+              ref={multipleTagContainerRef}
+              className="flex min-w-0 flex-1 flex-wrap items-center gap-[5px]"
+            >
+              {selectedValues.map((item) => (
+                <Tag
+                  key={item}
+                  data-datepicker-tag
+                  data-datepicker-layout-key={`tag:${item}`}
+                  color="grey"
+                  variant="filled"
+                  className={twMerge(
+                    multipleTagSizeClasses[size],
+                    "tabular-nums",
+                    variant === "filled" && "bg-white",
+                  )}
+                  suffixIcon={
+                    disabled || readOnly ? undefined : (
+                      <Icon
+                        icon="close"
+                        size={12}
+                        onMouseDown={(event) => event.preventDefault()}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          emitValues(selectedValues.filter((value) => value !== item));
+                        }}
+                      />
+                    )
+                  }
+                >
+                  {formatDisplayValue(item, format)}
+                </Tag>
+              ))}
+            </span>
+          ) : (
+            <span
+              className={twMerge(
+                "flex min-w-0 flex-1 flex-wrap gap-1",
+                !selectedValues.length && "text-[#999]",
+              )}
+            >
+              {selectedValues.length ? (
+                <Tag className="h-auto bg-transparent p-0 text-sm text-[#111]">
+                  {formatDisplayValue(selectedValues[0], format)}
+                </Tag>
+              ) : (
+                (placeholder ?? pickerPlaceholder(picker))
+              )}
+            </span>
+          )}
           {allowClear && selectedValues.length && !disabled && !readOnly ? (
             <span
               className="cursor-pointer"
@@ -275,12 +507,13 @@ function BaseDatePicker({
               data-datepicker-popup
               className={twMerge(
                 "fixed rounded-lg bg-white p-3 font-pretendard text-sm text-[#111] shadow-[0_6px_16px_rgba(0,0,0,0.06),0_3px_6px_-4px_rgba(0,0,0,0.08),0_9px_28px_8px_rgba(0,0,0,0.03)]",
-                showTime ? "w-[468px]" : "w-[296px]",
+                !showTime && "w-[296px]",
                 !floating.isMotionVisible && "pointer-events-none",
               )}
               style={{
                 left: floating.position?.left ?? 0,
                 top: floating.position?.top ?? 0,
+                width: showTimePopupWidth,
                 zIndex: 1050,
                 visibility: floating.position ? "visible" : "hidden",
                 ...getPopupMotionStyle(floating.position?.placement, floating.isMotionVisible),
@@ -314,15 +547,7 @@ function BaseDatePicker({
                     picker={picker}
                     panelDate={panelDate}
                     selectedValues={needConfirm ? pendingValues : selectedValues}
-                    disabledDate={(date) => {
-                      const min = parseDate(minDate);
-                      const max = parseDate(maxDate);
-                      return (
-                        Boolean(min && date < min) ||
-                        Boolean(max && date > max) ||
-                        Boolean(disabledDate?.(date))
-                      );
-                    }}
+                    disabledDate={isDateDisabled}
                     showWeek={showWeek}
                     showNow={showNow}
                     cellRender={cellRender}
@@ -386,6 +611,9 @@ function PickerPanel({
   picker,
   panelDate,
   selectedValues,
+  rangeValues,
+  previousButton = true,
+  nextButton = true,
   disabledDate,
   showWeek,
   showNow,
@@ -393,9 +621,12 @@ function PickerPanel({
   onPanelDateChange,
   onSelect,
 }: {
-  picker: DatePickerMode;
+  picker: DatePickerModeType;
   panelDate: Date;
   selectedValues: string[];
+  rangeValues?: [string | null, string | null];
+  previousButton?: boolean;
+  nextButton?: boolean;
   disabledDate: (date: Date) => boolean;
   showWeek: boolean;
   showNow: boolean;
@@ -412,18 +643,78 @@ function PickerPanel({
     onPanelDateChange(next);
   };
 
+  const changeYear = (amount: number) => {
+    const next = new Date(panelDate);
+    next.setFullYear(next.getFullYear() + amount);
+    onPanelDateChange(next);
+  };
+
+  const showYearNavigation = picker === "date" || picker === "week";
+
   return (
     <>
-      <div className="mb-2 flex h-8 items-center justify-between">
-        <Icon icon="chevron-left" onClick={() => changePanel(-1)} />
-        <strong>{panelTitle(panelDate, picker)}</strong>
-        <Icon icon="chevron-right" onClick={() => changePanel(1)} />
+      <div
+        className={twMerge(
+          "mb-2 grid h-8 items-center",
+          showYearNavigation ? "grid-cols-[64px_1fr_64px]" : "grid-cols-[32px_1fr_32px]",
+        )}
+      >
+        <div className="flex">
+          {previousButton && showYearNavigation ? (
+            <button
+              type="button"
+              data-datepicker-previous-year
+              className="inline-flex size-8 cursor-pointer items-center justify-center rounded hover:bg-[#f5f5f5]"
+              onClick={() => changeYear(-1)}
+            >
+              <span className="flex -space-x-1.5">
+                <Icon icon="chevron-left" size={12} />
+                <Icon icon="chevron-left" size={12} />
+              </span>
+            </button>
+          ) : null}
+          {previousButton ? (
+            <button
+              type="button"
+              className="inline-flex size-8 cursor-pointer items-center justify-center rounded hover:bg-[#f5f5f5]"
+              onClick={() => changePanel(-1)}
+            >
+              <Icon icon="chevron-left" />
+            </button>
+          ) : null}
+        </div>
+        <strong className="text-center">{panelTitle(panelDate, picker)}</strong>
+        <div className="flex justify-end">
+          {nextButton ? (
+            <button
+              type="button"
+              className="inline-flex size-8 cursor-pointer items-center justify-center rounded hover:bg-[#f5f5f5]"
+              onClick={() => changePanel(1)}
+            >
+              <Icon icon="chevron-right" />
+            </button>
+          ) : null}
+          {nextButton && showYearNavigation ? (
+            <button
+              type="button"
+              data-datepicker-next-year
+              className="inline-flex size-8 cursor-pointer items-center justify-center rounded hover:bg-[#f5f5f5]"
+              onClick={() => changeYear(1)}
+            >
+              <span className="flex -space-x-1.5">
+                <Icon icon="chevron-right" size={12} />
+                <Icon icon="chevron-right" size={12} />
+              </span>
+            </button>
+          ) : null}
+        </div>
       </div>
       {picker === "date" || picker === "week" ? (
         <DateGrid
           picker={picker}
           panelDate={panelDate}
           selectedValues={selectedValues}
+          rangeValues={rangeValues}
           disabledDate={disabledDate}
           showWeek={showWeek}
           cellRender={cellRender}
@@ -456,7 +747,7 @@ function PickerPanel({
       )}
       {showNow ? (
         <div className="mt-2 border-t border-[#f0f0f0] pt-2 text-right">
-          <Button size="sm" variant="ghost" onClick={() => onSelect(new Date())}>
+          <Button size="md" onClick={() => onSelect(new Date())}>
             오늘
           </Button>
         </div>
@@ -469,6 +760,7 @@ function DateGrid({
   picker,
   panelDate,
   selectedValues,
+  rangeValues,
   disabledDate,
   showWeek,
   cellRender,
@@ -477,6 +769,7 @@ function DateGrid({
   picker: "date" | "week";
   panelDate: Date;
   selectedValues: string[];
+  rangeValues?: [string | null, string | null];
   disabledDate: (date: Date) => boolean;
   showWeek: boolean;
   cellRender?: DatePickerProps["cellRender"];
@@ -499,6 +792,11 @@ function DateGrid({
         const dateValue = formatDate(date, picker);
         const muted = date.getMonth() !== panelDate.getMonth();
         const selected = selectedValues.some((item) => item.startsWith(dateValue));
+        const rangeStart = parseDate(rangeValues?.[0]);
+        const rangeEnd = parseDate(rangeValues?.[1]);
+        const inRange = Boolean(rangeStart && rangeEnd && date >= rangeStart && date <= rangeEnd);
+        const isRangeStart = Boolean(rangeStart && sameDay(date, rangeStart));
+        const isRangeEnd = Boolean(rangeEnd && sameDay(date, rangeEnd));
         const dateDisabled = disabledDate(date);
         const originNode = <>{date.getDate()}</>;
         return (
@@ -508,25 +806,42 @@ function DateGrid({
                 {getWeek(date)}
               </span>
             ) : null}
-            <button
-              type="button"
-              disabled={dateDisabled}
+            <div
               className={twMerge(
-                "mx-auto my-0.5 flex size-8 cursor-pointer items-center justify-center rounded hover:bg-[#e6f4ff]",
-                muted && "text-[#bbb]",
-                selected && "bg-[#0062df] text-white hover:bg-[#0062df]",
-                dateDisabled && "cursor-not-allowed bg-[#fafafa] text-[#ccc] hover:bg-[#fafafa]",
+                "relative my-0.5 flex h-8 items-center justify-center",
+                inRange && "bg-[#e6f4ff]",
+                isRangeStart && "rounded-l-md",
+                isRangeEnd && "rounded-r-md",
               )}
-              onClick={() => onSelect(date)}
             >
-              {cellRender
-                ? cellRender(date, { originNode, today: new Date(), type: picker })
-                : originNode}
-            </button>
+              <button
+                type="button"
+                disabled={dateDisabled}
+                className={twMerge(
+                  "relative z-[1] flex size-8 cursor-pointer items-center justify-center rounded hover:bg-[#e6f4ff]",
+                  muted && "text-[#bbb]",
+                  selected && "bg-[#0062df] text-white hover:bg-[#0062df]",
+                  dateDisabled && "cursor-not-allowed bg-[#fafafa] text-[#ccc] hover:bg-[#fafafa]",
+                )}
+                onClick={() => onSelect(date)}
+              >
+                {cellRender
+                  ? cellRender(date, { originNode, today: new Date(), type: picker })
+                  : originNode}
+              </button>
+            </div>
           </div>
         );
       })}
     </div>
+  );
+}
+
+function sameDay(first: Date, second: Date) {
+  return (
+    first.getFullYear() === second.getFullYear() &&
+    first.getMonth() === second.getMonth() &&
+    first.getDate() === second.getDate()
   );
 }
 
@@ -648,7 +963,7 @@ function YearGrid({
   );
 }
 
-function pickerPlaceholder(picker: DatePickerMode) {
+function pickerPlaceholder(picker: DatePickerModeType) {
   if (picker === "year") return "연도를 선택하세요";
   if (picker === "quarter") return "분기를 선택하세요";
   if (picker === "month") return "월을 선택하세요";
@@ -656,7 +971,7 @@ function pickerPlaceholder(picker: DatePickerMode) {
   return "날짜를 선택하세요";
 }
 
-function panelTitle(date: Date, picker: DatePickerMode) {
+function panelTitle(date: Date, picker: DatePickerModeType) {
   if (picker === "year") {
     const start = Math.floor(date.getFullYear() / 12) * 12;
     return `${start} - ${start + 11}`;
@@ -665,76 +980,261 @@ function panelTitle(date: Date, picker: DatePickerMode) {
   return `${date.getFullYear()}년 ${date.getMonth() + 1}월`;
 }
 
+function offsetPanelDate(date: Date, picker: DatePickerModeType, amount: number) {
+  const next = new Date(date);
+  if (picker === "year") next.setFullYear(next.getFullYear() + amount * 12);
+  else if (picker === "month" || picker === "quarter")
+    next.setFullYear(next.getFullYear() + amount);
+  else next.setMonth(next.getMonth() + amount);
+  return next;
+}
+
 function DateRangePicker({
   value,
   defaultValue = [null, null],
+  defaultPickerValue,
+  pickerValue,
+  picker = "date",
   placeholder = ["시작 날짜", "종료 날짜"],
+  format,
   label,
   errorMessage,
   required = false,
   size = "md",
+  variant = "default",
   presets,
+  disabled = false,
+  readOnly = false,
+  allowClear = true,
+  open,
+  defaultOpen = false,
+  placement = "bottomLeft",
+  minDate,
+  maxDate,
+  showWeek = picker === "week",
+  showNow = false,
+  disabledDate,
+  cellRender,
+  renderExtraFooter,
   onChange,
   onCalendarChange,
+  onClear,
+  onPanelChange,
   className,
   width,
-  ...props
+  onOpenChange,
 }: DateRangePickerProps) {
   const [innerValue, setInnerValue] = useState(defaultValue);
   const selectedValue = value ?? innerValue;
-  const changeRange = (index: 0 | 1, nextValue: DatePickerValue | DatePickerValue[] | null) => {
-    const normalized = Array.isArray(nextValue) ? (nextValue[0] ?? null) : nextValue;
-    const nextRange: [DatePickerValue | null, DatePickerValue | null] = [...selectedValue];
-    nextRange[index] = normalized;
+  const initialPanel =
+    parseDate(pickerValue) ??
+    parseDate(defaultPickerValue) ??
+    parseDate(selectedValue[0]) ??
+    new Date();
+  const [leftPanel, setLeftPanel] = useState(initialPanel);
+  const [rightPanel, setRightPanel] = useState(() => offsetPanelDate(initialPanel, picker, 1));
+  const [selecting, setSelecting] = useState<"start" | "end">(
+    selectedValue[0] && !selectedValue[1] ? "end" : "start",
+  );
+  const floating = useFloatingLayer({
+    placement,
+    trigger: "click",
+    targetGap: 2,
+    disabled: disabled || readOnly,
+    open,
+    defaultOpen,
+    onOpenChange: (nextOpen) => {
+      if (nextOpen) {
+        const initial =
+          parseDate(pickerValue) ??
+          parseDate(defaultPickerValue) ??
+          parseDate(selectedValue[0]) ??
+          new Date();
+        const next = offsetPanelDate(initial, picker, 1);
+        setLeftPanel(initial);
+        setRightPanel(next);
+        setSelecting(selectedValue[0] && !selectedValue[1] ? "end" : "start");
+      }
+      onOpenChange?.(nextOpen);
+    },
+  });
+  const emitRange = (nextRange: [DatePickerValueType | null, DatePickerValueType | null]) => {
     if (value === undefined) setInnerValue(nextRange);
-    onChange?.(nextRange, [nextRange[0] ?? "", nextRange[1] ?? ""]);
-    onCalendarChange?.(nextRange, { range: index === 0 ? "start" : "end" });
+    onChange?.(nextRange, [
+      nextRange[0] ? formatDisplayValue(nextRange[0], format) : "",
+      nextRange[1] ? formatDisplayValue(nextRange[1], format) : "",
+    ]);
+  };
+  const selectRangeDate = (date: Date) => {
+    const min = parseDate(minDate);
+    const max = parseDate(maxDate);
+    if (Boolean(min && date < min) || Boolean(max && date > max) || disabledDate?.(date)) return;
+    const nextDate = formatDate(date, picker);
+    if (selecting === "start" || !selectedValue[0] || selectedValue[1]) {
+      const next: [string, null] = [nextDate, null];
+      if (value === undefined) setInnerValue(next);
+      onCalendarChange?.(next, { range: "start" });
+      setSelecting("end");
+      return;
+    }
+    const startDate = selectedValue[0];
+    const next: [string, string] =
+      startDate && nextDate < startDate ? [nextDate, startDate] : [startDate ?? nextDate, nextDate];
+    emitRange(next);
+    onCalendarChange?.(next, { range: "end" });
+    setSelecting("start");
+    floating.changeOpen(false, "menu");
   };
 
   return (
     <div className={twMerge("flex w-full flex-col gap-1", className)} style={{ width }}>
       {label ? <Label label={label} required={required} size={size} /> : null}
-      {presets?.length ? (
-        <div className="mb-1 flex flex-wrap gap-1">
-          {presets.map((preset) => (
-            <Button
-              key={String(preset.label)}
-              size="sm"
-              variant="secondary"
-              onClick={() => {
-                const nextRange =
-                  typeof preset.value === "function" ? preset.value() : preset.value;
-                if (value === undefined) setInnerValue(nextRange);
-                onChange?.(nextRange, [nextRange[0] ?? "", nextRange[1] ?? ""]);
+      <span ref={floating.triggerRef} className="block w-full" {...floating.triggerProps}>
+        <button
+          type="button"
+          disabled={disabled}
+          className={pickerRootVariants({
+            size,
+            variant,
+            error: Boolean(errorMessage),
+            disabled,
+            readOnly,
+          })}
+        >
+          <span className={twMerge("min-w-0 flex-1 truncate", !selectedValue[0] && "text-[#999]")}>
+            {selectedValue[0] ? formatDisplayValue(selectedValue[0], format) : placeholder[0]}
+          </span>
+          <span className="shrink-0 text-[#999]">-</span>
+          <span className={twMerge("min-w-0 flex-1 truncate", !selectedValue[1] && "text-[#999]")}>
+            {selectedValue[1] ? formatDisplayValue(selectedValue[1], format) : placeholder[1]}
+          </span>
+          {allowClear && (selectedValue[0] || selectedValue[1]) && !disabled && !readOnly ? (
+            <span
+              className="cursor-pointer"
+              onClick={(event) => {
+                event.stopPropagation();
+                emitRange([null, null]);
+                onClear?.();
               }}
             >
-              {preset.label}
-            </Button>
-          ))}
-        </div>
-      ) : null}
-      <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-2">
-        <BaseDatePicker
-          {...props}
-          size={size}
-          value={selectedValue[0]}
-          placeholder={placeholder[0]}
-          onChange={(nextValue) => changeRange(0, nextValue)}
-        />
-        <span className="pt-1.5 text-[#999]">-</span>
-        <BaseDatePicker
-          {...props}
-          size={size}
-          value={selectedValue[1]}
-          placeholder={placeholder[1]}
-          disabledDate={(date) => {
-            const start = parseDate(selectedValue[0]);
-            return Boolean(start && date < start) || Boolean(props.disabledDate?.(date));
-          }}
-          onChange={(nextValue) => changeRange(1, nextValue)}
-        />
-      </div>
+              {typeof allowClear === "object" && allowClear.clearIcon ? (
+                allowClear.clearIcon
+              ) : (
+                <Icon icon="close" color="#999" />
+              )}
+            </span>
+          ) : (
+            <Icon icon="calendar" color="#999" />
+          )}
+        </button>
+      </span>
       <ErrorMessage errorMessage={errorMessage} />
+      {floating.isRendered && typeof document !== "undefined"
+        ? createPortal(
+            <div
+              ref={floating.popupRef}
+              data-datepicker-range-popup
+              className={twMerge(
+                "fixed flex overflow-hidden rounded-lg bg-white font-pretendard text-sm text-[#111] shadow-[0_6px_16px_rgba(0,0,0,0.06),0_3px_6px_-4px_rgba(0,0,0,0.08),0_9px_28px_8px_rgba(0,0,0,0.03)]",
+                !floating.isMotionVisible && "pointer-events-none",
+              )}
+              style={{
+                left: floating.position?.left ?? 0,
+                top: floating.position?.top ?? 0,
+                zIndex: 1050,
+                visibility: floating.position ? "visible" : "hidden",
+                ...getPopupMotionStyle(
+                  floating.position?.placement ?? placement,
+                  floating.isMotionVisible && Boolean(floating.position),
+                ),
+              }}
+              {...floating.popupProps}
+            >
+              {presets?.length ? (
+                <div className="flex w-28 flex-col gap-1 border-r border-[#f0f0f0] p-2">
+                  {presets.map((preset) => (
+                    <Button
+                      key={String(preset.label)}
+                      size="sm"
+                      variant="ghost"
+                      className="justify-start"
+                      onClick={() => {
+                        const nextRange =
+                          typeof preset.value === "function" ? preset.value() : preset.value;
+                        emitRange(nextRange);
+                        floating.changeOpen(false, "menu");
+                      }}
+                    >
+                      {preset.label}
+                    </Button>
+                  ))}
+                </div>
+              ) : null}
+              <div className="grid grid-cols-2 divide-x divide-[#f0f0f0]">
+                <div className="w-[296px] p-3">
+                  <PickerPanel
+                    picker={picker}
+                    panelDate={leftPanel}
+                    nextButton={false}
+                    selectedValues={selectedValue.filter(Boolean) as string[]}
+                    rangeValues={selectedValue}
+                    disabledDate={(date) => {
+                      const min = parseDate(minDate);
+                      const max = parseDate(maxDate);
+                      return (
+                        Boolean(min && date < min) ||
+                        Boolean(max && date > max) ||
+                        Boolean(disabledDate?.(date))
+                      );
+                    }}
+                    showWeek={showWeek}
+                    showNow={false}
+                    cellRender={cellRender}
+                    onPanelDateChange={(next) => {
+                      setLeftPanel(next);
+                      const right = offsetPanelDate(next, picker, 1);
+                      setRightPanel(right);
+                      onPanelChange?.(formatDate(next, picker), picker);
+                    }}
+                    onSelect={selectRangeDate}
+                  />
+                </div>
+                <div className="w-[296px] p-3">
+                  <PickerPanel
+                    picker={picker}
+                    panelDate={rightPanel}
+                    previousButton={false}
+                    selectedValues={selectedValue.filter(Boolean) as string[]}
+                    rangeValues={selectedValue}
+                    disabledDate={(date) => {
+                      const min = parseDate(minDate);
+                      const max = parseDate(maxDate);
+                      return (
+                        Boolean(min && date < min) ||
+                        Boolean(max && date > max) ||
+                        Boolean(disabledDate?.(date))
+                      );
+                    }}
+                    showWeek={showWeek}
+                    showNow={showNow}
+                    cellRender={cellRender}
+                    onPanelDateChange={(next) => {
+                      setRightPanel(next);
+                      const left = offsetPanelDate(next, picker, -1);
+                      setLeftPanel(left);
+                      onPanelChange?.(formatDate(next, picker), picker);
+                    }}
+                    onSelect={selectRangeDate}
+                  />
+                </div>
+              </div>
+              {renderExtraFooter ? (
+                <div className="border-t border-[#f0f0f0] p-3">{renderExtraFooter(picker)}</div>
+              ) : null}
+            </div>,
+            document.body,
+          )
+        : null}
     </div>
   );
 }
@@ -746,16 +1246,14 @@ export const DatePicker = Object.assign(BaseDatePicker, {
 }) as DatePickerComponent;
 
 const pickerRootVariants = cva(
-  "flex w-full cursor-pointer items-center gap-2 rounded border border-solid bg-white px-2.5 text-left font-pretendard font-medium text-[#111] transition-colors hover:border-[#0062df] focus-visible:border-[#0062df] focus-visible:outline-none",
+  "flex w-full cursor-pointer items-center gap-2 rounded border border-solid px-2.5 text-left font-pretendard font-medium text-[#111] transition-colors hover:border-[#0062df] focus-visible:border-[#0062df] focus-visible:outline-none",
   {
     variants: {
       size: { lg: "min-h-10 text-base", md: "min-h-[30px] text-sm", sm: "min-h-5 text-xs" },
       variant: {
-        default: "border-[#ddd]",
-        outlined: "border-[#ddd]",
+        default: "border-[#ddd] bg-white",
+        outlined: "border-[#ddd] bg-white",
         filled: "border-[#f5f5f5] bg-[#f5f5f5]",
-        borderless: "border-transparent",
-        underlined: "rounded-none border-x-0 border-t-0 border-b-[#ddd] px-0",
       },
       error: { true: "border-[#fe5150]", false: "" },
       readOnly: {

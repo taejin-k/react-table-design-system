@@ -12,7 +12,6 @@ export interface ImagePreviewConfig {
   maxScale?: number;
   scaleStep?: number;
   movable?: boolean;
-  focusTrap?: boolean;
   toolbarRender?: (
     node: ReactNode,
     info: { transform: ImageTransform; actions: ImageActions },
@@ -55,7 +54,6 @@ export interface ImageProps extends Omit<
           boolean | { percent?: number; render?: (node: ReactNode, percent: number) => ReactNode };
       };
   preview?: boolean | ImagePreviewConfig;
-  rootClassName?: string;
   rootStyle?: CSSProperties;
 }
 

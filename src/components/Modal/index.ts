@@ -1,12 +1,13 @@
 export { Modal } from "./Modal";
 export type {
-  ModalClosable,
+  ModalClosableType,
   ModalComponent,
   ModalFuncConfig,
   ModalFuncResult,
-  ModalMask,
+  ModalMaskType,
   ModalProps,
-  ModalSemanticName,
+  ModalSemanticNameType,
   ModalStaticFunctions,
-  ModalWidth,
+  ModalStatusType,
+  ModalWidthType,
 } from "./Modal.types";

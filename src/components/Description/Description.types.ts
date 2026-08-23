@@ -1,15 +1,15 @@
 import type { CSSProperties, ReactNode } from "react";
 
-export type DescriptionSize = "large" | "medium" | "small";
-export type DescriptionLayout = "horizontal" | "vertical";
-export type DescriptionSpan =
+export type DescriptionSizeType = "large" | "medium" | "small";
+export type DescriptionLayoutType = "horizontal" | "vertical";
+export type DescriptionSpanType =
   number | "filled" | Partial<Record<"xs" | "sm" | "md" | "lg" | "xl" | "xxl", number>>;
 
 export interface DescriptionItem {
   key?: React.Key;
   label?: ReactNode;
   children?: ReactNode;
-  span?: DescriptionSpan;
+  span?: DescriptionSpanType;
   className?: string;
   style?: CSSProperties;
   labelStyle?: CSSProperties;
@@ -26,8 +26,8 @@ export interface DescriptionProps {
   bordered?: boolean;
   colon?: boolean;
   column?: number | Partial<Record<"xs" | "sm" | "md" | "lg" | "xl" | "xxl", number>>;
-  layout?: DescriptionLayout;
-  size?: DescriptionSize;
+  layout?: DescriptionLayoutType;
+  size?: DescriptionSizeType;
   className?: string;
   style?: CSSProperties;
 }

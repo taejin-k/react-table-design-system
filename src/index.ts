@@ -34,19 +34,23 @@ export type {
 export { DatePicker } from "./components/DatePicker";
 export type {
   DatePickerShowTime,
-  DatePickerMode,
-  DatePickerPlacement,
+  DatePickerModeType,
+  DatePickerPlacementType,
   DatePickerProps,
-  DatePickerValue,
+  DatePickerSizeType,
+  DatePickerValueType,
+  DatePickerVariantType,
   DateRangePickerProps,
 } from "./components/DatePicker";
 export { TimePicker } from "./components/TimePicker";
 export type {
   DisabledTime,
   TimePickerCellInfo,
-  TimePickerPlacement,
+  TimePickerPlacementType,
   TimePickerProps,
-  TimePickerValue,
+  TimePickerSizeType,
+  TimePickerValueType,
+  TimePickerVariantType,
   TimeRangePickerProps,
 } from "./components/TimePicker";
 export { Checkbox } from "./components/Checkbox";
@@ -75,25 +79,26 @@ export { Segmented } from "./components/Segmented";
 export type { SegmentedItem, SegmentedProps, SegmentedSizeType } from "./components/Segmented";
 export { Modal } from "./components/Modal";
 export type {
-  ModalClosable,
+  ModalClosableType,
   ModalComponent,
   ModalFuncConfig,
   ModalFuncResult,
-  ModalMask,
+  ModalMaskType,
   ModalProps,
-  ModalSemanticName,
+  ModalSemanticNameType,
   ModalStaticFunctions,
-  ModalWidth,
+  ModalStatusType,
+  ModalWidthType,
 } from "./components/Modal";
 export { Drawer } from "./components/Drawer";
 export type {
-  DrawerClosable,
-  DrawerMask,
-  DrawerPlacement,
+  DrawerClosableType,
+  DrawerMaskType,
+  DrawerPlacementType,
   DrawerProps,
   DrawerResizableConfig,
-  DrawerSemanticName,
-  DrawerSize,
+  DrawerSemanticNameType,
+  DrawerSizeType,
 } from "./components/Drawer";
 export { message } from "./components/Message";
 export type {
@@ -101,10 +106,10 @@ export type {
   MessageArgsProps,
   MessageGlobalConfig,
   MessageInstance,
-  MessageKey,
-  MessageSemanticName,
+  MessageKeyType,
+  MessageSemanticNameType,
   MessageType,
-  MessageTypeName,
+  MessageStatusType,
 } from "./components/Message";
 export { notification } from "./components/Notification";
 export type {
@@ -112,9 +117,9 @@ export type {
   NotificationArgsProps,
   NotificationGlobalConfig,
   NotificationInstance,
-  NotificationPlacement,
-  NotificationSemanticName,
-  NotificationType,
+  NotificationPlacementType,
+  NotificationSemanticNameType,
+  NotificationStatusType,
 } from "./components/Notification";
 export { Illustrations } from "./components/Illustrations";
 export type {
@@ -134,52 +139,57 @@ export type {
   ExpandableConfig,
   FilterItem,
   FilterKey,
-  FilterValue,
+  FilterValueType,
   Key,
   PaginationConfig,
   PaginationPlacementType,
   RowDragConfig,
-  RowDragInfo,
+  RowDrag,
   ColumnDragConfig,
-  ColumnDragInfo,
-  RowSelectMethodType,
+  ColumnDrag,
   RowSelection,
   RowSelectionType,
   SortOrderType,
   SorterConfig,
-  SorterTooltipConfig,
-  SorterTooltipTargetType,
   SorterResult,
-  TableChangeExtra,
-  TableChangeActionType,
+  TableChangePagination,
   TableLoadingConfig,
   TableLocale,
-  TableLayoutType,
   TableProps,
   TableRef,
   TableScrollAlignType,
   TableSizeType,
-  TableStickyScrollBarConfig,
   TableRowCheckboxProps,
 } from "./components/Table";
 export { Menu } from "./components/Menu";
 export type {
   MenuClickInfo,
   MenuItemType,
-  MenuMode,
+  MenuItemKindType,
+  MenuModeType,
   MenuProps,
   MenuSelectInfo,
-  MenuTheme,
+  MenuThemeType,
+  MenuTriggerType,
 } from "./components/Menu";
 export { Tabs } from "./components/Tabs";
-export type { TabItemType, TabsPlacement, TabsProps, TabsSize, TabsType } from "./components/Tabs";
+export type {
+  TabItemType,
+  TabsPlacementType,
+  TabsProps,
+  TabsSizeType,
+  TabsType,
+} from "./components/Tabs";
 export { Color, ColorPicker } from "./components/ColorPicker";
 export type {
-  ColorFormat,
-  ColorPickerMode,
+  ColorFormatType,
+  ColorGradientType,
+  ColorPickerPlacementType,
   ColorPickerProps,
+  ColorPickerSizeType,
+  ColorPickerTriggerType,
   ColorPreset,
-  ColorValue,
+  ColorValueType,
   HsbColor,
   RgbColor,
 } from "./components/ColorPicker";
@@ -188,7 +198,7 @@ export type {
   UploadChangeParam,
   UploadComponent,
   UploadFile,
-  UploadFileStatus,
+  UploadFileStatusType,
   UploadListType,
   UploadProps,
   UploadRequestOption,
@@ -198,35 +208,37 @@ export type {
   AvatarComponent,
   AvatarGroupProps,
   AvatarProps,
-  AvatarShape,
-  AvatarSize,
+  AvatarShapeType,
+  AvatarSizeType,
+  AvatarTypeType,
 } from "./components/Avatar";
 export { Badge } from "./components/Badge";
-export type { BadgeComponent, BadgeProps, BadgeRibbonProps, BadgeStatus } from "./components/Badge";
+export type { BadgeProps, BadgeStatusType } from "./components/Badge";
 export { Calendar } from "./components/Calendar";
 export type {
   CalendarCellInfo,
-  CalendarMode,
+  CalendarModeType,
   CalendarProps,
-  CalendarSelectSource,
+  CalendarSelectSourceType,
 } from "./components/Calendar";
 export { Collapse } from "./components/Collapse";
 export type {
-  CollapseCollapsible,
+  CollapseCollapsibleType,
+  CollapseExpandIconPlacementType,
   CollapseItem,
-  CollapseKey,
+  CollapseKeyType,
   CollapseProps,
-  CollapseSize,
+  CollapseSizeType,
 } from "./components/Collapse";
 export { Description, Descriptions } from "./components/Description";
 export type {
   DescriptionComponent,
   DescriptionItem,
   DescriptionItemProps,
-  DescriptionLayout,
+  DescriptionLayoutType,
   DescriptionProps,
-  DescriptionSize,
-  DescriptionSpan,
+  DescriptionSizeType,
+  DescriptionSpanType,
 } from "./components/Description";
 export { Image } from "./components/Image";
 export type {
@@ -244,5 +256,6 @@ export type {
   SkeletonComponent,
   SkeletonElementProps,
   SkeletonProps,
-  SkeletonSize,
+  SkeletonShapeType,
+  SkeletonSizeType,
 } from "./components/Skeleton";

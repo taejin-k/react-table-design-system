@@ -2,17 +2,30 @@ import { createPortal } from "react-dom";
 import { useMemo, useState } from "react";
 import { twMerge } from "tailwind-merge";
 import { Icon } from "../Icon";
+import { Input } from "../Input";
+import { Select } from "../Select";
+import { getPopupMotionStyle } from "../_internal/motion";
 import { useFloatingLayer } from "../_internal/use-floating-layer";
 import type {
-  ColorFormat,
+  ColorFormatType,
+  ColorGradientType,
   ColorPickerProps,
-  ColorValue,
+  ColorValueType,
   HsbColor,
   RgbColor,
 } from "./ColorPicker.types";
 
 function clamp(value: number, min = 0, max = 1) {
   return Math.min(max, Math.max(min, value));
+}
+
+function isValidColorInput(value: string, format: ColorFormatType) {
+  const input = value.trim();
+  if (format === "hex") return /^#(?:[\da-f]{3,4}|[\da-f]{6}|[\da-f]{8})$/i.test(input);
+  if (format === "rgb") {
+    return /^rgba?\(\s*[\d.]+[,\s]+[\d.]+[,\s]+[\d.]+(?:[,/\s]+[\d.]+%?)?\s*\)$/i.test(input);
+  }
+  return /^hs[bg]\(\s*[\d.]+[,\s]+[\d.]+%[,\s]+[\d.]+%(?:[,/\s]+[\d.]+%?)?\s*\)$/i.test(input);
 }
 function rgbToHsb({ r, g, b, a = 1 }: RgbColor): HsbColor {
   const red = r / 255,
@@ -88,13 +101,15 @@ function parseColor(value: string | RgbColor | HsbColor = "#0062df"): RgbColor {
   const hsb = input.match(
     /^hs[bg]\(\s*([\d.]+)[,\s]+([\d.]+)%[,\s]+([\d.]+)%(?:[,/\s]+([\d.]+)%?)?\s*\)$/,
   );
-  if (hsb)
+  if (hsb) {
+    const alphaDivisor = input.endsWith("%)") ? 100 : 1;
     return hsbToRgb({
       h: Number(hsb[1]),
       s: Number(hsb[2]) / 100,
       b: Number(hsb[3]) / 100,
-      a: hsb[4] ? Number(hsb[4]) / (input.endsWith("%)") ? 100 : 1) : 1,
+      a: hsb[4] ? Number(hsb[4]) / alphaDivisor : 1,
     });
+  }
   const canvas = typeof document !== "undefined" ? document.createElement("canvas") : null;
   const context = canvas?.getContext("2d");
   if (context) {
@@ -143,16 +158,16 @@ export class Color {
   }
 }
 
-function firstColor(value?: ColorValue) {
+function firstColor(value?: ColorValueType | ColorGradientType) {
   return Array.isArray(value)
     ? (value[0]?.color ?? "#0062df")
     : typeof value === "string"
-      ? value
+      ? value || "#ffffff"
       : value instanceof Color
         ? value.toCssString()
         : "#0062df";
 }
-function colorCss(value?: ColorValue) {
+function colorCss(value?: ColorValueType | ColorGradientType) {
   return Array.isArray(value)
     ? `linear-gradient(90deg, ${value.map((stop) => `${stop.color} ${stop.percent}%`).join(", ")})`
     : firstColor(value);
@@ -163,11 +178,8 @@ export function ColorPicker({
   defaultValue = "#0062df",
   format: formatProp,
   defaultFormat = "hex",
-  mode = "single",
-  defaultMode = "single",
   size = "medium",
   disabled = false,
-  disabledAlpha = false,
   allowClear = false,
   open,
   defaultOpen = false,
@@ -185,15 +197,17 @@ export function ColorPicker({
   onOpenChange,
   onClear,
 }: ColorPickerProps) {
-  const [innerValue, setInnerValue] = useState<ColorValue>(defaultValue);
+  const [innerValue, setInnerValue] = useState<ColorValueType>(defaultValue);
   const selected = value ?? innerValue;
-  const [innerFormat, setInnerFormat] = useState<ColorFormat>(defaultFormat);
+  const [innerFormat, setInnerFormat] = useState<ColorFormatType>(defaultFormat);
+  const [draft, setDraft] = useState("");
+  const [editing, setEditing] = useState(false);
   const format = formatProp ?? innerFormat;
-  const [activeMode, setActiveMode] = useState(Array.isArray(mode) ? defaultMode : mode);
   const current = useMemo(() => new Color(firstColor(selected)), [selected]);
   const floating = useFloatingLayer({
     placement,
     trigger,
+    targetGap: 2,
     disabled,
     open,
     defaultOpen,
@@ -205,6 +219,17 @@ export function ColorPicker({
     if (complete) onChangeComplete?.(next);
   };
   const hsb = current.toHsb();
+  const saturationFromPoint = (element: HTMLElement, clientX: number, clientY: number) => {
+    const rect = element.getBoundingClientRect();
+    return new Color(
+      hsbToRgb({
+        h: hsb.h,
+        s: clamp((clientX - rect.left) / rect.width),
+        b: 1 - clamp((clientY - rect.top) / rect.height),
+        a: hsb.a,
+      }),
+    );
+  };
   const display =
     format === "hex"
       ? current.toHexString().toUpperCase()
@@ -212,96 +237,112 @@ export function ColorPicker({
         ? current.toRgbString()
         : current.toHsbString();
   const Picker = (
-    <div className="grid gap-3">
+    <div className="grid w-full max-w-full min-w-0 gap-3 overflow-hidden">
       <div
-        role="slider"
-        aria-label="채도와 밝기"
+        data-colorpicker-saturation
         className="relative h-40 cursor-crosshair overflow-hidden rounded-md"
         style={{
           background: `linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, hsl(${hsb.h}, 100%, 50%))`,
         }}
         onPointerDown={(event) => {
-          const rect = event.currentTarget.getBoundingClientRect();
-          const next = new Color(
-            hsbToRgb({
-              h: hsb.h,
-              s: clamp((event.clientX - rect.left) / rect.width),
-              b: 1 - clamp((event.clientY - rect.top) / rect.height),
-              a: hsb.a,
-            }),
-          );
+          event.currentTarget.setPointerCapture(event.pointerId);
+          change(saturationFromPoint(event.currentTarget, event.clientX, event.clientY));
+        }}
+        onPointerMove={(event) => {
+          if (!event.currentTarget.hasPointerCapture(event.pointerId)) return;
+          change(saturationFromPoint(event.currentTarget, event.clientX, event.clientY));
+        }}
+        onPointerUp={(event) => {
+          const next = saturationFromPoint(event.currentTarget, event.clientX, event.clientY);
           change(next, true);
+          event.currentTarget.releasePointerCapture(event.pointerId);
         }}
       >
         <span
+          data-colorpicker-saturation-thumb
           className="absolute size-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow"
           style={{ left: `${hsb.s * 100}%`, top: `${(1 - hsb.b) * 100}%` }}
         />
       </div>
-      <div className="flex items-center gap-3">
+      <div className="flex min-w-0 items-center gap-3">
         <span
           className="size-7 shrink-0 rounded-full border border-black/10"
           style={{ background: current.toCssString() }}
         />
-        <div className="grid flex-1 gap-2">
+        <div className="grid min-w-0 flex-1 gap-2 px-1">
           <input
-            aria-label="색조"
             type="range"
             min={0}
             max={360}
             value={Math.round(hsb.h)}
-            className="wizard-color-hue h-3 w-full appearance-none rounded-full"
+            className="wizard-color-hue h-3 w-full min-w-0 appearance-none rounded-full"
             onChange={(event) =>
               change(new Color(hsbToRgb({ ...hsb, h: Number(event.target.value) })))
             }
-            onPointerUp={() => onChangeComplete?.(current)}
+            onPointerUp={(event) =>
+              onChangeComplete?.(
+                new Color(hsbToRgb({ ...hsb, h: Number(event.currentTarget.value) })),
+              )
+            }
           />
-          {!disabledAlpha ? (
-            <input
-              aria-label="투명도"
-              type="range"
-              min={0}
-              max={100}
-              value={Math.round(hsb.a * 100)}
-              className="wizard-color-alpha h-3 w-full appearance-none rounded-full"
-              style={{
-                background: `linear-gradient(to right, transparent, ${new Color({ ...current.toRgb(), a: 1 }).toHexString()})`,
-              }}
-              onChange={(event) =>
-                change(new Color({ ...current.toRgb(), a: Number(event.target.value) / 100 }))
-              }
-              onPointerUp={() => onChangeComplete?.(current)}
-            />
-          ) : null}
+          <input
+            type="range"
+            min={0}
+            max={100}
+            value={Math.round(hsb.a * 100)}
+            className="wizard-color-alpha h-3 w-full min-w-0 appearance-none rounded-full"
+            style={{
+              background: `linear-gradient(to right, transparent, ${new Color({ ...current.toRgb(), a: 1 }).toHexString()})`,
+            }}
+            onInput={(event) =>
+              change(new Color({ ...current.toRgb(), a: Number(event.currentTarget.value) / 100 }))
+            }
+            onPointerUp={(event) =>
+              onChangeComplete?.(
+                new Color({ ...current.toRgb(), a: Number(event.currentTarget.value) / 100 }),
+              )
+            }
+          />
         </div>
       </div>
-      <div className="flex gap-2">
-        <select
-          aria-label="색상 형식"
+      <div className="flex min-w-0 gap-2">
+        <Select
           value={format}
-          className="h-8 rounded-md border border-[#d9d9d9] bg-white px-2"
-          onChange={(event) => {
-            const next = event.target.value as ColorFormat;
+          width={76}
+          options={[
+            { label: "HEX", value: "hex" },
+            { label: "RGB", value: "rgb" },
+            { label: "HSB", value: "hsb" },
+          ]}
+          onChange={(nextValue) => {
+            if (typeof nextValue !== "string") return;
+            const next = nextValue as ColorFormatType;
+            setEditing(false);
             if (formatProp === undefined) setInnerFormat(next);
             onFormatChange?.(next);
           }}
-        >
-          <option value="hex">HEX</option>
-          <option value="rgb">RGB</option>
-          <option value="hsb">HSB</option>
-        </select>
-        <input
-          aria-label="색상 값"
-          value={display}
-          className="h-8 min-w-0 flex-1 rounded-md border border-[#d9d9d9] px-2"
-          onChange={(event) => change(new Color(event.target.value))}
-          onBlur={() => onChangeComplete?.(current)}
+        />
+        <Input
+          value={editing ? draft : display}
+          className="min-w-0 flex-1"
+          onFocus={() => {
+            setDraft(display);
+            setEditing(true);
+          }}
+          onChange={(nextValue) => {
+            setDraft(nextValue);
+            if (isValidColorInput(nextValue, format)) change(new Color(nextValue));
+          }}
+          onBlur={() => {
+            setEditing(false);
+            onChangeComplete?.(current);
+          }}
         />
         {allowClear ? (
           <button
+            data-colorpicker-clear
             type="button"
-            aria-label="색상 지우기"
-            className="inline-flex size-8 items-center justify-center rounded-md border border-[#d9d9d9]"
+            className="inline-flex size-[30px] items-center justify-center rounded-md border border-[#d9d9d9]"
             onClick={() => {
               if (value === undefined) setInnerValue("");
               onClear?.();
@@ -314,16 +355,15 @@ export function ColorPicker({
     </div>
   );
   const Presets = presets.length ? (
-    <div className="grid gap-3 border-t border-[#f0f0f0] pt-3">
+    <div className="grid w-full max-w-full min-w-0 gap-3 overflow-hidden border-t border-[#f0f0f0] pt-3">
       {presets.map((preset, index) => (
-        <details key={preset.key ?? index} open={preset.defaultOpen ?? true}>
+        <details key={preset.key ?? index} open={preset.defaultOpen ?? true} className="min-w-0">
           <summary className="cursor-pointer text-sm font-medium">{preset.label}</summary>
           <div className="mt-2 flex flex-wrap gap-2">
             {preset.colors.map((presetColor, colorIndex) => (
               <button
                 key={colorIndex}
                 type="button"
-                aria-label={firstColor(presetColor)}
                 className="size-6 rounded border border-black/10 transition-transform hover:scale-110"
                 style={{ background: colorCss(presetColor) }}
                 onClick={() => change(new Color(firstColor(presetColor)), true)}
@@ -335,7 +375,7 @@ export function ColorPicker({
     </div>
   ) : null;
   let panel: React.ReactNode = (
-    <div className="grid gap-3">
+    <div className="grid w-full max-w-full min-w-0 gap-3 overflow-hidden">
       {Picker}
       {Presets}
     </div>
@@ -344,7 +384,10 @@ export function ColorPicker({
   const triggerContent = children ?? (
     <>
       <span
-        className="size-6 rounded border border-black/10"
+        className={twMerge(
+          "rounded border border-black/10",
+          size === "large" ? "size-8" : size === "small" ? "size-4" : "size-6",
+        )}
         style={{ background: colorCss(selected) }}
       />
       {showText ? (
@@ -352,7 +395,11 @@ export function ColorPicker({
           {typeof showText === "function" ? showText(current) : display}
         </span>
       ) : null}
-      <Icon icon="chevron-down" size={12} />
+      <Icon
+        icon="chevron-down"
+        size={12}
+        className={twMerge("transition-transform", floating.isOpen && "rotate-180")}
+      />
     </>
   );
   return (
@@ -363,7 +410,7 @@ export function ColorPicker({
         disabled={disabled}
         className={twMerge(
           "inline-flex items-center gap-2 rounded-md border border-[#d9d9d9] bg-white font-pretendard text-sm text-[#111] transition-colors hover:border-[#0062df] disabled:cursor-not-allowed disabled:bg-[#f5f5f5] disabled:text-[#bbb]",
-          size === "large" ? "h-10 px-3" : size === "small" ? "h-6 px-2" : "h-8 px-2.5",
+          size === "large" ? "h-10 p-[3px]" : size === "small" ? "h-6 p-[3px]" : "h-8 p-[3px]",
           className,
         )}
         style={style}
@@ -375,36 +422,22 @@ export function ColorPicker({
         ? createPortal(
             <div
               ref={floating.popupRef}
+              data-colorpicker-popup
               className={twMerge(
-                "fixed z-[1050] w-72 rounded-lg bg-white p-3 font-pretendard text-[#111] shadow-[0_6px_16px_rgba(0,0,0,0.08),0_3px_6px_-4px_rgba(0,0,0,0.12),0_9px_28px_8px_rgba(0,0,0,0.05)] transition-[opacity,transform] duration-200",
-                floating.isMotionVisible
-                  ? "scale-100 opacity-100"
-                  : "pointer-events-none scale-95 opacity-0",
+                "fixed z-[1050] box-border w-[234px] max-w-[calc(100vw-16px)] overflow-hidden rounded-lg bg-white p-3 font-pretendard text-[#111] shadow-[0_6px_16px_rgba(0,0,0,0.06),0_3px_6px_-4px_rgba(0,0,0,0.08),0_9px_28px_8px_rgba(0,0,0,0.03)]",
+                !floating.isMotionVisible && "pointer-events-none",
               )}
               style={{
                 left: floating.position?.left ?? 0,
                 top: floating.position?.top ?? 0,
                 visibility: floating.position ? "visible" : "hidden",
+                ...getPopupMotionStyle(
+                  floating.position?.placement ?? placement,
+                  floating.isMotionVisible && Boolean(floating.position),
+                ),
               }}
               {...floating.popupProps}
             >
-              {Array.isArray(mode) && mode.length > 1 ? (
-                <div className="mb-3 flex rounded-md bg-[#f5f5f5] p-0.5">
-                  {mode.map((entry) => (
-                    <button
-                      type="button"
-                      key={entry}
-                      className={twMerge(
-                        "flex-1 rounded px-2 py-1 text-xs",
-                        activeMode === entry && "bg-white shadow-sm",
-                      )}
-                      onClick={() => setActiveMode(entry)}
-                    >
-                      {entry === "single" ? "단색" : "그라데이션"}
-                    </button>
-                  ))}
-                </div>
-              ) : null}
               {panel}
             </div>,
             document.body,

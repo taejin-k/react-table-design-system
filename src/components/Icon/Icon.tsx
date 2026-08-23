@@ -129,6 +129,10 @@ const paths = {
     d: "M8 1.333a6.667 6.667 0 1 1 0 13.334A6.667 6.667 0 0 1 8 1.333ZM7.333 6.667h1.334v4H7.333v-4Zm0-2.667h1.334v1.333H7.333V4Z",
     fillRule: "evenodd",
   },
+  "warning-circle-filled": {
+    d: "M8 1.333a6.667 6.667 0 1 1 0 13.334A6.667 6.667 0 0 1 8 1.333ZM7.333 4h1.334v4.667H7.333V4Zm0 6h1.334v1.333H7.333V10Z",
+    fillRule: "evenodd",
+  },
   "help-circle-outlined": legacyPaths["help-circle"],
   "help-circle-filled": {
     d: "M8 1.333a6.667 6.667 0 1 1 0 13.334A6.667 6.667 0 0 1 8 1.333ZM8 4a2.333 2.333 0 0 1 1.02 4.433c-.353.174-.353.267-.353.567H7.333c0-.893.367-1.4 1.1-1.76A1 1 0 1 0 7 6.34H5.667A2.333 2.333 0 0 1 8 4Zm-.667 6h1.334v1.333H7.333V10Z",
@@ -256,7 +260,7 @@ const opticalScaleByIcon = {
   "eye-off": 0.95,
   file: 0.95,
   filter: 1.05,
-  folder: 1.12,
+  folder: [1, 0.88],
   "help-circle": 0.96,
   home: 1,
   info: 0.96,
@@ -277,7 +281,7 @@ const opticalScaleByIcon = {
   user: 0.95,
   users: 0.9,
   warning: 1,
-} as const satisfies Partial<Record<IconNameType, number>>;
+} as const satisfies Partial<Record<IconNameType, number | readonly [number, number]>>;
 
 export function Icon({
   icon,
@@ -310,6 +314,8 @@ export function Icon({
       : resolvedIcon.replace(/-(outlined|filled)$/, "");
   const opticalScale =
     opticalScaleByIcon[opticalScaleName as keyof typeof opticalScaleByIcon] ?? 0.96;
+  const opticalScaleTransform =
+    typeof opticalScale === "number" ? String(opticalScale) : opticalScale.join(" ");
 
   return (
     <svg
@@ -346,7 +352,7 @@ export function Icon({
       }
       {...rest}
     >
-      <g transform={`translate(8 8) scale(${opticalScale}) translate(-8 -8)`}>
+      <g transform={`translate(8 8) scale(${opticalScaleTransform}) translate(-8 -8)`}>
         {pathList.map((path, index) => {
           const pathProps: { d: string; fillRule?: "evenodd" } =
             typeof path === "string" ? { d: path } : path;

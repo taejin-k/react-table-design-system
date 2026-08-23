@@ -1,10 +1,11 @@
 import type { CSSProperties, MouseEvent, ReactNode } from "react";
 
-export type DrawerPlacement = "top" | "right" | "bottom" | "left";
-export type DrawerSize = "default" | "large" | number | string;
-export type DrawerSemanticName = "root" | "mask" | "wrapper" | "header" | "body" | "footer";
-export type DrawerMask = boolean | { enabled?: boolean; blur?: boolean; closable?: boolean };
-export type DrawerClosable =
+export type DrawerPlacementType = "top" | "right" | "bottom" | "left";
+export type DrawerSizeType = "default" | "large" | number | string;
+export type DrawerSemanticNameType =
+  "root" | "mask" | "wrapper" | "panel" | "header" | "body" | "footer";
+export type DrawerMaskType = boolean | { enabled?: boolean; blur?: boolean; closable?: boolean };
+export type DrawerClosableType =
   boolean | { closeIcon?: ReactNode; disabled?: boolean; placement?: "start" | "end" };
 
 export interface DrawerResizableConfig {
@@ -19,34 +20,28 @@ export interface DrawerProps {
   open?: boolean;
   title?: ReactNode;
   children?: ReactNode;
-  placement?: DrawerPlacement;
-  size?: DrawerSize;
+  placement?: DrawerPlacementType;
+  size?: DrawerSizeType;
   width?: number | string;
   height?: number | string;
-  closable?: DrawerClosable;
-  closeIcon?: ReactNode;
+  closable?: DrawerClosableType;
   extra?: ReactNode;
   footer?: ReactNode;
   loading?: boolean;
   keyboard?: boolean;
-  mask?: DrawerMask;
-  maskClosable?: boolean;
+  mask?: DrawerMaskType;
   scrollLock?: boolean;
   forceRender?: boolean;
   destroyOnHidden?: boolean;
-  destroyOnClose?: boolean;
   push?: boolean | { distance?: number | string };
   resizable?: boolean | DrawerResizableConfig;
-  maxSize?: number;
   focusable?: { trap?: boolean; focusTriggerAfterClose?: boolean };
   getContainer?: HTMLElement | (() => HTMLElement) | string | false;
   zIndex?: number;
   className?: string;
-  rootClassName?: string;
   style?: CSSProperties;
-  rootStyle?: CSSProperties;
-  classNames?: Partial<Record<DrawerSemanticName, string>>;
-  styles?: Partial<Record<DrawerSemanticName, CSSProperties>>;
+  classNames?: Partial<Record<DrawerSemanticNameType, string>>;
+  styles?: Partial<Record<DrawerSemanticNameType, CSSProperties>>;
   drawerRender?: (node: ReactNode) => ReactNode;
   afterOpenChange?: (open: boolean) => void;
   onClose?: (event: MouseEvent<HTMLButtonElement | HTMLDivElement> | KeyboardEvent) => void;

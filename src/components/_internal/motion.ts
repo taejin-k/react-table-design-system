@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import type { CSSProperties } from "react";
+import type { CSSProperties, RefObject } from "react";
 import type { FloatingPlacement } from "./floating-position";
 
 export const MOTION_DURATION_FAST = 100;
@@ -13,7 +13,11 @@ export const MOTION_EASE_IN_QUINT = "cubic-bezier(0.755, 0.05, 0.855, 0.06)";
 
 export type MotionPhase = "idle" | "prepare" | "enter" | "leave";
 
-export function useMotionPresence(visible: boolean, duration = MOTION_DURATION_MID) {
+export function useMotionPresence(
+  visible: boolean,
+  duration = MOTION_DURATION_MID,
+  motionRef?: RefObject<HTMLElement | null>,
+) {
   const [rendered, setRendered] = useState(visible);
   const [phase, setPhase] = useState<MotionPhase>(visible ? "prepare" : "idle");
   const renderedRef = useRef(visible);
@@ -40,12 +44,25 @@ export function useMotionPresence(visible: boolean, duration = MOTION_DURATION_M
     }
 
     setPhase("leave");
-    timerRef.current = window.setTimeout(() => {
+    const finishLeave = () => {
       renderedRef.current = false;
       setRendered(false);
       setPhase("idle");
-    }, duration);
-  }, [duration, visible]);
+    };
+    const node = motionRef?.current;
+    const handleTransitionEnd = (event: TransitionEvent) => {
+      if (event.target !== node) return;
+      window.clearTimeout(timerRef.current);
+      node?.removeEventListener("transitionend", handleTransitionEnd);
+      finishLeave();
+    };
+    node?.addEventListener("transitionend", handleTransitionEnd);
+    timerRef.current = window.setTimeout(() => {
+      node?.removeEventListener("transitionend", handleTransitionEnd);
+      finishLeave();
+    }, duration + 50);
+    return () => node?.removeEventListener("transitionend", handleTransitionEnd);
+  }, [duration, motionRef, visible]);
 
   useEffect(() => {
     return () => {
@@ -76,6 +93,7 @@ export function getPopupMotionStyle(
         : "left center";
 
   return {
+    backfaceVisibility: "hidden",
     opacity: visible ? 1 : 0,
     transform: vertical
       ? `scaleY(${visible ? 1 : 0.8})`
@@ -86,5 +104,6 @@ export function getPopupMotionStyle(
     transitionDuration: `${MOTION_DURATION_MID}ms`,
     transitionProperty: "opacity, transform",
     transitionTimingFunction: visible ? MOTION_EASE_OUT_QUINT : MOTION_EASE_IN_QUINT,
+    willChange: "opacity, transform",
   };
 }

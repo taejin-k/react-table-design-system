@@ -1,36 +1,194 @@
-import { render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import { notification } from "./Notification";
 
 describe("notification", () => {
+  afterEach(async () => {
+    act(() => notification.destroy());
+    await waitFor(() =>
+      expect(document.querySelectorAll(".wizard-notification-card")).toHaveLength(0),
+    );
+  });
+
   it("opens and updates a keyed notification", async () => {
-    function Example() {
-      const [api, holder] = notification.useNotification();
-      return (
-        <>
-          {holder}
-          <button
-            onClick={() =>
-              api.open({ key: "save", title: "저장", description: "완료", duration: false })
-            }
-          >
-            열기
-          </button>
-          <button
-            onClick={() =>
-              api.open({ key: "save", title: "수정", description: "갱신", duration: false })
-            }
-          >
-            수정
-          </button>
-        </>
-      );
-    }
-    render(<Example />);
+    render(
+      <>
+        <button
+          onClick={() =>
+            notification.open({
+              key: "save",
+              title: "저장",
+              description: "완료",
+              duration: false,
+            })
+          }
+        >
+          열기
+        </button>
+        <button
+          onClick={() =>
+            notification.open({
+              key: "save",
+              title: "수정",
+              description: "갱신",
+              duration: false,
+            })
+          }
+        >
+          수정
+        </button>
+      </>,
+    );
     await userEvent.click(screen.getByText("열기"));
     await userEvent.click(screen.getByText("수정", { selector: "button" }));
-    expect(screen.getByText("갱신")).toBeInTheDocument();
+    expect(await screen.findByText("갱신")).toBeInTheDocument();
     expect(screen.queryByText("완료")).not.toBeInTheDocument();
+  });
+
+  it("expands a collapsed stack while hovering", async () => {
+    render(
+      <button
+        onClick={() => {
+          for (let index = 1; index <= 4; index += 1) {
+            notification.open({
+              key: String(index),
+              title: `알림 ${index}`,
+              description: "내용",
+              duration: 10,
+              showProgress: true,
+            });
+          }
+        }}
+      >
+        열기
+      </button>,
+    );
+    await userEvent.click(screen.getByText("열기"));
+    await waitFor(() =>
+      expect(document.querySelectorAll(".wizard-notification-card")).toHaveLength(4),
+    );
+    const cards = document.querySelectorAll(".wizard-notification-card");
+    expect(document.querySelectorAll(".wizard-notification-stack-hidden")).toHaveLength(1);
+    expect(cards[0]).toHaveStyle({ "--wizard-notification-scale": "0.88" });
+    expect(cards[3]).toHaveStyle({ "--wizard-notification-scale": "1" });
+
+    fireEvent.mouseEnter(cards[3].parentElement!.parentElement!);
+
+    expect(document.querySelectorAll(".wizard-notification-stack-hidden")).toHaveLength(0);
+    cards.forEach((card) => {
+      expect(card).toHaveStyle({ "--wizard-notification-scale": "1" });
+    });
+    document
+      .querySelectorAll<HTMLElement>(".wizard-notification-card [style*='animation']")
+      .forEach((progress) => {
+        expect(progress.style.animationPlayState).toBe("paused");
+      });
+  });
+
+  it("keeps an expanded stack open during a transient pointer leave", async () => {
+    render(
+      <button
+        onClick={() => {
+          for (let index = 1; index <= 4; index += 1) {
+            notification.open({
+              key: String(index),
+              title: `알림 ${index}`,
+              description: "내용",
+              duration: false,
+            });
+          }
+        }}
+      >
+        열기
+      </button>,
+    );
+    await userEvent.click(screen.getByText("열기"));
+    await waitFor(() =>
+      expect(document.querySelectorAll(".wizard-notification-card")).toHaveLength(4),
+    );
+
+    const cards = document.querySelectorAll<HTMLElement>(".wizard-notification-card");
+    const list = cards[3].parentElement!.parentElement!;
+    fireEvent.mouseEnter(list);
+    expect(document.querySelectorAll(".wizard-notification-stack-hidden")).toHaveLength(0);
+
+    fireEvent.mouseLeave(list, { clientX: 100, clientY: 100 });
+    cards.forEach((card) => {
+      expect(card).toHaveStyle({ "--wizard-notification-scale": "1" });
+    });
+
+    fireEvent.mouseEnter(list);
+    await new Promise((resolve) => window.setTimeout(resolve, 250));
+    expect(document.querySelectorAll(".wizard-notification-stack-hidden")).toHaveLength(0);
+    cards.forEach((card) => {
+      expect(card).toHaveStyle({ "--wizard-notification-scale": "1" });
+    });
+  });
+
+  it("uses filled 24px status icons", async () => {
+    render(
+      <button
+        onClick={() =>
+          notification.success({
+            title: "저장 완료",
+            description: "저장했어요.",
+            duration: false,
+          })
+        }
+      >
+        열기
+      </button>,
+    );
+    await userEvent.click(screen.getByText("열기"));
+
+    const icon = await waitFor(() => {
+      const element = document.querySelector('[data-icon="check-circle-filled"]');
+      expect(element).toBeInTheDocument();
+      return element;
+    });
+    expect(icon).toHaveAttribute("width", "24");
+    expect(icon).toHaveAttribute("height", "24");
+  });
+
+  it("keeps the newest rapidly opened card fully visible in a collapsed stack", async () => {
+    render(
+      <button
+        onClick={() => {
+          for (let index = 1; index <= 4; index += 1) {
+            notification.open({
+              key: String(index),
+              title: `알림 ${index}`,
+              description: "내용",
+              duration: false,
+            });
+          }
+        }}
+      >
+        빠르게 열기
+      </button>,
+    );
+    fireEvent.click(screen.getByText("빠르게 열기"));
+
+    await waitFor(() =>
+      expect(document.querySelectorAll(".wizard-notification-card")).toHaveLength(4),
+    );
+
+    const cards = document.querySelectorAll<HTMLElement>(".wizard-notification-card");
+    expect(cards[0]).toHaveStyle({ top: "24px" });
+    expect(cards[1]).toHaveStyle({ top: "16px" });
+    expect(cards[2]).toHaveStyle({ top: "8px" });
+    expect(cards[3]).toHaveStyle({ top: "0px" });
+    expect(cards[3]).toHaveAttribute("data-notification-index", "0");
+    expect(cards[3]).not.toHaveClass("wizard-notification-stack-hidden");
+    expect(cards[3].style.clipPath).toBe("inset(-48px)");
+
+    document
+      .querySelectorAll<HTMLElement>(
+        ".wizard-notification-motion-appear, .wizard-notification-motion-enter",
+      )
+      .forEach((card) => expect(card.style.clipPath).toBe("inset(-48px)"));
+
+    await waitFor(() => expect(cards[0].style.clipPath).toContain("50%"));
   });
 });

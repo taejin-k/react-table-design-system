@@ -1,10 +1,13 @@
 export { Color, ColorPicker } from "./ColorPicker";
 export type {
-  ColorFormat,
-  ColorPickerMode,
+  ColorFormatType,
+  ColorGradientType,
+  ColorPickerPlacementType,
   ColorPickerProps,
+  ColorPickerSizeType,
+  ColorPickerTriggerType,
   ColorPreset,
-  ColorValue,
+  ColorValueType,
   HsbColor,
   RgbColor,
 } from "./ColorPicker.types";

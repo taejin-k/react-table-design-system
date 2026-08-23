@@ -4,6 +4,25 @@ import { Illustrations } from "../components/Illustrations";
 import { formatTableStorySource } from "./table-story-source";
 
 describe("formatTableStorySource", () => {
+  it("includes merged story args so the copied example does not depend on meta args", () => {
+    const source = formatTableStorySource("<Table />", {
+      args: {
+        dataSource: [{ id: "M-1", name: "김민준" }],
+        columns: [{ key: "name", dataIndex: "name", title: "이름" }],
+        pagination: false,
+        className: "max-w-[720px]",
+      },
+      name: "Basic",
+    });
+
+    expect(source).toContain("const members =");
+    expect(source).toContain("const columns =");
+    expect(source).toContain("dataSource={members}");
+    expect(source).toContain("columns={columns}");
+    expect(source).toContain("pagination={false}");
+    expect(source).toContain('className="max-w-[720px]"');
+  });
+
   it("adds the scroll.y explanation beside the fixed-table-height value", () => {
     const source = formatTableStorySource("<Table />", {
       args: { scroll: { y: 280 } },

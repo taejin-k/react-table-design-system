@@ -3,8 +3,13 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { useEffect, useRef, useState } from "react";
 import { storyDescriptions } from "../../storybook/story-descriptions";
 import { withStoryImports } from "../../storybook/story-source";
+import { TypeTokens } from "../../storybook/type-tokens";
 import { Button } from "../Button";
 import { Modal } from "./Modal";
+import type { ModalStatusType, ModalWidthType } from "./Modal.types";
+
+const modalWidths = ["number", "string", "BreakpointMap"] satisfies readonly ModalWidthType[];
+const modalStatuses: ModalStatusType[] = ["info", "success", "error", "warning", "confirm"];
 
 const storyDescription = (id: string) => ({
   docs: { description: { story: storyDescriptions[id] } },
@@ -18,8 +23,7 @@ const meta = {
     controls: { disable: true },
     docs: {
       description: {
-        component:
-          "현재 화면 위에서 중요한 정보나 작업을 확인해요.  \n일반 컴포넌트·정적 메서드와 useModal을 사용할 수 있어요.",
+        component: "현재 화면 위에서 중요한 정보나 작업을 확인해요.",
       },
       page: () => (
         <div className="modal-docs component-docs">
@@ -35,11 +39,9 @@ const meta = {
 | \`open\` | Modal 표시 상태를 설정해요. | \`boolean\` | \`false\` |
 | \`title\` | 제목을 설정해요. | \`ReactNode\` | - |
 | \`footer\` | footer를 교체하거나 렌더 함수로 구성해요. | \`ReactNode \\| FooterRender\` | 확인·취소 버튼 |
-| \`closable\` | 닫기 버튼 표시와 아이콘·비활성 상태를 설정해요. | \`boolean \\| ModalClosable\` | \`true\` |
-| \`closeIcon\` | 닫기 아이콘을 변경해요. | \`ReactNode\` | close Icon |
+| \`closable\` | 닫기 버튼 표시와 아이콘·비활성 상태를 설정해요. | \`ModalClosableType\` | \`true\` |
 | \`centered\` | 화면 가운데에 배치해요. | \`boolean\` | \`false\` |
-| \`width\` | 너비 또는 반응형 너비를 설정해요. | \`number \\| string \\| BreakpointMap\` | \`520\` |
-| \`loading\` | 본문 로딩 상태를 표시해요. | \`boolean\` | \`false\` |
+| \`width\` | 너비 또는 반응형 너비를 설정해요. | [\`ModalWidthType\`](#modal-width-type) | \`520\` |
 | \`confirmLoading\` | 확인 버튼의 로딩 상태를 표시해요. | \`boolean\` | \`false\` |
 | \`okText\` | 확인 버튼 내용을 설정해요. | \`ReactNode\` | \`확인\` |
 | \`cancelText\` | 취소 버튼 내용을 설정해요. | \`ReactNode\` | \`취소\` |
@@ -47,19 +49,16 @@ const meta = {
 | \`okButtonProps\` | 확인 Button의 속성을 설정해요. | \`ButtonProps\` | - |
 | \`cancelButtonProps\` | 취소 Button의 속성을 설정해요. | \`ButtonProps\` | - |
 | \`keyboard\` | Escape로 닫을 수 있게 해요. | \`boolean\` | \`true\` |
-| \`mask\` | 배경 마스크·블러·닫기 동작을 설정해요. | \`boolean \\| ModalMask\` | \`true\` |
-| \`maskClosable\` | 배경을 눌러 닫을지 설정해요. | \`boolean\` | \`true\` |
+| \`mask\` | 배경 마스크·블러·닫기 동작을 설정해요. | \`ModalMaskType\` | \`true\` |
 | \`scrollLock\` | 열려 있는 동안 문서 스크롤을 잠가요. | \`boolean\` | \`true\` |
 | \`forceRender\` | 닫힌 상태에서도 내용을 미리 렌더링해요. | \`boolean\` | \`false\` |
 | \`destroyOnHidden\` | 닫힌 뒤 내용을 제거해요. | \`boolean\` | \`false\` |
 | \`focusable\` | 포커스 순환과 원래 요소 복귀를 설정해요. | \`object\` | - |
-| \`focusTriggerAfterClose\` | 닫힌 뒤 열었던 요소로 포커스를 돌려요. | \`boolean\` | \`true\` |
 | \`getContainer\` | Modal을 렌더링할 컨테이너를 설정해요. | \`HTMLElement \\| () => HTMLElement \\| string \\| false\` | \`document.body\` |
 | \`zIndex\` | 겹치는 순서를 설정해요. | \`number\` | \`1000\` |
 | \`classNames\` | 각 영역의 클래스를 설정해요. | \`Record<SemanticName, string>\` | - |
 | \`styles\` | 각 영역의 스타일을 설정해요. | \`Record<SemanticName, CSSProperties>\` | - |
-| \`rootClassName\` | 최상위 요소에 Tailwind 클래스를 추가해요. | \`string\` | - |
-| \`className\` | 패널에 Tailwind 클래스를 추가해요. | \`string\` | - |
+| \`className\` | 최상위 요소에 Tailwind 클래스를 추가해요. | \`string\` | - |
 | \`modalRender\` | 전체 패널을 감싸서 렌더링해요. | \`(node) => ReactNode\` | - |
 | \`afterClose\` | 닫힘 애니메이션 뒤 실행해요. | \`() => void\` | - |
 | \`afterOpenChange\` | 열림 상태 전환이 끝나면 실행해요. | \`(open) => void\` | - |
@@ -69,9 +68,14 @@ const meta = {
 ### Static methods
 
 \`Modal.info\` · \`Modal.success\` · \`Modal.error\` · \`Modal.warning\` · \`Modal.confirm\` · \`Modal.destroyAll\`을 제공해요.
-
-\`Modal.useModal()\`은 동일한 메서드와 \`contextHolder\`를 반환해요.
       `}</Markdown>
+          <h2 className="component-docs-types-heading">Types</h2>
+          <h3 id="modal-width-type">ModalWidthType</h3>
+          <p>px 숫자, CSS 길이 또는 반응형 너비 맵을 사용해요.</p>
+          <TypeTokens values={modalWidths} />
+          <h3 id="modal-status-type">ModalStatusType</h3>
+          <p>정적 Modal의 상태를 선택해요.</p>
+          <TypeTokens values={modalStatuses} />
         </div>
       ),
     },
@@ -195,36 +199,21 @@ function AsyncModalExample() {
   );
 }
 
-export const FooterAndLoading: Story = {
+export const Footer: Story = {
   parameters: {
-    ...storyDescription("components-modal--footer-loading"),
+    ...storyDescription("components-modal--footer"),
     docs: {
-      ...storyDescription("components-modal--footer-loading").docs,
+      ...storyDescription("components-modal--footer").docs,
       source: {
-        code: withStoryImports(`function ModalFooterAndLoading() {
+        code: withStoryImports(`function ModalFooter() {
   const [open, setOpen] = useState(false);
-  return (
-    <>
-      <Button onClick={() => setOpen(true)}>로딩 Modal</Button>
-      <Modal open={open} title="데이터 불러오기" loading footer={(origin) => <div className="flex justify-between"><span>자동 저장</span>{origin}</div>} onCancel={() => setOpen(false)} />
-    </>
-  );
-}`),
-      },
-    },
-  },
-  render: () => <FooterLoadingExample />,
-};
 
-function FooterLoadingExample() {
-  const [open, setOpen] = useState(false);
   return (
     <>
-      <Button onClick={() => setOpen(true)}>로딩 Modal</Button>
+      <Button onClick={() => setOpen(true)}>Footer Modal</Button>
       <Modal
         open={open}
-        title="데이터 불러오기"
-        loading
+        title="Footer 구성"
         footer={(origin) => (
           <div className="flex items-center justify-between">
             <span className="text-[#666]">자동 저장</span>
@@ -232,7 +221,39 @@ function FooterLoadingExample() {
           </div>
         )}
         onCancel={() => setOpen(false)}
-      />
+        onOk={() => setOpen(false)}
+      >
+        Footer의 콘텐츠와 기본 버튼을 함께 구성해요.
+      </Modal>
+    </>
+  );
+}`),
+      },
+    },
+  },
+  render: () => <FooterExample />,
+};
+
+function FooterExample() {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <>
+      <Button onClick={() => setOpen(true)}>Footer Modal</Button>
+      <Modal
+        open={open}
+        title="Footer 구성"
+        footer={(origin) => (
+          <div className="flex items-center justify-between">
+            <span className="text-[#666]">자동 저장</span>
+            {origin}
+          </div>
+        )}
+        onCancel={() => setOpen(false)}
+        onOk={() => setOpen(false)}
+      >
+        Footer의 콘텐츠와 기본 버튼을 함께 구성해요.
+      </Modal>
     </>
   );
 }
@@ -279,43 +300,6 @@ export const StaticMethods: Story = {
     </div>
   ),
 };
-
-export const Hook: Story = {
-  parameters: {
-    ...storyDescription("components-modal--hook"),
-    docs: {
-      ...storyDescription("components-modal--hook").docs,
-      source: {
-        code: withStoryImports(`function ModalHook() {
-  const [modal, contextHolder] = Modal.useModal();
-  return (
-    <>
-      {contextHolder}
-      <Button onClick={() => modal.confirm({ title: 'Hook Modal', content: '현재 Context 안에서 열려요.' })}>Hook Modal</Button>
-    </>
-  );
-}`),
-      },
-    },
-  },
-  render: () => <ModalHookExample />,
-};
-
-function ModalHookExample() {
-  const [modal, contextHolder] = Modal.useModal();
-  return (
-    <>
-      {contextHolder}
-      <Button
-        onClick={() =>
-          modal.confirm({ title: "Hook Modal", content: "현재 Context 안에서 열려요." })
-        }
-      >
-        Hook Modal
-      </Button>
-    </>
-  );
-}
 
 export const PositionAndWidth: Story = {
   parameters: {

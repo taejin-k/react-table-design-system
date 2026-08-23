@@ -1,21 +1,45 @@
-import { render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { message } from "./Message";
 
 describe("message", () => {
-  it("opens from the hook api", async () => {
-    function Example() {
-      const [api, holder] = message.useMessage();
-      return (
-        <>
-          {holder}
-          <button onClick={() => api.success({ content: "저장했어요", duration: 0 })}>열기</button>
-        </>
-      );
-    }
-    render(<Example />);
+  afterEach(async () => {
+    act(() => message.destroy());
+    await waitFor(() => expect(document.querySelectorAll(".wizard-message-card")).toHaveLength(0));
+  });
+
+  it("opens directly without a context holder", async () => {
+    render(
+      <button onClick={() => message.success({ content: "저장했어요", duration: 0 })}>열기</button>,
+    );
     await userEvent.click(screen.getByText("열기"));
-    expect(screen.getByText("저장했어요")).toBeInTheDocument();
+    expect(await screen.findByText("저장했어요")).toBeInTheDocument();
+  });
+
+  it("keeps existing messages above rapidly opened messages", async () => {
+    const heightMock = vi.spyOn(HTMLElement.prototype, "offsetHeight", "get").mockReturnValue(40);
+
+    render(
+      <button
+        onClick={() => {
+          for (let index = 1; index <= 3; index += 1) {
+            message.info({ key: index, content: `메시지 ${index}`, duration: 0 });
+          }
+        }}
+      >
+        빠르게 열기
+      </button>,
+    );
+    fireEvent.click(screen.getByText("빠르게 열기"));
+
+    await waitFor(() => {
+      const cards = document.querySelectorAll<HTMLElement>(".wizard-message-card");
+      expect(cards[0]).toHaveStyle({ top: "0px" });
+      expect(cards[1]).toHaveStyle({ top: "48px" });
+      expect(cards[2]).toHaveStyle({ top: "96px" });
+    });
+
+    heightMock.mockRestore();
   });
 });

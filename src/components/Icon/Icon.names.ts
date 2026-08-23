@@ -45,6 +45,7 @@ export const iconGalleryNames = [
   "minus-circle-filled",
   "info-circle-outlined",
   "info-circle-filled",
+  "warning-circle-filled",
   "help-circle-outlined",
   "help-circle-filled",
   "warning",

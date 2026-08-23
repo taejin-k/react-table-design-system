@@ -1,7 +1,9 @@
 import type { CSSProperties, Key, MouseEvent, ReactNode } from "react";
 
-export type MenuMode = "vertical" | "horizontal" | "inline";
-export type MenuTheme = "light" | "dark";
+export type MenuModeType = "vertical" | "horizontal" | "inline";
+export type MenuThemeType = "light" | "dark";
+export type MenuTriggerType = "hover" | "click";
+export type MenuItemKindType = "item" | "group" | "divider";
 
 export interface MenuClickInfo {
   key: string;
@@ -22,19 +24,18 @@ export interface MenuItemType {
   disabled?: boolean;
   danger?: boolean;
   children?: MenuItemType[];
-  type?: "item" | "group" | "divider";
+  type?: MenuItemKindType;
   dashed?: boolean;
   popupClassName?: string;
   popupOffset?: [number, number];
-  theme?: MenuTheme;
   onClick?: (info: MenuClickInfo) => void;
   onTitleClick?: (info: { key: string; domEvent: MouseEvent<HTMLElement> }) => void;
 }
 
 export interface MenuProps {
   items?: MenuItemType[];
-  mode?: MenuMode;
-  theme?: MenuTheme;
+  mode?: MenuModeType;
+  theme?: MenuThemeType;
   selectable?: boolean;
   multiple?: boolean;
   selectedKeys?: string[];
@@ -44,11 +45,10 @@ export interface MenuProps {
   inlineCollapsed?: boolean;
   inlineIndent?: number;
   forceSubMenuRender?: boolean;
-  triggerSubMenuAction?: "hover" | "click";
+  triggerSubMenuAction?: MenuTriggerType;
   subMenuOpenDelay?: number;
   subMenuCloseDelay?: number;
   expandIcon?: ReactNode | ((props: { isOpen: boolean; item: MenuItemType }) => ReactNode);
-  overflowedIndicator?: ReactNode;
   className?: string;
   style?: CSSProperties;
   classNames?: Partial<Record<"root" | "item" | "itemIcon" | "itemContent" | "popup", string>>;

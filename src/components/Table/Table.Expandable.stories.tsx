@@ -63,7 +63,7 @@ export const ExpandByRowClick: Story = {
 };
 
 export const TreeData: Story = {
-  name: "Expan Tree Data",
+  name: "Expand Tree Data",
   parameters: storyDescription("components-table-expandable--tree-data"),
   args: {
     dataSource: treeData,

@@ -1,10 +1,135 @@
-import { useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
+import { createPortal } from "react-dom";
 import { twMerge } from "tailwind-merge";
 import { Icon } from "../Icon";
+import {
+  calculateFloatingPosition,
+  type FloatingPlacement,
+  type FloatingPosition,
+} from "../_internal/floating-position";
 import type { MenuClickInfo, MenuItemType, MenuProps } from "./Menu.types";
 
 function normalize(keys?: string[]) {
   return keys?.map(String) ?? [];
+}
+
+function MenuPopupPortal({
+  getAnchor,
+  open,
+  placement,
+  offset,
+  className,
+  style,
+  onMouseEnter,
+  onMouseLeave,
+  children,
+}: {
+  getAnchor: () => HTMLElement | null;
+  open: boolean;
+  placement: "bottomLeft" | "rightTop";
+  offset?: [number, number];
+  className?: string;
+  style?: CSSProperties;
+  onMouseEnter: () => void;
+  onMouseLeave: () => void;
+  children: ReactNode;
+}) {
+  const popupRef = useRef<HTMLDivElement>(null);
+  const getAnchorRef = useRef(getAnchor);
+  const [position, setPosition] = useState<FloatingPosition | null>(null);
+  getAnchorRef.current = getAnchor;
+
+  const updatePosition = useCallback(() => {
+    const anchor = getAnchorRef.current();
+    const popup = popupRef.current;
+    if (!anchor || !popup) return;
+    const next = calculateFloatingPosition(
+      anchor.getBoundingClientRect(),
+      popup.getBoundingClientRect(),
+      placement,
+      { targetGap: 4 },
+    );
+    setPosition((current) =>
+      current?.left === next.left &&
+      current.top === next.top &&
+      current.placement === next.placement
+        ? current
+        : next,
+    );
+  }, [placement]);
+
+  const setPopupNode = useCallback(
+    (node: HTMLDivElement | null) => {
+      popupRef.current = node;
+      if (node) updatePosition();
+    },
+    [updatePosition],
+  );
+
+  useLayoutEffect(() => {
+    updatePosition();
+    const anchor = getAnchorRef.current();
+    const observer =
+      typeof ResizeObserver === "undefined" ? null : new ResizeObserver(updatePosition);
+    if (anchor) observer?.observe(anchor);
+    if (popupRef.current) observer?.observe(popupRef.current);
+    window.addEventListener("resize", updatePosition);
+    window.addEventListener("scroll", updatePosition, { capture: true, passive: true });
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", updatePosition, true);
+    };
+  }, [updatePosition]);
+
+  useEffect(() => {
+    updatePosition();
+  }, [open, updatePosition]);
+
+  if (typeof document === "undefined") return null;
+  const resolvedPlacement = position?.placement ?? placement;
+  const hiddenTransform = getMenuPopupHiddenTransform(resolvedPlacement);
+
+  return createPortal(
+    <div
+      ref={setPopupNode}
+      data-menu-popup=""
+      data-placement={resolvedPlacement}
+      className={twMerge(
+        "fixed z-[1050] transition-[opacity,transform] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none",
+        open
+          ? "translate-x-0 translate-y-0 opacity-100"
+          : `pointer-events-none opacity-0 ${hiddenTransform}`,
+        className,
+      )}
+      style={{
+        left: position ? position.left + (offset?.[0] ?? 0) : 0,
+        top: position ? position.top + (offset?.[1] ?? 0) : 0,
+        visibility: position ? "visible" : "hidden",
+        ...style,
+      }}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
+    >
+      {children}
+    </div>,
+    document.body,
+  );
+}
+
+function getMenuPopupHiddenTransform(placement: FloatingPlacement) {
+  if (placement.startsWith("top")) return "translate-y-1";
+  if (placement.startsWith("bottom")) return "-translate-y-1";
+  if (placement.startsWith("left")) return "translate-x-1";
+  return "-translate-x-1";
 }
 
 export function Menu({
@@ -37,7 +162,12 @@ export function Menu({
   const [innerOpen, setInnerOpen] = useState(normalize(defaultOpenKeys));
   const selected = selectedKeys === undefined ? innerSelected : normalize(selectedKeys);
   const opened = openKeys === undefined ? innerOpen : normalize(openKeys);
+  const visitedOpenKeys = useRef(new Set(opened));
   const timers = useRef(new Map<string, ReturnType<typeof setTimeout>>());
+  const popupAnchors = useRef(new Map<string, HTMLLIElement>());
+  useEffect(() => {
+    opened.forEach((key) => visitedOpenKeys.current.add(key));
+  }, [opened]);
   useEffect(
     () => () => {
       timers.current.forEach(clearTimeout);
@@ -94,11 +224,12 @@ export function Menu({
     popup = false,
   ) => (
     <ul
-      role={level === 0 ? "menu" : "group"}
       className={twMerge(
-        "m-0 list-none p-1",
-        level === 0 && mode === "horizontal" && "flex items-center border-b border-[#f0f0f0] p-0",
-        level === 0 && mode !== "horizontal" && "w-64",
+        "m-0 list-none space-y-1 p-1",
+        level === 0 &&
+          mode === "horizontal" &&
+          "flex items-center gap-2 space-y-0 border-b border-[#f0f0f0] p-0",
+        level === 0 && mode !== "horizontal" && (inlineCollapsed ? "w-16" : "w-64"),
         popup &&
           "min-w-40 rounded-lg bg-white shadow-[0_6px_16px_rgba(0,0,0,0.08),0_3px_6px_-4px_rgba(0,0,0,0.12),0_9px_28px_8px_rgba(0,0,0,0.05)]",
         popup && theme === "dark" && "bg-[#001529]",
@@ -111,7 +242,6 @@ export function Menu({
           return (
             <li
               key={key || `divider-${index}`}
-              role="separator"
               className={twMerge(
                 "my-1 border-t border-[#f0f0f0]",
                 item.dashed && "border-dashed",
@@ -121,7 +251,7 @@ export function Menu({
           );
         if (item.type === "group")
           return (
-            <li key={key} role="presentation" className="py-1">
+            <li key={key} className="py-1">
               {item.label ? (
                 <div
                   className={twMerge(
@@ -142,10 +272,6 @@ export function Menu({
         const itemNode = (
           <button
             type="button"
-            role="menuitem"
-            aria-haspopup={hasChildren || undefined}
-            aria-expanded={hasChildren ? open : undefined}
-            aria-disabled={item.disabled || undefined}
             title={
               collapsed
                 ? (item.title ?? (typeof item.label === "string" ? item.label : undefined))
@@ -204,11 +330,19 @@ export function Menu({
                 className={twMerge(
                   "inline-flex transition-transform duration-200",
                   open && mode === "inline" && "rotate-90",
+                  open && mode === "horizontal" && level === 0 && "rotate-180",
                 )}
               >
                 {typeof expandIcon === "function"
                   ? expandIcon({ isOpen: open, item })
-                  : (expandIcon ?? <Icon icon="chevron-right" size={12} />)}
+                  : (expandIcon ?? (
+                      <Icon
+                        icon={
+                          mode === "horizontal" && level === 0 ? "chevron-down" : "chevron-right"
+                        }
+                        size={12}
+                      />
+                    ))}
               </span>
             ) : null}
           </button>
@@ -217,7 +351,10 @@ export function Menu({
         return (
           <li
             key={key}
-            role="none"
+            ref={(node) => {
+              if (node) popupAnchors.current.set(key, node);
+              else popupAnchors.current.delete(key);
+            }}
             className={twMerge("relative", mode === "horizontal" && level === 0 && "h-12")}
             onMouseEnter={() =>
               hasChildren &&
@@ -235,30 +372,32 @@ export function Menu({
             {itemNode}
             {hasChildren && inlineSubmenu ? (
               <div
-                className="grid transition-[grid-template-rows] duration-200 ease-[cubic-bezier(0.645,0.045,0.355,1)]"
+                className="grid transition-[grid-template-rows] duration-200 ease-[cubic-bezier(0.645,0.045,0.355,1)] motion-reduce:transition-none"
                 style={{ gridTemplateRows: open ? "1fr" : "0fr" }}
               >
                 <div className="overflow-hidden">
-                  {open || forceSubMenuRender ? renderItems(item.children!, path, level + 1) : null}
+                  {open || forceSubMenuRender || visitedOpenKeys.current.has(key)
+                    ? renderItems(item.children!, path, level + 1)
+                    : null}
                 </div>
               </div>
-            ) : hasChildren && (open || forceSubMenuRender) ? (
-              <div
-                className={twMerge(
-                  "absolute z-[1050] pt-1 transition-[opacity,transform] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)]",
-                  mode === "horizontal" && level === 0 ? "top-full left-0" : "top-0 left-full pl-1",
-                  open ? "visible translate-y-0 opacity-100" : "invisible -translate-y-1 opacity-0",
-                  item.popupClassName,
-                  classNames?.popup,
-                )}
-                style={{
-                  marginLeft: item.popupOffset?.[0],
-                  marginTop: item.popupOffset?.[1],
-                  ...styles?.popup,
+            ) : hasChildren && (open || forceSubMenuRender || visitedOpenKeys.current.has(key)) ? (
+              <MenuPopupPortal
+                getAnchor={() => popupAnchors.current.get(key) ?? null}
+                open={open}
+                placement={mode === "horizontal" && level === 0 ? "bottomLeft" : "rightTop"}
+                offset={item.popupOffset}
+                className={twMerge(item.popupClassName, classNames?.popup)}
+                style={styles?.popup}
+                onMouseEnter={() => {
+                  if (triggerSubMenuAction === "hover") delayOpen(key, true);
+                }}
+                onMouseLeave={() => {
+                  if (triggerSubMenuAction === "hover") delayOpen(key, false);
                 }}
               >
                 {renderItems(item.children!, path, level + 1, true)}
-              </div>
+              </MenuPopupPortal>
             ) : null}
           </li>
         );

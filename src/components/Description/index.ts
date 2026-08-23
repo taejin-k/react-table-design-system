@@ -3,8 +3,8 @@ export type {
   DescriptionComponent,
   DescriptionItem,
   DescriptionItemProps,
-  DescriptionLayout,
+  DescriptionLayoutType,
   DescriptionProps,
-  DescriptionSize,
-  DescriptionSpan,
+  DescriptionSizeType,
+  DescriptionSpanType,
 } from "./Description.types";

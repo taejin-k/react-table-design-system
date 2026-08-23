@@ -155,7 +155,7 @@ export const Loading: Story = {
       source: {
         code: withStoryImports(`function LoadingToggle() {
   const [checked, setChecked] = useState(false);
-  const [pendingChecked, setPendingChecked] = useState(null);
+  const [pendingChecked, setPendingChecked] = useState<boolean | null>(null);
 
   useEffect(() => {
     if (pendingChecked === null) return;
@@ -166,7 +166,7 @@ export const Loading: Story = {
     return () => clearTimeout(timeout);
   }, [pendingChecked]);
 
-  const handleChange = (nextChecked) => {
+  const handleChange = (nextChecked: boolean) => {
     setPendingChecked(nextChecked);
   };
 

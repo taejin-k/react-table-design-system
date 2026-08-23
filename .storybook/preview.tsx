@@ -41,7 +41,7 @@ const preview: Preview = {
             ),
           ),
         ),
-        createElement(Story),
+        createElement("div", { className: "story-render" }, createElement(Story)),
       );
     },
   ],
@@ -68,7 +68,9 @@ const preview: Preview = {
           if (title === "Components/Illustrations") return 15;
           if (title === "Components/Flex") return 16;
           if (title === "Components/Select") return 17;
-          return 18;
+          if (title === "Components/Table") return 18;
+          if (title === "Components/Badge") return 19;
+          return 20;
         };
         const rankDifference = componentRank(a.title) - componentRank(b.title);
 

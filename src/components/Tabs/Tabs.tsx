@@ -1,11 +1,7 @@
-import { useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { twMerge } from "tailwind-merge";
 import { Icon } from "../Icon";
-import type { TabsPlacement, TabsProps } from "./Tabs.types";
-
-function placementFromLegacy(value?: TabsProps["tabPosition"]): TabsPlacement | undefined {
-  return value === "left" ? "start" : value === "right" ? "end" : value;
-}
+import type { TabsProps } from "./Tabs.types";
 
 export function Tabs(props: TabsProps) {
   const {
@@ -17,8 +13,7 @@ export function Tabs(props: TabsProps) {
     destroyOnHidden = false,
     type = "line",
     size = "medium",
-    tabPlacement: placementProp,
-    tabPosition,
+    tabPlacement: placement = "top",
     tabBarGutter,
     tabBarExtraContent,
     tabBarStyle,
@@ -35,36 +30,69 @@ export function Tabs(props: TabsProps) {
     onTabClick,
     renderTabBar,
   } = props;
-  const placement = placementProp ?? placementFromLegacy(tabPosition) ?? "top";
   const vertical = placement === "start" || placement === "end";
   const [innerActive, setInnerActive] = useState(
     defaultActiveKey ?? items.find((item) => !item.disabled)?.key,
   );
   const selected = activeKey ?? innerActive;
+  useEffect(() => {
+    if (activeKey !== undefined || items.some((item) => item.key === selected)) return;
+    setInnerActive(items.find((item) => !item.disabled)?.key);
+  }, [activeKey, items, selected]);
+  const visitedKeys = useRef(new Set(selected === undefined ? [] : [selected]));
+  useEffect(() => {
+    if (selected !== undefined) visitedKeys.current.add(selected);
+  }, [selected]);
   const refs = useRef(new Map<string, HTMLButtonElement>());
   const headerRef = useRef<HTMLDivElement>(null);
+  const tabListRef = useRef<HTMLDivElement>(null);
   const [ink, setInk] = useState({ left: 0, top: 0, width: 0, height: 0, ready: false });
   useLayoutEffect(() => {
-    const node = selected ? refs.current.get(selected) : undefined;
-    const root = headerRef.current;
-    if (!node || !root) return;
-    const origin = vertical ? node.offsetHeight : node.offsetWidth;
-    const configured =
-      typeof indicator?.size === "function" ? indicator.size(origin) : (indicator?.size ?? origin);
-    const alignOffset =
-      indicator?.align === "start"
-        ? 0
-        : indicator?.align === "end"
-          ? origin - configured
-          : (origin - configured) / 2;
-    setInk({
-      left: node.offsetLeft + (vertical ? 0 : alignOffset),
-      top: node.offsetTop + (vertical ? alignOffset : 0),
-      width: vertical ? 2 : configured,
-      height: vertical ? configured : 2,
-      ready: true,
-    });
-  }, [selected, items, vertical, indicator]);
+    const updateInk = () => {
+      const node = selected === undefined ? undefined : refs.current.get(selected);
+      const root = headerRef.current;
+      if (!node || !root) return;
+      const nodeRect = node.getBoundingClientRect();
+      const rootRect = root.getBoundingClientRect();
+      const origin = vertical ? nodeRect.height : nodeRect.width;
+      const configured =
+        typeof indicator?.size === "function"
+          ? indicator.size(origin)
+          : (indicator?.size ?? origin);
+      const alignOffset =
+        indicator?.align === "start"
+          ? 0
+          : indicator?.align === "end"
+            ? origin - configured
+            : (origin - configured) / 2;
+      setInk({
+        left: vertical
+          ? placement === "start"
+            ? root.clientWidth - 2
+            : 0
+          : nodeRect.left - rootRect.left + alignOffset,
+        top: vertical
+          ? nodeRect.top - rootRect.top + alignOffset
+          : placement === "bottom"
+            ? 0
+            : root.clientHeight - 2,
+        width: vertical ? 2 : configured,
+        height: vertical ? configured : 2,
+        ready: true,
+      });
+    };
+    updateInk();
+    const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(updateInk);
+    if (headerRef.current) observer?.observe(headerRef.current);
+    const activeTab = selected === undefined ? undefined : refs.current.get(selected);
+    if (activeTab) observer?.observe(activeTab);
+    const tabList = tabListRef.current;
+    tabList?.addEventListener("scroll", updateInk, { passive: true });
+    return () => {
+      observer?.disconnect();
+      tabList?.removeEventListener("scroll", updateInk);
+    };
+  }, [selected, items, vertical, indicator, placement]);
   const change = (key: string, event: React.MouseEvent<HTMLElement>) => {
     onTabClick?.(key, event);
     const item = items.find((entry) => entry.key === key);
@@ -78,29 +106,65 @@ export function Tabs(props: TabsProps) {
     ("left" in tabBarExtraContent || "right" in tabBarExtraContent)
       ? (tabBarExtraContent as { left?: React.ReactNode; right?: React.ReactNode })
       : { right: tabBarExtraContent as React.ReactNode };
-  const padding =
+  const linePadding =
     size === "large"
       ? "px-4 py-4 text-base"
       : size === "small"
         ? "px-2 py-2 text-sm"
         : "px-3 py-3 text-sm";
+  const cardSize =
+    size === "large"
+      ? "h-12 px-4 text-base"
+      : size === "small"
+        ? "h-8 px-2 text-sm"
+        : "h-10 px-4 text-sm";
+  const cardEdge = vertical
+    ? placement === "start"
+      ? "rounded-l-md border-r-0"
+      : "rounded-r-md border-l-0"
+    : placement === "bottom"
+      ? "rounded-b-md border-t-0"
+      : "rounded-t-md border-b-0";
+  const inkBarAnimated = typeof animated === "boolean" ? animated : animated.inkBar !== false;
+  const indicatorTransition = inkBarAnimated
+    ? "width 300ms, height 300ms, transform 300ms"
+    : "none";
   const DefaultTabBar = () => (
     <div
       ref={headerRef}
+      data-tabs-header=""
+      data-tabs-type={type}
       className={twMerge(
         "relative flex min-w-0 items-center",
         vertical ? "flex-col" : "w-full",
         centered && !vertical && "justify-center",
-        type === "line" && (vertical ? "border-r border-[#f0f0f0]" : "border-b border-[#f0f0f0]"),
+        type === "line" &&
+          (placement === "start"
+            ? "border-r border-[#f0f0f0]"
+            : placement === "end"
+              ? "border-l border-[#f0f0f0]"
+              : placement === "bottom"
+                ? "border-t border-[#f0f0f0]"
+                : "border-b border-[#f0f0f0]"),
+        type !== "line" &&
+          (vertical
+            ? placement === "start"
+              ? "border-r border-[#d9d9d9]"
+              : "border-l border-[#d9d9d9]"
+            : placement === "bottom"
+              ? "border-t border-[#d9d9d9]"
+              : "border-b border-[#d9d9d9]"),
         classNames?.header,
       )}
       style={{ gap: tabBarGutter, ...tabBarStyle, ...styles?.header }}
     >
       {extra.left ? <div className={vertical ? "mb-2" : "mr-auto"}>{extra.left}</div> : null}
       <div
+        ref={tabListRef}
         className={twMerge(
           "wizard-scrollbar-hidden flex min-w-0 overflow-auto",
-          vertical ? "w-full flex-col" : "items-center",
+          vertical ? "w-full flex-col" : type === "line" ? "items-center" : "items-start",
+          type !== "line" && (vertical ? "gap-y-0.5" : "gap-x-0.5"),
         )}
       >
         {items.map((item) => (
@@ -111,16 +175,16 @@ export function Tabs(props: TabsProps) {
               else refs.current.delete(item.key);
             }}
             type="button"
-            role="tab"
-            aria-selected={item.key === selected}
-            aria-controls={`tab-panel-${item.key}`}
             disabled={item.disabled}
+            data-tabs-item={item.key}
+            data-tabs-active={item.key === selected ? "true" : "false"}
             className={twMerge(
-              "relative inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap text-[#666] transition-colors duration-200 hover:text-[#0062df] disabled:cursor-not-allowed disabled:text-[#bbb] motion-reduce:transition-none",
+              "relative inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap text-[#666] hover:text-[#0062df] disabled:cursor-not-allowed disabled:text-[#bbb] motion-reduce:transition-none",
               item.key === selected && "font-medium text-[#0062df]",
-              padding,
-              type !== "line" && "border border-[#d9d9d9] bg-[#fafafa]",
-              type !== "line" && item.key === selected && "bg-white",
+              type === "line"
+                ? `${linePadding} transition-colors duration-200`
+                : `${cardSize} border border-[#d9d9d9] bg-[#fafafa] ${cardEdge} transition-[background-color,border-color,color] duration-300 ease-[cubic-bezier(0.645,0.045,0.355,1)]`,
+              type !== "line" && item.key === selected && "z-[1] bg-white",
               type !== "line" && vertical ? "w-full" : "",
               classNames?.item,
             )}
@@ -131,8 +195,7 @@ export function Tabs(props: TabsProps) {
             <span>{item.label}</span>
             {type === "editable-card" && item.closable !== false ? (
               <span
-                role="button"
-                aria-label={`${String(item.label)} 닫기`}
+                data-tab-close={item.key}
                 className="inline-flex rounded p-0.5 hover:bg-black/5"
                 onClick={(event) => {
                   event.stopPropagation();
@@ -147,10 +210,18 @@ export function Tabs(props: TabsProps) {
         {type === "editable-card" && !hideAdd ? (
           <button
             type="button"
-            aria-label="탭 추가"
+            data-tabs-add=""
             className={twMerge(
-              "inline-flex items-center justify-center border border-[#d9d9d9] bg-[#fafafa]",
-              padding,
+              "inline-flex shrink-0 items-center justify-center border border-[#d9d9d9] bg-[#fafafa] text-[#111] transition-[background-color,border-color,color] duration-300 ease-[cubic-bezier(0.645,0.045,0.355,1)] hover:border-[#0062df] hover:text-[#0062df] motion-reduce:transition-none",
+              cardSize,
+              vertical
+                ? "w-full"
+                : size === "small"
+                  ? "w-8 px-0"
+                  : size === "large"
+                    ? "w-12 px-0"
+                    : "w-10 px-0",
+              cardEdge,
             )}
             onClick={(event) => onEdit?.(event, "add")}
           >
@@ -160,25 +231,53 @@ export function Tabs(props: TabsProps) {
       </div>
       {type === "line" && ink.ready ? (
         <span
+          data-tabs-indicator=""
           className={twMerge(
-            "absolute bg-[#0062df]",
-            (typeof animated === "boolean" ? animated : animated.inkBar !== false) &&
-              "transition-[transform,width,height] duration-300 ease-[cubic-bezier(0.645,0.045,0.355,1)] motion-reduce:transition-none",
+            "pointer-events-none absolute top-0 left-0 bg-[#0062df] will-change-transform",
             classNames?.indicator,
           )}
           style={{
             width: ink.width,
             height: ink.height,
-            transform: `translate3d(${ink.left}px, ${ink.top + (vertical ? 0 : (headerRef.current?.offsetHeight ?? 0) - 2)}px, 0)`,
+            transform: `translate3d(${ink.left}px, ${ink.top}px, 0)`,
+            transition: indicatorTransition,
+            transitionTimingFunction: "cubic-bezier(0.645, 0.045, 0.355, 1)",
             ...styles?.indicator,
           }}
+        />
+      ) : null}
+      {type !== "line" && ink.ready ? (
+        <span
+          data-tabs-card-bridge=""
+          className="pointer-events-none absolute z-[2] bg-white"
+          style={
+            vertical
+              ? {
+                  top: 0,
+                  [placement === "start" ? "right" : "left"]: -1,
+                  width: 1,
+                  height: ink.height,
+                  transform: `translate3d(0, ${ink.top}px, 0)`,
+                  transition: indicatorTransition,
+                  transitionTimingFunction: "cubic-bezier(0.645, 0.045, 0.355, 1)",
+                }
+              : {
+                  [placement === "bottom" ? "top" : "bottom"]: -1,
+                  left: 0,
+                  width: ink.width,
+                  height: 1,
+                  transform: `translate3d(${ink.left}px, 0, 0)`,
+                  transition: indicatorTransition,
+                  transitionTimingFunction: "cubic-bezier(0.645, 0.045, 0.355, 1)",
+                }
+          }
         />
       ) : null}
       {extra.right ? <div className={vertical ? "mt-2" : "ml-auto"}>{extra.right}</div> : null}
     </div>
   );
-  const tabBar = renderTabBar?.(props, DefaultTabBar) ?? <DefaultTabBar />;
-  const paneAnimated = typeof animated === "object" && animated.tabPane;
+  const tabBar = renderTabBar?.(props, DefaultTabBar) ?? DefaultTabBar();
+  const paneAnimated = typeof animated === "boolean" ? animated : animated.tabPane;
   return (
     <div
       className={twMerge(
@@ -200,13 +299,11 @@ export function Tabs(props: TabsProps) {
           const active = item.key === selected;
           if (!active && (destroyOnHidden || item.destroyOnHidden) && !item.forceRender)
             return null;
-          if (!active && !item.forceRender && selected !== item.key) return null;
+          if (!active && !item.forceRender && !visitedKeys.current.has(item.key)) return null;
           return (
             <div
               key={item.key}
-              id={`tab-panel-${item.key}`}
-              role="tabpanel"
-              aria-hidden={!active}
+              data-tab-panel={item.key}
               hidden={!active}
               className={twMerge(
                 paneAnimated &&

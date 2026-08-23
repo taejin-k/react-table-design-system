@@ -1,7 +1,7 @@
 import type { CSSProperties, MouseEvent, ReactElement, ReactNode } from "react";
 
-export type TabsPlacement = "top" | "end" | "bottom" | "start";
-export type TabsSize = "large" | "medium" | "small";
+export type TabsPlacementType = "top" | "end" | "bottom" | "start";
+export type TabsSizeType = "large" | "medium" | "small";
 export type TabsType = "line" | "card" | "editable-card";
 
 export interface TabItemType {
@@ -24,10 +24,8 @@ export interface TabsProps {
   centered?: boolean;
   destroyOnHidden?: boolean;
   type?: TabsType;
-  size?: TabsSize;
-  tabPlacement?: TabsPlacement;
-  /** @deprecated `tabPlacement`를 사용해 주세요. */
-  tabPosition?: "top" | "right" | "bottom" | "left";
+  size?: TabsSizeType;
+  tabPlacement?: TabsPlacementType;
   tabBarGutter?: number;
   tabBarExtraContent?: ReactNode | { left?: ReactNode; right?: ReactNode };
   tabBarStyle?: CSSProperties;

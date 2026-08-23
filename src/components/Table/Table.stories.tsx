@@ -204,7 +204,7 @@ const filterColumns: ColumnsType<Member> = [
       { text: "2024년", value: "2024" },
     ],
     defaultFilteredValue: ["all"], // 처음 적용할 필터 값이에요.
-    filterResetToDefaultFilteredValue: true, // 초기화하면 기본값으로 돌아가요.
+    filterResetToDefault: true, // 초기화하면 기본값으로 돌아가요.
     onFilter: (value, record) => value === "all" || record.joinedAt.startsWith(String(value)),
   },
 ];
@@ -436,7 +436,7 @@ const columns = [
     title: '합류일',
     filters: joinedAtFilters,
     defaultFilteredValue: ['all'], // 처음 적용할 필터 값이에요.
-    filterResetToDefaultFilteredValue: true, // 초기화하면 기본값으로 돌아가요.
+    filterResetToDefault: true, // 초기화하면 기본값으로 돌아가요.
     onFilter: (value, record) =>
       value === 'all' || record.joinedAt.startsWith(String(value)),
   },
@@ -467,7 +467,7 @@ export const Checkbox: Story = {
         code: withStoryImports(`${tableStoryDataSource}
 
 function CheckboxTable() {
-  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+  const [selectedKeys, setSelectedKeys] = useState<Key[]>([]);
 
   return (
     <Table
@@ -476,8 +476,8 @@ function CheckboxTable() {
       pagination={false}
       rowSelection={{
         type: 'checkbox',
-        selectedRowKeys,
-        onChange: setSelectedRowKeys,
+        selectedKeys,
+        onChange: setSelectedKeys,
       }}
     />
   );
@@ -514,7 +514,7 @@ export const CheckboxFixed: Story = {
   parameters: storyDescription("components-table--checkbox-fixed"),
   args: {
     columns: checkboxFixedColumns,
-    rowSelection: { type: "checkbox", fixed: "left" },
+    rowSelection: { type: "checkbox", fixed: true },
   },
 };
 
@@ -528,7 +528,7 @@ export const CheckboxDefault: Story = {
   args: {
     rowSelection: {
       type: "checkbox",
-      defaultSelectedRowKeys: ["M-1001", "M-1002"],
+      defaultSelectedKeys: ["M-1001", "M-1002"],
     },
   },
 };
@@ -543,7 +543,7 @@ export const Radio: Story = {
         code: withStoryImports(`${tableStoryDataSource}
 
 function RadioTable() {
-  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+  const [selectedKeys, setSelectedKeys] = useState<Key[]>([]);
 
   return (
     <Table
@@ -552,8 +552,8 @@ function RadioTable() {
       pagination={false}
       rowSelection={{
         type: 'radio',
-        selectedRowKeys,
-        onChange: setSelectedRowKeys,
+        selectedKeys,
+        onChange: setSelectedKeys,
       }}
     />
   );
@@ -565,30 +565,30 @@ function RadioTable() {
 };
 
 function CheckboxStory(args: TableProps<Member>) {
-  const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
+  const [selectedKeys, setSelectedKeys] = useState<Key[]>([]);
 
   return (
     <Table<Member>
       {...args}
       rowSelection={{
         type: "checkbox",
-        selectedRowKeys,
-        onChange: setSelectedRowKeys,
+        selectedKeys,
+        onChange: setSelectedKeys,
       }}
     />
   );
 }
 
 function RadioStory(args: TableProps<Member>) {
-  const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
+  const [selectedKeys, setSelectedKeys] = useState<Key[]>([]);
 
   return (
     <Table<Member>
       {...args}
       rowSelection={{
         type: "radio",
-        selectedRowKeys,
-        onChange: setSelectedRowKeys,
+        selectedKeys,
+        onChange: setSelectedKeys,
       }}
     />
   );

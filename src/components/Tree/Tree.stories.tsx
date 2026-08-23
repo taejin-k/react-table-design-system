@@ -29,13 +29,12 @@ const meta = {
   title: "Components/Tree",
   component: Tree,
   tags: ["autodocs"],
-  args: { treeData, showIcon: true, defaultExpandAll: true },
   parameters: {
     controls: { disable: true },
     docs: {
       description: {
         component:
-          "중첩된 데이터를 펼치고 접을 수 있는 계층 구조로 보여줘요.  \n단일·다중 선택, 연관 체크, 연결선, 비동기 로드와 고정 높이 가상 목록을 지원해요.",
+          "중첩된 데이터를 펼치고 접을 수 있는 계층 구조로 보여줘요.  \n단일·다중 선택, 연관 체크, 연결선, 비동기 로드와 고정 높이 스크롤을 지원해요.",
       },
       page: () => (
         <div className="tree-docs component-docs">
@@ -47,19 +46,32 @@ const meta = {
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
 | \`treeData\` | 계층형 노드 데이터를 전달해요. | \`TreeDataNode[]\` | \`[]\` |
+| \`fieldNames\` | 데이터의 title·key·children 필드명을 바꿔요. | \`{ title?, key?, children? }\` | 기본 필드명 |
+| \`blockNode\` | 노드 선택 영역을 가로로 채워요. | \`boolean\` | \`false\` |
 | \`expandedKeys\` | 펼친 노드를 제어해요. | \`Key[]\` | - |
+| \`defaultExpandedKeys\` | 처음 펼칠 노드를 정해요. | \`Key[]\` | \`[]\` |
 | \`selectedKeys\` | 선택된 노드를 제어해요. | \`Key[]\` | - |
+| \`defaultSelectedKeys\` | 처음 선택할 노드를 정해요. | \`Key[]\` | \`[]\` |
 | \`checkedKeys\` | 체크된 노드와 부분 체크 노드를 제어해요. | \`Key[] \\| { checked: Key[]; halfChecked: Key[] }\` | - |
+| \`defaultCheckedKeys\` | 처음 체크할 노드를 정해요. | \`Key[]\` | \`[]\` |
 | \`defaultExpandAll\` | 처음에 모든 노드를 펼쳐요. | \`boolean\` | \`false\` |
 | \`checkable\` | 각 노드에 체크박스를 표시해요. | \`boolean\` | \`false\` |
 | \`checkStrictly\` | 부모와 자식의 체크 상태를 분리해요. | \`boolean\` | \`false\` |
+| \`selectable\` | 노드 선택 상태를 사용해요. | \`boolean\` | \`true\` |
 | \`multiple\` | 여러 노드를 동시에 선택해요. | \`boolean\` | \`false\` |
+| \`disabled\` | 전체 Tree 동작을 비활성화해요. | \`boolean\` | \`false\` |
 | \`showIcon\` | 노드 아이콘을 표시해요. | \`boolean\` | \`false\` |
 | \`showLine\` | 노드 사이의 연결선과 리프 아이콘을 설정해요. | \`boolean \\| { showLeafIcon?: boolean \\| ReactNode }\` | \`false\` |
-| \`height\` | 스크롤 영역 높이를 정하고 가상 목록을 사용해요. | \`number\` | - |
+| \`switcherIcon\` | 펼침·접힘 아이콘을 변경해요. | \`ReactNode \\| function\` | chevron Icon |
+| \`titleRender\` | 노드 제목을 직접 구성해요. | \`(node) => ReactNode\` | - |
+| \`height\` | 스크롤 영역의 최대 높이를 정해요. | \`number\` | - |
 | \`loadData\` | 노드를 펼칠 때 자식 데이터를 비동기로 불러와요. | \`(node) => Promise<void>\` | - |
+| \`loadedKeys\` | 불러오기를 마친 노드를 제어해요. | \`Key[]\` | - |
+| \`className\` | 최상위 요소에 Tailwind 클래스를 추가해요. | \`string\` | - |
+| \`onExpand\` | 펼친 노드가 바뀔 때 실행해요. | \`(expandedKeys, info) => void\` | - |
 | \`onSelect\` | 선택된 노드가 바뀔 때 실행해요. | \`(selectedKeys, info) => void\` | - |
 | \`onCheck\` | 체크 상태가 바뀔 때 실행해요. | \`(checkedKeys, info) => void\` | - |
+| \`onLoad\` | 노드 불러오기가 끝나면 실행해요. | \`(loadedKeys, info) => void\` | - |
 
 ### TreeDataNode
 
@@ -80,8 +92,31 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-const source = `<Tree showIcon defaultExpandAll treeData={[\n  { key: 'src', title: 'src', icon: <Icon icon="folder-outlined" />, children: [\n    { key: 'index', title: 'index.ts', icon: <Icon icon="file-outlined" /> },\n  ] },\n  { key: 'package', title: 'package.json', icon: <Icon icon="file-outlined" /> },\n]} />`;
+const source = `<Tree
+  showIcon
+  defaultExpandAll
+  treeData={[
+    {
+      key: 'src',
+      title: 'src',
+      icon: <Icon icon="folder-outlined" />,
+      children: [
+        {
+          key: 'components',
+          title: 'components',
+          icon: <Icon icon="folder-outlined" />,
+          children: [
+            { key: 'button', title: 'Button.tsx', icon: <Icon icon="file-outlined" /> },
+          ],
+        },
+        { key: 'index', title: 'index.ts', icon: <Icon icon="file-outlined" /> },
+      ],
+    },
+    { key: 'package', title: 'package.json', icon: <Icon icon="file-outlined" /> },
+  ]}
+/>`;
 export const Basic: Story = {
+  args: { treeData, showIcon: true, defaultExpandAll: true },
   parameters: {
     ...storyDescription("components-tree--basic"),
     docs: {
@@ -91,7 +126,13 @@ export const Basic: Story = {
   },
 };
 export const Checkable: Story = {
-  args: { checkable: true, defaultCheckedKeys: ["button"] },
+  args: {
+    treeData,
+    showIcon: true,
+    defaultExpandAll: true,
+    checkable: true,
+    defaultCheckedKeys: ["button"],
+  },
   parameters: {
     ...storyDescription("components-tree--checkable"),
     docs: {
@@ -106,7 +147,7 @@ export const Checkable: Story = {
   },
 };
 export const Lines: Story = {
-  args: { showLine: true },
+  args: { treeData, showIcon: true, defaultExpandAll: true, showLine: true },
   parameters: {
     ...storyDescription("components-tree--lines"),
     docs: {

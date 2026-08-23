@@ -3,23 +3,25 @@ import { describe, expect, it } from "vitest";
 import { Badge } from "./Badge";
 
 describe("Badge", () => {
-  it("applies overflow count and hides zero by default", () => {
-    const { rerender } = render(
-      <Badge count={120}>
-        <span>알림</span>
-      </Badge>,
-    );
-    expect(screen.getByText("99+")).toBeInTheDocument();
-    rerender(
-      <Badge count={0}>
-        <span>알림</span>
-      </Badge>,
-    );
-    expect(screen.queryByText("0")).not.toBeInTheDocument();
-  });
-
   it("renders status text", () => {
     render(<Badge status="processing" text="처리 중" />);
     expect(screen.getByText("처리 중")).toBeInTheDocument();
+  });
+
+  it("applies a custom status color", () => {
+    const { container } = render(<Badge status="default" color="#722ed1" />);
+    expect(container.querySelector("span > span")).toHaveStyle({
+      backgroundColor: "#722ed1",
+      color: "#722ed1",
+    });
+  });
+
+  it("applies the spreading animation only when process is true", () => {
+    const { container, rerender } = render(<Badge status="processing" />);
+    const status = container.querySelector("span > span");
+    expect(status).not.toHaveClass("after:animate-ping");
+
+    rerender(<Badge status="processing" process />);
+    expect(status).toHaveClass("after:animate-ping");
   });
 });

@@ -1,12 +1,12 @@
 import type { CSSProperties, ReactElement, ReactNode } from "react";
 
-export type UploadFileStatus = "error" | "done" | "uploading" | "removed";
+export type UploadFileStatusType = "error" | "done" | "uploading" | "removed";
 export type UploadListType = "text" | "picture" | "picture-card" | "picture-circle";
 
 export interface UploadFile<T = unknown> {
   uid: string;
   name: string;
-  status?: UploadFileStatus;
+  status?: UploadFileStatusType;
   percent?: number;
   size?: number;
   type?: string;

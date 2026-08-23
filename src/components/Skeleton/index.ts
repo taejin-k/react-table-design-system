@@ -3,5 +3,6 @@ export type {
   SkeletonComponent,
   SkeletonElementProps,
   SkeletonProps,
-  SkeletonSize,
+  SkeletonShapeType,
+  SkeletonSizeType,
 } from "./Skeleton.types";

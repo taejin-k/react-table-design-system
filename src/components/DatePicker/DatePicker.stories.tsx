@@ -3,7 +3,24 @@ import { Description, Markdown, Stories, Title } from "@storybook/addon-docs/blo
 import type { Meta, StoryObj } from "@storybook/react";
 import { storyDescriptions } from "../../storybook/story-descriptions";
 import { withStoryImports } from "../../storybook/story-source";
+import { TypeTokens } from "../../storybook/type-tokens";
 import { DatePicker } from "./DatePicker";
+import type {
+  DatePickerModeType,
+  DatePickerPlacementType,
+  DatePickerSizeType,
+  DatePickerVariantType,
+} from "./DatePicker.types";
+
+const datePickerModes: DatePickerModeType[] = ["date", "week", "month", "quarter", "year"];
+const datePickerSizes: DatePickerSizeType[] = ["lg", "md", "sm"];
+const datePickerVariants: DatePickerVariantType[] = ["default", "outlined", "filled"];
+const datePickerPlacements: DatePickerPlacementType[] = [
+  "topLeft",
+  "topRight",
+  "bottomLeft",
+  "bottomRight",
+];
 
 const storyDescription = (id: string) => ({
   docs: { description: { story: storyDescriptions[id] } },
@@ -20,7 +37,6 @@ const meta = {
   title: "Components/DatePicker",
   component: DatePicker,
   tags: ["autodocs"],
-  args: { placeholder: "날짜를 선택하세요" },
   argTypes: {
     value: { control: false },
     defaultValue: { control: false },
@@ -33,7 +49,7 @@ const meta = {
     variant: {
       name: "표현 방식",
       control: "select",
-      options: ["default", "outlined", "filled", "borderless", "underlined"],
+      options: ["default", "outlined", "filled"],
     },
     placeholder: { name: "안내 문구", control: "text" },
     label: { name: "레이블", control: "text" },
@@ -69,10 +85,10 @@ const meta = {
 | \`value\` | 선택값을 외부에서 관리해요. | \`string \\| string[] \\| null\` | - |
 | \`defaultValue\` | 처음 선택할 값을 설정해요. | \`string \\| string[]\` | - |
 | \`placeholder\` | 선택 전 안내 문구를 설정해요. | \`string\` | \`날짜를 선택하세요\` |
-| \`picker\` | 날짜 선택 단위를 설정해요. | \`date \\| week \\| month \\| quarter \\| year\` | \`date\` |
+| \`picker\` | 날짜 선택 단위를 설정해요. | [\`DatePickerModeType\`](#date-picker-mode-type) | \`date\` |
 | \`format\` | 선택값을 화면에 표시할 형식을 설정해요. | \`string \\| (value) => string\` | - |
-| \`size\` | DatePicker의 크기를 설정해요. | \`lg \\| md \\| sm\` | \`md\` |
-| \`variant\` | 배경과 테두리 표현 방식을 설정해요. | \`default \\| outlined \\| filled \\| borderless \\| underlined\` | \`default\` |
+| \`size\` | DatePicker의 크기를 설정해요. | [\`DatePickerSizeType\`](#date-picker-size-type) | \`md\` |
+| \`variant\` | 배경과 테두리 표현 방식을 설정해요. | [\`DatePickerVariantType\`](#date-picker-variant-type) | \`default\` |
 | \`allowClear\` | 선택값을 지우는 버튼을 표시해요. | \`boolean \\| { clearIcon }\` | \`true\` |
 | \`disabled\` | 날짜 선택과 열기 동작을 비활성화해요. | \`boolean\` | \`false\` |
 | \`readOnly\` | 선택값을 읽기 전용으로 표시해요. | \`boolean\` | \`false\` |
@@ -93,7 +109,7 @@ const meta = {
 | \`defaultPickerValue\` | 달력이 처음 보여줄 기준 날짜를 설정해요. | \`string\` | - |
 | \`open\` | 달력 표시 상태를 외부에서 관리해요. | \`boolean\` | - |
 | \`defaultOpen\` | 처음 달력을 표시할지 설정해요. | \`boolean\` | \`false\` |
-| \`placement\` | 달력이 표시될 위치를 설정해요. | \`topLeft \\| topRight \\| bottomLeft \\| bottomRight\` | \`bottomLeft\` |
+| \`placement\` | 달력이 표시될 위치를 설정해요. | [\`DatePickerPlacementType\`](#date-picker-placement-type) | \`bottomLeft\` |
 | \`label\` | DatePicker 위에 레이블을 표시해요. | \`ReactNode\` | - |
 | \`errorMessage\` | DatePicker 아래에 오류 문구를 표시해요. | \`ReactNode\` | - |
 | \`required\` | 레이블에 필수 표시를 추가해요. | \`boolean\` | \`false\` |
@@ -139,6 +155,19 @@ const meta = {
 | \`onChange\` | 날짜 범위가 바뀔 때 실행할 함수예요. | \`(value, dateStrings) => void\` | - |
 | \`onCalendarChange\` | 시작일이나 종료일을 선택할 때 실행해요. | \`(value, info) => void\` | - |
           `}</Markdown>
+          <h2 className="component-docs-types-heading">Types</h2>
+          <h3 id="date-picker-mode-type">DatePickerModeType</h3>
+          <p>선택할 날짜 단위를 정해요.</p>
+          <TypeTokens values={datePickerModes} />
+          <h3 id="date-picker-size-type">DatePickerSizeType</h3>
+          <p>DatePicker 크기를 선택해요.</p>
+          <TypeTokens values={datePickerSizes} />
+          <h3 id="date-picker-variant-type">DatePickerVariantType</h3>
+          <p>배경과 테두리 표현을 선택해요.</p>
+          <TypeTokens values={datePickerVariants} />
+          <h3 id="date-picker-placement-type">DatePickerPlacementType</h3>
+          <p>달력 패널 위치를 선택해요.</p>
+          <TypeTokens values={datePickerPlacements} />
         </div>
       ),
     },
@@ -234,8 +263,6 @@ export const Variants: Story = {
         code: withStoryImports(`<div className="grid max-w-xs gap-3">
   <DatePicker placeholder="기본" />
   <DatePicker variant="filled" placeholder="채움" />
-  <DatePicker variant="borderless" placeholder="테두리 없음" />
-  <DatePicker variant="underlined" placeholder="밑줄" />
 </div>`),
       },
     },
@@ -244,8 +271,6 @@ export const Variants: Story = {
     <div className="grid max-w-xs gap-3">
       <DatePicker placeholder="기본" />
       <DatePicker variant="filled" placeholder="채움" />
-      <DatePicker variant="borderless" placeholder="테두리 없음" />
-      <DatePicker variant="underlined" placeholder="밑줄" />
     </div>
   ),
 };
@@ -268,6 +293,7 @@ export const StaticError: Story = {
 };
 
 export const Basic: Story = {
+  args: { placeholder: "날짜를 선택하세요" },
   parameters: {
     ...storySource("components-datepicker--basic", `<DatePicker width={320} />`),
     controls: { disable: false },
@@ -497,7 +523,7 @@ export const ControlledPanel: Story = {
 export const Placements: Story = {
   parameters: storySource(
     "components-datepicker--placements",
-    `<div className="grid max-w-xs gap-3 pt-72">
+    `<div className="grid max-w-2xl grid-cols-2 gap-3">
   <DatePicker placement="topLeft" />
   <DatePicker placement="topRight" />
   <DatePicker />
@@ -505,7 +531,7 @@ export const Placements: Story = {
 </div>`,
   ),
   render: () => (
-    <div className="grid max-w-xs gap-3 pt-72">
+    <div className="grid max-w-2xl grid-cols-2 gap-3">
       <DatePicker placement="topLeft" />
       <DatePicker placement="topRight" />
       <DatePicker placement="bottomLeft" />

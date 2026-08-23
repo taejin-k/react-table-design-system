@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { twMerge } from "tailwind-merge";
 import { Icon } from "../Icon";
-import type { CollapseItem, CollapseKey, CollapseProps } from "./Collapse.types";
+import type { CollapseItem, CollapseKeyType, CollapseProps } from "./Collapse.types";
 
-function keys(value?: CollapseKey | CollapseKey[]) {
+function keys(value?: CollapseKeyType | CollapseKeyType[]) {
   if (value === undefined) return [];
-  return (Array.isArray(value) ? value : [value]).map(String);
+  return Array.isArray(value) ? value : [value];
 }
 
 export function Collapse({
@@ -26,18 +26,24 @@ export function Collapse({
 }: CollapseProps) {
   const [innerKeys, setInnerKeys] = useState(() => keys(defaultActiveKey));
   const opened = activeKey === undefined ? innerKeys : keys(activeKey);
+  const visitedKeys = useRef(new Set(opened.map(String)));
+  const [renderedKeys, setRenderedKeys] = useState(new Set(opened.map(String)));
+  useEffect(() => {
+    opened.forEach((key) => visitedKeys.current.add(String(key)));
+    setRenderedKeys((current) => new Set([...current, ...opened.map(String)]));
+  }, [activeKey, innerKeys]);
   const toggle = (item: CollapseItem) => {
-    const key = String(item.key);
-    const isOpen = opened.includes(key);
+    const key = item.key;
+    const isOpen = opened.some((value) => String(value) === String(key));
     const next = accordion
       ? isOpen
         ? []
         : [key]
       : isOpen
-        ? opened.filter((value) => value !== key)
+        ? opened.filter((value) => String(value) !== String(key))
         : [...opened, key];
     if (activeKey === undefined) setInnerKeys(next);
-    onChange?.(accordion ? (next[0] ?? "") : next);
+    onChange?.(accordion ? (next[0] ?? []) : next);
   };
   const padding = size === "large" ? "px-6 py-4" : size === "small" ? "px-3 py-2" : "px-4 py-3";
   return (
@@ -52,7 +58,7 @@ export function Collapse({
       style={style}
     >
       {items.map((item, index) => {
-        const open = opened.includes(String(item.key));
+        const open = opened.some((value) => String(value) === String(item.key));
         const itemCollapsible = item.collapsible ?? collapsible;
         const disabled = itemCollapsible === "disabled";
         const arrow = expandIcon?.({ isActive: open, item }) ?? (
@@ -68,10 +74,7 @@ export function Collapse({
             style={item.style}
           >
             <div
-              role="button"
               tabIndex={disabled ? -1 : 0}
-              aria-expanded={open}
-              aria-disabled={disabled}
               className={twMerge(
                 "flex items-center gap-3 bg-[rgba(0,0,0,0.02)] transition-colors hover:bg-[#f0f0f0] motion-reduce:transition-none",
                 ghost && "bg-transparent hover:bg-transparent",
@@ -128,9 +131,26 @@ export function Collapse({
             <div
               className="grid transition-[grid-template-rows] duration-200 ease-[cubic-bezier(0.645,0.045,0.355,1)] motion-reduce:transition-none"
               style={{ gridTemplateRows: open ? "1fr" : "0fr" }}
+              onTransitionEnd={(event) => {
+                if (
+                  event.propertyName !== "grid-template-rows" ||
+                  open ||
+                  !destroyOnHidden ||
+                  item.forceRender
+                )
+                  return;
+                setRenderedKeys((current) => {
+                  const next = new Set(current);
+                  next.delete(String(item.key));
+                  return next;
+                });
+              }}
             >
               <div className="overflow-hidden">
-                {open || item.forceRender || !destroyOnHidden ? (
+                {open ||
+                item.forceRender ||
+                renderedKeys.has(String(item.key)) ||
+                (!destroyOnHidden && visitedKeys.current.has(String(item.key))) ? (
                   <div
                     className={twMerge(
                       "bg-white",

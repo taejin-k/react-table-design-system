@@ -12,15 +12,35 @@ const rows: Row[] = [
   { id: "3", name: "박지호", team: "Design" },
 ];
 
+function requiredElement<T extends Element>(selector: string): T {
+  const element = document.querySelector<T>(selector);
+  if (!element) throw new Error(`Element not found: ${selector}`);
+  return element;
+}
+
 afterEach(() => vi.unstubAllGlobals());
 
 describe("Table regressions", () => {
+  it("forwards className to the top-level Table element", () => {
+    const { container } = render(
+      <Table
+        className="max-w-[720px] bg-red-500"
+        columns={[{ title: "이름", dataIndex: "name" }]}
+        dataSource={data}
+        pagination={false}
+      />,
+    );
+
+    expect(container.firstElementChild).toHaveClass("max-w-[720px]", "bg-red-500");
+    expect(container.querySelector("table")).not.toHaveClass("max-w-[720px]", "bg-red-500");
+  });
+
   it("데이터가 없으면 기본 일러스트레이션과 안내 문구를 표시한다", () => {
     const { container } = render(
       <Table columns={[{ title: "이름", dataIndex: "name" }]} dataSource={[]} pagination={false} />,
     );
 
-    expect(screen.getByText("데이터가 없어요")).toBeInTheDocument();
+    expect(screen.getByText("검색결과가 없어요")).toBeInTheDocument();
     const illustration = container.querySelector('svg[viewBox="0 0 128 128"]');
     expect(illustration).toBeInTheDocument();
     expect(illustration?.parentElement).toHaveClass("size-24");
@@ -44,8 +64,8 @@ describe("Table regressions", () => {
     );
   });
 
-  it("uses fixed table layout by default", () => {
-    const { container, rerender } = render(
+  it("always uses fixed table layout", () => {
+    const { container } = render(
       <Table
         columns={[{ title: "이름", dataIndex: "name" }]}
         dataSource={data}
@@ -54,17 +74,6 @@ describe("Table regressions", () => {
     );
 
     expect(container.querySelector("table")).toHaveStyle({ tableLayout: "fixed" });
-
-    rerender(
-      <Table
-        columns={[{ title: "이름", dataIndex: "name" }]}
-        dataSource={data}
-        pagination={false}
-        tableLayout="auto"
-      />,
-    );
-
-    expect(container.querySelector("table")).toHaveStyle({ tableLayout: "auto" });
   });
 
   it("applies lg, md, and sm table sizes", () => {
@@ -300,7 +309,7 @@ describe("Table regressions", () => {
           ]}
           dataSource={data}
           pagination={false}
-          rowSelection={{ type: "checkbox", fixed: "left" }}
+          rowSelection={{ type: "checkbox", fixed: true }}
           scroll={{ x: "max-content" }}
         />,
       );
@@ -355,6 +364,7 @@ describe("Table regressions", () => {
             title: "이름",
             dataIndex: "name",
             onCell: () => ({ colSpan: 2, scope: "row" }),
+            onHeaderCell: () => ({ className: "custom-header-cell" }),
           },
           { title: "팀", dataIndex: "team" },
         ]}
@@ -373,6 +383,7 @@ describe("Table regressions", () => {
     expect(row).toHaveClass("custom-row");
     expect(row).not.toHaveClass("hover:[&>td]:bg-[#f5f5f5]");
     expect(container.querySelector("thead tr")).toHaveClass("custom-header-row");
+    expect(container.querySelector("thead th")).toHaveClass("custom-header-cell");
     expect(screen.getByText("김민준").closest("td")).toHaveAttribute("colspan", "2");
     expect(screen.getByText("김민준").closest("td")).toHaveAttribute("scope", "row");
 
@@ -407,13 +418,11 @@ describe("Table regressions", () => {
 
     expect(screen.queryByText("Platform")).not.toBeInTheDocument();
     expect(screen.getAllByRole("row")[1]).toHaveTextContent("박지호");
-    expect(screen.getByRole("button", { name: "팀 필터" })).toHaveClass("text-[#0062df]");
+    expect(requiredElement("[data-table-filter]")).toHaveClass("text-[#0062df]");
   });
 
-  it("renders filter popups in the requested container", async () => {
+  it("renders filter popups in document.body", async () => {
     const user = userEvent.setup();
-    const popupContainer = document.createElement("div");
-    document.body.append(popupContainer);
     render(
       <Table
         columns={[
@@ -424,14 +433,38 @@ describe("Table regressions", () => {
           },
         ]}
         dataSource={data}
-        getPopupContainer={() => popupContainer}
         pagination={false}
       />,
     );
 
-    await user.click(screen.getByRole("button", { name: "팀 필터" }));
-    expect(popupContainer.querySelector("[data-table-filter-motion]")).toBeInTheDocument();
-    popupContainer.remove();
+    await user.click(requiredElement("[data-table-filter]"));
+    expect(document.body.querySelector("[data-table-filter-motion]")).toBeInTheDocument();
+  });
+
+  it("shows the default empty text when filter search has no results", async () => {
+    const user = userEvent.setup();
+    render(
+      <Table
+        columns={[
+          {
+            title: "팀",
+            dataIndex: "team",
+            filters: [
+              { text: "Design", value: "Design" },
+              { text: "Platform", value: "Platform" },
+            ],
+            filterSearch: true,
+          },
+        ]}
+        dataSource={data}
+        pagination={false}
+      />,
+    );
+
+    await user.click(requiredElement("[data-table-filter]"));
+    await user.type(screen.getByPlaceholderText("키워드를 입력해요"), "검색 결과 없음");
+
+    expect(screen.getByText("검색결과가 없어요")).toBeInTheDocument();
   });
 
   it("keeps ellipsis content inside the cell when the shared tooltip is enabled", () => {
@@ -493,16 +526,37 @@ describe("Table regressions", () => {
       />,
     );
 
-    await user.click(screen.getByRole("button", { name: "이름 정렬" }));
+    await user.click(requiredElement("[data-table-sorter]"));
     expect(screen.getAllByRole("row")[1]).toHaveTextContent("김민준");
     expect(onChange).toHaveBeenLastCalledWith(
       expect.any(Object),
       expect.any(Object),
-      expect.objectContaining({ order: "ascend" }),
-      expect.objectContaining({ action: "sort" }),
+      expect.arrayContaining([expect.objectContaining({ order: "ascend" })]),
     );
 
-    await user.click(screen.getByRole("button", { name: "이름 정렬" }));
+    await user.click(requiredElement("[data-table-sorter]"));
+    expect(screen.getAllByRole("row")[1]).toHaveTextContent("이서연");
+
+    await user.click(requiredElement("[data-table-sorter]"));
+    expect(onChange.mock.calls[onChange.mock.calls.length - 1]?.[2]).toEqual([]);
+  });
+
+  it("applies defaultSortOrder on the first render", () => {
+    render(
+      <Table
+        columns={[
+          {
+            title: "이름",
+            dataIndex: "name",
+            sorter: (left, right) => left.name.localeCompare(right.name, "ko"),
+            defaultSortOrder: "descend",
+          },
+        ]}
+        dataSource={[rows[2], rows[0], rows[1]]}
+        pagination={false}
+      />,
+    );
+
     expect(screen.getAllByRole("row")[1]).toHaveTextContent("이서연");
   });
 
@@ -515,7 +569,6 @@ describe("Table regressions", () => {
             title: "이름",
             dataIndex: "name",
             sorter: (left, right) => left.name.localeCompare(right.name, "ko"),
-            showSorterTooltip: { target: "sorter-icon" },
           },
         ]}
         dataSource={rows}
@@ -523,13 +576,40 @@ describe("Table regressions", () => {
       />,
     );
 
-    const sorter = screen.getByRole("button", { name: "이름 정렬" });
+    const sorter = requiredElement<HTMLElement>("[data-table-sorter]");
     await user.hover(sorter);
     expect(await screen.findByText("오름차순 정렬")).toBeInTheDocument();
     await user.unhover(sorter);
     await user.click(sorter);
     await user.hover(sorter);
     expect(await screen.findByText("내림차순 정렬")).toBeInTheDocument();
+  });
+
+  it("scrolls to the first row after sorting", async () => {
+    const user = userEvent.setup();
+    const { container } = render(
+      <Table
+        columns={[
+          {
+            title: "이름",
+            dataIndex: "name",
+            sorter: (left, right) => left.name.localeCompare(right.name, "ko"),
+          },
+        ]}
+        dataSource={rows}
+        pagination={false}
+        scroll={{ y: 120 }}
+      />,
+    );
+    const scrollRegion = container.querySelector<HTMLElement>(
+      "[data-table-scroll-container]",
+    ) as HTMLElement;
+    const scrollTo = vi.fn();
+    Object.defineProperty(scrollRegion, "scrollTo", { configurable: true, value: scrollTo });
+
+    await user.click(requiredElement("[data-table-sorter]"));
+
+    expect(scrollTo).toHaveBeenCalledWith({ top: 0 });
   });
 
   it("filters rows after confirming the filter menu", async () => {
@@ -552,7 +632,7 @@ describe("Table regressions", () => {
       />,
     );
 
-    await user.click(screen.getByRole("button", { name: "팀 필터" }));
+    await user.click(requiredElement("[data-table-filter]"));
     await user.click(screen.getByRole("checkbox", { name: "Design" }));
     await user.click(screen.getByRole("button", { name: "확인" }));
 
@@ -581,7 +661,7 @@ describe("Table regressions", () => {
       />,
     );
 
-    await user.click(screen.getByRole("button", { name: "팀 필터" }));
+    await user.click(requiredElement("[data-table-filter]"));
     expect(document.querySelector("[data-table-filter-motion]")).toBeInTheDocument();
     fireEvent.scroll(window);
     await waitFor(() => {
@@ -599,7 +679,7 @@ describe("Table regressions", () => {
       />,
     );
 
-    await user.click(screen.getByRole("button", { name: "2 페이지" }));
+    await user.click(requiredElement('[data-pagination-page="2"]'));
     expect(screen.getByText("이서연")).toBeInTheDocument();
     expect(screen.queryByText("김민준")).not.toBeInTheDocument();
 
@@ -614,6 +694,79 @@ describe("Table regressions", () => {
     expect(screen.queryByText("김민준")).not.toBeInTheDocument();
   });
 
+  it("uses 10, 20, and 50 as the default page size options", async () => {
+    const user = userEvent.setup();
+    const manyRows = Array.from({ length: 50 }, (_, index) => ({
+      id: index + 1,
+      name: `구성원 ${index + 1}`,
+    }));
+
+    render(<Table columns={[{ title: "이름", dataIndex: "name" }]} dataSource={manyRows} />);
+
+    await user.click(screen.getByRole("button", { name: "10 / 페이지" }));
+    const pageSizePopup = await waitFor(() => {
+      const popup = document.querySelector<HTMLElement>("[data-select-popup]");
+      expect(popup).toBeInTheDocument();
+      return popup as HTMLElement;
+    });
+
+    expect(within(pageSizePopup).getByText("20 / 페이지")).toBeInTheDocument();
+    expect(within(pageSizePopup).getByText("50 / 페이지")).toBeInTheDocument();
+    expect(within(pageSizePopup).queryByText("100 / 페이지")).not.toBeInTheDocument();
+  });
+
+  it("uses defaultPage as the initial uncontrolled page", () => {
+    render(
+      <Table
+        columns={[{ title: "이름", dataIndex: "name" }]}
+        dataSource={rows}
+        pagination={{ defaultPage: 2, defaultPageSize: 1 }}
+      />,
+    );
+
+    expect(screen.getByText("이서연")).toBeInTheDocument();
+    expect(screen.queryByText("김민준")).not.toBeInTheDocument();
+  });
+
+  it("uses page as the controlled page", async () => {
+    const user = userEvent.setup();
+    const onPaginationChange = vi.fn();
+    const tableProps = {
+      columns: [{ title: "이름", dataIndex: "name" }] satisfies ColumnsType<Row>,
+      dataSource: rows,
+    };
+    const { rerender } = render(
+      <Table {...tableProps} pagination={{ page: 1, pageSize: 1, onChange: onPaginationChange }} />,
+    );
+
+    await user.click(requiredElement('[data-pagination-page="2"]'));
+    expect(onPaginationChange).toHaveBeenCalledWith(2, 1);
+    expect(screen.getByText("김민준")).toBeInTheDocument();
+
+    rerender(
+      <Table {...tableProps} pagination={{ page: 2, pageSize: 1, onChange: onPaginationChange }} />,
+    );
+    expect(screen.getByText("이서연")).toBeInTheDocument();
+    expect(screen.queryByText("김민준")).not.toBeInTheDocument();
+  });
+
+  it("reports page in the Table onChange pagination config", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(
+      <Table
+        columns={[{ title: "이름", dataIndex: "name" }]}
+        dataSource={rows}
+        pagination={{ pageSize: 1 }}
+        onChange={onChange}
+      />,
+    );
+
+    await user.click(requiredElement('[data-pagination-page="2"]'));
+    expect(onChange.mock.calls[0]?.[0]).toMatchObject({ page: 2, pageSize: 1 });
+    expect(onChange.mock.calls[0]?.[0]).not.toHaveProperty("current");
+  });
+
   it("uses the design-system medium input for quick page jumps", async () => {
     const user = userEvent.setup();
     render(
@@ -624,7 +777,7 @@ describe("Table regressions", () => {
       />,
     );
 
-    const quickJumper = screen.getByRole("textbox", { name: "이동할 페이지" });
+    const quickJumper = requiredElement<HTMLInputElement>("[data-pagination-jumper]");
     expect(quickJumper.parentElement).toHaveClass("h-[30px]");
 
     await user.type(quickJumper, "3{Enter}");
@@ -642,12 +795,12 @@ describe("Table regressions", () => {
       />,
     );
 
-    const trigger = screen.getByRole("button", { name: "행 펼치기" });
+    const trigger = requiredElement<HTMLElement>("[data-table-expand]");
     await user.click(trigger);
     const detail = screen.getByText("김민준 상세 정보");
     expect(detail).toBeInTheDocument();
     expect(detail.closest("td")).toHaveClass("!bg-[#fafafa]");
-    await user.click(screen.getByRole("button", { name: "행 접기" }));
+    await user.click(requiredElement("[data-table-expand]"));
     expect(screen.queryByText("김민준 상세 정보")).not.toBeInTheDocument();
   });
 
@@ -684,7 +837,7 @@ describe("Table regressions", () => {
         columns={[{ title: "이름", dataIndex: "name" }]}
         dataSource={data}
         expandable={{
-          expandedRowKeys: ["1"],
+          expandedKeys: ["1"],
           expandedRowRender: (record) => `${record.name} 상세 정보`,
           onExpand,
           onExpandedRowsChange,
@@ -694,9 +847,27 @@ describe("Table regressions", () => {
     );
 
     expect(screen.getByText("김민준 상세 정보")).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "행 접기" }));
+    await user.click(requiredElement("[data-table-expand]"));
     expect(onExpand).toHaveBeenCalledWith(false, data[0]);
     expect(onExpandedRowsChange).toHaveBeenCalledWith([]);
+  });
+
+  it("fixes the expand column to the left when fixed is true", () => {
+    const { container } = render(
+      <Table
+        columns={[{ title: "이름", dataIndex: "name", width: 600 }]}
+        dataSource={data}
+        expandable={{
+          fixed: true,
+          expandedRowRender: (record) => `${record.name} 상세 정보`,
+        }}
+        pagination={false}
+        scroll={{ x: 648 }}
+      />,
+    );
+
+    expect(container.querySelector("thead th")).toHaveStyle({ position: "sticky", left: "0px" });
+    expect(container.querySelector("tbody td")).toHaveStyle({ position: "sticky", left: "0px" });
   });
 
   it("uses the expanded background for child tree rows", () => {
@@ -737,11 +908,7 @@ describe("Table regressions", () => {
     await user.click(radios[1]);
     expect(radios[0]).not.toBeChecked();
     expect(radios[1]).toBeChecked();
-    expect(onChange).toHaveBeenLastCalledWith(
-      ["2"],
-      [rows[1]],
-      expect.objectContaining({ type: "single" }),
-    );
+    expect(onChange).toHaveBeenLastCalledWith(["2"], [rows[1]]);
   });
 
   it("preserves selected rows that temporarily leave the data source", async () => {
@@ -753,8 +920,8 @@ describe("Table regressions", () => {
         dataSource={rows}
         pagination={false}
         rowSelection={{
-          defaultSelectedRowKeys: ["1"],
-          preserveSelectedRowKeys: true,
+          defaultSelectedKeys: ["1"],
+          preserveSelectedKeys: true,
           onChange,
         }}
       />,
@@ -765,16 +932,14 @@ describe("Table regressions", () => {
         columns={[{ title: "이름", dataIndex: "name" }]}
         dataSource={rows.slice(1)}
         pagination={false}
-        rowSelection={{ preserveSelectedRowKeys: true, onChange }}
+        rowSelection={{ preserveSelectedKeys: true, onChange }}
       />,
     );
-    await user.click(screen.getByRole("checkbox", { name: "2 행 선택" }));
-
-    expect(onChange).toHaveBeenLastCalledWith(
-      ["1", "2"],
-      [rows[0], rows[1]],
-      expect.objectContaining({ type: "multiple" }),
+    await user.click(
+      requiredElement<HTMLInputElement>('tbody tr[data-row-key="2"] input[type="checkbox"]'),
     );
+
+    expect(onChange).toHaveBeenLastCalledWith(["1", "2"], [rows[0], rows[1]]);
   });
 
   it("calculates the header checkbox state from selectable table rows", async () => {
@@ -786,23 +951,19 @@ describe("Table regressions", () => {
         dataSource={rows}
         pagination={false}
         rowSelection={{
-          defaultSelectedRowKeys: ["1"],
+          defaultSelectedKeys: ["1"],
           getCheckboxProps: (record) => ({ disabled: record.id === "3" }),
           onChange,
         }}
       />,
     );
 
-    const selectAll = screen.getByRole("checkbox", { name: "모든 행 선택" });
+    const selectAll = requiredElement<HTMLInputElement>('thead input[type="checkbox"]');
     expect(selectAll).toBePartiallyChecked();
 
     await user.click(selectAll);
     expect(selectAll).toBeChecked();
-    expect(onChange).toHaveBeenLastCalledWith(
-      ["1", "2"],
-      rows.slice(0, 2),
-      expect.objectContaining({ type: "all" }),
-    );
+    expect(onChange).toHaveBeenLastCalledWith(["1", "2"], rows.slice(0, 2));
   });
 
   it("renders internal row drag handles without custom row components", () => {
@@ -818,6 +979,13 @@ describe("Table regressions", () => {
     expect(screen.getAllByRole("button")).toHaveLength(rows.length);
     expect(container.querySelectorAll("tbody tr[data-row-key]")).toHaveLength(rows.length);
     expect(container.querySelectorAll("tbody td:first-child svg")).toHaveLength(rows.length);
+    expect(
+      Array.from(container.querySelectorAll("*")).flatMap((element) =>
+        Array.from(element.attributes).filter((attribute) => attribute.name.startsWith("aria-")),
+      ),
+    ).toHaveLength(0);
+    expect(document.querySelector('[id^="DndDescribedBy"]')).not.toBeInTheDocument();
+    expect(document.querySelector('[id^="DndLiveRegion"]')).not.toBeInTheDocument();
   });
 
   it("makes columns draggable without custom header components", () => {
@@ -848,7 +1016,7 @@ describe("Table regressions", () => {
       />,
     );
 
-    const scrollRegion = screen.getByRole("region", { name: "테이블 스크롤 영역" });
+    const scrollRegion = requiredElement<HTMLElement>("[data-table-scroll-container]");
     const headerRegion = container.querySelector("[data-table-header-scroll]");
 
     expect(headerRegion?.querySelector("thead")).toBeInTheDocument();
@@ -864,6 +1032,7 @@ describe("Table regressions", () => {
         dataSource={rows}
         pagination={false}
         stickyHeader
+        stickyHeaderOffset={48}
       />,
     );
 
@@ -872,7 +1041,7 @@ describe("Table regressions", () => {
 
     expect(headerRegion).toHaveStyle({
       position: "sticky",
-      top: "0px",
+      top: "48px",
       zIndex: "40",
     });
     expect(container.contains(headerRegion)).toBe(true);
@@ -898,7 +1067,7 @@ describe("Table regressions", () => {
       />,
     );
 
-    const scrollRegion = screen.getByRole("region", { name: "테이블 스크롤 영역" });
+    const scrollRegion = requiredElement<HTMLElement>("[data-table-scroll-container]");
     const headerRegion = container.querySelector<HTMLElement>("[data-table-header-scroll]");
 
     Object.defineProperty(scrollRegion, "scrollLeft", { configurable: true, value: 80 });
@@ -937,7 +1106,7 @@ describe("Table regressions", () => {
     expect(tables[0]).toHaveStyle({ minWidth: "440px" });
     expect(tables[1]).toHaveStyle({ minWidth: "440px" });
 
-    const scrollRegion = screen.getByRole("region", { name: "테이블 스크롤 영역" });
+    const scrollRegion = requiredElement<HTMLElement>("[data-table-scroll-container]");
     Object.defineProperty(scrollRegion, "scrollTop", { configurable: true, value: 500 });
     fireEvent.scroll(scrollRegion);
 
@@ -1032,7 +1201,8 @@ describe("Table regressions", () => {
         ]}
         dataSource={rows}
         pagination={false}
-        stickyScrollBar={{ offsetScroll: 20 }}
+        stickyScrollBar
+        stickyScrollBarOffset={24}
         scroll={{ x: 600 }}
       />,
     );
@@ -1068,7 +1238,7 @@ describe("Table regressions", () => {
     expect(stickyTrack).toHaveStyle({
       left: "40px",
       opacity: "1",
-      top: `${window.innerHeight - 34}px`,
+      top: `${window.innerHeight - 38}px`,
       width: "400px",
     });
     expect(container.querySelector("[data-table-horizontal-scrollbar-track]")).toBeInTheDocument();
@@ -1079,13 +1249,13 @@ describe("Table regressions", () => {
       document.body.querySelector<HTMLElement>("[data-table-sticky-scrollbar-thumb]"),
     ).toHaveStyle({ transform: "translateX(50px)", width: "200px" });
 
-    bottom = window.innerHeight - 25;
+    bottom = window.innerHeight - 29;
     fireEvent.scroll(window);
     expect(document.body.querySelector<HTMLElement>("[data-table-sticky-scrollbar]")).toHaveStyle({
       opacity: "1",
     });
 
-    bottom = window.innerHeight - 26;
+    bottom = window.innerHeight - 30;
     fireEvent.scroll(window);
     expect(document.body.querySelector<HTMLElement>("[data-table-sticky-scrollbar]")).toHaveStyle({
       opacity: "0",
@@ -1146,18 +1316,6 @@ describe("Table regressions", () => {
     expect(mergedCell).not.toHaveClass("bg-[#f5f5f5]");
   });
 
-  it("applies pagination classes", () => {
-    render(
-      <Table
-        columns={[{ title: "이름", dataIndex: "name" }]}
-        dataSource={rows}
-        pagination={{ pageSize: 1, className: "pagination-class" }}
-      />,
-    );
-
-    expect(screen.getByRole("navigation")).toHaveClass("pagination-class");
-  });
-
   it("uses compact pagination in a narrow table container", () => {
     vi.stubGlobal(
       "ResizeObserver",
@@ -1181,7 +1339,7 @@ describe("Table regressions", () => {
     );
 
     expect(screen.getByRole("navigation")).toHaveAttribute("data-pagination-compact");
-    expect(screen.getByRole("textbox", { name: "현재 페이지" })).toBeInTheDocument();
+    expect(requiredElement("[data-pagination-current]")).toBeInTheDocument();
   });
 
   it("keeps page buttons static and transitions only previous and next buttons", () => {
@@ -1193,16 +1351,16 @@ describe("Table regressions", () => {
       />,
     );
 
-    expect(screen.getByRole("button", { name: "1 페이지" })).toHaveClass(
+    expect(requiredElement('[data-pagination-page="1"]')).toHaveClass(
       "transition-none",
       "duration-0",
     );
-    expect(screen.getByRole("button", { name: "이전 페이지" })).toHaveClass(
+    expect(requiredElement("[data-pagination-prev]")).toHaveClass(
       "transition-colors",
       "duration-200",
       "ease-out",
     );
-    expect(screen.getByRole("button", { name: "다음 페이지" })).toHaveClass(
+    expect(requiredElement("[data-pagination-next]")).toHaveClass(
       "transition-colors",
       "duration-200",
       "ease-out",

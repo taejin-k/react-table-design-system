@@ -3,8 +3,12 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { useEffect, useRef } from "react";
 import { storyDescriptions } from "../../storybook/story-descriptions";
 import { withStoryImports } from "../../storybook/story-source";
+import { TypeTokens } from "../../storybook/type-tokens";
 import { Button } from "../Button";
 import { message } from "./Message";
+import type { MessageStatusType } from "./Message.types";
+
+const messageStatuses: MessageStatusType[] = ["success", "error", "info", "warning", "loading"];
 
 const storyDescription = (id: string) => ({
   docs: { description: { story: storyDescriptions[id] } },
@@ -17,8 +21,7 @@ const meta = {
     controls: { disable: true },
     docs: {
       description: {
-        component:
-          "작업 결과나 짧은 안내를 화면 위에 표시해요.  \n정적 메서드와 useMessage를 사용할 수 있어요.",
+        component: "작업 결과나 짧은 안내를 화면 위에 표시해요.",
       },
       page: () => (
         <div className="message-docs component-docs">
@@ -38,7 +41,7 @@ const meta = {
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
 | \`content\` | 표시할 내용을 설정해요. | \`ReactNode\` | - |
-| \`type\` | 상태 타입을 설정해요. | \`success \\| error \\| info \\| warning \\| loading\` | \`info\` |
+| \`type\` | 상태 타입을 설정해요. | [\`MessageStatusType\`](#message-status-type) | \`info\` |
 | \`duration\` | 자동으로 닫히기까지의 초를 설정해요. 0이면 유지해요. | \`number\` | \`3\` |
 | \`icon\` | 상태 아이콘을 변경해요. | \`ReactNode\` | - |
 | \`key\` | 같은 메시지를 갱신하거나 제거할 key예요. | \`string \\| number\` | - |
@@ -51,10 +54,18 @@ const meta = {
 
 ### Global config
 
-\`message.config({ duration, getContainer, maxCount, rtl, stack, top })\`으로 정적 메시지 기본값을 설정해요.
-
-\`message.useMessage(config)\`은 동일한 메서드와 \`contextHolder\`를 반환해요.
+| Name | Description | Type | Default |
+| --- | --- | --- | --- |
+| \`duration\` | 자동으로 닫히기까지의 초를 정해요. | \`number\` | \`3\` |
+| \`getContainer\` | 메시지를 렌더링할 컨테이너를 정해요. | \`() => HTMLElement\` | \`document.body\` |
+| \`maxCount\` | 동시에 유지할 최대 메시지 수를 정해요. | \`number\` | - |
+| \`rtl\` | 내용을 오른쪽에서 왼쪽 방향으로 표시해요. | \`boolean\` | \`false\` |
+| \`top\` | 화면 위쪽 간격을 px로 정해요. | \`number\` | \`8\` |
       `}</Markdown>
+          <h2 className="component-docs-types-heading">Types</h2>
+          <h3 id="message-status-type">MessageStatusType</h3>
+          <p>메시지 상태를 선택해요.</p>
+          <TypeTokens values={messageStatuses} />
         </div>
       ),
     },
@@ -94,40 +105,6 @@ export const Types: Story = {
     </div>
   ),
 };
-
-export const Hook: Story = {
-  parameters: {
-    ...storyDescription("components-message--hook"),
-    docs: {
-      ...storyDescription("components-message--hook").docs,
-      source: {
-        code: withStoryImports(`function MessageHook() {
-  const [messageApi, contextHolder] = message.useMessage();
-
-  return (
-    <>
-      {contextHolder}
-      <Button onClick={() => messageApi.success('현재 Context에서 열렸어요.')}>
-        Hook Message
-      </Button>
-    </>
-  );
-}`),
-      },
-    },
-  },
-  render: () => <MessageHookExample />,
-};
-
-function MessageHookExample() {
-  const [api, holder] = message.useMessage();
-  return (
-    <>
-      {holder}
-      <Button onClick={() => api.success("현재 Context에서 열렸어요.")}>Hook Message</Button>
-    </>
-  );
-}
 
 export const DurationAndUpdate: Story = {
   parameters: {
@@ -174,60 +151,30 @@ function MessageUpdateExample() {
   return <Button onClick={update}>key로 갱신</Button>;
 }
 
-export const PromiseAndStack: Story = {
+export const Promise: Story = {
   parameters: {
-    ...storyDescription("components-message--promise-stack"),
+    ...storyDescription("components-message--promise"),
     docs: {
-      ...storyDescription("components-message--promise-stack").docs,
+      ...storyDescription("components-message--promise").docs,
       source: {
-        code: withStoryImports(`function MessagePromiseAndStack() {
-  const [messageApi, contextHolder] = message.useMessage({ stack: { threshold: 3 } });
-
-  const openMany = () =>
-    Array.from({ length: 5 }, (_, index) =>
-      messageApi.info({ content: '메시지 ' + (index + 1), duration: 0 }),
-    );
-
+        code: withStoryImports(`function MessagePromise() {
   const sequence = async () => {
-    await messageApi.success({ content: '첫 메시지', duration: 1 });
-    messageApi.info('첫 메시지가 닫혔어요.');
+    await message.success({ content: '첫 메시지', duration: 1 });
+    message.info('첫 메시지가 닫혔어요.');
   };
 
-  return (
-    <>
-      {contextHolder}
-      <div className="flex gap-2">
-        <Button onClick={openMany}>스택</Button>
-        <Button variant="secondary" onClick={sequence}>순서대로</Button>
-      </div>
-    </>
-  );
+  return <Button onClick={sequence}>순서대로</Button>;
 }`),
       },
     },
   },
-  render: () => <MessageStackExample />,
+  render: () => <MessagePromiseExample />,
 };
 
-function MessageStackExample() {
-  const [api, holder] = message.useMessage({ stack: { threshold: 3 } });
-  const openMany = () =>
-    Array.from({ length: 5 }, (_, index) =>
-      api.info({ content: `메시지 ${index + 1}`, duration: 0 }),
-    );
+function MessagePromiseExample() {
   const sequence = async () => {
-    await api.success({ content: "첫 메시지", duration: 1 });
-    api.info("첫 메시지가 닫혔어요.");
+    await message.success({ content: "첫 메시지", duration: 1 });
+    message.info("첫 메시지가 닫혔어요.");
   };
-  return (
-    <>
-      {holder}
-      <div className="flex gap-2">
-        <Button onClick={openMany}>스택</Button>
-        <Button variant="secondary" onClick={sequence}>
-          순서대로
-        </Button>
-      </div>
-    </>
-  );
+  return <Button onClick={sequence}>순서대로</Button>;
 }

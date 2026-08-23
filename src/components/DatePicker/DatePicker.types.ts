@@ -2,21 +2,22 @@ import type { ReactNode } from "react";
 import type { InputSizeType } from "../Input";
 import type { DisabledTime, TimePickerCellInfo } from "../TimePicker";
 
-export type DatePickerValue = string;
-export type DatePickerMode = "date" | "week" | "month" | "quarter" | "year";
-export type DatePickerPlacement = "bottomLeft" | "bottomRight" | "topLeft" | "topRight";
-export type DatePickerVariant = "default" | "outlined" | "filled" | "borderless" | "underlined";
+export type DatePickerValueType = string;
+export type DatePickerSizeType = InputSizeType;
+export type DatePickerModeType = "date" | "week" | "month" | "quarter" | "year";
+export type DatePickerPlacementType = "bottomLeft" | "bottomRight" | "topLeft" | "topRight";
+export type DatePickerVariantType = "default" | "outlined" | "filled";
 
 export interface DatePickerCellInfo {
   originNode: ReactNode;
   today: Date;
-  type: DatePickerMode;
+  type: DatePickerModeType;
   range?: "start" | "end";
 }
 
 export interface DatePickerPreset {
   label: ReactNode;
-  value: DatePickerValue | (() => DatePickerValue);
+  value: DatePickerValueType | (() => DatePickerValueType);
 }
 
 export interface DatePickerShowTime {
@@ -34,15 +35,15 @@ export interface DatePickerShowTime {
 }
 
 export interface DatePickerProps {
-  value?: DatePickerValue | DatePickerValue[] | null;
-  defaultValue?: DatePickerValue | DatePickerValue[];
-  defaultPickerValue?: DatePickerValue;
-  pickerValue?: DatePickerValue;
-  picker?: DatePickerMode;
+  value?: DatePickerValueType | DatePickerValueType[] | null;
+  defaultValue?: DatePickerValueType | DatePickerValueType[];
+  defaultPickerValue?: DatePickerValueType;
+  pickerValue?: DatePickerValueType;
+  picker?: DatePickerModeType;
   placeholder?: string;
-  format?: string | ((value: DatePickerValue) => string);
-  size?: InputSizeType;
-  variant?: DatePickerVariant;
+  format?: string | ((value: DatePickerValueType) => string);
+  size?: DatePickerSizeType;
+  variant?: DatePickerVariantType;
   label?: ReactNode;
   errorMessage?: ReactNode;
   required?: boolean;
@@ -52,28 +53,28 @@ export interface DatePickerProps {
   allowClear?: boolean | { clearIcon?: ReactNode };
   multiple?: boolean;
   order?: boolean;
-  minDate?: DatePickerValue;
-  maxDate?: DatePickerValue;
+  minDate?: DatePickerValueType;
+  maxDate?: DatePickerValueType;
   showWeek?: boolean;
   showNow?: boolean;
   showTime?: boolean | DatePickerShowTime;
   needConfirm?: boolean;
   open?: boolean;
   defaultOpen?: boolean;
-  placement?: DatePickerPlacement;
+  placement?: DatePickerPlacementType;
   disabledDate?: (date: Date) => boolean;
   cellRender?: (date: Date, info: DatePickerCellInfo) => ReactNode;
-  renderExtraFooter?: (mode: DatePickerMode) => ReactNode;
+  renderExtraFooter?: (mode: DatePickerModeType) => ReactNode;
   presets?: DatePickerPreset[];
   className?: string;
   onChange?: (
-    value: DatePickerValue | DatePickerValue[] | null,
+    value: DatePickerValueType | DatePickerValueType[] | null,
     dateString: string | string[],
   ) => void;
-  onCalendarChange?: (value: DatePickerValue | DatePickerValue[] | null) => void;
+  onCalendarChange?: (value: DatePickerValueType | DatePickerValueType[] | null) => void;
   onClear?: () => void;
-  onOk?: (value: DatePickerValue | DatePickerValue[] | null) => void;
-  onPanelChange?: (value: DatePickerValue, mode: DatePickerMode) => void;
+  onOk?: (value: DatePickerValueType | DatePickerValueType[] | null) => void;
+  onPanelChange?: (value: DatePickerValueType, mode: DatePickerModeType) => void;
   onOpenChange?: (open: boolean) => void;
 }
 
@@ -81,27 +82,31 @@ export interface DateRangePickerProps extends Omit<
   DatePickerProps,
   | "defaultValue"
   | "multiple"
+  | "needConfirm"
   | "onCalendarChange"
   | "onChange"
+  | "onOk"
+  | "order"
   | "placeholder"
   | "presets"
+  | "showTime"
   | "value"
 > {
-  value?: [DatePickerValue | null, DatePickerValue | null];
-  defaultValue?: [DatePickerValue | null, DatePickerValue | null];
+  value?: [DatePickerValueType | null, DatePickerValueType | null];
+  defaultValue?: [DatePickerValueType | null, DatePickerValueType | null];
   placeholder?: [string, string];
   onChange?: (
-    value: [DatePickerValue | null, DatePickerValue | null],
+    value: [DatePickerValueType | null, DatePickerValueType | null],
     dateStrings: [string, string],
   ) => void;
   presets?: Array<{
     label: ReactNode;
     value:
-      | [DatePickerValue | null, DatePickerValue | null]
-      | (() => [DatePickerValue | null, DatePickerValue | null]);
+      | [DatePickerValueType | null, DatePickerValueType | null]
+      | (() => [DatePickerValueType | null, DatePickerValueType | null]);
   }>;
   onCalendarChange?: (
-    value: [DatePickerValue | null, DatePickerValue | null],
+    value: [DatePickerValueType | null, DatePickerValueType | null],
     info: { range: "start" | "end" },
   ) => void;
 }

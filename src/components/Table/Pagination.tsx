@@ -62,7 +62,7 @@ const navVariants = cva(
 );
 
 const itemSizeVariants = cva(
-  "inline-flex cursor-pointer items-center justify-center rounded border border-transparent text-[#111] transition-none duration-0 hover:bg-[#f5f5f5] disabled:pointer-events-none disabled:cursor-not-allowed disabled:!border-transparent disabled:!bg-transparent disabled:opacity-40 disabled:!ring-transparent aria-[current=page]:border-[#0062df] aria-[current=page]:bg-[#0062df] aria-[current=page]:text-white aria-[current=page]:hover:bg-[#0062df] disabled:aria-[current=page]:!bg-[#0062df] disabled:aria-[current=page]:!opacity-60",
+  "inline-flex cursor-pointer items-center justify-center rounded border border-transparent text-[#111] transition-none duration-0 hover:bg-[#f5f5f5] disabled:pointer-events-none disabled:cursor-not-allowed disabled:!border-transparent disabled:!bg-transparent disabled:opacity-40 disabled:!ring-transparent",
   {
     variants: {
       size: {
@@ -74,6 +74,9 @@ const itemSizeVariants = cva(
     defaultVariants: { size: "md" },
   },
 );
+
+const activeItemClassName =
+  "border-[#0062df] bg-[#0062df] text-white hover:bg-[#0062df] disabled:!bg-[#0062df] disabled:!opacity-60";
 
 export function Pagination({
   config,
@@ -102,9 +105,9 @@ export function Pagination({
   }, []);
   const start = total ? (page - 1) * pageSize + 1 : 0;
   const end = Math.min(total, page * pageSize);
-  const sizeChanger = config.showSizeChanger ?? total > 50;
+  const sizeChanger = config.showSizeChanger ?? total >= 50;
   const pageSizeOptions = [
-    ...new Set([pageSize, ...(config.pageSizeOptions ?? [10, 20, 50, 100]).map(Number)]),
+    ...new Set([pageSize, ...(config.pageSizeOptions ?? [10, 20, 50]).map(Number)]),
   ].sort((left, right) => left - right);
   const disabled = config.disabled ?? false;
   const size = config.size ?? "md";
@@ -150,7 +153,7 @@ export function Pagination({
       iconOnly
       prefixIcon={<Icon icon="chevron-left" size={12} />}
       className={directionButtonClassName}
-      aria-label="이전 페이지"
+      data-pagination-prev
       disabled={disabled || page <= 1}
       onClick={() => jump(page - 1)}
     />
@@ -162,7 +165,7 @@ export function Pagination({
       iconOnly
       prefixIcon={<Icon icon="chevron-right" size={12} />}
       className={directionButtonClassName}
-      aria-label="다음 페이지"
+      data-pagination-next
       disabled={disabled || page >= pageCount}
       onClick={() => jump(page + 1)}
     />
@@ -171,7 +174,7 @@ export function Pagination({
   return (
     <nav
       ref={navRef}
-      className={twMerge(navVariants({ align: placementAlign }), config.className, className)}
+      className={twMerge(navVariants({ align: placementAlign }), className)}
       data-pagination-compact={compact ? "" : undefined}
     >
       {config.showTotal && (
@@ -182,7 +185,7 @@ export function Pagination({
         {simple ? (
           <span className="flex items-center gap-1">
             <Input
-              aria-label="현재 페이지"
+              data-pagination-current
               inputMode="numeric"
               disabled={disabled}
               value={simpleValue}
@@ -201,13 +204,12 @@ export function Pagination({
             if (item === "jump-prev" || item === "jump-next") {
               const delta = 5;
               const target = item === "jump-prev" ? page - delta : page + delta;
-              const label = item === "jump-prev" ? `이전 ${delta}페이지` : `다음 ${delta}페이지`;
               const element = (
                 <Button
                   variant="ghost"
                   size={buttonSize}
                   className={twMerge(itemClassName, "text-[#999] hover:text-[#111]")}
-                  aria-label={label}
+                  data-pagination-jump={item}
                   disabled={disabled}
                   onClick={() => jump(target)}
                 >
@@ -216,14 +218,12 @@ export function Pagination({
               );
               return <span key={item}>{element}</span>;
             }
-            const label = `${item} 페이지`;
             const element = (
               <Button
                 variant="ghost"
                 size={buttonSize}
-                className={itemClassName}
-                aria-label={label}
-                aria-current={item === page ? "page" : undefined}
+                className={twMerge(itemClassName, item === page && activeItemClassName)}
+                data-pagination-page={item}
                 disabled={disabled}
                 onClick={() => jump(item)}
               >
@@ -265,7 +265,7 @@ export function Pagination({
           <label className="flex items-center gap-1 text-[#999]">
             이동
             <Input
-              aria-label="이동할 페이지"
+              data-pagination-jumper
               className="w-[48px] [&_input]:text-center"
               inputMode="numeric"
               disabled={disabled}

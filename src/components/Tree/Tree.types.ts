@@ -44,9 +44,7 @@ export interface TreeProps {
   defaultSelectedKeys?: Key[];
   checkedKeys?: Key[] | { checked: Key[]; halfChecked: Key[] };
   defaultCheckedKeys?: Key[];
-  autoExpandParent?: boolean;
   height?: number;
-  virtual?: boolean;
   loadData?: (node: TreeDataNode) => Promise<void>;
   loadedKeys?: Key[];
   className?: string;

@@ -1,5 +1,4 @@
 import type {
-  CSSProperties,
   HTMLAttributes,
   InputHTMLAttributes,
   ReactNode,
@@ -10,23 +9,15 @@ import type {
 export type Key = string | number | bigint;
 export type SortOrderType = "ascend" | "descend" | null;
 export type FilterKey = Key | boolean;
-export type FilterValue = FilterKey[] | null;
+export type FilterValueType = FilterKey[] | null;
 export type BreakpointType = "xs" | "sm" | "md" | "lg" | "xl" | "xxl";
 export type DataIndex = string | number | readonly (string | number)[];
 export type TableSizeType = "lg" | "md" | "sm";
-export type TableLayoutType = "auto" | "fixed";
 export type ColumnAlignType = "left" | "center" | "right";
 export type ColumnFixedType = "left" | "right";
 export type RowSelectionType = "checkbox" | "radio";
 export type ColumnFilterModeType = "menu" | "tree";
-export type SorterTooltipTargetType = "full-header" | "sorter-icon";
-export type TableChangeActionType = "paginate" | "sort" | "filter";
 export type TableScrollAlignType = "start" | "center" | "end" | "nearest";
-
-export type SorterTooltipConfig = {
-  title?: ReactNode;
-  target?: SorterTooltipTargetType;
-};
 
 export type FilterItem = {
   text: ReactNode;
@@ -52,26 +43,22 @@ export type ColumnType<T> = {
   ellipsis?: boolean;
   responsive?: BreakpointType[];
   render?: (value: unknown, record: T, index: number) => ReactNode;
-  sorter?:
-    | boolean
-    | ((a: T, b: T, sortOrder?: SortOrderType) => number)
-    | SorterConfig<T>;
+  sorter?: boolean | ((a: T, b: T, sortOrder?: SortOrderType) => number) | SorterConfig<T>;
   sortOrder?: SortOrderType;
   defaultSortOrder?: SortOrderType;
-  sortDirections?: SortOrderType[];
-  showSorterTooltip?: boolean | SorterTooltipConfig;
+  showSorterTooltip?: boolean;
   filters?: FilterItem[];
   filterOnClose?: boolean;
   filterMultiple?: boolean;
-  filteredValue?: FilterValue;
-  defaultFilteredValue?: FilterValue;
+  filteredValue?: FilterValueType;
+  defaultFilteredValue?: FilterValueType;
   filterMode?: ColumnFilterModeType;
-  filterSearch?: boolean | ((input: string, item: FilterItem) => boolean);
-  filterResetToDefaultFilteredValue?: boolean;
+  filterSearch?: boolean;
+  filterResetToDefault?: boolean;
+  children?: ColumnsType<T>;
   onFilter?: (value: FilterKey, record: T) => boolean;
   onCell?: (record: T, rowIndex?: number) => TdHTMLAttributes<HTMLTableCellElement>;
   onHeaderCell?: (column: ColumnType<T>, index?: number) => ThHTMLAttributes<HTMLTableCellElement>;
-  children?: ColumnsType<T>;
 };
 
 export type ColumnsType<T> = readonly ColumnType<T>[];
@@ -80,9 +67,8 @@ export type PaginationPlacementType =
   "topStart" | "topCenter" | "topEnd" | "bottomStart" | "bottomCenter" | "bottomEnd" | "none";
 
 export type PaginationConfig = {
-  className?: string;
-  current?: number;
-  defaultCurrent?: number;
+  page?: number;
+  defaultPage?: number;
   pageSize?: number;
   defaultPageSize?: number;
   total?: number;
@@ -98,7 +84,12 @@ export type PaginationConfig = {
   onChange?: (page: number, pageSize: number) => void;
 };
 
-export type RowSelectMethodType = "all" | "none" | "single" | "multiple";
+export type TableChangePagination = PaginationConfig & {
+  page: number;
+  pageSize: number;
+  total: number;
+};
+
 export type TableRowCheckboxProps = Omit<
   InputHTMLAttributes<HTMLInputElement>,
   "checked" | "defaultChecked" | "type"
@@ -107,19 +98,14 @@ export type TableRowCheckboxProps = Omit<
 export type RowSelection<T> = {
   type?: RowSelectionType;
   checkStrictly?: boolean;
-  selectedRowKeys?: Key[];
-  defaultSelectedRowKeys?: Key[];
-  preserveSelectedRowKeys?: boolean;
+  selectedKeys?: Key[];
+  defaultSelectedKeys?: Key[];
+  preserveSelectedKeys?: boolean;
   columnWidth?: number;
-  fixed?: "left" | "right";
-  align?: "left" | "center" | "right";
+  fixed?: boolean;
   hideSelectAll?: boolean;
   getCheckboxProps?: (record: T) => TableRowCheckboxProps;
-  onChange?: (
-    selectedRowKeys: Key[],
-    selectedRows: T[],
-    info: { type: RowSelectMethodType },
-  ) => void;
+  onChange?: (selectedKeys: Key[], selectedRows: T[]) => void;
 };
 
 export type ExpandableConfig<T> = {
@@ -127,52 +113,35 @@ export type ExpandableConfig<T> = {
   columnTitle?: ReactNode;
   columnWidth?: number;
   defaultExpandAllRows?: boolean;
-  defaultExpandedRowKeys?: readonly Key[];
-  expandedRowKeys?: readonly Key[];
-  expandedRowRender?: (record: T, index: number, indent: number, expanded: boolean) => ReactNode;
+  defaultExpandedKeys?: readonly Key[];
+  expandedKeys?: readonly Key[];
+  expandedRowRender?: (record: T, index: number) => ReactNode;
   expandRowByClick?: boolean;
-  fixed?: "left" | "right";
-  indentSize?: number;
+  fixed?: boolean;
   rowExpandable?: (record: T) => boolean;
   showExpandColumn?: boolean;
   onExpand?: (expanded: boolean, record: T) => void;
-  onExpandedRowsChange?: (expandedKeys: readonly Key[]) => void;
+  onExpandedRowsChange?: (keys: Key[]) => void;
 };
 
 export type TableLocale = {
-  filterTitle?: string;
   filterConfirm?: ReactNode;
   filterReset?: ReactNode;
   filterEmptyText?: ReactNode;
-  filterSearchPlaceholder?: string;
-  emptyText?: ReactNode | (() => ReactNode);
-  sortTitle?: string;
-  expand?: string;
-  collapse?: string;
+  filterPlaceholder?: string;
+  emptyText?: ReactNode;
   triggerDesc?: string;
   triggerAsc?: string;
   cancelSort?: string;
 };
 
-export type TableChangeExtra<T> = {
-  currentDataSource: T[];
-  action: TableChangeActionType;
-};
-
 export type TableLoadingConfig = {
   spinning?: boolean;
-  indicator?: ReactNode;
-  tip?: ReactNode;
+  text?: ReactNode;
   delay?: number;
-  className?: string;
-  style?: CSSProperties;
 };
 
-export type TableStickyScrollBarConfig = {
-  offsetScroll?: number;
-};
-
-export type RowDragInfo = {
+export type RowDrag = {
   activeKey: Key;
   overKey: Key;
   activeIndex: number;
@@ -181,10 +150,10 @@ export type RowDragInfo = {
 
 export type RowDragConfig<T> = {
   columnWidth?: number;
-  onChange?: (dataSource: T[], info: RowDragInfo) => void;
+  onChange?: (records: T[], info: RowDrag) => void;
 };
 
-export type ColumnDragInfo = {
+export type ColumnDrag = {
   activeKey: Key;
   overKey: Key;
   activeIndex: number;
@@ -192,7 +161,7 @@ export type ColumnDragInfo = {
 };
 
 export type ColumnDragConfig<T> = {
-  onChange?: (columns: ColumnsType<T>, info: ColumnDragInfo) => void;
+  onChange?: (columns: ColumnsType<T>, info: ColumnDrag) => void;
 };
 
 export type TableProps<T extends object> = Omit<
@@ -212,21 +181,19 @@ export type TableProps<T extends object> = Omit<
   size?: TableSizeType;
   locale?: TableLocale;
   showHeader?: boolean;
-  showSorterTooltip?: boolean | SorterTooltipConfig;
-  tableLayout?: TableLayoutType;
+  showSorterTooltip?: boolean;
   rowHoverable?: boolean;
   stickyHeader?: boolean;
+  stickyHeaderOffset?: number;
   virtual?: boolean;
-  stickyScrollBar?: boolean | TableStickyScrollBarConfig;
-  scroll?: { x?: string | number | true; y?: string | number; scrollToFirstRowOnChange?: boolean };
-  sortDirections?: SortOrderType[];
+  stickyScrollBar?: boolean;
+  stickyScrollBarOffset?: number;
+  scroll?: { x?: string | number | true; y?: string | number };
   className?: string;
-  getPopupContainer?: (triggerNode: HTMLElement) => HTMLElement;
   onChange?: (
-    pagination: PaginationConfig,
-    filters: Record<string, FilterValue>,
-    sorter: SorterResult<T> | SorterResult<T>[],
-    extra: TableChangeExtra<T>,
+    pagination: TableChangePagination,
+    filters: Record<string, FilterValueType>,
+    sorter: SorterResult<T>[],
   ) => void;
   onRow?: (record: T, index: number) => HTMLAttributes<HTMLTableRowElement>;
   onHeaderRow?: (columns: ColumnsType<T>, index: number) => HTMLAttributes<HTMLTableRowElement>;
@@ -235,7 +202,7 @@ export type TableProps<T extends object> = Omit<
 
 export type SorterResult<T> = {
   column?: ColumnType<T>;
-  order?: SortOrderType;
+  order: Exclude<SortOrderType, null>;
   field?: Key | readonly Key[];
   columnKey?: Key;
 };

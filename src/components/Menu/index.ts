@@ -2,8 +2,10 @@ export { Menu } from "./Menu";
 export type {
   MenuClickInfo,
   MenuItemType,
-  MenuMode,
+  MenuItemKindType,
+  MenuModeType,
   MenuProps,
   MenuSelectInfo,
-  MenuTheme,
+  MenuThemeType,
+  MenuTriggerType,
 } from "./Menu.types";

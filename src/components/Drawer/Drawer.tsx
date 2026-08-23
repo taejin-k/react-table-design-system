@@ -7,20 +7,19 @@ import {
   useState,
   type MouseEvent,
 } from "react";
+import CSSMotion from "@rc-component/motion";
 import { createPortal } from "react-dom";
 import { twMerge } from "tailwind-merge";
+import { Button } from "../Button";
 import { Icon } from "../Icon";
-import {
-  MOTION_DURATION_SLOW,
-  MOTION_EASE_IN_OUT_CIRC,
-  MOTION_EASE_OUT_CIRC,
-} from "../_internal/motion";
+import { Skeleton } from "../Skeleton";
+import { MOTION_DURATION_SLOW } from "../_internal/motion";
 import { lockBodyScroll } from "../_internal/body-scroll-lock";
 import type {
-  DrawerPlacement,
+  DrawerPlacementType,
   DrawerProps,
   DrawerResizableConfig,
-  DrawerSize,
+  DrawerSizeType,
 } from "./Drawer.types";
 
 const DrawerPushContext = createContext<(open: boolean) => void>(() => undefined);
@@ -33,8 +32,8 @@ function resolveContainer(getContainer: DrawerProps["getContainer"]) {
 }
 
 function resolveSize(
-  size: DrawerSize,
-  placement: DrawerPlacement,
+  size: DrawerSizeType,
+  placement: DrawerPlacementType,
   width?: number | string,
   height?: number | string,
 ) {
@@ -43,14 +42,7 @@ function resolveSize(
   return height ?? (size === "large" ? 736 : size === "default" ? 378 : size);
 }
 
-function hiddenTransform(placement: DrawerPlacement) {
-  if (placement === "left") return "translateX(-100%)";
-  if (placement === "right") return "translateX(100%)";
-  if (placement === "top") return "translateY(-100%)";
-  return "translateY(100%)";
-}
-
-function pushTransform(placement: DrawerPlacement, distance: number | string) {
+function pushTransform(placement: DrawerPlacementType, distance: number | string) {
   const value = typeof distance === "number" ? `${distance}px` : distance;
   if (placement === "left") return `translateX(${value})`;
   if (placement === "right") return `translateX(calc(-1 * ${value}))`;
@@ -67,65 +59,48 @@ export function Drawer({
   width,
   height,
   closable = true,
-  closeIcon,
   extra,
   footer,
   loading = false,
   keyboard = true,
   mask = true,
-  maskClosable,
   scrollLock = true,
   forceRender = false,
   destroyOnHidden = false,
-  destroyOnClose = false,
   push = { distance: 180 },
   resizable = false,
-  maxSize,
   focusable,
   getContainer,
   zIndex = 1000,
   className,
-  rootClassName,
   style,
-  rootStyle,
   classNames,
   styles,
   drawerRender,
   afterOpenChange,
   onClose,
 }: DrawerProps) {
-  const [rendered, setRendered] = useState(open || forceRender);
-  const [closing, setClosing] = useState(false);
-  const [motionVisible, setMotionVisible] = useState(false);
-  const motionFrameRef = useRef<number | undefined>(undefined);
-  const didMountRef = useRef(false);
-  const renderedRef = useRef(open || forceRender);
-  const lifecycleRef = useRef({
-    afterOpenChange,
-    focusable,
-    forceRender,
-    shouldDestroy: destroyOnHidden || destroyOnClose,
-  });
-  lifecycleRef.current = {
-    afterOpenChange,
-    focusable,
-    forceRender,
-    shouldDestroy: destroyOnHidden || destroyOnClose,
-  };
+  const [rootVisible, setRootVisible] = useState(open);
   const [childOpen, setChildOpen] = useState(false);
   const [resized, setResized] = useState<number>();
   const triggerRef = useRef<HTMLElement | null>(null);
   const panelRef = useRef<HTMLDivElement | null>(null);
+  const lastOpenPlacementRef = useRef(placement);
   const parentPush = useContext(DrawerPushContext);
-  const resolvedCloseIcon =
-    typeof closable === "object" ? (closable.closeIcon ?? closeIcon) : closeIcon;
-  const closePlacement = typeof closable === "object" ? (closable.placement ?? "start") : "start";
+  if (open) lastOpenPlacementRef.current = placement;
+  const motionPlacement = open ? placement : lastOpenPlacementRef.current;
+  const resolvedCloseIcon = typeof closable === "object" ? closable.closeIcon : undefined;
+  const closePlacement = typeof closable === "object" ? (closable.placement ?? "end") : "end";
   const closeDisabled = typeof closable === "object" && closable.disabled;
   const maskEnabled = typeof mask === "object" ? mask.enabled !== false : mask;
-  const canCloseMask = maskClosable ?? (typeof mask === "object" ? mask.closable !== false : true);
+  const canCloseMask = typeof mask === "object" ? mask.closable !== false : true;
   const blurMask = typeof mask === "object" && mask.blur;
-  const drawerSize = resized ?? resolveSize(size, placement, width, height);
+  const drawerSize = resized ?? resolveSize(size, motionPlacement, width, height);
   const pushDistance = typeof push === "object" ? (push.distance ?? 180) : 180;
+
+  useEffect(() => {
+    if (open) setRootVisible(true);
+  }, [open]);
 
   useEffect(() => {
     parentPush(open);
@@ -133,45 +108,7 @@ export function Drawer({
   }, [open, parentPush]);
 
   useEffect(() => {
-    if (!didMountRef.current) {
-      didMountRef.current = true;
-      if (!open) return;
-    }
-    if (open) {
-      triggerRef.current = document.activeElement as HTMLElement;
-      renderedRef.current = true;
-      setRendered(true);
-      setClosing(false);
-      window.cancelAnimationFrame(motionFrameRef.current ?? 0);
-      motionFrameRef.current = window.requestAnimationFrame(() => {
-        motionFrameRef.current = window.requestAnimationFrame(() => setMotionVisible(true));
-      });
-      const timer = window.setTimeout(
-        () => lifecycleRef.current.afterOpenChange?.(true),
-        MOTION_DURATION_SLOW,
-      );
-      return () => {
-        window.cancelAnimationFrame(motionFrameRef.current ?? 0);
-        window.clearTimeout(timer);
-      };
-    }
-    if (!renderedRef.current) return;
-    setClosing(true);
-    setMotionVisible(false);
-    const timer = window.setTimeout(() => {
-      setClosing(false);
-      if (lifecycleRef.current.shouldDestroy && !lifecycleRef.current.forceRender) {
-        renderedRef.current = false;
-        setRendered(false);
-      }
-      lifecycleRef.current.afterOpenChange?.(false);
-      if (lifecycleRef.current.focusable?.focusTriggerAfterClose !== false)
-        triggerRef.current?.focus();
-    }, MOTION_DURATION_SLOW);
-    return () => {
-      window.cancelAnimationFrame(motionFrameRef.current ?? 0);
-      window.clearTimeout(timer);
-    };
+    if (open) triggerRef.current = document.activeElement as HTMLElement;
   }, [open]);
 
   useEffect(() => {
@@ -209,57 +146,62 @@ export function Drawer({
   }, [open, scrollLock]);
 
   const panelStyle = useMemo(() => {
-    const horizontal = placement === "left" || placement === "right";
+    const horizontal = motionPlacement === "left" || motionPlacement === "right";
     const base: React.CSSProperties = horizontal
       ? { width: drawerSize, height: "100%" }
       : { height: drawerSize, width: "100%" };
     return {
       ...base,
-      transform: motionVisible
-        ? childOpen && push !== false
-          ? pushTransform(placement, pushDistance)
-          : "translate(0)"
-        : hiddenTransform(placement),
-      ...style,
+      transform:
+        childOpen && push !== false ? pushTransform(motionPlacement, pushDistance) : "translate(0)",
+      ...styles?.panel,
     };
-  }, [childOpen, drawerSize, motionVisible, placement, push, pushDistance, style]);
+  }, [childOpen, drawerSize, motionPlacement, push, pushDistance, styles?.panel]);
+  const motionWrapperStyle = useMemo<React.CSSProperties>(
+    () =>
+      motionPlacement === "left" || motionPlacement === "right"
+        ? { width: drawerSize, height: "100%" }
+        : { width: "100%", height: drawerSize },
+    [drawerSize, motionPlacement],
+  );
 
-  if (!rendered && !open) return null;
   const close = (event: MouseEvent<HTMLButtonElement | HTMLDivElement>) => onClose?.(event);
   const closeButton =
     closable === false ? null : (
-      <button
-        type="button"
+      <Button
+        variant="ghost"
+        size="md"
+        iconOnly
+        prefixIcon={
+          <span className="inline-flex">
+            {resolvedCloseIcon ?? <Icon icon="close" size={16} />}
+          </span>
+        }
         disabled={closeDisabled}
-        className="inline-flex size-7 cursor-pointer items-center justify-center rounded text-[#666] hover:bg-[#f5f5f5] disabled:cursor-not-allowed disabled:opacity-40"
+        className="size-7 text-[#666]"
         onClick={close}
-      >
-        {resolvedCloseIcon ?? <Icon icon="close" />}
-      </button>
+      />
     );
   const panel = (
     <div
       ref={panelRef}
       data-drawer-panel
       className={twMerge(
-        "absolute flex flex-col bg-white font-pretendard text-sm text-[#111] shadow-[-8px_0_24px_rgba(0,0,0,0.12)] transition-transform duration-300 motion-reduce:transition-none",
-        placement === "left" && "inset-y-0 left-0",
-        placement === "right" && "inset-y-0 right-0",
-        placement === "top" && "inset-x-0 top-0",
-        placement === "bottom" && "inset-x-0 bottom-0",
-        className,
+        "wizard-drawer-panel absolute flex flex-col bg-white font-pretendard text-sm text-[#111] shadow-[-8px_0_24px_rgba(0,0,0,0.12)]",
+        "pointer-events-auto",
+        motionPlacement === "left" && "inset-y-0 left-0",
+        motionPlacement === "right" && "inset-y-0 right-0",
+        motionPlacement === "top" && "inset-x-0 top-0",
+        motionPlacement === "bottom" && "inset-x-0 bottom-0",
+        classNames?.panel,
       )}
-      style={{
-        ...panelStyle,
-        transitionTimingFunction: motionVisible ? MOTION_EASE_OUT_CIRC : MOTION_EASE_IN_OUT_CIRC,
-      }}
+      style={panelStyle}
     >
       {resizable ? (
         <ResizeHandle
-          placement={placement}
+          placement={motionPlacement}
           value={typeof drawerSize === "number" ? drawerSize : 378}
           config={resizable}
-          maxSize={maxSize}
           onResize={setResized}
         />
       ) : null}
@@ -281,15 +223,7 @@ export function Drawer({
         className={twMerge("min-h-0 flex-1 overflow-auto p-5", classNames?.body)}
         style={styles?.body}
       >
-        {loading ? (
-          <div className="grid gap-3">
-            <div className="h-4 w-2/3 animate-pulse rounded bg-[#eee]" />
-            <div className="h-4 animate-pulse rounded bg-[#eee]" />
-            <div className="h-4 w-5/6 animate-pulse rounded bg-[#eee]" />
-          </div>
-        ) : (
-          children
-        )}
+        {loading ? <Skeleton active /> : children}
       </div>
       {footer !== undefined ? (
         <div
@@ -304,31 +238,71 @@ export function Drawer({
   const content = (
     <div
       data-drawer-root
-      className={twMerge(
-        "fixed inset-0",
-        open || closing ? "pointer-events-auto visible" : "pointer-events-none invisible",
-        rootClassName,
-        classNames?.root,
-      )}
-      style={{ zIndex, ...rootStyle, ...styles?.root }}
+      className={twMerge("pointer-events-none fixed inset-0", className, classNames?.root)}
+      style={{
+        zIndex,
+        ...style,
+        ...styles?.root,
+        display: open || rootVisible ? undefined : "none",
+      }}
     >
       {maskEnabled ? (
-        <div
-          className={twMerge(
-            "absolute inset-0 bg-black/45 transition-opacity duration-300 motion-reduce:transition-none",
-            blurMask && "backdrop-blur-sm",
-            motionVisible ? "opacity-100" : "opacity-0",
-            classNames?.mask,
+        <CSSMotion
+          visible={open}
+          motionName="wizard-drawer-mask-motion"
+          motionDeadline={MOTION_DURATION_SLOW + 50}
+          removeOnLeave
+        >
+          {({ className: maskMotionClassName, style: maskMotionStyle }, maskRef) => (
+            <div
+              ref={maskRef}
+              data-drawer-mask
+              className={twMerge(
+                "pointer-events-auto absolute inset-0 bg-black/45",
+                blurMask && "backdrop-blur-sm",
+                maskMotionClassName,
+                classNames?.mask,
+              )}
+              style={{ ...styles?.mask, ...maskMotionStyle }}
+              onClick={canCloseMask ? close : undefined}
+            />
           )}
-          style={styles?.mask}
-          onClick={canCloseMask ? close : undefined}
-        />
+        </CSSMotion>
       ) : null}
-      <div className={twMerge("absolute inset-0", classNames?.wrapper)} style={styles?.wrapper}>
-        <DrawerPushContext.Provider value={setChildOpen}>
-          {drawerRender ? drawerRender(panel) : panel}
-        </DrawerPushContext.Provider>
-      </div>
+      <CSSMotion
+        visible={open}
+        motionName="wizard-drawer-motion"
+        motionDeadline={MOTION_DURATION_SLOW + 50}
+        forceRender={forceRender || !destroyOnHidden}
+        removeOnLeave={destroyOnHidden}
+        onVisibleChanged={(visible) => {
+          setRootVisible(visible);
+          afterOpenChange?.(visible);
+          if (!visible && focusable?.focusTriggerAfterClose !== false) triggerRef.current?.focus();
+        }}
+      >
+        {({ className: motionClassName, style: motionStyle }, motionRef) => (
+          <div
+            ref={motionRef}
+            data-drawer-motion
+            data-placement={motionPlacement}
+            className={twMerge(
+              "pointer-events-none absolute",
+              motionPlacement === "left" && "inset-y-0 left-0",
+              motionPlacement === "right" && "inset-y-0 right-0",
+              motionPlacement === "top" && "inset-x-0 top-0",
+              motionPlacement === "bottom" && "inset-x-0 bottom-0",
+              motionClassName,
+              classNames?.wrapper,
+            )}
+            style={{ ...motionWrapperStyle, ...styles?.wrapper, ...motionStyle }}
+          >
+            <DrawerPushContext.Provider value={setChildOpen}>
+              {drawerRender ? drawerRender(panel) : panel}
+            </DrawerPushContext.Provider>
+          </div>
+        )}
+      </CSSMotion>
     </div>
   );
   const container = resolveContainer(getContainer);
@@ -339,13 +313,11 @@ function ResizeHandle({
   placement,
   value,
   config,
-  maxSize,
   onResize,
 }: {
-  placement: DrawerPlacement;
+  placement: DrawerPlacementType;
   value: number;
   config: boolean | DrawerResizableConfig;
-  maxSize?: number;
   onResize: (value: number) => void;
 }) {
   const settings = typeof config === "object" ? config : {};
@@ -360,7 +332,7 @@ function ResizeHandle({
       const point =
         placement === "left" || placement === "right" ? moveEvent.clientX : moveEvent.clientY;
       const next = Math.min(
-        maxSize ?? settings.max ?? Number.POSITIVE_INFINITY,
+        settings.max ?? Number.POSITIVE_INFINITY,
         Math.max(settings.min ?? 180, value + (point - startPoint) * sign),
       );
       lastValue = next;

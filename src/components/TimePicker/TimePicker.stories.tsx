@@ -3,8 +3,23 @@ import { Description, Markdown, Stories, Title } from "@storybook/addon-docs/blo
 import type { Meta, StoryObj } from "@storybook/react";
 import { storyDescriptions } from "../../storybook/story-descriptions";
 import { withStoryImports } from "../../storybook/story-source";
+import { TypeTokens } from "../../storybook/type-tokens";
 import { Icon } from "../Icon";
 import { TimePicker } from "./TimePicker";
+import type {
+  TimePickerPlacementType,
+  TimePickerSizeType,
+  TimePickerVariantType,
+} from "./TimePicker.types";
+
+const timePickerSizes: TimePickerSizeType[] = ["lg", "md", "sm"];
+const timePickerVariants: TimePickerVariantType[] = ["default", "outlined", "filled"];
+const timePickerPlacements: TimePickerPlacementType[] = [
+  "topLeft",
+  "topRight",
+  "bottomLeft",
+  "bottomRight",
+];
 
 const storyDescription = (id: string) => ({
   docs: { description: { story: storyDescriptions[id] } },
@@ -21,7 +36,6 @@ const meta = {
   title: "Components/TimePicker",
   component: TimePicker,
   tags: ["autodocs"],
-  args: { placeholder: "시간을 선택하세요" },
   argTypes: {
     value: { control: false },
     defaultValue: { control: false },
@@ -29,7 +43,7 @@ const meta = {
     variant: {
       name: "표현 방식",
       control: "select",
-      options: ["default", "outlined", "filled", "borderless", "underlined"],
+      options: ["default", "outlined", "filled"],
     },
     placeholder: { name: "안내 문구", control: "text" },
     label: { name: "레이블", control: "text" },
@@ -68,8 +82,8 @@ const meta = {
 | \`defaultValue\` | 처음 선택할 시간을 설정해요. | \`string\` | - |
 | \`placeholder\` | 선택 전 안내 문구를 설정해요. | \`string\` | \`시간을 선택하세요\` |
 | \`format\` | 표시할 시간 형식을 설정해요. | \`string\` | \`HH:mm:ss\` |
-| \`size\` | TimePicker의 크기를 설정해요. | \`lg \\| md \\| sm\` | \`md\` |
-| \`variant\` | 배경과 테두리 표현 방식을 설정해요. | \`default \\| outlined \\| filled \\| borderless \\| underlined\` | \`default\` |
+| \`size\` | TimePicker의 크기를 설정해요. | [\`TimePickerSizeType\`](#time-picker-size-type) | \`md\` |
+| \`variant\` | 배경과 테두리 표현 방식을 설정해요. | [\`TimePickerVariantType\`](#time-picker-variant-type) | \`default\` |
 | \`use12Hours\` | AM과 PM을 사용하는 12시간제로 표시해요. | \`boolean\` | \`false\` |
 | \`showSecond\` | 초 선택 열을 표시해요. | \`boolean\` | \`true\` |
 | \`hourStep\` | 시 선택 간격을 설정해요. | \`number\` | \`1\` |
@@ -91,7 +105,7 @@ const meta = {
 | \`cellRender\` | 시간 항목의 내용을 직접 구성해요. | \`(current, info) => ReactNode\` | - |
 | \`open\` | 목록 표시 상태를 외부에서 관리해요. | \`boolean\` | - |
 | \`defaultOpen\` | 처음 시간 목록을 표시할지 설정해요. | \`boolean\` | \`false\` |
-| \`placement\` | 목록이 표시될 위치를 설정해요. | \`topLeft \\| topRight \\| bottomLeft \\| bottomRight\` | \`bottomLeft\` |
+| \`placement\` | 목록이 표시될 위치를 설정해요. | [\`TimePickerPlacementType\`](#time-picker-placement-type) | \`bottomLeft\` |
 | \`label\` | TimePicker 위에 레이블을 표시해요. | \`ReactNode\` | - |
 | \`errorMessage\` | TimePicker 아래에 오류 문구를 표시해요. | \`ReactNode\` | - |
 | \`required\` | 레이블에 필수 표시를 추가해요. | \`boolean\` | \`false\` |
@@ -118,6 +132,16 @@ const meta = {
 | \`onChange\` | 시간 범위가 바뀔 때 실행할 함수예요. | \`(value, timeStrings) => void\` | - |
 | \`onCalendarChange\` | 시작 시간이나 종료 시간을 선택할 때 실행해요. | \`(value, timeStrings, info) => void\` | - |
           `}</Markdown>
+          <h2 className="component-docs-types-heading">Types</h2>
+          <h3 id="time-picker-size-type">TimePickerSizeType</h3>
+          <p>TimePicker 크기를 선택해요.</p>
+          <TypeTokens values={timePickerSizes} />
+          <h3 id="time-picker-variant-type">TimePickerVariantType</h3>
+          <p>배경과 테두리 표현을 선택해요.</p>
+          <TypeTokens values={timePickerVariants} />
+          <h3 id="time-picker-placement-type">TimePickerPlacementType</h3>
+          <p>시간 패널 위치를 선택해요.</p>
+          <TypeTokens values={timePickerPlacements} />
         </div>
       ),
     },
@@ -213,8 +237,6 @@ export const Variants: Story = {
         code: withStoryImports(`<div className="grid max-w-xs gap-3">
   <TimePicker placeholder="기본" />
   <TimePicker variant="filled" placeholder="채움" />
-  <TimePicker variant="borderless" placeholder="테두리 없음" />
-  <TimePicker variant="underlined" placeholder="밑줄" />
 </div>`),
       },
     },
@@ -223,8 +245,6 @@ export const Variants: Story = {
     <div className="grid max-w-xs gap-3">
       <TimePicker placeholder="기본" />
       <TimePicker variant="filled" placeholder="채움" />
-      <TimePicker variant="borderless" placeholder="테두리 없음" />
-      <TimePicker variant="underlined" placeholder="밑줄" />
     </div>
   ),
 };
@@ -250,6 +270,7 @@ export const StaticError: Story = {
 };
 
 export const Basic: Story = {
+  args: { placeholder: "시간을 선택하세요" },
   parameters: {
     ...storySource("components-timepicker--basic", "<TimePicker width={320} />"),
     controls: { disable: false },
@@ -421,7 +442,11 @@ export const PrefixAndSuffix: Story = {
 />`,
   ),
   render: () => (
-    <TimePicker width={320} prefix={<span>시작</span>} suffixIcon={<Icon icon="clock-outlined" />} />
+    <TimePicker
+      width={320}
+      prefix={<span>시작</span>}
+      suffixIcon={<Icon icon="clock-outlined" />}
+    />
   ),
 };
 
@@ -443,7 +468,7 @@ export const Controlled: Story = {
 export const Placements: Story = {
   parameters: storySource(
     "components-timepicker--placements",
-    `<div className="grid max-w-xs gap-3 pt-60">
+    `<div className="grid max-w-2xl grid-cols-2 gap-3">
   <TimePicker placement="topLeft" />
   <TimePicker placement="topRight" />
   <TimePicker />
@@ -451,7 +476,7 @@ export const Placements: Story = {
 </div>`,
   ),
   render: () => (
-    <div className="grid max-w-xs gap-3 pt-60">
+    <div className="grid max-w-2xl grid-cols-2 gap-3">
       <TimePicker placement="topLeft" />
       <TimePicker placement="topRight" />
       <TimePicker placement="bottomLeft" />

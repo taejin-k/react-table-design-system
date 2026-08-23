@@ -1,8 +1,9 @@
 export { Collapse } from "./Collapse";
 export type {
-  CollapseCollapsible,
+  CollapseCollapsibleType,
+  CollapseExpandIconPlacementType,
   CollapseItem,
-  CollapseKey,
+  CollapseKeyType,
   CollapseProps,
-  CollapseSize,
+  CollapseSizeType,
 } from "./Collapse.types";

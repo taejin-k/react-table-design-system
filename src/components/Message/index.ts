@@ -4,8 +4,8 @@ export type {
   MessageArgsProps,
   MessageGlobalConfig,
   MessageInstance,
-  MessageKey,
-  MessageSemanticName,
+  MessageKeyType,
+  MessageSemanticNameType,
   MessageType,
-  MessageTypeName,
+  MessageStatusType,
 } from "./Message.types";

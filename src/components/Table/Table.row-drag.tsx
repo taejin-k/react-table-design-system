@@ -55,7 +55,7 @@ type SortableTableHeaderCellProps = HTMLAttributes<HTMLTableCellElement> & {
 
 type RowDragContextValue = Pick<
   ReturnType<typeof useSortable>,
-  "attributes" | "listeners" | "setActivatorNodeRef"
+  "listeners" | "setActivatorNodeRef"
 >;
 
 const RowDragContext = createContext<RowDragContextValue | null>(null);
@@ -101,6 +101,9 @@ function EnabledTableDragProvider({
   onDragEnd,
 }: Omit<TableDragProviderProps, "enabled">) {
   const [activeType, setActiveType] = useState<string | null>(null);
+  const [detachedAccessibilityContainer] = useState<Element | undefined>(() =>
+    typeof document === "undefined" ? undefined : document.createElement("div"),
+  );
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
@@ -111,6 +114,7 @@ function EnabledTableDragProvider({
       sensors={sensors}
       collisionDetection={tableCollisionDetection}
       modifiers={[restrictRowToTableBody]}
+      accessibility={{ container: detachedAccessibilityContainer, restoreFocus: false }}
       autoScroll={activeType === "row" ? { canScroll: canTableAutoScroll } : false}
       onDragStart={({ active }) => setActiveType(String(active.data.current?.dragType ?? ""))}
       onDragCancel={() => setActiveType(null)}
@@ -155,15 +159,8 @@ export function SortableTableRow({
   style,
   ...props
 }: SortableTableRowProps) {
-  const {
-    attributes,
-    listeners,
-    setActivatorNodeRef,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: dragId, data: { dragType: "row" } });
+  const { listeners, setActivatorNodeRef, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id: dragId, data: { dragType: "row" } });
   const dragStyle: CSSProperties = {
     ...style,
     transform: CSS.Translate.toString(transform),
@@ -171,7 +168,7 @@ export function SortableTableRow({
   };
 
   return (
-    <RowDragContext.Provider value={{ attributes, listeners, setActivatorNodeRef }}>
+    <RowDragContext.Provider value={{ listeners, setActivatorNodeRef }}>
       <Component
         ref={setNodeRef}
         {...props}
@@ -189,7 +186,7 @@ export function SortableTableHeaderCell({
   style,
   ...props
 }: SortableTableHeaderCellProps) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+  const { listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: dragId,
     data: { dragType: "column" },
   });
@@ -199,9 +196,7 @@ export function SortableTableHeaderCell({
     <Component
       ref={setNodeRef}
       {...props}
-      {...attributes}
       {...listeners}
-      role="columnheader"
       className={twMerge(
         className,
         "cursor-grab active:cursor-grabbing",
@@ -227,7 +222,6 @@ export function RowDragHandle() {
       size="sm"
       iconOnly
       prefixIcon={<Icon icon="drag-handle" color="#999" className="select-none" />}
-      {...context.attributes}
       {...context.listeners}
       className="inline-grid size-7 cursor-grab place-items-center rounded border-0 bg-transparent p-0 active:cursor-grabbing"
       onClick={(event) => event.stopPropagation()}

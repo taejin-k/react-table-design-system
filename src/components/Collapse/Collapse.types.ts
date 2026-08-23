@@ -1,15 +1,16 @@
 import type { CSSProperties, ReactNode } from "react";
 
-export type CollapseKey = string | number;
-export type CollapseSize = "large" | "medium" | "small";
-export type CollapseCollapsible = "header" | "icon" | "disabled";
+export type CollapseKeyType = string | number;
+export type CollapseSizeType = "large" | "medium" | "small";
+export type CollapseCollapsibleType = "header" | "icon" | "disabled";
+export type CollapseExpandIconPlacementType = "start" | "end";
 
 export interface CollapseItem {
-  key: CollapseKey;
+  key: CollapseKeyType;
   label?: ReactNode;
   children?: ReactNode;
   extra?: ReactNode;
-  collapsible?: CollapseCollapsible;
+  collapsible?: CollapseCollapsibleType;
   forceRender?: boolean;
   showArrow?: boolean;
   className?: string;
@@ -21,16 +22,16 @@ export interface CollapseItem {
 export interface CollapseProps {
   items?: CollapseItem[];
   accordion?: boolean;
-  activeKey?: CollapseKey | CollapseKey[];
-  defaultActiveKey?: CollapseKey | CollapseKey[];
+  activeKey?: CollapseKeyType | CollapseKeyType[];
+  defaultActiveKey?: CollapseKeyType | CollapseKeyType[];
   bordered?: boolean;
-  collapsible?: CollapseCollapsible;
+  collapsible?: CollapseCollapsibleType;
   destroyOnHidden?: boolean;
   expandIcon?: (props: { isActive: boolean; item: CollapseItem }) => ReactNode;
-  expandIconPlacement?: "start" | "end";
+  expandIconPlacement?: CollapseExpandIconPlacementType;
   ghost?: boolean;
-  size?: CollapseSize;
+  size?: CollapseSizeType;
   className?: string;
   style?: CSSProperties;
-  onChange?: (key: CollapseKey | CollapseKey[]) => void;
+  onChange?: (key: CollapseKeyType | CollapseKeyType[]) => void;
 }

@@ -81,6 +81,18 @@ describe("Icon", () => {
     );
   });
 
+  it.each(["folder-outlined", "folder-filled"] as const)(
+    "compresses the %s glyph vertically without changing its width",
+    (icon) => {
+      const { container } = render(<Icon icon={icon} />);
+
+      expect(container.querySelector("g")).toHaveAttribute(
+        "transform",
+        "translate(8 8) scale(1 0.88) translate(-8 -8)",
+      );
+    },
+  );
+
   it.each(["chevron-left", "chevron-right"] as const)("renders the %s icon", (icon) => {
     const { container } = render(<Icon icon={icon} />);
 

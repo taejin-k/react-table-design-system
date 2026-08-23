@@ -1,7 +1,18 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import CSSMotion from "@rc-component/motion";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { createPortal } from "react-dom";
 import { twMerge } from "tailwind-merge";
 import { Icon } from "../Icon";
+import { lockBodyScroll } from "../_internal/body-scroll-lock";
+import { MOTION_DURATION_MID } from "../_internal/motion";
 import type {
   ImageActions,
   ImageComponent,
@@ -41,14 +52,20 @@ function Preview({
 }) {
   const [active, setActive] = useState(Math.max(0, sources.indexOf(src)));
   const [transform, setTransform] = useState(initialTransform);
+  const unlockScrollRef = useRef<(() => void) | null>(null);
+  const dragRef = useRef<{ clientX: number; clientY: number; x: number; y: number } | undefined>(
+    undefined,
+  );
   const current = sources[active] ?? src;
-  const minScale = config.minScale ?? 0.5,
-    maxScale = config.maxScale ?? 8,
+  const minScale = config.minScale ?? 1,
+    maxScale = config.maxScale ?? 50,
     step = config.scaleStep ?? 0.5;
   const apply = (patch: Partial<ImageTransform>, action: string) => {
-    const next = { ...transform, ...patch };
-    setTransform(next);
-    config.onTransform?.({ transform: next, action });
+    setTransform((currentTransform) => {
+      const next = { ...currentTransform, ...patch };
+      config.onTransform?.({ transform: next, action });
+      return next;
+    });
   };
   const actions: ImageActions = {
     onActive: (index) => {
@@ -59,8 +76,8 @@ function Preview({
     onFlipY: () => apply({ flipY: !transform.flipY }, "flipY"),
     onRotateLeft: () => apply({ rotate: transform.rotate - 90 }, "rotateLeft"),
     onRotateRight: () => apply({ rotate: transform.rotate + 90 }, "rotateRight"),
-    onZoomIn: () => apply({ scale: Math.min(maxScale, transform.scale + step) }, "zoomIn"),
-    onZoomOut: () => apply({ scale: Math.max(minScale, transform.scale - step) }, "zoomOut"),
+    onZoomIn: () => apply({ scale: Math.min(maxScale, transform.scale * (1 + step)) }, "zoomIn"),
+    onZoomOut: () => apply({ scale: Math.max(minScale, transform.scale / (1 + step)) }, "zoomOut"),
     onReset: () => {
       setTransform(initialTransform);
       config.onTransform?.({ transform: initialTransform, action: "reset" });
@@ -69,6 +86,17 @@ function Preview({
   useEffect(() => {
     if (open) setTransform(initialTransform);
   }, [open, current]);
+  useEffect(() => {
+    setActive(Math.max(0, sources.indexOf(src)));
+  }, [sources, src]);
+  const releaseBodyScroll = useCallback(() => {
+    unlockScrollRef.current?.();
+    unlockScrollRef.current = null;
+  }, []);
+  useEffect(() => {
+    if (open && !unlockScrollRef.current) unlockScrollRef.current = lockBodyScroll();
+  }, [open]);
+  useEffect(() => releaseBodyScroll, [releaseBodyScroll]);
   useEffect(() => {
     if (!open) return;
     const key = (event: KeyboardEvent) => {
@@ -79,24 +107,58 @@ function Preview({
     document.addEventListener("keydown", key);
     return () => document.removeEventListener("keydown", key);
   });
-  if (!open || typeof document === "undefined") return null;
+  if (typeof document === "undefined") return null;
   const toolbar = (
-    <div className="flex items-center gap-1 rounded-full bg-black/65 p-1 text-white">
-      <button aria-label="축소" onClick={actions.onZoomOut}>
-        <Icon icon="remove" />
+    <div className="flex h-11 items-center rounded-full bg-black/65 px-2 text-white">
+      <button
+        type="button"
+        className="inline-flex size-9 items-center justify-center rounded-full hover:bg-white/10"
+        onClick={actions.onZoomOut}
+      >
+        <Icon icon="remove" size={20} />
       </button>
-      <span className="min-w-12 text-center text-xs">{Math.round(transform.scale * 100)}%</span>
-      <button aria-label="확대" onClick={actions.onZoomIn}>
-        <Icon icon="add" />
+      <span className="min-w-14 text-center text-sm">{Math.round(transform.scale * 100)}%</span>
+      <button
+        type="button"
+        className="inline-flex size-9 items-center justify-center rounded-full hover:bg-white/10"
+        onClick={actions.onZoomIn}
+      >
+        <Icon icon="add" size={20} />
       </button>
-      <button aria-label="왼쪽 회전" onClick={actions.onRotateLeft}>
-        <Icon icon="refresh" />
+      <button
+        type="button"
+        className="inline-flex size-9 items-center justify-center rounded-full hover:bg-white/10"
+        onClick={actions.onRotateLeft}
+      >
+        <Icon icon="refresh" size={20} />
       </button>
-      <button aria-label="좌우 반전" onClick={actions.onFlipX}>
-        <span className="text-xs">↔</span>
+      <button
+        type="button"
+        className="inline-flex size-9 items-center justify-center rounded-full hover:bg-white/10"
+        onClick={actions.onRotateRight}
+      >
+        <Icon icon="refresh" size={20} className="-scale-x-100" />
       </button>
-      <button aria-label="초기화" onClick={actions.onReset}>
-        <span className="text-xs">1:1</span>
+      <button
+        type="button"
+        className="inline-flex size-9 items-center justify-center rounded-full text-xl hover:bg-white/10"
+        onClick={actions.onFlipX}
+      >
+        ↔
+      </button>
+      <button
+        type="button"
+        className="inline-flex size-9 items-center justify-center rounded-full text-xl hover:bg-white/10"
+        onClick={actions.onFlipY}
+      >
+        ↕
+      </button>
+      <button
+        type="button"
+        className="inline-flex h-9 min-w-9 items-center justify-center rounded-full px-1 text-xs hover:bg-white/10"
+        onClick={actions.onReset}
+      >
+        1:1
       </button>
     </div>
   );
@@ -113,67 +175,111 @@ function Preview({
           ? document.querySelector<HTMLElement>(config.getContainer)
           : (config.getContainer ?? document.body);
   const content = (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-label="이미지 미리보기"
-      className="fixed inset-0 flex items-center justify-center font-pretendard"
-      style={{ zIndex: config.zIndex ?? 1080 }}
+    <CSSMotion
+      visible={open}
+      motionName="wizard-image-preview-motion"
+      motionDeadline={MOTION_DURATION_MID + 50}
+      removeOnLeave
+      onVisibleChanged={(visible) => {
+        if (!visible) releaseBodyScroll();
+      }}
     >
-      {maskConfig.enabled !== false ? (
+      {({ className, style }, motionRef) => (
         <div
-          className="wizard-fade-enter absolute inset-0 bg-black/45"
-          onClick={() => maskConfig.closable !== false && onClose()}
-        />
-      ) : null}
-      <button
-        type="button"
-        aria-label="미리보기 닫기"
-        className="absolute top-5 right-5 z-[2] inline-flex size-10 items-center justify-center rounded-full bg-black/45 text-white hover:bg-black/65"
-        onClick={onClose}
-      >
-        {config.closeIcon ?? <Icon icon="close" size={20} />}
-      </button>
-      {sources.length > 1 ? (
-        <>
+          ref={motionRef}
+          data-image-preview-root
+          className={twMerge(
+            "fixed inset-0 flex items-center justify-center font-pretendard",
+            className,
+          )}
+          style={{ zIndex: config.zIndex ?? 1080, ...style }}
+        >
+          {maskConfig.enabled !== false ? (
+            <div
+              className="wizard-image-preview-mask absolute inset-0 bg-black/45"
+              onClick={() => maskConfig.closable !== false && onClose()}
+            />
+          ) : null}
           <button
             type="button"
-            aria-label="이전 이미지"
-            disabled={active === 0}
-            className="absolute left-5 z-[2] inline-flex size-12 items-center justify-center rounded-full bg-black/45 text-white disabled:opacity-30"
-            onClick={() => actions.onActive(active - 1)}
+            data-image-preview-close
+            className="absolute top-5 right-5 z-[2] inline-flex size-10 items-center justify-center rounded-full bg-black/45 text-white hover:bg-black/65"
+            onClick={onClose}
           >
-            <Icon icon="chevron-left" size={24} />
+            {config.closeIcon ?? <Icon icon="close" size={20} />}
           </button>
-          <button
-            type="button"
-            aria-label="다음 이미지"
-            disabled={active === sources.length - 1}
-            className="absolute right-5 z-[2] inline-flex size-12 items-center justify-center rounded-full bg-black/45 text-white disabled:opacity-30"
-            onClick={() => actions.onActive(active + 1)}
-          >
-            <Icon icon="chevron-right" size={24} />
-          </button>
-        </>
-      ) : null}
-      <img
-        src={current}
-        alt=""
-        draggable={false}
-        className="relative z-[1] max-h-[calc(100vh-140px)] max-w-[calc(100vw-120px)] object-contain transition-transform duration-300 ease-[cubic-bezier(0.645,0.045,0.355,1)] select-none motion-reduce:transition-none"
-        style={{
-          transform: `translate3d(${transform.x}px,${transform.y}px,0) rotate(${transform.rotate}deg) scale(${transform.scale * (transform.flipX ? -1 : 1)}, ${transform.scale * (transform.flipY ? -1 : 1)})`,
-        }}
-        onWheel={(event) => {
-          event.preventDefault();
-          if (event.deltaY < 0) actions.onZoomIn();
-          else actions.onZoomOut();
-        }}
-      />
-      <div className="absolute bottom-6 z-[2]">
-        {config.toolbarRender?.(toolbar, { transform, actions }) ?? toolbar}
-      </div>
-    </div>
+          {sources.length > 1 ? (
+            <>
+              <button
+                type="button"
+                data-image-preview-previous
+                disabled={active === 0}
+                className="absolute left-5 z-[2] inline-flex size-12 items-center justify-center rounded-full bg-black/45 text-white disabled:opacity-30"
+                onClick={() => actions.onActive(active - 1)}
+              >
+                <Icon icon="chevron-left" size={24} />
+              </button>
+              <button
+                type="button"
+                data-image-preview-next
+                disabled={active === sources.length - 1}
+                className="absolute right-5 z-[2] inline-flex size-12 items-center justify-center rounded-full bg-black/45 text-white disabled:opacity-30"
+                onClick={() => actions.onActive(active + 1)}
+              >
+                <Icon icon="chevron-right" size={24} />
+              </button>
+            </>
+          ) : null}
+          <img
+            src={current}
+            alt=""
+            draggable={false}
+            className={twMerge(
+              "wizard-image-preview-image relative z-[1] max-h-[calc(100vh-140px)] max-w-[calc(100vw-120px)] object-contain transition-transform duration-300 ease-[cubic-bezier(0.645,0.045,0.355,1)] select-none motion-reduce:transition-none",
+              config.movable !== false && "cursor-grab active:cursor-grabbing",
+            )}
+            style={{
+              transform: `translate3d(${transform.x}px,${transform.y}px,0) rotate(${transform.rotate}deg) scale(${transform.scale * (transform.flipX ? -1 : 1)}, ${transform.scale * (transform.flipY ? -1 : 1)})`,
+            }}
+            onPointerDown={(event) => {
+              if (config.movable === false) return;
+              event.currentTarget.setPointerCapture(event.pointerId);
+              dragRef.current = {
+                clientX: event.clientX,
+                clientY: event.clientY,
+                x: transform.x,
+                y: transform.y,
+              };
+            }}
+            onPointerMove={(event) => {
+              const drag = dragRef.current;
+              if (!drag) return;
+              apply(
+                {
+                  x: drag.x + event.clientX - drag.clientX,
+                  y: drag.y + event.clientY - drag.clientY,
+                },
+                "move",
+              );
+            }}
+            onPointerUp={() => {
+              dragRef.current = undefined;
+            }}
+            onPointerCancel={() => {
+              dragRef.current = undefined;
+            }}
+            onWheel={(event) => {
+              event.preventDefault();
+              if (event.deltaY < 0) actions.onZoomIn();
+              else actions.onZoomOut();
+            }}
+          />
+          <div className="absolute bottom-6 z-[2]">
+            {config.toolbarRender?.(toolbar, { transform, actions }) ?? toolbar}
+          </div>
+        </div>
+      )}
+    </CSSMotion>
   );
   return container ? createPortal(content, container) : content;
 }
@@ -185,7 +291,6 @@ function ImageBase({
   height,
   placeholder,
   preview = true,
-  rootClassName,
   rootStyle,
   className,
   style,
@@ -206,6 +311,10 @@ function ImageBase({
     if (!actualSrc || !registerInGroup) return;
     return registerInGroup(actualSrc);
   }, [actualSrc, registerInGroup]);
+  useEffect(() => {
+    setLoading(Boolean(src));
+    setFailed(false);
+  }, [src]);
   const changeOpen = (next: boolean) => {
     const previous = controlledOpen ?? innerOpen;
     if (controlledOpen === undefined) setInnerOpen(next);
@@ -224,7 +333,7 @@ function ImageBase({
   const progressNode = <span className="text-xs text-[#999]">{progressPercent}%</span>;
   return (
     <span
-      className={twMerge("relative inline-block overflow-hidden align-middle", rootClassName)}
+      className={twMerge("group relative inline-block overflow-hidden align-middle", className)}
       style={{ width, height, ...rootStyle }}
     >
       {loading && placeholder ? (
@@ -244,25 +353,31 @@ function ImageBase({
           "block size-full object-cover",
           preview !== false && "cursor-zoom-in",
           loading && "invisible",
-          className,
         )}
         style={style}
         onLoad={(event) => {
           setLoading(false);
-          setFailed(false);
           onLoad?.(event);
         }}
         onError={(event) => {
-          setLoading(false);
-          if (fallback && actualSrc !== fallback) setFailed(true);
+          if (fallback && actualSrc !== fallback) {
+            setLoading(true);
+            setFailed(true);
+          } else {
+            setLoading(false);
+          }
           onError?.(event);
         }}
         onClick={openPreview}
       />
       {preview !== false && !loading ? (
-        <span className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/0 text-white opacity-0 transition-[background-color,opacity] duration-300 hover:bg-black/45 hover:opacity-100">
-          <Icon icon="eye" size={20} />
-          <span className="ml-2 text-sm">미리보기</span>
+        <span className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/0 text-white opacity-0 transition-[background-color,opacity] duration-300 group-hover:bg-black/45 group-hover:opacity-100">
+          {config.cover ?? (
+            <>
+              <Icon icon="eye" size={20} />
+              <span className="ml-2 text-sm">미리보기</span>
+            </>
+          )}
         </span>
       ) : null}
       {!group && actualSrc ? (

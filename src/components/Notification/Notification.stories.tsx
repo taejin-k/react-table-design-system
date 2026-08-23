@@ -3,9 +3,20 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { useEffect, useRef } from "react";
 import { storyDescriptions } from "../../storybook/story-descriptions";
 import { withStoryImports } from "../../storybook/story-source";
+import { TypeTokens } from "../../storybook/type-tokens";
 import { Button } from "../Button";
 import { notification } from "./Notification";
-import type { NotificationPlacement } from "./Notification.types";
+import type { NotificationPlacementType, NotificationStatusType } from "./Notification.types";
+
+const notificationStatuses: NotificationStatusType[] = ["success", "error", "info", "warning"];
+const notificationPlacements: NotificationPlacementType[] = [
+  "top",
+  "topLeft",
+  "topRight",
+  "bottom",
+  "bottomLeft",
+  "bottomRight",
+];
 
 const storyDescription = (id: string) => ({
   docs: { description: { story: storyDescriptions[id] } },
@@ -18,8 +29,7 @@ const meta = {
     controls: { disable: true },
     docs: {
       description: {
-        component:
-          "제목과 설명이 있는 전역 알림을 화면 가장자리에 표시해요.  \n정적 메서드와 useNotification을 사용할 수 있어요.",
+        component: "제목과 설명이 있는 전역 알림을 화면 가장자리에 표시해요.",
       },
       page: () => (
         <div className="notification-docs component-docs">
@@ -38,6 +48,7 @@ const meta = {
 | --- | --- | --- | --- |
 | \`title\` | 알림 제목을 설정해요. | \`ReactNode\` | - |
 | \`description\` | 알림 설명을 설정해요. | \`ReactNode\` | - |
+| \`type\` | 알림 상태를 설정해요. | [\`NotificationStatusType\`](#notification-status-type) | - |
 | \`actions\` | 알림 아래 작업을 추가해요. | \`ReactNode\` | - |
 | \`closable\` | 닫기 버튼 표시·아이콘·비활성을 설정해요. | \`boolean \\| object\` | \`true\` |
 | \`duration\` | 자동으로 닫히기까지의 초를 설정해요. false면 유지해요. | \`number \\| false\` | \`4.5\` |
@@ -45,7 +56,7 @@ const meta = {
 | \`pauseOnHover\` | 마우스를 올리면 닫힘 시간을 멈춰요. | \`boolean\` | \`true\` |
 | \`icon\` | 상태 아이콘을 변경해요. | \`ReactNode\` | - |
 | \`key\` | 알림을 갱신하거나 제거할 key예요. | \`string\` | - |
-| \`placement\` | 화면 배치 위치를 설정해요. | \`NotificationPlacement\` | \`topRight\` |
+| \`placement\` | 화면 배치 위치를 설정해요. | [\`NotificationPlacementType\`](#notification-placement-type) | \`topRight\` |
 | \`classNames\` | 각 영역의 클래스를 설정해요. | \`Record<SemanticName, string>\` | - |
 | \`styles\` | 각 영역의 스타일을 설정해요. | \`Record<SemanticName, CSSProperties>\` | - |
 | \`className\` | 알림에 Tailwind 클래스를 추가해요. | \`string\` | - |
@@ -54,10 +65,25 @@ const meta = {
 
 ### Global config
 
-\`notification.config({ top, bottom, placement, duration, getContainer, maxCount, stack, showProgress, pauseOnHover })\`로 정적 알림 기본값을 설정해요.
-
-\`notification.useNotification(config)\`은 동일한 메서드와 \`contextHolder\`를 반환해요.
+| Name | Description | Type | Default |
+| --- | --- | --- | --- |
+| \`top\` | 위쪽 알림의 화면 간격을 정해요. | \`number\` | \`24\` |
+| \`bottom\` | 아래쪽 알림의 화면 간격을 정해요. | \`number\` | \`24\` |
+| \`placement\` | 기본 표시 위치를 정해요. | [\`NotificationPlacementType\`](#notification-placement-type) | \`topRight\` |
+| \`duration\` | 자동으로 닫히기까지의 초를 정해요. | \`number \\| false\` | \`4.5\` |
+| \`getContainer\` | 알림을 렌더링할 컨테이너를 정해요. | \`() => HTMLElement\` | \`document.body\` |
+| \`maxCount\` | 동시에 유지할 최대 알림 수를 정해요. | \`number\` | - |
+| \`stack\` | 알림이 많을 때 겹쳐 표시해요. | \`boolean \\| { threshold?: number }\` | \`{ threshold: 3 }\` |
+| \`showProgress\` | 남은 시간을 하단 막대로 표시해요. | \`boolean\` | \`false\` |
+| \`pauseOnHover\` | hover 중 닫힘 시간을 멈춰요. | \`boolean\` | \`true\` |
       `}</Markdown>
+          <h2 className="component-docs-types-heading">Types</h2>
+          <h3 id="notification-status-type">NotificationStatusType</h3>
+          <p>알림 상태를 선택해요.</p>
+          <TypeTokens values={notificationStatuses} />
+          <h3 id="notification-placement-type">NotificationPlacementType</h3>
+          <p>알림이 표시될 위치를 선택해요.</p>
+          <TypeTokens values={notificationPlacements} />
         </div>
       ),
     },
@@ -67,20 +93,19 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const TypesAndActions: Story = {
+export const Types: Story = {
   parameters: {
-    ...storyDescription("components-notification--types-actions"),
+    ...storyDescription("components-notification--types"),
     docs: {
-      ...storyDescription("components-notification--types-actions").docs,
+      ...storyDescription("components-notification--types").docs,
       source: {
         code: withStoryImports(`function NotificationTypes() {
-  const actions = <Button size="sm">되돌리기</Button>;
   return (
     <div className="flex flex-wrap gap-2">
-      <Button onClick={() => notification.success({ title: '저장 완료', description: '변경사항을 저장했어요.', actions })}>Success</Button>
-      <Button onClick={() => notification.error({ title: '저장 실패', description: '잠시 뒤 다시 시도해 주세요.' })}>Error</Button>
-      <Button onClick={() => notification.info({ title: '새 소식', description: '업데이트 내용을 확인해 주세요.' })}>Info</Button>
-      <Button onClick={() => notification.warning({ title: '확인 필요', description: '입력값을 확인해 주세요.' })}>Warning</Button>
+      <Button size="md" onClick={() => notification.success({ title: '저장 완료', description: '변경사항을 저장했어요.' })}>Success</Button>
+      <Button size="md" onClick={() => notification.error({ title: '저장 실패', description: '잠시 뒤 다시 시도해 주세요.' })}>Error</Button>
+      <Button size="md" onClick={() => notification.info({ title: '새 소식', description: '업데이트 내용을 확인해 주세요.' })}>Info</Button>
+      <Button size="md" onClick={() => notification.warning({ title: '확인 필요', description: '입력값을 확인해 주세요.' })}>Warning</Button>
     </div>
   );
 }`),
@@ -88,21 +113,21 @@ export const TypesAndActions: Story = {
     },
   },
   render: () => {
-    const actions = <Button size="sm">되돌리기</Button>;
     return (
       <div className="flex flex-wrap gap-2">
         <Button
+          size="md"
           onClick={() =>
             notification.success({
               title: "저장 완료",
               description: "변경사항을 저장했어요.",
-              actions,
             })
           }
         >
           Success
         </Button>
         <Button
+          size="md"
           onClick={() =>
             notification.error({ title: "저장 실패", description: "잠시 뒤 다시 시도해 주세요." })
           }
@@ -110,6 +135,7 @@ export const TypesAndActions: Story = {
           Error
         </Button>
         <Button
+          size="md"
           onClick={() =>
             notification.info({ title: "새 소식", description: "업데이트 내용을 확인해 주세요." })
           }
@@ -117,6 +143,7 @@ export const TypesAndActions: Story = {
           Info
         </Button>
         <Button
+          size="md"
           onClick={() =>
             notification.warning({ title: "확인 필요", description: "입력값을 확인해 주세요." })
           }
@@ -127,6 +154,87 @@ export const TypesAndActions: Story = {
     );
   },
 };
+
+export const Actions: Story = {
+  parameters: {
+    ...storyDescription("components-notification--actions"),
+    docs: {
+      ...storyDescription("components-notification--actions").docs,
+      source: {
+        code: withStoryImports(`function NotificationActions() {
+  const open = () => {
+    notification.success({
+      key: 'notification-actions',
+      title: '저장 완료',
+      description: '저장된 내용을 확인할 수 있어요.',
+      duration: false,
+      actions: (
+        <div className="flex gap-2">
+          <Button
+            size="md"
+            variant="secondary"
+            onClick={() => notification.destroy('notification-actions')}
+          >
+            닫기
+          </Button>
+          <Button
+            size="md"
+            onClick={() => {
+              alert('저장된 내용을 확인해요.');
+              notification.destroy('notification-actions');
+            }}
+          >
+            확인
+          </Button>
+        </div>
+      ),
+    });
+  };
+
+  return <Button size="md" onClick={open}>Actions 열기</Button>;
+}`),
+      },
+    },
+  },
+  render: () => <NotificationActionsExample />,
+};
+
+function NotificationActionsExample() {
+  const open = () => {
+    notification.success({
+      key: "notification-actions",
+      title: "저장 완료",
+      description: "저장된 내용을 확인할 수 있어요.",
+      duration: false,
+      actions: (
+        <div className="flex gap-2">
+          <Button
+            size="md"
+            variant="secondary"
+            onClick={() => notification.destroy("notification-actions")}
+          >
+            닫기
+          </Button>
+          <Button
+            size="md"
+            onClick={() => {
+              alert("저장된 내용을 확인해요.");
+              notification.destroy("notification-actions");
+            }}
+          >
+            확인
+          </Button>
+        </div>
+      ),
+    });
+  };
+
+  return (
+    <Button size="md" onClick={open}>
+      Actions 열기
+    </Button>
+  );
+}
 
 export const Placements: Story = {
   parameters: {
@@ -177,7 +285,7 @@ function NotificationPlacements() {
           "bottomLeft",
           "bottom",
           "bottomRight",
-        ] as NotificationPlacement[]
+        ] as NotificationPlacementType[]
       ).map((placement) => (
         <Button
           key={placement}
@@ -197,60 +305,46 @@ function NotificationPlacements() {
   ),
 };
 
-export const ProgressAndStack: Story = {
+export const Progress: Story = {
   parameters: {
-    ...storyDescription("components-notification--progress-stack"),
+    ...storyDescription("components-notification--progress"),
     docs: {
-      ...storyDescription("components-notification--progress-stack").docs,
+      ...storyDescription("components-notification--progress").docs,
       source: {
-        code: withStoryImports(`function NotificationProgressAndStack() {
-  const [api, contextHolder] = notification.useNotification({
-    stack: { threshold: 3 },
-    showProgress: true,
-  });
-
-  const openMany = () => {
-    Array.from({ length: 5 }, (_, index) =>
-      api.info({
-        title: '알림 ' + (index + 1),
-        description: '여러 알림을 스택으로 표시해요.',
-      }),
-    );
-  };
-
+        code: withStoryImports(`function NotificationProgress() {
   return (
-    <>
-      {contextHolder}
-      <Button onClick={openMany}>알림 5개 열기</Button>
-    </>
+    <Button
+      onClick={() =>
+        notification.info({
+          title: '작업 진행 중',
+          description: '남은 시간이 하단 진행 바로 표시돼요.',
+          duration: 6,
+          showProgress: true,
+        })
+      }
+    >
+      진행 상태 열기
+    </Button>
   );
 }`),
       },
     },
   },
-  render: () => <NotificationStackExample />,
+  render: () => (
+    <Button
+      onClick={() =>
+        notification.info({
+          title: "작업 진행 중",
+          description: "남은 시간이 하단 진행 바로 표시돼요.",
+          duration: 6,
+          showProgress: true,
+        })
+      }
+    >
+      진행 상태 열기
+    </Button>
+  ),
 };
-
-function NotificationStackExample() {
-  const [api, holder] = notification.useNotification({
-    stack: { threshold: 3 },
-    showProgress: true,
-  });
-  return (
-    <>
-      {holder}
-      <Button
-        onClick={() =>
-          Array.from({ length: 5 }, (_, index) =>
-            api.info({ title: `알림 ${index + 1}`, description: "여러 알림을 스택으로 표시해요." }),
-          )
-        }
-      >
-        알림 5개 열기
-      </Button>
-    </>
-  );
-}
 
 export const Update: Story = {
   parameters: {
@@ -305,49 +399,4 @@ function NotificationUpdateExample() {
   };
 
   return <Button onClick={update}>key로 갱신</Button>;
-}
-
-export const Hook: Story = {
-  parameters: {
-    ...storyDescription("components-notification--hook"),
-    docs: {
-      ...storyDescription("components-notification--hook").docs,
-      source: {
-        code: withStoryImports(`function NotificationHook() {
-  const [api, contextHolder] = notification.useNotification();
-
-  return (
-    <>
-      {contextHolder}
-      <Button
-        onClick={() => api.success({
-          title: 'Hook 알림',
-          description: '현재 Context에서 열렸어요.',
-        })}
-      >
-        Hook Notification
-      </Button>
-    </>
-  );
-}`),
-      },
-    },
-  },
-  render: () => <NotificationHookExample />,
-};
-
-function NotificationHookExample() {
-  const [api, holder] = notification.useNotification();
-  return (
-    <>
-      {holder}
-      <Button
-        onClick={() =>
-          api.success({ title: "Hook 알림", description: "현재 Context에서 열렸어요." })
-        }
-      >
-        Hook Notification
-      </Button>
-    </>
-  );
 }

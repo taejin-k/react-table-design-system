@@ -1,31 +1,27 @@
 import type { CSSProperties, ReactNode } from "react";
 
-export type NotificationType = "success" | "error" | "info" | "warning";
-export type NotificationPlacement =
+export type NotificationStatusType = "success" | "error" | "info" | "warning";
+export type NotificationPlacementType =
   "top" | "topLeft" | "topRight" | "bottom" | "bottomLeft" | "bottomRight";
-export type NotificationSemanticName =
+export type NotificationSemanticNameType =
   "root" | "icon" | "title" | "description" | "actions" | "close" | "progress";
 
 export interface NotificationArgsProps {
   title?: ReactNode;
-  message?: ReactNode;
   description: ReactNode;
-  type?: NotificationType;
+  type?: NotificationStatusType;
   actions?: ReactNode;
   closable?: boolean | { closeIcon?: ReactNode; disabled?: boolean };
-  closeIcon?: ReactNode;
   duration?: number | false;
   showProgress?: boolean;
   pauseOnHover?: boolean;
   icon?: ReactNode;
   key?: string;
-  placement?: NotificationPlacement;
-  role?: "alert" | "status";
+  placement?: NotificationPlacementType;
   className?: string;
-  classNames?: Partial<Record<NotificationSemanticName, string>>;
+  classNames?: Partial<Record<NotificationSemanticNameType, string>>;
   style?: CSSProperties;
-  styles?: Partial<Record<NotificationSemanticName, CSSProperties>>;
-  props?: Record<string, unknown>;
+  styles?: Partial<Record<NotificationSemanticNameType, CSSProperties>>;
   onClick?: () => void;
   onClose?: () => void;
 }
@@ -37,7 +33,7 @@ export interface NotificationGlobalConfig {
   getContainer?: () => HTMLElement;
   maxCount?: number;
   pauseOnHover?: boolean;
-  placement?: NotificationPlacement;
+  placement?: NotificationPlacementType;
   rtl?: boolean;
   showProgress?: boolean;
   stack?: boolean | { threshold?: number };
@@ -55,5 +51,4 @@ export interface NotificationInstance {
 
 export interface NotificationApi extends NotificationInstance {
   config: (config: NotificationGlobalConfig) => void;
-  useNotification: (config?: NotificationGlobalConfig) => [NotificationInstance, ReactNode];
 }
