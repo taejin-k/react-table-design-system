@@ -49,9 +49,7 @@ const meta = {
 | --- | --- | --- | --- |
 | \`open\` | 미리보기 표시 상태를 제어해요. | \`boolean\` | - |
 | \`src\` | 미리보기에서 사용할 이미지 주소를 변경해요. | \`string\` | Image의 src |
-| \`mask\` | 미리보기 배경 마스크 표시 여부를 설정해요. | \`boolean\` | \`true\` |
 | \`cover\` | 이미지 hover 영역에 표시할 내용을 설정해요. | \`ReactNode\` | 미리보기 안내 |
-| \`getContainer\` | 미리보기를 렌더링할 컨테이너를 설정해요. | \`HTMLElement \\| () => HTMLElement \\| string \\| false\` | \`document.body\` |
 | \`zIndex\` | 미리보기의 겹침 순서를 설정해요. | \`number\` | \`1080\` |
 | \`onOpenChange\` | 미리보기 표시 상태가 바뀔 때 실행해요. | \`(open, previousOpen) => void\` | - |
 

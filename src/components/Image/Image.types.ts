@@ -3,9 +3,7 @@ import type { ImgHTMLAttributes, ReactNode } from "react";
 export interface ImagePreviewConfig {
   open?: boolean;
   src?: string;
-  mask?: boolean;
   cover?: ReactNode;
-  getContainer?: HTMLElement | (() => HTMLElement) | string | false;
   zIndex?: number;
   onOpenChange?: (open: boolean, previousOpen: boolean) => void;
 }

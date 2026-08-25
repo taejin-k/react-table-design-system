@@ -54,13 +54,13 @@ describe("Image", () => {
     );
   });
 
-  it("hides the preview mask when mask is false", async () => {
-    render(<Image src="photo.png" alt="마스크 없는 사진" preview={{ mask: false }} />);
-    const image = screen.getByRole("img", { name: "마스크 없는 사진" });
+  it("shows the default preview mask", async () => {
+    render(<Image src="photo.png" alt="마스크가 있는 사진" />);
+    const image = screen.getByRole("img", { name: "마스크가 있는 사진" });
     fireEvent.load(image);
     await userEvent.click(image);
 
-    expect(document.querySelector(".wizard-image-preview-mask")).not.toBeInTheDocument();
+    expect(document.querySelector(".wizard-image-preview-mask")).toBeInTheDocument();
     expect(document.querySelector("[data-image-preview-root]")).toBeInTheDocument();
   });
 

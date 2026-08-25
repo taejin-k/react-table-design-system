@@ -410,9 +410,15 @@ export const storyDescriptions: Record<string, string> = {
   "components-calendar--selection-rules-and-cell":
     "선택 가능한 기간과 요일을 제한하고 일정이 있는 날짜에 표시를 추가해요.",
 
-  "components-collapse--basic": "여러 패널을 독립적으로 열고 닫으며 비활성 패널의 동작을 제한해요.",
+  "components-collapse--basic": "여러 패널을 독립적으로 열고 닫아요.",
   "components-collapse--accordion": "한 번에 하나의 패널만 펼쳐지는 아코디언을 사용해요.",
   "components-collapse--ghost": "배경과 테두리를 제거해 주변 콘텐츠에 자연스럽게 배치해요.",
+  "components-collapse--sizes": "세 가지 크기의 패널 여백을 비교해요.",
+  "components-collapse--collapsible": "헤더 전체, 아이콘 전용과 비활성 클릭 방식을 비교해요.",
+  "components-collapse--header-and-icons":
+    "추가 정보, 아이콘 위치와 사용자 정의 펼침 아이콘을 적용해요.",
+  "components-collapse--controlled-and-rendering":
+    "펼친 패널을 제어하고 접힌 콘텐츠의 상태 유지 여부를 비교해요.",
 
   "components-description--basic":
     "레이블과 값을 열 단위로 정렬해 사용자 정보를 읽기 쉽게 표시해요.",

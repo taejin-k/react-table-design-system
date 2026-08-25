@@ -215,14 +215,6 @@ function Preview({
       </button>
     </div>
   );
-  const container =
-    config.getContainer === false
-      ? null
-      : typeof config.getContainer === "function"
-        ? config.getContainer()
-        : typeof config.getContainer === "string"
-          ? document.querySelector<HTMLElement>(config.getContainer)
-          : (config.getContainer ?? document.body);
   const content = (
     <CSSMotion
       visible={open}
@@ -243,12 +235,10 @@ function Preview({
           )}
           style={{ zIndex: config.zIndex ?? 1080, ...style }}
         >
-          {config.mask !== false ? (
-            <div
-              className="wizard-image-preview-mask absolute inset-0 bg-black/45"
-              onClick={onClose}
-            />
-          ) : null}
+          <div
+            className="wizard-image-preview-mask absolute inset-0 bg-black/45"
+            onClick={onClose}
+          />
           <button
             type="button"
             data-image-preview-close
@@ -354,7 +344,8 @@ function Preview({
       )}
     </CSSMotion>
   );
-  return container ? createPortal(content, container) : content;
+  if (typeof document === "undefined") return null;
+  return createPortal(content, document.body);
 }
 
 function ImageBase({

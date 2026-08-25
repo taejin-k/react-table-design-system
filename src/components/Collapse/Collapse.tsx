@@ -45,12 +45,13 @@ export function Collapse({
     if (activeKey === undefined) setInnerKeys(next);
     onChange?.(accordion ? (next[0] ?? []) : next);
   };
-  const padding = size === "large" ? "px-6 py-4" : size === "small" ? "px-3 py-2" : "px-4 py-3";
+  const padding =
+    size === "large" ? "px-6 py-3" : size === "small" ? "px-3 py-1.5" : "px-4 py-2";
   return (
     <div
       className={twMerge(
-        "overflow-hidden font-pretendard text-sm text-[#111]",
-        bordered && !ghost && "rounded-lg border border-[#d9d9d9]",
+        "overflow-hidden font-pretendard text-sm leading-[22px] text-[#111]",
+        bordered && !ghost && "rounded-lg border border-[#ddd]",
         ghost && "bg-transparent",
         !ghost && "bg-[#fafafa]",
         className,
@@ -68,7 +69,7 @@ export function Collapse({
           <section
             key={item.key}
             className={twMerge(
-              index > 0 && bordered && !ghost && "border-t border-[#d9d9d9]",
+              index > 0 && bordered && !ghost && "border-t border-[#ddd]",
               item.className,
             )}
             style={item.style}
