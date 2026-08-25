@@ -23,4 +23,23 @@ describe("Tree", () => {
       expect.any(Object),
     );
   });
+
+  it("applies selection styling to the title and only fills the row with blockNode", () => {
+    const { rerender } = render(
+      <Tree treeData={treeData} defaultExpandedKeys={["parent"]} defaultSelectedKeys={["child"]} />,
+    );
+    const title = screen.getByText("하위");
+    expect(title).toHaveClass("bg-[#e6f4ff]");
+    expect(title.parentElement).not.toHaveClass("bg-[#e6f4ff]");
+
+    rerender(
+      <Tree
+        blockNode
+        treeData={treeData}
+        defaultExpandedKeys={["parent"]}
+        defaultSelectedKeys={["child"]}
+      />,
+    );
+    expect(screen.getByText("하위")).toHaveClass("flex-1");
+  });
 });

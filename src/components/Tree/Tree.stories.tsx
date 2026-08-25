@@ -1,9 +1,11 @@
 import { Description, Markdown, Stories, Title } from "@storybook/addon-docs/blocks";
 import type { Meta, StoryObj } from "@storybook/react";
+import { useState } from "react";
 import { storyDescriptions } from "../../storybook/story-descriptions";
 import { withStoryImports } from "../../storybook/story-source";
 import { Icon } from "../Icon";
 import { Tree } from "./Tree";
+import type { TreeDataNode } from "./Tree.types";
 
 const treeData = [
   {
@@ -156,3 +158,75 @@ export const Lines: Story = {
     },
   },
 };
+
+export const AsyncLoading: Story = {
+  parameters: {
+    ...storyDescription("components-tree--async-loading"),
+    docs: {
+      ...storyDescription("components-tree--async-loading").docs,
+      source: {
+        type: "code",
+        code: withStoryImports(`function AsyncTreeExample() {
+  const [data, setData] = useState([
+    {
+      key: 'team',
+      title: '팀 문서',
+      icon: <Icon icon="folder-outlined" />,
+      isLeaf: false,
+    },
+  ]);
+
+  const loadData = async (node) => {
+    await new Promise((resolve) => window.setTimeout(resolve, 600));
+    setData((current) =>
+      current.map((item) =>
+        item.key === node.key
+          ? {
+              ...item,
+              children: [
+                { key: 'guide', title: '가이드.md', icon: <Icon icon="file-outlined" /> },
+                { key: 'plan', title: '계획.md', icon: <Icon icon="file-outlined" /> },
+              ],
+            }
+          : item,
+      ),
+    );
+  };
+
+  return <Tree showIcon treeData={data} loadData={loadData} />;
+}`),
+      },
+    },
+  },
+  render: () => <AsyncTreeExample />,
+};
+
+function AsyncTreeExample() {
+  const [data, setData] = useState<TreeDataNode[]>([
+    {
+      key: "team",
+      title: "팀 문서",
+      icon: <Icon icon="folder-outlined" />,
+      isLeaf: false,
+    },
+  ]);
+
+  const loadData = async (node: TreeDataNode) => {
+    await new Promise((resolve) => window.setTimeout(resolve, 600));
+    setData((current) =>
+      current.map((item) =>
+        item.key === node.key
+          ? {
+              ...item,
+              children: [
+                { key: "guide", title: "가이드.md", icon: <Icon icon="file-outlined" /> },
+                { key: "plan", title: "계획.md", icon: <Icon icon="file-outlined" /> },
+              ],
+            }
+          : item,
+      ),
+    );
+  };
+
+  return <Tree showIcon treeData={data} loadData={loadData} />;
+}

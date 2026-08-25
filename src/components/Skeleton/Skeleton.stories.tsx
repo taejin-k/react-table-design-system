@@ -5,6 +5,7 @@ import { storyDescriptions } from "../../storybook/story-descriptions";
 import { withStoryImports } from "../../storybook/story-source";
 import { TypeTokens } from "../../storybook/type-tokens";
 import { Button } from "../Button";
+import { Icon } from "../Icon";
 import { Skeleton } from "./Skeleton";
 import type { SkeletonShapeType, SkeletonSizeType } from "./Skeleton.types";
 
@@ -46,9 +47,17 @@ const meta = {
 | \`round\` | 제목과 문단 모서리를 더 둥글게 표시해요. | \`boolean\` | \`false\` |
 | \`className\` | 최상위 요소에 Tailwind 클래스를 추가해요. | \`string\` | - |
 
-### Skeleton Element
+### Skeleton Elements
 
-\`Skeleton.Avatar\`, \`Skeleton.Button\`, \`Skeleton.Input\`, \`Skeleton.Image\`, \`Skeleton.Node\`가 같은 공통 API를 사용해요.
+| Name | Description | Type | Default |
+| --- | --- | --- | --- |
+| \`Avatar\` | 아바타 자리 표시자를 표시해요. | \`(props: SkeletonElementProps) => ReactNode\` | - |
+| \`Button\` | 버튼 자리 표시자를 표시해요. | \`(props: SkeletonElementProps) => ReactNode\` | - |
+| \`Input\` | 입력창 자리 표시자를 표시해요. | \`(props: SkeletonElementProps) => ReactNode\` | - |
+| \`Image\` | 이미지 자리 표시자를 표시해요. | \`(props: SkeletonElementProps) => ReactNode\` | - |
+| \`Node\` | 사용자 정의 자리 표시자를 표시해요. | \`(props: SkeletonElementProps) => ReactNode\` | - |
+
+### SkeletonElementProps
 
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
@@ -96,17 +105,28 @@ export const Elements: Story = {
       source: {
         type: "code",
         code: withStoryImports(
-          `<div className="flex items-center gap-3">\n  <Skeleton.Avatar active />\n  <Skeleton.Button active />\n  <Skeleton.Input active width={180} />\n  <Skeleton.Image active />\n</div>`,
+          `<div className="flex flex-wrap items-center gap-3">
+  <Skeleton.Avatar active />
+  <Skeleton.Button active />
+  <Skeleton.Input active width={180} />
+  <Skeleton.Image active />
+  <Skeleton.Node active width={96} height={96}>
+    <Icon icon="file-outlined" />
+  </Skeleton.Node>
+</div>`,
         ),
       },
     },
   },
   render: () => (
-    <div className="flex items-center gap-3">
+    <div className="flex flex-wrap items-center gap-3">
       <Skeleton.Avatar active />
       <Skeleton.Button active />
       <Skeleton.Input active width={180} />
       <Skeleton.Image active />
+      <Skeleton.Node active width={96} height={96}>
+        <Icon icon="file-outlined" />
+      </Skeleton.Node>
     </div>
   ),
 };

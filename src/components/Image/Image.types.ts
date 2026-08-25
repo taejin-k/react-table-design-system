@@ -1,23 +1,13 @@
-import type { CSSProperties, ImgHTMLAttributes, ReactNode } from "react";
+import type { ImgHTMLAttributes, ReactNode } from "react";
 
 export interface ImagePreviewConfig {
   open?: boolean;
   src?: string;
-  mask?: boolean | { enabled?: boolean; closable?: boolean };
+  mask?: boolean;
   cover?: ReactNode;
-  closeIcon?: ReactNode;
   getContainer?: HTMLElement | (() => HTMLElement) | string | false;
   zIndex?: number;
-  minScale?: number;
-  maxScale?: number;
-  scaleStep?: number;
-  movable?: boolean;
-  toolbarRender?: (
-    node: ReactNode,
-    info: { transform: ImageTransform; actions: ImageActions },
-  ) => ReactNode;
   onOpenChange?: (open: boolean, previousOpen: boolean) => void;
-  onTransform?: (info: { transform: ImageTransform; action: string }) => void;
 }
 
 export interface ImageTransform {
@@ -41,25 +31,18 @@ export interface ImageActions {
 
 export interface ImageProps extends Omit<
   ImgHTMLAttributes<HTMLImageElement>,
-  "placeholder" | "src" | "width" | "height"
+  "placeholder" | "src" | "width" | "height" | "style"
 > {
   src?: string;
   fallback?: string;
   width?: string | number;
   height?: string | number;
-  placeholder?:
-    | ReactNode
-    | {
-        progress?:
-          boolean | { percent?: number; render?: (node: ReactNode, percent: number) => ReactNode };
-      };
+  placeholder?: boolean;
   preview?: boolean | ImagePreviewConfig;
-  rootStyle?: CSSProperties;
 }
 
 export interface ImagePreviewGroupProps {
   children?: ReactNode;
-  preview?: boolean | ImagePreviewConfig;
 }
 
 export interface ImageComponent {

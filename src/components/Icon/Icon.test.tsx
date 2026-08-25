@@ -99,6 +99,20 @@ describe("Icon", () => {
     expect(container.querySelector("path")).toHaveAttribute("d");
   });
 
+  it.each([
+    "flip-vertical",
+    "flip-horizontal",
+    "rotate-left",
+    "rotate-right",
+    "zoom-out",
+    "zoom-in",
+  ] as const)("renders the %s image action icon", (icon) => {
+    const { container } = render(<Icon icon={icon} />);
+
+    expect(container.querySelector("svg")).toHaveAttribute("viewBox", "64 64 896 896");
+    expect(container.querySelector("path")).toHaveAttribute("d");
+  });
+
   it("animates the loading icon", () => {
     render(<Icon data-testid="icon" icon="loading" />);
 

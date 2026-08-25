@@ -32,6 +32,31 @@
   opacity: 1;
 }
 
+.wizard-image-preview-motion-enter .wizard-image-preview-body,
+.wizard-image-preview-motion-appear .wizard-image-preview-body {
+  transform: scale(0);
+}
+
+.wizard-image-preview-motion-enter-active .wizard-image-preview-body,
+.wizard-image-preview-motion-appear-active .wizard-image-preview-body {
+  transform: scale(1);
+  transition: transform 300ms cubic-bezier(0.08, 0.82, 0.17, 1);
+}
+
+.wizard-image-preview-motion-leave .wizard-image-preview-body {
+  transform: scale(1);
+}
+
+.wizard-image-preview-motion-leave-active .wizard-image-preview-body {
+  transform: scale(0);
+  transition: transform 300ms cubic-bezier(0.78, 0.14, 0.15, 0.86);
+}
+
+.wizard-image-preview-body {
+  backface-visibility: hidden;
+  will-change: transform;
+}
+
 .wizard-upload-motion-enter,
 .wizard-upload-motion-appear,
 .wizard-upload-motion-leave-active {
@@ -182,6 +207,9 @@
   .wizard-image-preview-motion-enter-active .wizard-image-preview-image,
   .wizard-image-preview-motion-appear-active .wizard-image-preview-image,
   .wizard-image-preview-motion-leave-active .wizard-image-preview-image,
+  .wizard-image-preview-motion-enter-active .wizard-image-preview-body,
+  .wizard-image-preview-motion-appear-active .wizard-image-preview-body,
+  .wizard-image-preview-motion-leave-active .wizard-image-preview-body,
   .wizard-upload-motion-enter-active,
   .wizard-upload-motion-appear-active,
   .wizard-upload-motion-leave-active {

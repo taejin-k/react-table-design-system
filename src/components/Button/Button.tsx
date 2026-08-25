@@ -107,7 +107,7 @@ const buttonVariants = cva(
         primary:
           "bg-[#0062df] text-white ring-1 ring-transparent ring-inset hover:bg-[#227cef] disabled:bg-[#f5f5f5] disabled:text-[#999999] disabled:ring-[#dddddd]",
         secondary:
-          "bg-white text-[#111111] ring-1 ring-[#999999] ring-inset hover:bg-[#f5f5f5] disabled:bg-[#f5f5f5] disabled:text-[#999999] disabled:ring-[#dddddd]",
+          "bg-white text-[#111111] ring-1 ring-[#ddd] ring-inset hover:bg-[#f5f5f5] disabled:bg-[#f5f5f5] disabled:text-[#999999] disabled:ring-[#dddddd]",
         tertiary:
           "bg-[#f5f5f5] text-[#111111] ring-1 ring-transparent ring-inset hover:ring-[#999999] disabled:text-[#999999] disabled:ring-[#dddddd]",
         dark: "bg-[#111111] text-white ring-1 ring-transparent ring-inset hover:bg-[#303030] disabled:bg-[#f5f5f5] disabled:text-[#999999] disabled:ring-[#dddddd]",

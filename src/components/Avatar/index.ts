@@ -5,5 +5,4 @@ export type {
   AvatarProps,
   AvatarShapeType,
   AvatarSizeType,
-  AvatarTypeType,
 } from "./Avatar.types";

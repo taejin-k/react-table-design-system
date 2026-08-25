@@ -1,19 +1,20 @@
 import type { CSSProperties, ImgHTMLAttributes, ReactNode } from "react";
 
-export type AvatarSizeType = "large" | "medium" | "small";
+export type AvatarSizeType = "md" | "lg";
 export type AvatarShapeType = "circle" | "square";
-export type AvatarTypeType = "default" | "label";
 
 export interface AvatarProps extends Omit<
   ImgHTMLAttributes<HTMLImageElement>,
-  "size" | "src" | "onError"
+  "size" | "src" | "onError" | "width"
 > {
   src?: ReactNode;
   icon?: ReactNode;
   color?: CSSProperties["backgroundColor"];
-  type?: AvatarTypeType;
+  label?: boolean;
+  labelWidth?: number;
   size?: AvatarSizeType;
   shape?: AvatarShapeType;
+  preview?: boolean;
   children?: ReactNode;
 }
 

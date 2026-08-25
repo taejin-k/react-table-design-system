@@ -130,34 +130,43 @@ export const Basic: Story = {
       ...storyDescription("components-menu--basic").docs,
       source: {
         type: "code",
-        code: withStoryImports(`<Menu
-  mode="inline"
-  defaultSelectedKeys={['home']}
-  defaultOpenKeys={['workspace']}
-  items={[
-    { key: 'home', label: '홈', icon: <Icon icon="home-outlined" /> },
-    {
-      key: 'workspace',
-      label: '워크스페이스',
-      icon: <Icon icon="folder-outlined" />,
-      children: [
-        { key: 'documents', label: '문서' },
-        { key: 'members', label: '멤버' },
-      ],
-    },
-    { type: 'divider', key: 'divider' },
-    { key: 'settings', label: '설정', icon: <Icon icon="setting" /> },
-  ]}
-/>`),
+        code: withStoryImports(`${itemsSource}
+
+<div className="grid gap-6 md:grid-cols-2">
+  <div>
+    <strong className="mb-2 block">Vertical</strong>
+    <Menu defaultSelectedKeys={['home']} items={items} />
+  </div>
+  <div>
+    <strong className="mb-2 block">Inline</strong>
+    <Menu
+      mode="inline"
+      defaultSelectedKeys={['home']}
+      defaultOpenKeys={['workspace']}
+      items={items}
+    />
+  </div>
+</div>`),
       },
     },
   },
-  args: {
-    items,
-    mode: "inline",
-    defaultSelectedKeys: ["home"],
-    defaultOpenKeys: ["workspace"],
-  },
+  render: () => (
+    <div className="grid gap-6 md:grid-cols-2">
+      <div>
+        <strong className="mb-2 block">Vertical</strong>
+        <Menu defaultSelectedKeys={["home"]} items={items} />
+      </div>
+      <div>
+        <strong className="mb-2 block">Inline</strong>
+        <Menu
+          mode="inline"
+          defaultSelectedKeys={["home"]}
+          defaultOpenKeys={["workspace"]}
+          items={items}
+        />
+      </div>
+    </div>
+  ),
 };
 
 export const Horizontal: Story = {

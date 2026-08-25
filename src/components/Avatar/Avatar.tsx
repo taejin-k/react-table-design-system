@@ -9,6 +9,7 @@ import {
 } from "react";
 import { twMerge } from "tailwind-merge";
 import { Icon } from "../Icon";
+import { Image } from "../Image";
 import type {
   AvatarComponent,
   AvatarGroupProps,
@@ -16,21 +17,23 @@ import type {
   AvatarSizeType,
 } from "./Avatar.types";
 
-function resolveSize(size: AvatarSizeType = "medium") {
-  return { small: 24, medium: 32, large: 40 }[size];
+function resolveSize(size: AvatarSizeType = "md") {
+  return { md: 30, lg: 40 }[size];
 }
 
 function AvatarBase({
   src,
   icon,
   color,
-  type = "default",
-  size = "medium",
+  label = false,
+  labelWidth,
+  size = "md",
   shape = "circle",
   children,
   className,
   style,
   alt,
+  preview = false,
   ...imageProps
 }: AvatarProps) {
   const pixelSize = resolveSize(size);
@@ -48,21 +51,40 @@ function AvatarBase({
     setTextScale(text.offsetWidth > available ? available / text.offsetWidth : 1);
   }, [children, pixelSize]);
 
-  const imageSource = typeof src === "string" ? src : null;
+  const imageElement = isValidElement<{ src?: unknown; alt?: string }>(src) ? src : null;
+  const imageSource =
+    typeof src === "string"
+      ? src
+      : imageElement && typeof imageElement.props.src === "string"
+        ? imageElement.props.src
+        : null;
   const displayedChildren =
     typeof children === "string" || typeof children === "number"
       ? (Array.from(String(children))[0] ?? "")
       : children;
-  const fallbackIconSize = { small: 14, medium: 18, large: 20 }[size];
+  const fallbackIconSize = { md: 18, lg: 24 }[size];
   const content =
     imageSource && !imageFailed ? (
-      <img
-        {...imageProps}
-        src={imageSource}
-        alt={alt ?? ""}
-        className="size-full object-cover"
-        onError={() => setImageFailed(true)}
-      />
+      preview ? (
+        <Image
+          {...imageProps}
+          src={imageSource}
+          alt={alt ?? imageElement?.props.alt ?? ""}
+          width="100%"
+          height="100%"
+          preview
+          className="size-full [&>span]:hidden"
+          onError={() => setImageFailed(true)}
+        />
+      ) : (
+        <img
+          {...imageProps}
+          src={imageSource}
+          alt={alt ?? imageElement?.props.alt ?? ""}
+          className="size-full object-cover"
+          onError={() => setImageFailed(true)}
+        />
+      )
     ) : isValidElement(src) && !imageFailed ? (
       src
     ) : icon ? (
@@ -83,18 +105,18 @@ function AvatarBase({
 
   const avatar = (
     <span
-      ref={type === "default" ? rootRef : undefined}
+      ref={!label ? rootRef : undefined}
       className={twMerge(
         "relative inline-flex shrink-0 items-center justify-center overflow-hidden bg-[#bfbfbf] align-middle font-pretendard text-white",
         shape === "circle" ? "rounded-full" : "rounded-md",
         pixelSize >= 40 && "text-xl",
-        type === "default" && className,
+        !label && className,
       )}
       style={{
         width: pixelSize,
         height: pixelSize,
         lineHeight: `${pixelSize}px`,
-        ...(type === "default" ? style : undefined),
+        ...(!label ? style : undefined),
         backgroundColor: color,
       }}
     >
@@ -102,19 +124,18 @@ function AvatarBase({
     </span>
   );
 
-  if (type === "label") {
+  if (label) {
     return (
       <span
         ref={rootRef}
         className={twMerge(
           "inline-flex w-fit items-center bg-[#f5f5f5] font-pretendard text-[#111]",
           shape === "circle" ? "rounded-full" : "rounded-lg",
-          size === "small" && "gap-1.5 p-1 pr-2 text-sm",
-          size === "medium" && "gap-2 p-1 pr-3 text-base",
-          size === "large" && "gap-2.5 p-1 pr-4 text-lg",
+          size === "md" && "gap-2 p-1 pr-3 text-base",
+          size === "lg" && "gap-2.5 p-1 pr-4 text-lg",
           className,
         )}
-        style={style}
+        style={{ ...style, width: labelWidth ?? style?.width }}
       >
         {avatar}
         {children !== undefined && children !== null ? (
@@ -130,7 +151,7 @@ function AvatarBase({
 function AvatarGroup({
   children,
   maxCount,
-  size = "medium",
+  size = "md",
   shape = "circle",
   className,
   style,

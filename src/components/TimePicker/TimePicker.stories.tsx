@@ -151,6 +151,15 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+export const Basic: Story = {
+  args: { placeholder: "시간을 선택하세요" },
+  parameters: {
+    ...storySource("components-timepicker--basic", "<TimePicker width={320} />"),
+    controls: { disable: false },
+  },
+  render: (args) => <TimePicker {...args} width={320} />,
+};
+
 export const Sizes: Story = {
   parameters: {
     ...storyDescription("components-timepicker--sizes"),
@@ -267,15 +276,6 @@ export const StaticError: Story = {
   render: () => (
     <TimePicker label="업무 시작" required width={320} errorMessage="시간을 선택해 주세요." />
   ),
-};
-
-export const Basic: Story = {
-  args: { placeholder: "시간을 선택하세요" },
-  parameters: {
-    ...storySource("components-timepicker--basic", "<TimePicker width={320} />"),
-    controls: { disable: false },
-  },
-  render: (args) => <TimePicker {...args} width={320} />,
 };
 
 export const FormatAndSteps: Story = {

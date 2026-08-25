@@ -70,7 +70,10 @@ const preview: Preview = {
           if (title === "Components/Select") return 17;
           if (title === "Components/Table") return 18;
           if (title === "Components/Badge") return 19;
-          return 20;
+          if (title === "Components/ColorPicker") return 20;
+          if (title === "Components/Avatar") return 21;
+          if (title === "Components/Image") return 22;
+          return 23;
         };
         const rankDifference = componentRank(a.title) - componentRank(b.title);
 

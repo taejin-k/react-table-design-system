@@ -38,9 +38,17 @@ const meta = {
           <Stories />
           <h2>API</h2>
           <Markdown>{`
-### Methods
+### Notification
 
-\`notification.success\` · \`notification.error\` · \`notification.info\` · \`notification.warning\` · \`notification.open\` · \`notification.destroy\`를 제공해요.
+| Name | Description | Type | Default |
+| --- | --- | --- | --- |
+| \`open\` | 설정한 내용으로 알림을 표시해요. | \`(config) => void\` | - |
+| \`success\` | 성공 알림을 표시해요. | \`(config) => void\` | - |
+| \`error\` | 오류 알림을 표시해요. | \`(config) => void\` | - |
+| \`info\` | 정보 알림을 표시해요. | \`(config) => void\` | - |
+| \`warning\` | 경고 알림을 표시해요. | \`(config) => void\` | - |
+| \`destroy\` | key의 알림 또는 모든 알림을 닫아요. | \`(key?) => void\` | - |
+| \`config\` | 전역 알림 설정을 변경해요. | \`(config) => void\` | - |
 
 ### Config
 

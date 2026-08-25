@@ -67,7 +67,14 @@ const meta = {
 
 ### Static methods
 
-\`Modal.info\` · \`Modal.success\` · \`Modal.error\` · \`Modal.warning\` · \`Modal.confirm\` · \`Modal.destroyAll\`을 제공해요.
+| Name | Description | Type | Default |
+| --- | --- | --- | --- |
+| \`info\` | 정보 Modal을 표시해요. | \`(config) => ModalFuncResult\` | - |
+| \`success\` | 성공 Modal을 표시해요. | \`(config) => ModalFuncResult\` | - |
+| \`error\` | 오류 Modal을 표시해요. | \`(config) => ModalFuncResult\` | - |
+| \`warning\` | 경고 Modal을 표시해요. | \`(config) => ModalFuncResult\` | - |
+| \`confirm\` | 확인 Modal을 표시해요. | \`(config) => ModalFuncResult\` | - |
+| \`destroyAll\` | 열린 정적 Modal을 모두 닫아요. | \`() => void\` | - |
       `}</Markdown>
           <h2 className="component-docs-types-heading">Types</h2>
           <h3 id="modal-width-type">ModalWidthType</h3>

@@ -8,6 +8,14 @@ import type { CalendarModeType, CalendarSelectSourceType } from "./Calendar.type
 
 const calendarModes: CalendarModeType[] = ["month", "year"];
 const calendarSelectSources: CalendarSelectSourceType[] = ["year", "month", "date", "customize"];
+const calendarEvents = new Set(["2026-08-07", "2026-08-14", "2026-08-21"]);
+
+const dateKey = (date: Date) =>
+  [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, "0"),
+    String(date.getDate()).padStart(2, "0"),
+  ].join("-");
 
 const storyDescription = (id: string) => ({
   docs: { description: { story: storyDescriptions[id] } },
@@ -62,6 +70,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Fullscreen: Story = {
+  name: "Basic",
   args: { defaultValue: new Date(2026, 7, 20) },
   parameters: {
     ...storyDescription("components-calendar--fullscreen"),
@@ -101,4 +110,53 @@ export const Year: Story = {
       },
     },
   },
+};
+
+export const SelectionRulesAndCell: Story = {
+  parameters: {
+    ...storyDescription("components-calendar--selection-rules-and-cell"),
+    docs: {
+      ...storyDescription("components-calendar--selection-rules-and-cell").docs,
+      source: {
+        type: "code",
+        code: withStoryImports(`const events = new Set(['2026-08-07', '2026-08-14', '2026-08-21']);
+
+const dateKey = (date) =>
+  [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, '0'),
+    String(date.getDate()).padStart(2, '0'),
+  ].join('-');
+
+<Calendar
+  defaultValue={new Date(2026, 7, 12)}
+  validRange={[new Date(2026, 7, 5), new Date(2026, 7, 25)]}
+  disabledDate={(date) => date.getDay() === 0 || date.getDay() === 6}
+  cellRender={(date, { originNode }) => (
+    <div className="relative">
+      {originNode}
+      {events.has(dateKey(date)) ? (
+        <span className="pointer-events-none absolute right-3 bottom-2 size-1.5 rounded-full bg-[#0062df]" />
+      ) : null}
+    </div>
+  )}
+/>`),
+      },
+    },
+  },
+  render: () => (
+    <Calendar
+      defaultValue={new Date(2026, 7, 12)}
+      validRange={[new Date(2026, 7, 5), new Date(2026, 7, 25)]}
+      disabledDate={(date) => date.getDay() === 0 || date.getDay() === 6}
+      cellRender={(date, { originNode }) => (
+        <div className="relative">
+          {originNode}
+          {calendarEvents.has(dateKey(date)) ? (
+            <span className="pointer-events-none absolute right-3 bottom-2 size-1.5 rounded-full bg-[#0062df]" />
+          ) : null}
+        </div>
+      )}
+    />
+  ),
 };

@@ -4,14 +4,12 @@ import { useState } from "react";
 import { storyDescriptions } from "../../storybook/story-descriptions";
 import { withStoryImports } from "../../storybook/story-source";
 import { TypeTokens } from "../../storybook/type-tokens";
-import { Icon } from "../Icon";
 import { Input } from "../Input";
 import { Avatar } from "./Avatar";
-import type { AvatarShapeType, AvatarSizeType, AvatarTypeType } from "./Avatar.types";
+import type { AvatarShapeType, AvatarSizeType } from "./Avatar.types";
 
-const avatarSizes: AvatarSizeType[] = ["large", "medium", "small"];
+const avatarSizes: AvatarSizeType[] = ["md", "lg"];
 const avatarShapes: AvatarShapeType[] = ["circle", "square"];
-const avatarTypes: AvatarTypeType[] = ["default", "label"];
 
 const storyDescription = (id: string) => ({
   docs: { description: { story: storyDescriptions[id] } },
@@ -41,9 +39,11 @@ const meta = {
 | \`src\` | 아바타 이미지 주소 또는 이미지 노드를 전달해요. | \`ReactNode\` | - |
 | \`icon\` | 이미지 대신 표시할 아이콘이에요. | \`ReactNode\` | - |
 | \`color\` | 아바타 배경색을 설정해요. | \`CSSProperties['backgroundColor']\` | \`#bfbfbf\` |
-| \`type\` | 기본형 또는 라벨형을 정해요. | [\`AvatarTypeType\`](#avatar-type-type) | \`default\` |
-| \`size\` | 아바타 크기를 정해요. | [\`AvatarSizeType\`](#avatar-size-type) | \`medium\` |
+| \`label\` | 아바타 옆에 라벨을 표시해요. | \`boolean\` | \`false\` |
+| \`labelWidth\` | 라벨 너비를 px로 정하고 넘치는 텍스트를 말줄임해요. | \`number\` | 텍스트 너비 |
+| \`size\` | 아바타 크기를 정해요. | [\`AvatarSizeType\`](#avatar-size-type) | \`md\` |
 | \`shape\` | 원형 또는 사각형 모양을 정해요. | [\`AvatarShapeType\`](#avatar-shape-type) | \`circle\` |
+| \`preview\` | 이미지를 클릭해 상세 보기를 열어요. | \`boolean\` | \`false\` |
 | \`className\` | 최상위 요소에 Tailwind 클래스를 추가해요. | \`string\` | - |
 
 ### Avatar.Group
@@ -51,14 +51,11 @@ const meta = {
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
 | \`maxCount\` | 표시할 최대 개수를 정해요. | \`number\` | - |
-| \`size\` | 그룹 안 아바타의 공통 크기를 정해요. | [\`AvatarSizeType\`](#avatar-size-type) | \`medium\` |
+| \`size\` | 그룹 안 아바타의 공통 크기를 정해요. | [\`AvatarSizeType\`](#avatar-size-type) | \`md\` |
 | \`shape\` | 그룹 안 아바타의 공통 모양을 정해요. | [\`AvatarShapeType\`](#avatar-shape-type) | \`circle\` |
 | \`className\` | 최상위 요소에 Tailwind 클래스를 추가해요. | \`string\` | - |
           `}</Markdown>
           <h2 className="component-docs-types-heading">Types</h2>
-          <h3 id="avatar-type-type">AvatarTypeType</h3>
-          <p>기본 아바타 또는 텍스트가 함께 표시되는 라벨형을 선택해요.</p>
-          <TypeTokens values={avatarTypes} />
           <h3 id="avatar-size-type">AvatarSizeType</h3>
           <p>미리 정한 아바타 크기를 사용해요.</p>
           <TypeTokens values={avatarSizes} />
@@ -80,18 +77,116 @@ export const Basic: Story = {
       ...storyDescription("components-avatar--basic").docs,
       source: {
         type: "code",
-        code: withStoryImports(
-          `<div className="flex items-center gap-3">\n  <Avatar size="small">S</Avatar>\n  <Avatar>M</Avatar>\n  <Avatar size="large" icon={<Icon icon="user-outlined" />} />\n  <Avatar shape="square">KT</Avatar>\n</div>`,
-        ),
+        code: withStoryImports(`<Avatar>MD</Avatar>`),
+      },
+    },
+  },
+  render: () => <Avatar>MD</Avatar>,
+};
+
+export const Sizes: Story = {
+  parameters: {
+    ...storyDescription("components-avatar--sizes"),
+    docs: {
+      ...storyDescription("components-avatar--sizes").docs,
+      source: {
+        type: "code",
+        code: withStoryImports(`<div className="flex items-center gap-3">
+  <Avatar size="md">MD</Avatar>
+  <Avatar size="lg">LG</Avatar>
+</div>`),
       },
     },
   },
   render: () => (
     <div className="flex items-center gap-3">
-      <Avatar size="small">S</Avatar>
-      <Avatar>M</Avatar>
-      <Avatar size="large" icon={<Icon icon="user-outlined" />} />
-      <Avatar shape="square">KT</Avatar>
+      <Avatar size="md">MD</Avatar>
+      <Avatar size="lg">LG</Avatar>
+    </div>
+  ),
+};
+
+export const Shapes: Story = {
+  parameters: {
+    ...storyDescription("components-avatar--shapes"),
+    docs: {
+      ...storyDescription("components-avatar--shapes").docs,
+      source: {
+        type: "code",
+        code: withStoryImports(`<div className="flex flex-col items-start gap-3">
+  <div className="flex items-center gap-3">
+    <Avatar size="md" shape="circle">MD</Avatar>
+    <Avatar size="lg" shape="circle">LG</Avatar>
+  </div>
+  <div className="flex items-center gap-3">
+    <Avatar size="md" shape="square">MD</Avatar>
+    <Avatar size="lg" shape="square">LG</Avatar>
+  </div>
+</div>`),
+      },
+    },
+  },
+  render: () => (
+    <div className="flex flex-col items-start gap-3">
+      {avatarShapes.map((shape) => (
+        <div key={shape} className="flex items-center gap-3">
+          {avatarSizes.map((size) => (
+            <Avatar key={size} size={size} shape={shape}>
+              {size.toUpperCase()}
+            </Avatar>
+          ))}
+        </div>
+      ))}
+    </div>
+  ),
+};
+
+export const Color: Story = {
+  parameters: {
+    ...storyDescription("components-avatar--color"),
+    docs: {
+      ...storyDescription("components-avatar--color").docs,
+      source: {
+        type: "code",
+        code: withStoryImports(`<div className="flex flex-col items-start gap-3">
+  <div className="flex items-center gap-3">
+    <Avatar color="#0062df">K</Avatar>
+    <Avatar color="#52c41a">L</Avatar>
+    <Avatar color="#faad14">P</Avatar>
+    <Avatar color="#722ed1">C</Avatar>
+  </div>
+  <div className="flex items-center gap-3">
+    <Avatar color="#0062df" label>김민준</Avatar>
+    <Avatar color="#52c41a" label>이서연</Avatar>
+    <Avatar color="#faad14" label>박지호</Avatar>
+    <Avatar color="#722ed1" label>최유진</Avatar>
+  </div>
+</div>`),
+      },
+    },
+  },
+  render: () => (
+    <div className="flex flex-col items-start gap-3">
+      <div className="flex items-center gap-3">
+        <Avatar color="#0062df">K</Avatar>
+        <Avatar color="#52c41a">L</Avatar>
+        <Avatar color="#faad14">P</Avatar>
+        <Avatar color="#722ed1">C</Avatar>
+      </div>
+      <div className="flex items-center gap-3">
+        <Avatar color="#0062df" label>
+          김민준
+        </Avatar>
+        <Avatar color="#52c41a" label>
+          이서연
+        </Avatar>
+        <Avatar color="#faad14" label>
+          박지호
+        </Avatar>
+        <Avatar color="#722ed1" label>
+          최유진
+        </Avatar>
+      </div>
     </div>
   ),
 };
@@ -115,9 +210,8 @@ export const Text: Story = {
         onChange={setText}
       />
       <div className="flex items-center gap-3">
-        <Avatar size="small">{text}</Avatar>
-        <Avatar size="medium">{text}</Avatar>
-        <Avatar size="large">{text}</Avatar>
+        <Avatar size="md">{text}</Avatar>
+        <Avatar size="lg">{text}</Avatar>
       </div>
     </div>
   );
@@ -135,13 +229,87 @@ function AvatarTextExample() {
     <div className="flex flex-col items-start gap-3">
       <Input label="아바타 글자" value={text} width={160} onChange={setText} />
       <div className="flex items-center gap-3">
-        <Avatar size="small">{text}</Avatar>
-        <Avatar size="medium">{text}</Avatar>
-        <Avatar size="large">{text}</Avatar>
+        <Avatar size="md">{text}</Avatar>
+        <Avatar size="lg">{text}</Avatar>
       </div>
     </div>
   );
 }
+
+function AvatarLabelTextExample() {
+  const [text, setText] = useState("긴 라벨 텍스트를 입력해보세요");
+  const [width, setWidth] = useState("180");
+
+  return (
+    <div className="flex flex-col items-start gap-3">
+      <div className="flex flex-wrap items-end gap-3">
+        <Input label="라벨 텍스트" value={text} width={240} onChange={setText} />
+        <Input
+          type="number"
+          min={80}
+          label="라벨 너비"
+          value={width}
+          width={160}
+          onChange={setWidth}
+        />
+      </div>
+      <Avatar
+        label
+        labelWidth={Number(width) || 180}
+        size="lg"
+        src="https://api.dicebear.com/9.x/miniavs/svg?seed=1"
+      >
+        {text}
+      </Avatar>
+    </div>
+  );
+}
+
+export const LabelText: Story = {
+  parameters: {
+    ...storyDescription("components-avatar--label-text"),
+    docs: {
+      ...storyDescription("components-avatar--label-text").docs,
+      source: {
+        type: "code",
+        code: withStoryImports(`function AvatarLabelText() {
+  const [text, setText] = useState('긴 라벨 텍스트를 입력해보세요');
+  const [width, setWidth] = useState('180');
+
+  return (
+    <div className="flex flex-col items-start gap-3">
+      <div className="flex flex-wrap items-end gap-3">
+        <Input
+          label="라벨 텍스트"
+          value={text}
+          width={240}
+          onChange={setText}
+        />
+        <Input
+          type="number"
+          min={80}
+          label="라벨 너비"
+          value={width}
+          width={160}
+          onChange={setWidth}
+        />
+      </div>
+      <Avatar
+        label
+        labelWidth={Number(width) || 180}
+        size="lg"
+        src="https://api.dicebear.com/9.x/miniavs/svg?seed=1"
+      >
+        {text}
+      </Avatar>
+    </div>
+  );
+}`),
+      },
+    },
+  },
+  render: () => <AvatarLabelTextExample />,
+};
 
 export const Image: Story = {
   parameters: {
@@ -150,11 +318,62 @@ export const Image: Story = {
       ...storyDescription("components-avatar--image").docs,
       source: {
         type: "code",
-        code: withStoryImports(`<Avatar src="https://api.dicebear.com/9.x/miniavs/svg?seed=1" />`),
+        code: withStoryImports(`<div className="flex items-center gap-3">
+  <Avatar
+    src="https://api.dicebear.com/9.x/miniavs/svg?seed=1"
+    size="md"
+  />
+  <Avatar
+    src="https://api.dicebear.com/9.x/miniavs/svg?seed=1"
+    size="lg"
+  />
+</div>`),
       },
     },
   },
-  render: () => <Avatar src="https://api.dicebear.com/9.x/miniavs/svg?seed=1" />,
+  render: () => (
+    <div className="flex items-center gap-3">
+      <Avatar src="https://api.dicebear.com/9.x/miniavs/svg?seed=1" size="md" />
+      <Avatar src="https://api.dicebear.com/9.x/miniavs/svg?seed=1" size="lg" />
+    </div>
+  ),
+};
+
+export const ImagePreview: Story = {
+  parameters: {
+    ...storyDescription("components-avatar--image-preview"),
+    docs: {
+      ...storyDescription("components-avatar--image-preview").docs,
+      source: {
+        type: "code",
+        code: withStoryImports(
+          `<div className="flex items-center gap-3">
+  <Avatar
+    src="https://api.dicebear.com/9.x/miniavs/svg?seed=1"
+    size="lg"
+    preview
+  />
+  <Avatar
+    label
+    src="https://api.dicebear.com/9.x/miniavs/svg?seed=1"
+    size="lg"
+    preview
+  >
+    manhat
+  </Avatar>
+</div>`,
+        ),
+      },
+    },
+  },
+  render: () => (
+    <div className="flex items-center gap-3">
+      <Avatar src="https://api.dicebear.com/9.x/miniavs/svg?seed=1" size="lg" preview />
+      <Avatar label src="https://api.dicebear.com/9.x/miniavs/svg?seed=1" size="lg" preview>
+        manhat
+      </Avatar>
+    </div>
+  ),
 };
 
 export const ImageError: Story = {
@@ -165,124 +384,20 @@ export const ImageError: Story = {
       source: {
         type: "code",
         code: withStoryImports(`<div className="flex items-center gap-3">
-  <Avatar size="small" src="/avatar-image-not-found.png" />
-  <Avatar size="medium" src="/avatar-image-not-found.png" />
-  <Avatar size="large" src="/avatar-image-not-found.png" />
+  <Avatar size="md" src="/avatar-image-not-found.png" />
+  <Avatar size="lg" src="/avatar-image-not-found.png" />
 </div>`),
       },
     },
   },
   render: () => (
     <div className="flex items-center gap-3">
-      <Avatar size="small" src="/avatar-image-not-found.png" />
-      <Avatar size="medium" src="/avatar-image-not-found.png" />
-      <Avatar size="large" src="/avatar-image-not-found.png" />
+      <Avatar size="md" src="/avatar-image-not-found.png" />
+      <Avatar size="lg" src="/avatar-image-not-found.png" />
     </div>
   ),
 };
 
-export const Sizes: Story = {
-  parameters: {
-    ...storyDescription("components-avatar--sizes"),
-    docs: {
-      ...storyDescription("components-avatar--sizes").docs,
-      source: {
-        type: "code",
-        code: withStoryImports(
-          `<div className="flex items-center gap-3">
-  <Avatar size="small">S</Avatar>
-  <Avatar size="medium">M</Avatar>
-  <Avatar size="large">L</Avatar>
-</div>`,
-        ),
-      },
-    },
-  },
-  render: () => (
-    <div className="flex items-center gap-3">
-      <Avatar size="small">S</Avatar>
-      <Avatar size="medium">M</Avatar>
-      <Avatar size="large">L</Avatar>
-    </div>
-  ),
-};
-
-export const TypesSizesAndShapes: Story = {
-  parameters: {
-    ...storyDescription("components-avatar--types-sizes-and-shapes"),
-    docs: {
-      ...storyDescription("components-avatar--types-sizes-and-shapes").docs,
-      source: {
-        type: "code",
-        code: withStoryImports(
-          `<div className="flex flex-col items-start gap-4">
-  <div className="flex flex-wrap items-center gap-3">
-    <Avatar type="default" size="small" shape="circle">M</Avatar>
-    <Avatar type="default" size="medium" shape="circle">M</Avatar>
-    <Avatar type="default" size="large" shape="circle">M</Avatar>
-  </div>
-  <div className="flex flex-wrap items-center gap-3">
-    <Avatar type="default" size="small" shape="square">M</Avatar>
-    <Avatar type="default" size="medium" shape="square">M</Avatar>
-    <Avatar type="default" size="large" shape="square">M</Avatar>
-  </div>
-  <div className="flex flex-wrap items-center gap-3">
-    <Avatar type="label" size="small" shape="circle" src="https://api.dicebear.com/9.x/miniavs/svg?seed=1">manhat</Avatar>
-    <Avatar type="label" size="medium" shape="circle" src="https://api.dicebear.com/9.x/miniavs/svg?seed=1">manhat</Avatar>
-    <Avatar type="label" size="large" shape="circle" src="https://api.dicebear.com/9.x/miniavs/svg?seed=1">manhat</Avatar>
-  </div>
-  <div className="flex flex-wrap items-center gap-3">
-    <Avatar type="label" size="small" shape="square" src="https://api.dicebear.com/9.x/miniavs/svg?seed=1">manhat</Avatar>
-    <Avatar type="label" size="medium" shape="square" src="https://api.dicebear.com/9.x/miniavs/svg?seed=1">manhat</Avatar>
-    <Avatar type="label" size="large" shape="square" src="https://api.dicebear.com/9.x/miniavs/svg?seed=1">manhat</Avatar>
-  </div>
-</div>`,
-        ),
-      },
-    },
-  },
-  render: () => (
-    <div className="flex flex-col items-start gap-4">
-      <div className="flex flex-wrap items-center gap-3">
-        <Avatar type="default" size="small" shape="circle">
-          M
-        </Avatar>
-        <Avatar type="default" size="medium" shape="circle">
-          M
-        </Avatar>
-        <Avatar type="default" size="large" shape="circle">
-          M
-        </Avatar>
-      </div>
-      <div className="flex flex-wrap items-center gap-3">
-        <Avatar type="default" size="small" shape="square">
-          M
-        </Avatar>
-        <Avatar type="default" size="medium" shape="square">
-          M
-        </Avatar>
-        <Avatar type="default" size="large" shape="square">
-          M
-        </Avatar>
-      </div>
-      {avatarShapes.map((shape) => (
-        <div key={shape} className="flex flex-wrap items-center gap-3">
-          {(["small", "medium", "large"] as const).map((size) => (
-            <Avatar
-              key={`${shape}-${size}`}
-              type="label"
-              size={size}
-              shape={shape}
-              src="https://api.dicebear.com/9.x/miniavs/svg?seed=1"
-            >
-              manhat
-            </Avatar>
-          ))}
-        </div>
-      ))}
-    </div>
-  ),
-};
 export const Group: Story = {
   parameters: {
     ...storyDescription("components-avatar--group"),

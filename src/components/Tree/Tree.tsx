@@ -181,7 +181,7 @@ export function Tree({
       )}
       style={
         showLine && level > 0
-          ? ({ "--wizard-tree-line-left": `${16 + (level - 1) * 24}px` } as React.CSSProperties)
+          ? ({ "--wizard-tree-line-left": `${12 + (level - 1) * 24}px` } as React.CSSProperties)
           : undefined
       }
     >
@@ -209,24 +209,28 @@ export function Tree({
                 )
               ) : null));
         return (
-          <li key={key} className={twMerge("relative", node.className)} style={node.style}>
+          <li key={key} className={twMerge("relative pb-1", node.className)} style={node.style}>
             <div
               className={twMerge(
-                "relative flex min-h-8 items-center gap-1 rounded-md px-1 text-sm transition-colors hover:bg-[#f5f5f5]",
+                "relative flex min-h-6 items-start text-sm",
                 blockNode && "w-full",
-                isSelected && "bg-[#e6f4ff] text-[#0062df]",
-                nodeDisabled && "cursor-not-allowed text-[#bbb] hover:bg-transparent",
+                nodeDisabled && "cursor-not-allowed text-[#bbb]",
               )}
-              style={{ paddingInlineStart: 4 + level * 24 }}
-              onClick={(event) => select(node, event)}
+              style={{ paddingInlineStart: level * 24 }}
             >
+              {showLine && level > 0 ? (
+                <span
+                  className="pointer-events-none absolute top-3 h-px border-t border-solid border-[#d9d9d9]"
+                  style={{ left: 12 + (level - 1) * 24, width: 12 }}
+                />
+              ) : null}
               {hasChildren ? (
                 <button
                   type="button"
                   data-tree-switcher={key}
                   tabIndex={-1}
                   disabled={nodeDisabled}
-                  className="inline-flex size-6 shrink-0 items-center justify-center rounded transition-transform duration-200"
+                  className="inline-flex size-6 shrink-0 cursor-pointer items-center justify-center rounded transition-transform duration-200 disabled:cursor-not-allowed"
                   style={{
                     transform: open && !loading.includes(key) ? "rotate(90deg)" : undefined,
                   }}
@@ -242,7 +246,7 @@ export function Tree({
               )}
               {checkable || node.checkable ? (
                 <span
-                  className="inline-flex shrink-0 items-center"
+                  className="mr-2 inline-flex size-6 shrink-0 items-center justify-center"
                   onClick={(event) => event.stopPropagation()}
                 >
                   <Checkbox
@@ -254,13 +258,18 @@ export function Tree({
                 </span>
               ) : null}
               {showIcon && node.icon ? (
-                <span className="inline-flex shrink-0">{node.icon}</span>
+                <span className="mr-1 inline-flex size-6 shrink-0 items-center justify-center">
+                  {node.icon}
+                </span>
               ) : null}
               <span
                 className={twMerge(
-                  "flex min-h-6 min-w-0 cursor-pointer items-center leading-6",
+                  "flex min-h-6 min-w-0 cursor-pointer items-center rounded-md px-1 leading-6 transition-colors hover:bg-[#f5f5f5]",
                   blockNode && "flex-1",
+                  isSelected && "bg-[#e6f4ff] text-[#0062df] hover:bg-[#e6f4ff]",
+                  nodeDisabled && "cursor-not-allowed hover:bg-transparent",
                 )}
+                onClick={(event) => select(node, event)}
               >
                 {titleRender?.(node) ?? node.title}
               </span>

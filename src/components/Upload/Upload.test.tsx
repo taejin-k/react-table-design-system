@@ -168,8 +168,12 @@ describe("Upload", () => {
     const actions = container.querySelector("[data-upload-picture-actions]");
 
     expect(item).toHaveClass("overflow-hidden");
+    expect(item).toHaveClass("size-[102px]");
     expect(actions).toHaveClass("bg-black/45", "opacity-0", "group-hover:opacity-100");
     expect(screen.queryByText("design-system.png")).not.toBeInTheDocument();
+    expect(item?.compareDocumentPosition(screen.getByText("+ 업로드"))).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
 
     await userEvent.click(container.querySelector("[data-upload-preview]")!);
     expect(onPreview).toHaveBeenCalledWith(expect.objectContaining({ uid: "image" }));

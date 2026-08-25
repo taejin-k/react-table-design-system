@@ -30,11 +30,18 @@ const meta = {
           <Stories />
           <h2>API</h2>
           <Markdown>{`
-### Methods
+### Message
 
-\`message.success\` · \`message.error\` · \`message.info\` · \`message.warning\` · \`message.loading\` · \`message.open\`을 제공해요.
-
-각 호출은 직접 닫을 수 있고 닫힘을 기다릴 수 있는 thenable 함수를 반환해요.
+| Name | Description | Type | Default |
+| --- | --- | --- | --- |
+| \`open\` | 설정한 내용으로 메시지를 표시해요. | \`(config) => MessageType\` | - |
+| \`success\` | 성공 메시지를 표시해요. | \`(content, duration?, onClose?) => MessageType\` | - |
+| \`error\` | 오류 메시지를 표시해요. | \`(content, duration?, onClose?) => MessageType\` | - |
+| \`info\` | 정보 메시지를 표시해요. | \`(content, duration?, onClose?) => MessageType\` | - |
+| \`warning\` | 경고 메시지를 표시해요. | \`(content, duration?, onClose?) => MessageType\` | - |
+| \`loading\` | 로딩 메시지를 표시해요. | \`(content, duration?, onClose?) => MessageType\` | - |
+| \`destroy\` | key의 메시지 또는 모든 메시지를 닫아요. | \`(key?) => void\` | - |
+| \`config\` | 전역 메시지 설정을 변경해요. | \`(config) => void\` | - |
 
 ### Config
 

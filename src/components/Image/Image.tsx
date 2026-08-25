@@ -4,6 +4,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -11,8 +12,9 @@ import {
 import { createPortal } from "react-dom";
 import { twMerge } from "tailwind-merge";
 import { Icon } from "../Icon";
+import { Skeleton } from "../Skeleton";
 import { lockBodyScroll } from "../_internal/body-scroll-lock";
-import { MOTION_DURATION_MID } from "../_internal/motion";
+import { MOTION_DURATION_SLOW } from "../_internal/motion";
 import type {
   ImageActions,
   ImageComponent,
@@ -25,7 +27,11 @@ import type {
 interface GroupContextValue {
   sources: string[];
   register: (src: string) => () => void;
-  open: (src: string, config?: ImagePreviewConfig) => void;
+  open: (src: string, origin: PreviewOrigin) => void;
+}
+interface PreviewOrigin {
+  x: number;
+  y: number;
 }
 const GroupContext = createContext<GroupContextValue | null>(null);
 const initialTransform: ImageTransform = {
@@ -42,50 +48,92 @@ function Preview({
   sources = [src],
   config = {},
   open,
+  origin,
   onClose,
 }: {
   src: string;
   sources?: string[];
   config?: ImagePreviewConfig;
   open: boolean;
+  origin?: PreviewOrigin;
   onClose: () => void;
 }) {
   const [active, setActive] = useState(Math.max(0, sources.indexOf(src)));
   const [transform, setTransform] = useState(initialTransform);
+  const [dragging, setDragging] = useState(false);
   const unlockScrollRef = useRef<(() => void) | null>(null);
   const dragRef = useRef<{ clientX: number; clientY: number; x: number; y: number } | undefined>(
     undefined,
   );
+  const dragFrameRef = useRef<number | undefined>(undefined);
+  const pendingDragRef = useRef<{ x: number; y: number } | undefined>(undefined);
   const current = sources[active] ?? src;
-  const minScale = config.minScale ?? 1,
-    maxScale = config.maxScale ?? 50,
-    step = config.scaleStep ?? 0.5;
-  const apply = (patch: Partial<ImageTransform>, action: string) => {
-    setTransform((currentTransform) => {
-      const next = { ...currentTransform, ...patch };
-      config.onTransform?.({ transform: next, action });
-      return next;
-    });
+  const minScale = 0.25;
+  const maxScale = 50;
+  const step = 0.5;
+  const updateTransform = (updater: (currentTransform: ImageTransform) => ImageTransform) => {
+    setTransform(updater);
   };
   const actions: ImageActions = {
     onActive: (index) => {
       setActive(index);
       setTransform(initialTransform);
     },
-    onFlipX: () => apply({ flipX: !transform.flipX }, "flipX"),
-    onFlipY: () => apply({ flipY: !transform.flipY }, "flipY"),
-    onRotateLeft: () => apply({ rotate: transform.rotate - 90 }, "rotateLeft"),
-    onRotateRight: () => apply({ rotate: transform.rotate + 90 }, "rotateRight"),
-    onZoomIn: () => apply({ scale: Math.min(maxScale, transform.scale * (1 + step)) }, "zoomIn"),
-    onZoomOut: () => apply({ scale: Math.max(minScale, transform.scale / (1 + step)) }, "zoomOut"),
+    onFlipX: () =>
+      updateTransform((currentTransform) => ({
+        ...currentTransform,
+        flipX: !currentTransform.flipX,
+      })),
+    onFlipY: () =>
+      updateTransform((currentTransform) => ({
+        ...currentTransform,
+        flipY: !currentTransform.flipY,
+      })),
+    onRotateLeft: () =>
+      updateTransform((currentTransform) => ({
+        ...currentTransform,
+        rotate: currentTransform.rotate - 90,
+      })),
+    onRotateRight: () =>
+      updateTransform((currentTransform) => ({
+        ...currentTransform,
+        rotate: currentTransform.rotate + 90,
+      })),
+    onZoomIn: () =>
+      updateTransform((currentTransform) => ({
+        ...currentTransform,
+        scale: Math.min(
+          maxScale,
+          currentTransform.scale < 1
+            ? Number((currentTransform.scale + step / 2).toFixed(4))
+            : currentTransform.scale * (1 + step),
+        ),
+      })),
+    onZoomOut: () =>
+      updateTransform((currentTransform) => ({
+        ...currentTransform,
+        scale: Math.max(
+          minScale,
+          currentTransform.scale <= 1
+            ? Number((currentTransform.scale - step / 2).toFixed(4))
+            : currentTransform.scale / (1 + step),
+        ),
+      })),
     onReset: () => {
       setTransform(initialTransform);
-      config.onTransform?.({ transform: initialTransform, action: "reset" });
     },
   };
+  const zoomOutDisabled = transform.scale <= minScale;
+  const zoomInDisabled = transform.scale >= maxScale;
   useEffect(() => {
     if (open) setTransform(initialTransform);
   }, [open, current]);
+  useEffect(
+    () => () => {
+      if (dragFrameRef.current !== undefined) cancelAnimationFrame(dragFrameRef.current);
+    },
+    [],
+  );
   useEffect(() => {
     setActive(Math.max(0, sources.indexOf(src)));
   }, [sources, src]);
@@ -108,64 +156,65 @@ function Preview({
     return () => document.removeEventListener("keydown", key);
   });
   if (typeof document === "undefined") return null;
+  const actionClassName =
+    "inline-flex size-[42px] cursor-pointer items-center justify-center border-0 bg-transparent p-3 text-[rgba(255,255,255,0.65)] transition-colors hover:text-[rgba(255,255,255,0.85)] disabled:cursor-not-allowed disabled:text-[rgba(255,255,255,0.25)] motion-reduce:transition-none";
   const toolbar = (
-    <div className="flex h-11 items-center rounded-full bg-black/65 px-2 text-white">
+    <div
+      data-image-preview-actions
+      className="flex h-[42px] items-center gap-3 rounded-full bg-black/10 px-6"
+    >
       <button
         type="button"
-        className="inline-flex size-9 items-center justify-center rounded-full hover:bg-white/10"
-        onClick={actions.onZoomOut}
-      >
-        <Icon icon="remove" size={20} />
-      </button>
-      <span className="min-w-14 text-center text-sm">{Math.round(transform.scale * 100)}%</span>
-      <button
-        type="button"
-        className="inline-flex size-9 items-center justify-center rounded-full hover:bg-white/10"
-        onClick={actions.onZoomIn}
-      >
-        <Icon icon="add" size={20} />
-      </button>
-      <button
-        type="button"
-        className="inline-flex size-9 items-center justify-center rounded-full hover:bg-white/10"
-        onClick={actions.onRotateLeft}
-      >
-        <Icon icon="refresh" size={20} />
-      </button>
-      <button
-        type="button"
-        className="inline-flex size-9 items-center justify-center rounded-full hover:bg-white/10"
-        onClick={actions.onRotateRight}
-      >
-        <Icon icon="refresh" size={20} className="-scale-x-100" />
-      </button>
-      <button
-        type="button"
-        className="inline-flex size-9 items-center justify-center rounded-full text-xl hover:bg-white/10"
-        onClick={actions.onFlipX}
-      >
-        ↔
-      </button>
-      <button
-        type="button"
-        className="inline-flex size-9 items-center justify-center rounded-full text-xl hover:bg-white/10"
+        data-image-preview-action="flip-vertical"
+        className={actionClassName}
         onClick={actions.onFlipY}
       >
-        ↕
+        <Icon icon="flip-vertical" size={18} />
       </button>
       <button
         type="button"
-        className="inline-flex h-9 min-w-9 items-center justify-center rounded-full px-1 text-xs hover:bg-white/10"
-        onClick={actions.onReset}
+        data-image-preview-action="flip-horizontal"
+        className={actionClassName}
+        onClick={actions.onFlipX}
       >
-        1:1
+        <Icon icon="flip-horizontal" size={18} />
+      </button>
+      <button
+        type="button"
+        data-image-preview-action="rotate-left"
+        className={actionClassName}
+        onClick={actions.onRotateLeft}
+      >
+        <Icon icon="rotate-left" size={18} />
+      </button>
+      <button
+        type="button"
+        data-image-preview-action="rotate-right"
+        className={actionClassName}
+        onClick={actions.onRotateRight}
+      >
+        <Icon icon="rotate-right" size={18} />
+      </button>
+      <button
+        type="button"
+        data-image-preview-action="zoom-out"
+        className={actionClassName}
+        disabled={zoomOutDisabled}
+        onClick={actions.onZoomOut}
+      >
+        <Icon icon="zoom-out" size={18} />
+      </button>
+      <button
+        type="button"
+        data-image-preview-action="zoom-in"
+        className={actionClassName}
+        disabled={zoomInDisabled}
+        onClick={actions.onZoomIn}
+      >
+        <Icon icon="zoom-in" size={18} />
       </button>
     </div>
   );
-  const maskConfig =
-    typeof config.mask === "object"
-      ? config.mask
-      : { enabled: config.mask !== false, closable: true };
   const container =
     config.getContainer === false
       ? null
@@ -178,7 +227,7 @@ function Preview({
     <CSSMotion
       visible={open}
       motionName="wizard-image-preview-motion"
-      motionDeadline={MOTION_DURATION_MID + 50}
+      motionDeadline={MOTION_DURATION_SLOW + 50}
       removeOnLeave
       onVisibleChanged={(visible) => {
         if (!visible) releaseBodyScroll();
@@ -194,19 +243,19 @@ function Preview({
           )}
           style={{ zIndex: config.zIndex ?? 1080, ...style }}
         >
-          {maskConfig.enabled !== false ? (
+          {config.mask !== false ? (
             <div
               className="wizard-image-preview-mask absolute inset-0 bg-black/45"
-              onClick={() => maskConfig.closable !== false && onClose()}
+              onClick={onClose}
             />
           ) : null}
           <button
             type="button"
             data-image-preview-close
-            className="absolute top-5 right-5 z-[2] inline-flex size-10 items-center justify-center rounded-full bg-black/45 text-white hover:bg-black/65"
+            className="absolute top-3 right-3 z-[2] inline-flex size-[42px] items-center justify-center rounded-full border-0 bg-black/10 p-3 text-white transition-colors hover:bg-black/20 motion-reduce:transition-none"
             onClick={onClose}
           >
-            {config.closeIcon ?? <Icon icon="close" size={20} />}
+            <Icon icon="close" size={18} />
           </button>
           {sources.length > 1 ? (
             <>
@@ -214,68 +263,92 @@ function Preview({
                 type="button"
                 data-image-preview-previous
                 disabled={active === 0}
-                className="absolute left-5 z-[2] inline-flex size-12 items-center justify-center rounded-full bg-black/45 text-white disabled:opacity-30"
+                className="absolute left-3 z-[2] inline-flex size-[42px] items-center justify-center rounded-full border-0 bg-black/10 p-3 text-white transition-colors hover:bg-black/20 disabled:cursor-not-allowed disabled:bg-transparent disabled:text-[rgba(255,255,255,0.25)] motion-reduce:transition-none"
                 onClick={() => actions.onActive(active - 1)}
               >
-                <Icon icon="chevron-left" size={24} />
+                <Icon icon="chevron-left" size={18} />
               </button>
               <button
                 type="button"
                 data-image-preview-next
                 disabled={active === sources.length - 1}
-                className="absolute right-5 z-[2] inline-flex size-12 items-center justify-center rounded-full bg-black/45 text-white disabled:opacity-30"
+                className="absolute right-3 z-[2] inline-flex size-[42px] items-center justify-center rounded-full border-0 bg-black/10 p-3 text-white transition-colors hover:bg-black/20 disabled:cursor-not-allowed disabled:bg-transparent disabled:text-[rgba(255,255,255,0.25)] motion-reduce:transition-none"
                 onClick={() => actions.onActive(active + 1)}
               >
-                <Icon icon="chevron-right" size={24} />
+                <Icon icon="chevron-right" size={18} />
               </button>
             </>
           ) : null}
-          <img
-            src={current}
-            alt=""
-            draggable={false}
-            className={twMerge(
-              "wizard-image-preview-image relative z-[1] max-h-[calc(100vh-140px)] max-w-[calc(100vw-120px)] object-contain transition-transform duration-300 ease-[cubic-bezier(0.645,0.045,0.355,1)] select-none motion-reduce:transition-none",
-              config.movable !== false && "cursor-grab active:cursor-grabbing",
-            )}
-            style={{
-              transform: `translate3d(${transform.x}px,${transform.y}px,0) rotate(${transform.rotate}deg) scale(${transform.scale * (transform.flipX ? -1 : 1)}, ${transform.scale * (transform.flipY ? -1 : 1)})`,
-            }}
-            onPointerDown={(event) => {
-              if (config.movable === false) return;
-              event.currentTarget.setPointerCapture(event.pointerId);
-              dragRef.current = {
-                clientX: event.clientX,
-                clientY: event.clientY,
-                x: transform.x,
-                y: transform.y,
-              };
-            }}
-            onPointerMove={(event) => {
-              const drag = dragRef.current;
-              if (!drag) return;
-              apply(
-                {
+          <div
+            data-image-preview-body
+            className="wizard-image-preview-body pointer-events-none absolute inset-0 flex items-center justify-center overflow-hidden"
+            style={{ transformOrigin: origin ? `${origin.x}px ${origin.y}px` : "center center" }}
+          >
+            <img
+              src={current}
+              alt=""
+              draggable={false}
+              className={twMerge(
+                "wizard-image-preview-image pointer-events-auto relative z-[1] max-h-[calc(100vh-140px)] max-w-[calc(100vw-120px)] touch-none object-contain will-change-transform select-none",
+                !dragging &&
+                  "transition-transform duration-300 ease-[cubic-bezier(0,0,0.25,1)] motion-reduce:transition-none",
+                dragging ? "cursor-grabbing" : "cursor-grab",
+              )}
+              style={{
+                transform: `translate3d(${transform.x}px,${transform.y}px,0) rotate(${transform.rotate}deg) scale(${transform.scale * (transform.flipX ? -1 : 1)}, ${transform.scale * (transform.flipY ? -1 : 1)})`,
+              }}
+              onPointerDown={(event) => {
+                event.currentTarget.setPointerCapture?.(event.pointerId);
+                setDragging(true);
+                dragRef.current = {
+                  clientX: event.clientX,
+                  clientY: event.clientY,
+                  x: transform.x,
+                  y: transform.y,
+                };
+              }}
+              onPointerMove={(event) => {
+                const drag = dragRef.current;
+                if (!drag) return;
+                pendingDragRef.current = {
                   x: drag.x + event.clientX - drag.clientX,
                   y: drag.y + event.clientY - drag.clientY,
-                },
-                "move",
-              );
-            }}
-            onPointerUp={() => {
-              dragRef.current = undefined;
-            }}
-            onPointerCancel={() => {
-              dragRef.current = undefined;
-            }}
-            onWheel={(event) => {
-              event.preventDefault();
-              if (event.deltaY < 0) actions.onZoomIn();
-              else actions.onZoomOut();
-            }}
-          />
-          <div className="absolute bottom-6 z-[2]">
-            {config.toolbarRender?.(toolbar, { transform, actions }) ?? toolbar}
+                };
+                if (dragFrameRef.current !== undefined) return;
+                dragFrameRef.current = requestAnimationFrame(() => {
+                  dragFrameRef.current = undefined;
+                  const pendingDrag = pendingDragRef.current;
+                  if (!pendingDrag) return;
+                  updateTransform((currentTransform) => ({
+                    ...currentTransform,
+                    ...pendingDrag,
+                  }));
+                });
+              }}
+              onPointerUp={() => {
+                dragRef.current = undefined;
+                pendingDragRef.current = undefined;
+                setDragging(false);
+              }}
+              onPointerCancel={() => {
+                dragRef.current = undefined;
+                pendingDragRef.current = undefined;
+                setDragging(false);
+              }}
+              onWheel={(event) => {
+                event.preventDefault();
+                if (event.deltaY < 0) actions.onZoomIn();
+                else actions.onZoomOut();
+              }}
+            />
+          </div>
+          <div className="absolute bottom-8 z-[2] flex flex-col items-center gap-3">
+            {sources.length > 1 ? (
+              <span data-image-preview-count className="text-sm text-[rgba(255,255,255,0.65)]">
+                {active + 1} / {sources.length}
+              </span>
+            ) : null}
+            {toolbar}
           </div>
         </div>
       )}
@@ -291,9 +364,7 @@ function ImageBase({
   height,
   placeholder,
   preview = true,
-  rootStyle,
   className,
-  style,
   alt = "",
   onLoad,
   onError,
@@ -303,8 +374,10 @@ function ImageBase({
   const registerInGroup = group?.register;
   const config = useMemo(() => (typeof preview === "object" ? preview : {}), [preview]);
   const controlledOpen = typeof preview === "object" ? preview.open : undefined;
+  const imageRef = useRef<HTMLImageElement>(null);
   const [innerOpen, setInnerOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [previewOrigin, setPreviewOrigin] = useState<PreviewOrigin>();
+  const [loading, setLoading] = useState(Boolean(src));
   const [failed, setFailed] = useState(false);
   const actualSrc = failed && fallback ? fallback : src;
   useEffect(() => {
@@ -312,41 +385,61 @@ function ImageBase({
     return registerInGroup(actualSrc);
   }, [actualSrc, registerInGroup]);
   useEffect(() => {
-    setLoading(Boolean(src));
     setFailed(false);
   }, [src]);
+  useLayoutEffect(() => {
+    const image = imageRef.current;
+    if (!actualSrc) {
+      setLoading(false);
+      return;
+    }
+    if (!image?.complete) {
+      setLoading(true);
+      return;
+    }
+    if (image.naturalWidth > 0) {
+      setLoading(false);
+      return;
+    }
+    if (fallback && actualSrc !== fallback) {
+      setLoading(true);
+      setFailed(true);
+      return;
+    }
+    setLoading(false);
+  }, [actualSrc, fallback]);
   const changeOpen = (next: boolean) => {
     const previous = controlledOpen ?? innerOpen;
     if (controlledOpen === undefined) setInnerOpen(next);
     config.onOpenChange?.(next, previous);
   };
-  const openPreview = () => {
+  const openPreview: ImageProps["onClick"] = (event) => {
     if (!actualSrc || preview === false) return;
-    if (group) group.open(actualSrc, config);
+    const rect = event.currentTarget.getBoundingClientRect();
+    const origin = {
+      x: rect.left + rect.width / 2,
+      y: rect.top + rect.height / 2,
+    };
+    setPreviewOrigin(origin);
+    if (group) group.open(actualSrc, origin);
     else changeOpen(true);
   };
-  const progressConfig =
-    typeof placeholder === "object" && placeholder && "progress" in placeholder
-      ? placeholder.progress
-      : undefined;
-  const progressPercent = typeof progressConfig === "object" ? (progressConfig.percent ?? 0) : 0;
-  const progressNode = <span className="text-xs text-[#999]">{progressPercent}%</span>;
   return (
     <span
       className={twMerge("group relative inline-block overflow-hidden align-middle", className)}
-      style={{ width, height, ...rootStyle }}
+      style={{ width, height }}
     >
       {loading && placeholder ? (
-        <span className="absolute inset-0 flex items-center justify-center bg-[#f5f5f5]">
-          {typeof placeholder === "object"
-            ? typeof progressConfig === "object" && progressConfig.render
-              ? progressConfig.render(progressNode, progressPercent)
-              : progressNode
-            : placeholder}
-        </span>
+        <Skeleton.Image
+          active
+          fullWidth
+          height="100%"
+          className="absolute inset-0 size-full rounded-none"
+        />
       ) : null}
       <img
         {...rest}
+        ref={imageRef}
         src={actualSrc}
         alt={alt}
         className={twMerge(
@@ -354,7 +447,6 @@ function ImageBase({
           preview !== false && "cursor-zoom-in",
           loading && "invisible",
         )}
-        style={style}
         onLoad={(event) => {
           setLoading(false);
           onLoad?.(event);
@@ -385,6 +477,7 @@ function ImageBase({
           src={config.src ?? actualSrc}
           config={config}
           open={controlledOpen ?? innerOpen}
+          origin={previewOrigin}
           onClose={() => changeOpen(false)}
         />
       ) : null}
@@ -392,24 +485,20 @@ function ImageBase({
   );
 }
 
-function PreviewGroup({ children, preview = true }: ImagePreviewGroupProps) {
-  const config = useMemo(() => (typeof preview === "object" ? preview : {}), [preview]);
+function PreviewGroup({ children }: ImagePreviewGroupProps) {
   const [sources, setSources] = useState<string[]>([]);
   const [current, setCurrent] = useState<string>();
   const [open, setOpen] = useState(false);
+  const [previewOrigin, setPreviewOrigin] = useState<PreviewOrigin>();
   const register = useCallback((src: string) => {
     setSources((items) => (items.includes(src) ? items : [...items, src]));
     return () => setSources((items) => items.filter((item) => item !== src));
   }, []);
-  const openGroup = useCallback(
-    (src: string) => {
-      if (preview === false) return;
-      setCurrent(src);
-      setOpen(true);
-      config.onOpenChange?.(true, false);
-    },
-    [preview, config],
-  );
+  const openGroup = useCallback((src: string, origin: PreviewOrigin) => {
+    setCurrent(src);
+    setPreviewOrigin(origin);
+    setOpen(true);
+  }, []);
   const context = useMemo<GroupContextValue>(
     () => ({
       sources,
@@ -418,7 +507,6 @@ function PreviewGroup({ children, preview = true }: ImagePreviewGroupProps) {
     }),
     [sources, register, openGroup],
   );
-  const controlledOpen = typeof preview === "object" ? preview.open : undefined;
   return (
     <GroupContext.Provider value={context}>
       {children}
@@ -426,12 +514,9 @@ function PreviewGroup({ children, preview = true }: ImagePreviewGroupProps) {
         <Preview
           src={current}
           sources={sources}
-          config={config}
-          open={controlledOpen ?? open}
-          onClose={() => {
-            setOpen(false);
-            config.onOpenChange?.(false, true);
-          }}
+          open={open}
+          origin={previewOrigin}
+          onClose={() => setOpen(false)}
         />
       ) : null}
     </GroupContext.Provider>

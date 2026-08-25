@@ -177,6 +177,15 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+export const Basic: Story = {
+  args: { placeholder: "날짜를 선택하세요" },
+  parameters: {
+    ...storySource("components-datepicker--basic", `<DatePicker width={320} />`),
+    controls: { disable: false },
+  },
+  render: (args) => <DatePicker {...args} width={320} />,
+};
+
 export const Sizes: Story = {
   parameters: {
     ...storyDescription("components-datepicker--sizes"),
@@ -290,15 +299,6 @@ export const StaticError: Story = {
   render: () => (
     <DatePicker label="예약일" required errorMessage="예약일을 선택해 주세요." width={320} />
   ),
-};
-
-export const Basic: Story = {
-  args: { placeholder: "날짜를 선택하세요" },
-  parameters: {
-    ...storySource("components-datepicker--basic", `<DatePicker width={320} />`),
-    controls: { disable: false },
-  },
-  render: (args) => <DatePicker {...args} width={320} />,
 };
 
 export const PickerTypes: Story = {

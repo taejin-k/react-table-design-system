@@ -266,7 +266,7 @@ function UploadBase({
       <div
         data-upload-picture-item
         className={twMerge(
-          "group relative flex size-24 min-w-0 items-center justify-center overflow-hidden rounded-md border border-[#d9d9d9] bg-[#fafafa] text-sm",
+          "group relative flex size-[102px] min-w-0 items-center justify-center overflow-hidden rounded-lg border border-[#d9d9d9] bg-white p-2 text-sm",
           file.status === "error" && "border-[#ff4d4f] text-[#ff4d4f]",
           listType === "picture-circle" && "rounded-full",
         )}
@@ -276,11 +276,15 @@ function UploadBase({
             src={previewSource}
             alt=""
             crossOrigin={file.crossOrigin || undefined}
-            className="absolute inset-0 size-full object-cover"
+            className={twMerge(
+              "size-full rounded object-cover",
+              listType === "picture-circle" && "rounded-full",
+            )}
           />
         ) : (
-          <span className="inline-flex text-[#666]">
+          <span className="flex max-w-full flex-col items-center gap-1 text-[#666]">
             {iconRender?.(file, listType) ?? <Icon icon="file-outlined" size={28} />}
+            <span className="max-w-[78px] truncate text-xs">{file.name}</span>
           </span>
         )}
         {file.status === "uploading" ? (
@@ -298,30 +302,30 @@ function UploadBase({
               <button
                 data-upload-preview
                 type="button"
-                className="inline-flex size-7 items-center justify-center text-white/90 transition-colors hover:text-white"
+                className="inline-flex size-6 items-center justify-center text-white/90 transition-colors hover:text-white"
                 onClick={() => void preview(file)}
               >
-                <Icon icon="eye" size={18} />
+                <Icon icon="eye" size={16} />
               </button>
             ) : null}
             {showDownloadAction ? (
               <button
                 data-upload-download
                 type="button"
-                className="inline-flex size-7 items-center justify-center text-white/90 transition-colors hover:text-white"
+                className="inline-flex size-6 items-center justify-center text-white/90 transition-colors hover:text-white"
                 onClick={() => download(file)}
               >
-                <Icon icon="download" size={18} />
+                <Icon icon="download" size={16} />
               </button>
             ) : null}
             {showRemoveAction ? (
               <button
                 data-upload-remove
                 type="button"
-                className="inline-flex size-7 items-center justify-center text-white/90 transition-colors hover:text-white"
+                className="inline-flex size-6 items-center justify-center text-white/90 transition-colors hover:text-white"
                 onClick={() => void remove(file)}
               >
-                <Icon icon="delete-outlined" size={18} />
+                <Icon icon="delete-outlined" size={16} />
               </button>
             ) : null}
           </div>
@@ -338,7 +342,8 @@ function UploadBase({
     ) : (
       <div
         className={twMerge(
-          "group relative flex min-w-0 items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-[#f5f5f5]",
+          "group relative flex min-w-0 items-center rounded-md px-1 text-sm leading-6 transition-colors hover:bg-[#f5f5f5]",
+          listType === "picture" && "min-h-[66px] gap-2 p-2",
           file.status === "error" && "text-[#ff4d4f]",
         )}
       >
@@ -348,13 +353,18 @@ function UploadBase({
             alt=""
             crossOrigin={file.crossOrigin || undefined}
             className={twMerge(
-              "size-8 shrink-0 rounded object-cover",
-              listType === "picture" && "size-12",
+              "size-4 shrink-0 rounded object-cover",
+              listType === "picture" && "size-12 border border-[#d9d9d9] p-1",
             )}
           />
         ) : (
-          <span className="inline-flex shrink-0 text-[#666]">
-            {iconRender?.(file, listType) ?? <Icon icon="file-outlined" />}
+          <span
+            className={twMerge(
+              "mr-2 inline-flex shrink-0 text-[#0062df]",
+              file.status === "error" && "text-[#ff4d4f]",
+            )}
+          >
+            {iconRender?.(file, listType) ?? <Icon icon="file-outlined" size={16} />}
           </span>
         )}
         {(showConfig.showPreviewIcon ?? true) ? (
@@ -374,7 +384,7 @@ function UploadBase({
         {showDownloadAction ? (
           <button
             type="button"
-            className="inline-flex shrink-0 text-[#666] hover:text-[#0062df]"
+            className="inline-flex shrink-0 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 hover:text-[#0062df]"
             onClick={() => download(file)}
           >
             <Icon icon="download" />
@@ -383,7 +393,7 @@ function UploadBase({
         {showRemoveAction ? (
           <button
             type="button"
-            className="inline-flex shrink-0 text-[#666] hover:text-[#ff4d4f]"
+            className="inline-flex shrink-0 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 hover:text-[#ff4d4f]"
             onClick={() => void remove(file)}
           >
             <Icon icon="delete-outlined" />
@@ -407,14 +417,54 @@ function UploadBase({
       }) ?? origin
     );
   };
+  const isPictureList = listType === "picture-card" || listType === "picture-circle";
+  const triggerNode = (
+    <span
+      tabIndex={disabled ? -1 : 0}
+      className={twMerge(
+        "inline-flex",
+        isPictureList &&
+          "size-[102px] shrink-0 cursor-pointer items-center justify-center rounded-lg border border-dashed border-[#d9d9d9] bg-[#fafafa] transition-colors hover:border-[#0062df]",
+        listType === "picture-circle" && "rounded-full",
+        disabled && "cursor-not-allowed opacity-50 [&>*]:pointer-events-none",
+      )}
+      onClick={() => !disabled && openFileDialogOnClick && inputRef.current?.click()}
+      onKeyDown={(event) => {
+        if (!disabled && openFileDialogOnClick && (event.key === "Enter" || event.key === " ")) {
+          event.preventDefault();
+          inputRef.current?.click();
+        }
+      }}
+    >
+      {children}
+    </span>
+  );
+  const listNode = showUploadList ? (
+    <CSSMotionList
+      keys={currentFiles.map((file) => ({ key: file.uid, file }))}
+      component="div"
+      motionName="wizard-upload-motion"
+      motionAppear={false}
+      motionDeadline={250}
+      className={twMerge(isPictureList ? "contents" : "flex min-w-0 flex-col gap-2")}
+    >
+      {({ file, className: motionClassName, style: motionStyle }, motionRef) => (
+        <div
+          ref={motionRef}
+          className={twMerge("wizard-upload-motion-item", motionClassName)}
+          style={motionStyle}
+        >
+          <div>{renderFile(file as UploadFile)}</div>
+        </div>
+      )}
+    </CSSMotionList>
+  ) : null;
   return (
     <span
       ref={rootRef}
       className={twMerge(
         "inline-flex min-w-0 gap-2 font-pretendard",
-        listType === "picture-card" || listType === "picture-circle"
-          ? "flex-row flex-wrap items-start"
-          : "flex-col",
+        isPictureList ? "flex-row flex-wrap items-start" : "flex-col",
         className,
       )}
       style={style}
@@ -444,47 +494,8 @@ function UploadBase({
           event.target.value = "";
         }}
       />
-      <span
-        tabIndex={disabled ? -1 : 0}
-        className={twMerge(
-          "inline-flex",
-          (listType === "picture-card" || listType === "picture-circle") &&
-            "size-24 shrink-0 cursor-pointer items-center justify-center rounded-md border border-dashed border-[#d9d9d9] bg-[#fafafa] transition-colors hover:border-[#0062df]",
-          listType === "picture-circle" && "rounded-full",
-          disabled && "cursor-not-allowed opacity-50 [&>*]:pointer-events-none",
-        )}
-        onClick={() => !disabled && openFileDialogOnClick && inputRef.current?.click()}
-        onKeyDown={(event) => {
-          if (!disabled && openFileDialogOnClick && (event.key === "Enter" || event.key === " ")) {
-            event.preventDefault();
-            inputRef.current?.click();
-          }
-        }}
-      >
-        {children}
-      </span>
-      {showUploadList ? (
-        <CSSMotionList
-          keys={currentFiles.map((file) => ({ key: file.uid, file }))}
-          component="div"
-          motionName="wizard-upload-motion"
-          motionAppear={false}
-          motionDeadline={250}
-          className={twMerge(
-            (listType === "picture-card" || listType === "picture-circle") && "contents",
-          )}
-        >
-          {({ file, className: motionClassName, style: motionStyle }, motionRef) => (
-            <div
-              ref={motionRef}
-              className={twMerge("wizard-upload-motion-item", motionClassName)}
-              style={motionStyle}
-            >
-              <div>{renderFile(file as UploadFile)}</div>
-            </div>
-          )}
-        </CSSMotionList>
-      ) : null}
+      {isPictureList ? listNode : triggerNode}
+      {isPictureList ? triggerNode : listNode}
     </span>
   );
 }
@@ -516,11 +527,11 @@ function Dragger(props: UploadProps) {
       }}
     >
       <UploadBase {...rest} disabled={disabled} className="flex w-full" onDrop={onDrop}>
-        <span className="flex min-h-40 w-full flex-col items-center justify-center gap-3 p-6 text-center text-sm text-[#666]">
+        <span className="flex min-h-44 w-full flex-col items-center justify-center gap-1 p-4 text-center text-sm text-[#666]">
           {children ?? (
             <>
-              <Icon icon="upload" size={32} color="#0062df" />
-              <span className="text-base text-[#111]">
+              <Icon icon="upload" size={40} color="#0062df" />
+              <span className="mt-2 text-base text-[#111]">
                 클릭하거나 파일을 이 영역으로 드래그하세요
               </span>
             </>

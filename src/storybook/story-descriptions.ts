@@ -352,7 +352,7 @@ export const storyDescriptions: Record<string, string> = {
     "checkStrictly=false로 부모와 자식 선택 상태를 연동해요.",
 
   "components-menu--basic":
-    "아이콘, 구분선과 하위 메뉴를 포함한 인라인 내비게이션을 구성하고 항목을 선택해요.",
+    "같은 항목을 기본 세로형과 펼침 가능한 인라인형으로 구성해 배치 차이를 비교해요.",
   "components-menu--horizontal":
     "메뉴를 가로로 배치하고 하위 메뉴를 팝업으로 열어 상단 내비게이션에 사용해요.",
   "components-menu--dark":
@@ -363,8 +363,7 @@ export const storyDescriptions: Record<string, string> = {
   "components-tabs--editable": "탭 추가·삭제 버튼을 표시하고 onEdit으로 편집 동작을 처리해요.",
   "components-tabs--vertical": "탭 목록을 콘텐츠 왼쪽에 세로로 배치해요.",
 
-  "components-colorpicker--basic":
-    "색상 패널에서 색조·채도·명도·투명도를 조절하고 프리셋 색상을 선택해요.",
+  "components-colorpicker--basic": "색상 패널에서 색조·채도·명도·투명도를 조절해요.",
   "components-colorpicker--allow-clear": "선택한 색상을 초기화 버튼으로 지울 수 있어요.",
   "components-colorpicker--sizes": "세 가지 트리거 크기를 나란히 비교해요.",
   "components-colorpicker--formats": "HEX·RGB·HSB 형식으로 색상 값을 표시하고 입력해요.",
@@ -374,8 +373,6 @@ export const storyDescriptions: Record<string, string> = {
     "자주 사용하는 브랜드·상태 색상을 그룹으로 등록해 빠르게 선택해요.",
   "components-colorpicker--triggers": "클릭 또는 hover로 색상 패널을 열어요.",
   "components-colorpicker--controlled": "value와 onChange로 선택 색상을 외부 상태에서 제어해요.",
-  "components-colorpicker--custom-trigger":
-    "children으로 ColorPicker 트리거 내용을 원하는 형태로 구성해요.",
 
   "components-upload--basic":
     "버튼으로 파일을 선택하고 업로드 전에 파일 목록과 제거 동작을 확인해요.",
@@ -388,13 +385,18 @@ export const storyDescriptions: Record<string, string> = {
     "사용자 정의 요청에서 전달한 진행률과 완료 상태를 표시해요.",
   "components-upload--file-states": "완료·업로드 중·오류 파일의 목록 상태와 동작을 비교해요.",
 
-  "components-avatar--basic": "텍스트, 아이콘과 서로 다른 크기·모양의 아바타를 비교해요.",
+  "components-avatar--basic": "기본 아바타를 표시해요.",
+  "components-avatar--sizes": "md와 lg 크기의 아바타를 비교해요.",
+  "components-avatar--shapes": "원형과 사각형 아바타를 크기별로 비교해요.",
+  "components-avatar--color": "배경색을 적용한 기본 아바타와 라벨 아바타를 비교해요.",
   "components-avatar--text": "여러 글자를 입력해도 아바타에는 첫 글자만 표시해요.",
-  "components-avatar--image": "이미지 주소를 전달해 아바타로 표시해요.",
+  "components-avatar--label-text":
+    "라벨 텍스트와 너비를 입력하고 지정한 영역을 넘는 텍스트의 말줄임을 확인해요.",
+  "components-avatar--image": "이미지 아바타를 md와 lg 크기로 비교해요.",
+  "components-avatar--image-preview":
+    "기본형과 라벨형 아바타 이미지를 클릭해 크게 보고 확대·축소할 수 있어요.",
   "components-avatar--image-error":
-    "이미지를 불러오지 못했을 때 세 가지 크기로 기본 사용자 아이콘을 표시해요.",
-  "components-avatar--sizes": "세 가지 기본 크기의 아바타를 비교해요.",
-  "components-avatar--types-sizes-and-shapes": "기본형과 라벨형 아바타의 크기와 모양을 비교해요.",
+    "이미지를 불러오지 못했을 때 두 가지 크기로 기본 사용자 아이콘을 표시해요.",
   "components-avatar--group":
     "여러 아바타를 겹쳐 표시하고 최대 개수를 넘는 사용자를 숫자로 요약해요.",
 
@@ -405,6 +407,8 @@ export const storyDescriptions: Record<string, string> = {
     "월간 달력을 전체 너비로 표시하고 날짜와 이전·다음 달을 탐색해요.",
   "components-calendar--card": "작은 카드형 달력에서 날짜를 확인하고 선택해요.",
   "components-calendar--year": "한 해의 열두 달을 한 화면에서 선택해요.",
+  "components-calendar--selection-rules-and-cell":
+    "선택 가능한 기간과 요일을 제한하고 일정이 있는 날짜에 표시를 추가해요.",
 
   "components-collapse--basic": "여러 패널을 독립적으로 열고 닫으며 비활성 패널의 동작을 제한해요.",
   "components-collapse--accordion": "한 번에 하나의 패널만 펼쳐지는 아코디언을 사용해요.",
@@ -413,21 +417,37 @@ export const storyDescriptions: Record<string, string> = {
   "components-description--basic":
     "레이블과 값을 열 단위로 정렬해 사용자 정보를 읽기 쉽게 표시해요.",
   "components-description--bordered": "각 레이블과 값을 테두리로 구분한 정보 표를 만들어요.",
+  "components-description--sizes": "large, medium, small의 셀 여백 차이를 비교해요.",
+  "components-description--responsive": "화면 너비에 따라 한 행에 표시할 항목 수를 변경해요.",
   "components-description--vertical": "레이블을 값 위에 배치해 세로형 정보 목록을 만들어요.",
+  "components-description--vertical-bordered": "세로형 레이블과 값을 행별 테두리로 구분해요.",
+  "components-description--title-and-extra": "제목 오른쪽에 정보 목록과 관련된 작업을 배치해요.",
+  "components-description--span-and-filled":
+    "span으로 항목 범위를 합치거나 현재 행의 남은 영역을 채워요.",
+  "components-description--item-component":
+    "Description.Item을 사용해 항목을 자식 컴포넌트로 구성해요.",
 
-  "components-image--preview":
-    "이미지를 클릭해 확대 미리보기를 열고 확대·축소·회전·반전 도구를 사용해요.",
-  "components-image--fallback": "원본 이미지를 불러오지 못하면 지정한 대체 이미지를 표시해요.",
-  "components-image--group": "여러 이미지를 하나의 미리보기 그룹으로 묶어 앞뒤로 탐색해요.",
+  "components-image--basic":
+    "이미지를 표시하고 클릭해 반전·회전·확대·축소하거나 드래그해 이동해요.",
+  "components-image--dimensions": "width와 height로 자주 사용하는 이미지 크기를 비교해요.",
+  "components-image--placeholder": "이미지를 불러오는 동안 같은 크기의 Image Skeleton을 보여줘요.",
+  "components-image--group": "여러 이미지를 묶어 개수를 확인하고 이전·다음 이미지로 이동해요.",
+  "components-image--preview-options": "미리보기를 끄거나 썸네일과 상세 이미지를 다르게 지정해요.",
+  "components-image--controlled-preview":
+    "버튼과 open 상태로 이미지 미리보기를 외부에서 열고 닫아요.",
+  "components-image--fallback":
+    "정상 원본 이미지와 로드 실패 후 fallback 이미지가 표시된 결과를 비교해요.",
 
   "components-tree--basic": "계층형 데이터를 펼치고 접으며 폴더와 파일 항목을 선택해요.",
   "components-tree--checkable": "체크박스로 부모와 자식 노드의 선택 상태를 함께 관리해요.",
   "components-tree--lines": "부모와 자식 노드 사이의 연결선을 표시해 계층을 강조해요.",
+  "components-tree--async-loading":
+    "노드를 처음 펼칠 때 하위 데이터를 불러오고 완료 후 목록에 표시해요.",
 
   "components-skeleton--basic":
     "콘텐츠를 불러오는 동안 아바타, 제목과 문단 형태의 자리 표시자를 표시해요.",
   "components-skeleton--elements":
-    "아바타, 버튼, 입력창과 이미지 영역에 맞는 단독 Skeleton 요소를 사용해요.",
+    "아바타, 버튼, 입력창, 이미지와 사용자 정의 영역에 맞는 단독 Skeleton을 사용해요.",
   "components-skeleton--loaded": "loading이 끝나면 Skeleton을 실제 콘텐츠로 교체해요.",
 
   "components-table-sorting-filtering--server-table":

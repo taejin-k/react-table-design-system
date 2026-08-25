@@ -1,10 +1,13 @@
 export { Description, Descriptions } from "./Description";
 export type {
   DescriptionComponent,
-  DescriptionItem,
+  DescriptionBreakpointType,
+  DescriptionColumnType,
+  DescriptionItemType,
   DescriptionItemProps,
   DescriptionLayoutType,
   DescriptionProps,
+  DescriptionResponsiveType,
   DescriptionSizeType,
   DescriptionSpanType,
 } from "./Description.types";

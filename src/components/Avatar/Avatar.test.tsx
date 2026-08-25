@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import { Avatar } from "./Avatar";
 
@@ -23,22 +24,84 @@ describe("Avatar", () => {
   it("scales the image error icon with the avatar size", () => {
     const { container } = render(
       <>
-        <Avatar size="small" src="small-broken.png" />
-        <Avatar size="medium" src="medium-broken.png" />
-        <Avatar size="large" src="large-broken.png" />
+        <Avatar size="md" src="md-broken.png" />
+        <Avatar size="lg" src="lg-broken.png" />
       </>,
     );
 
     container.querySelectorAll("img").forEach((image) => fireEvent.error(image));
 
     const icons = container.querySelectorAll("svg");
-    expect(Array.from(icons, (icon) => icon.getAttribute("width"))).toEqual(["14", "18", "20"]);
+    expect(Array.from(icons, (icon) => icon.getAttribute("width"))).toEqual(["18", "24"]);
   });
 
-  it("shows the full text beside the avatar when type is label", () => {
-    render(<Avatar type="label">manhat</Avatar>);
+  it("uses 30px for md and 40px for lg", () => {
+    const { container } = render(
+      <>
+        <Avatar size="md">M</Avatar>
+        <Avatar size="lg">L</Avatar>
+      </>,
+    );
+
+    expect(container.children[0]).toHaveStyle({ width: "30px", height: "30px" });
+    expect(container.children[1]).toHaveStyle({ width: "40px", height: "40px" });
+  });
+
+  it("opens the image preview when preview is enabled", async () => {
+    render(<Avatar src="avatar.png" alt="사용자" preview />);
+
+    const image = screen.getByRole("img", { name: "사용자" });
+    fireEvent.load(image);
+    await userEvent.click(image);
+
+    expect(document.querySelector("[data-image-preview-root]")).toBeInTheDocument();
+  });
+
+  it("opens the image preview from a label avatar", async () => {
+    render(
+      <Avatar label src="avatar.png" alt="사용자" preview>
+        manhat
+      </Avatar>,
+    );
+
+    const image = screen.getByRole("img", { name: "사용자" });
+    fireEvent.load(image);
+    await userEvent.click(image);
+
+    expect(document.querySelector("[data-image-preview-root]")).toBeInTheDocument();
+  });
+
+  it("does not open the image preview by default", async () => {
+    render(<Avatar src="avatar.png" alt="사용자" />);
+
+    await userEvent.click(screen.getByRole("img", { name: "사용자" }));
+
+    expect(document.querySelector("[data-image-preview-root]")).not.toBeInTheDocument();
+  });
+
+  it("shows the full text beside the avatar when label is true", () => {
+    render(<Avatar label>manhat</Avatar>);
     expect(screen.getByText("m")).toBeInTheDocument();
     expect(screen.getByText("manhat")).toBeInTheDocument();
+  });
+
+  it("limits label width and truncates overflowing text", () => {
+    const { container } = render(
+      <Avatar label labelWidth={120}>
+        매우 긴 사용자 이름
+      </Avatar>,
+    );
+
+    expect(container.firstChild).toHaveStyle({ width: "120px" });
+    expect(screen.getByText("매우 긴 사용자 이름")).toHaveClass("truncate");
+  });
+
+  it("does not enable the label with labelWidth alone", () => {
+    const { container } = render(<Avatar labelWidth={120}>김민준</Avatar>);
+
+    expect(container.firstChild).toHaveStyle({ width: "30px" });
+    expect(screen.getByText("김")).toBeInTheDocument();
+    expect(screen.queryByText("김민준")).not.toBeInTheDocument();
   });
 
   it("collapses overflowing group members", () => {

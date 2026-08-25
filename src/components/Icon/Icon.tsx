@@ -223,6 +223,22 @@ const paths = {
     d: "M8 1.333a6.667 6.667 0 1 1 0 13.334A6.667 6.667 0 0 1 8 1.333ZM6.667 5.333 11.333 8l-4.666 2.667V5.333Z",
     fillRule: "evenodd",
   },
+  "flip-horizontal":
+    "M847.9 592H152c-4.4 0-8 3.6-8 8v60c0 4.4 3.6 8 8 8h605.2L612.9 851c-4.1 5.2-.4 13 6.3 13h72.5c4.9 0 9.5-2.2 12.6-6.1l168.8-214.1c16.5-21 1.6-51.8-25.2-51.8ZM872 356H266.8l144.3-183c4.1-5.2.4-13-6.3-13h-72.5c-4.9 0-9.5 2.2-12.6 6.1L150.9 380.2c-16.5 21-1.6 51.8 25.1 51.8h696c4.4 0 8-3.6 8-8v-60c0-4.4-3.6-8-8-8Z",
+  "flip-vertical":
+    "M847.9 592H152c-4.4 0-8 3.6-8 8v60c0 4.4 3.6 8 8 8h605.2L612.9 851c-4.1 5.2-.4 13 6.3 13h72.5c4.9 0 9.5-2.2 12.6-6.1l168.8-214.1c16.5-21 1.6-51.8-25.2-51.8ZM872 356H266.8l144.3-183c4.1-5.2.4-13-6.3-13h-72.5c-4.9 0-9.5 2.2-12.6 6.1L150.9 380.2c-16.5 21-1.6 51.8 25.1 51.8h696c4.4 0 8-3.6 8-8v-60c0-4.4-3.6-8-8-8Z",
+  "rotate-left": [
+    "M672 418H144c-17.7 0-32 14.3-32 32v414c0 17.7 14.3 32 32 32h528c17.7 0 32-14.3 32-32V450c0-17.7-14.3-32-32-32Zm-44 402H188V494h440v326Z",
+    "M819.3 328.5c-78.8-100.7-196-153.6-314.6-154.2l-.2-64c0-6.5-7.6-10.1-12.6-6.1l-128 101c-4 3.1-3.9 9.1 0 12.3L492 318.6c5.1 4 12.7.4 12.6-6.1v-63.9c12.9.1 25.9.9 38.8 2.5 42.1 5.2 82.1 18.2 119 38.7 38.1 21.2 71.2 49.7 98.4 84.3 27.1 34.7 46.7 73.7 58.1 115.8a325.95 325.95 0 0 1 6.5 140.9h74.9c14.8-103.6-11.3-213-81-302.3Z",
+  ],
+  "rotate-right": [
+    "M480.5 251.2c13-1.6 25.9-2.4 38.8-2.5v63.9c0 6.5 7.5 10.1 12.6 6.1L660 217.6c4-3.2 4-9.2 0-12.3l-128-101c-5.1-4-12.6-.4-12.6 6.1l-.2 64c-118.6.5-235.8 53.4-314.6 154.2A399.75 399.75 0 0 0 123.5 631h74.9c-.9-5.3-1.7-10.7-2.4-16.1-5.1-42.1-2.1-84.1 8.9-124.8 11.4-42.2 31-81.1 58.1-115.8 27.2-34.7 60.3-63.2 98.4-84.3 37-20.6 76.9-33.6 119.1-38.8Z",
+    "M880 418H352c-17.7 0-32 14.3-32 32v414c0 17.7 14.3 32 32 32h528c17.7 0 32-14.3 32-32V450c0-17.7-14.3-32-32-32Zm-44 402H396V494h440v326Z",
+  ],
+  "zoom-out":
+    "M637 443H325c-4.4 0-8 3.6-8 8v60c0 4.4 3.6 8 8 8h312c4.4 0 8-3.6 8-8v-60c0-4.4-3.6-8-8-8Zm284 424L775 721c122.1-148.9 113.6-369.5-26-509-148-148.1-388.4-148.1-537 0-148.1 148.6-148.1 389 0 537 139.5 139.6 360.1 148.1 509 26l146 146c3.2 2.8 8.3 2.8 11 0l43-43c2.8-2.7 2.8-7.8 0-11ZM696 696c-118.8 118.7-311.2 118.7-430 0-118.7-118.8-118.7-311.2 0-430 118.8-118.7 311.2-118.7 430 0 118.7 118.8 118.7 311.2 0 430Z",
+  "zoom-in":
+    "M637 443H519V309c0-4.4-3.6-8-8-8h-60c-4.4 0-8 3.6-8 8v134H325c-4.4 0-8 3.6-8 8v60c0 4.4 3.6 8 8 8h118v134c0 4.4 3.6 8 8 8h60c4.4 0 8-3.6 8-8V519h118c4.4 0 8-3.6 8-8v-60c0-4.4-3.6-8-8-8Zm284 424L775 721c122.1-148.9 113.6-369.5-26-509-148-148.1-388.4-148.1-537 0-148.1 148.6-148.1 389 0 537 139.5 139.6 360.1 148.1 509 26l146 146c3.2 2.8 8.3 2.8 11 0l43-43c2.8-2.7 2.8-7.8 0-11ZM696 696c-118.8 118.7-311.2 118.7-430 0-118.7-118.8-118.7-311.2 0-430 118.8-118.7 311.2-118.7 430 0 118.7 118.8 118.7 311.2 0 430Z",
 } as const satisfies Record<IconNameType, IconPaths>;
 
 export const iconNames = Object.keys(paths) as IconNameType[];
@@ -272,6 +288,12 @@ const opticalScaleByIcon = {
   "more-horizontal": 0.96,
   "more-vertical": 0.96,
   refresh: 1.1,
+  "flip-vertical": 1,
+  "flip-horizontal": 1,
+  "rotate-left": 1,
+  "rotate-right": 1,
+  "zoom-out": 1,
+  "zoom-in": 1,
   remove: 1,
   search: 0.91,
   setting: 1,
@@ -299,6 +321,15 @@ export function Icon({
   const isInteractive = Boolean(onClick) && !disabled && !loading;
   const iconPaths = paths[resolvedIcon];
   const effectiveColor = disabled ? "#aaa" : color;
+  const usesAntdViewBox = [
+    "flip-vertical",
+    "flip-horizontal",
+    "rotate-left",
+    "rotate-right",
+    "zoom-out",
+    "zoom-in",
+  ].includes(resolvedIcon);
+  const viewBoxCenter = usesAntdViewBox ? 512 : 8;
 
   if (!iconPaths) return null;
 
@@ -321,7 +352,7 @@ export function Icon({
     <svg
       width={size}
       height={size}
-      viewBox="0 0 16 16"
+      viewBox={usesAntdViewBox ? "64 64 896 896" : "0 0 16 16"}
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       tabIndex={isInteractive ? 0 : undefined}
@@ -352,7 +383,9 @@ export function Icon({
       }
       {...rest}
     >
-      <g transform={`translate(8 8) scale(${opticalScaleTransform}) translate(-8 -8)`}>
+      <g
+        transform={`${resolvedIcon === "flip-vertical" ? `rotate(90 ${viewBoxCenter} ${viewBoxCenter}) ` : ""}translate(${viewBoxCenter} ${viewBoxCenter}) scale(${opticalScaleTransform}) translate(-${viewBoxCenter} -${viewBoxCenter})`}
+      >
         {pathList.map((path, index) => {
           const pathProps: { d: string; fillRule?: "evenodd" } =
             typeof path === "string" ? { d: path } : path;

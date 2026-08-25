@@ -78,7 +78,12 @@ const meta = {
 
 ### Upload.Dragger
 
-\`Upload\`와 같은 API를 사용하며 파일을 놓을 수 있는 넓은 드래그 영역을 제공해요.
+| Name | Description | Type | Default |
+| --- | --- | --- | --- |
+| \`children\` | 드래그 영역에 표시할 내용을 구성해요. | \`ReactNode\` | 기본 업로드 안내 |
+| \`onDrop\` | 파일을 드래그 영역에 놓을 때 실행해요. | \`(event) => void\` | - |
+| \`className\` | 최상위 드래그 영역에 Tailwind 클래스를 추가해요. | \`string\` | - |
+| 공통 API | 나머지 파일 선택과 업로드 설정을 사용해요. | \`UploadProps\` | Upload와 동일 |
           `}</Markdown>
           <h2 className="component-docs-types-heading">Types</h2>
           <h3 id="upload-list-type">UploadListType</h3>
@@ -123,7 +128,12 @@ export const PictureCard: Story = {
     listType: "picture-card",
     maxCount: 3,
     beforeUpload: () => false,
-    children: <span>+ 업로드</span>,
+    children: (
+      <span className="flex flex-col items-center gap-2">
+        <Icon icon="add" />
+        업로드
+      </span>
+    ),
   },
   parameters: {
     ...storyDescription("components-upload--picture-card"),
@@ -132,7 +142,12 @@ export const PictureCard: Story = {
       source: {
         type: "code",
         code: withStoryImports(
-          `<Upload accept="image/*" listType="picture-card" maxCount={3} beforeUpload={() => false}>\n  <span>+ 업로드</span>\n</Upload>`,
+          `<Upload accept="image/*" listType="picture-card" maxCount={3} beforeUpload={() => false}>
+  <span className="flex flex-col items-center gap-2">
+    <Icon icon="add" />
+    업로드
+  </span>
+</Upload>`,
         ),
       },
     },

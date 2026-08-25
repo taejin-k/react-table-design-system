@@ -1,7 +1,9 @@
 import { Description, Markdown, Stories, Title } from "@storybook/addon-docs/blocks";
 import type { Meta, StoryObj } from "@storybook/react";
+import { useState } from "react";
 import { storyDescriptions } from "../../storybook/story-descriptions";
 import { withStoryImports } from "../../storybook/story-source";
+import { Button } from "../Button";
 import { Image } from "./Image";
 
 const picture =
@@ -37,11 +39,9 @@ const meta = {
 | \`fallback\` | 원본 로드에 실패했을 때 표시할 이미지 주소예요. | \`string\` | - |
 | \`width\` | 이미지의 가로 길이를 정해요. | \`string \\| number\` | 원본 너비 |
 | \`height\` | 이미지의 세로 길이를 정해요. | \`string \\| number\` | 원본 높이 |
-| \`placeholder\` | 이미지를 불러오는 동안 표시할 내용이에요. | \`ReactNode \\| { progress?: boolean \\| object }\` | - |
-| \`preview\` | 미리보기를 사용하거나 상세 동작을 설정해요. | \`boolean \\| ImagePreviewConfig\` | \`true\` |
+| \`placeholder\` | 로딩 중 Image Skeleton을 표시해요. | \`boolean\` | \`false\` |
+| \`preview\` | 미리보기를 사용하거나 상세 동작을 설정해요. | \`boolean\` \\| [\`ImagePreviewConfig\`](#imagepreviewconfig) | \`true\` |
 | \`className\` | 최상위 요소에 Tailwind 클래스를 추가해요. | \`string\` | - |
-| \`style\` | 이미지 요소에 인라인 스타일을 적용해요. | \`CSSProperties\` | - |
-| \`rootStyle\` | 이미지 래퍼에 인라인 스타일을 적용해요. | \`CSSProperties\` | - |
 
 ### ImagePreviewConfig
 
@@ -49,21 +49,17 @@ const meta = {
 | --- | --- | --- | --- |
 | \`open\` | 미리보기 표시 상태를 제어해요. | \`boolean\` | - |
 | \`src\` | 미리보기에서 사용할 이미지 주소를 변경해요. | \`string\` | Image의 src |
-| \`mask\` | 이미지 위 미리보기 마스크와 닫기 동작을 설정해요. | \`boolean \\| object\` | \`true\` |
+| \`mask\` | 미리보기 배경 마스크 표시 여부를 설정해요. | \`boolean\` | \`true\` |
 | \`cover\` | 이미지 hover 영역에 표시할 내용을 설정해요. | \`ReactNode\` | 미리보기 안내 |
-| \`closeIcon\` | 미리보기 닫기 아이콘을 변경해요. | \`ReactNode\` | close Icon |
 | \`getContainer\` | 미리보기를 렌더링할 컨테이너를 설정해요. | \`HTMLElement \\| () => HTMLElement \\| string \\| false\` | \`document.body\` |
 | \`zIndex\` | 미리보기의 겹침 순서를 설정해요. | \`number\` | \`1080\` |
-| \`minScale\` / \`maxScale\` | 확대·축소 가능한 범위를 정해요. | \`number\` | \`1 / 50\` |
-| \`scaleStep\` | 한 번에 확대·축소할 비율을 정해요. | \`number\` | \`0.5\` |
-| \`movable\` | 확대 이미지를 드래그해 이동할 수 있게 해요. | \`boolean\` | \`true\` |
-| \`toolbarRender\` | 미리보기 도구 모음을 사용자 정의해요. | \`(node, info) => ReactNode\` | - |
 | \`onOpenChange\` | 미리보기 표시 상태가 바뀔 때 실행해요. | \`(open, previousOpen) => void\` | - |
-| \`onTransform\` | 확대·회전·이동 상태가 바뀔 때 실행해요. | \`(info) => void\` | - |
 
 ### Image.PreviewGroup
 
-여러 \`Image\`를 묶어 미리보기에서 앞뒤 이미지로 이동할 수 있어요. \`preview\`에는 같은 미리보기 설정을 전달해요.
+| Name | Description | Type | Default |
+| --- | --- | --- | --- |
+| \`children\` | 함께 탐색할 Image를 전달해요. | \`ReactNode\` | - |
           `}</Markdown>
         </div>
       ),
@@ -73,12 +69,11 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Preview: Story = {
-  args: { src: picture, alt: "예시 풍경", width: 320, height: 200 },
+export const Basic: Story = {
   parameters: {
-    ...storyDescription("components-image--preview"),
+    ...storyDescription("components-image--basic"),
     docs: {
-      ...storyDescription("components-image--preview").docs,
+      ...storyDescription("components-image--basic").docs,
       source: {
         type: "code",
         code: withStoryImports(
@@ -89,24 +84,89 @@ export const Preview: Story = {
       },
     },
   },
+  render: () => <Image src={picture} alt="예시 풍경" width={320} height={200} />,
 };
-export const Fallback: Story = {
-  args: { src: "invalid.png", fallback: picture, alt: "대체 이미지" },
+
+export const Dimensions: Story = {
   parameters: {
-    ...storyDescription("components-image--fallback"),
+    ...storyDescription("components-image--dimensions"),
     docs: {
-      ...storyDescription("components-image--fallback").docs,
+      ...storyDescription("components-image--dimensions").docs,
       source: {
         type: "code",
         code: withStoryImports(
           `const picture = ${JSON.stringify(picture)};
 
-<Image src="invalid.png" fallback={picture} alt="대체 이미지" />`,
+<div className="flex flex-wrap items-end gap-4">
+  <Image src={picture} alt="작은 풍경" width={160} height={100} />
+  <Image src={picture} alt="중간 풍경" width={240} height={150} />
+  <Image src={picture} alt="큰 풍경" width={320} height={200} />
+</div>`,
         ),
       },
     },
   },
+  render: () => (
+    <div className="flex flex-wrap items-end gap-4">
+      <Image src={picture} alt="작은 풍경" width={160} height={100} />
+      <Image src={picture} alt="중간 풍경" width={240} height={150} />
+      <Image src={picture} alt="큰 풍경" width={320} height={200} />
+    </div>
+  ),
 };
+
+function PlaceholderExample() {
+  const [version, setVersion] = useState(0);
+  const source = `https://picsum.photos/seed/wizard-image-${version}`;
+
+  return (
+    <div className="grid justify-items-start gap-4">
+      <Button onClick={() => setVersion((current) => current + 1)}>다시 불러오기</Button>
+      <Image
+        key={version}
+        src={`${source}/480/300`}
+        alt="자리 표시자 예시"
+        width={320}
+        height={200}
+        placeholder
+      />
+    </div>
+  );
+}
+
+export const Placeholder: Story = {
+  parameters: {
+    ...storyDescription("components-image--placeholder"),
+    docs: {
+      ...storyDescription("components-image--placeholder").docs,
+      source: {
+        type: "code",
+        code: withStoryImports(`function Placeholder() {
+  const [version, setVersion] = useState(0);
+  const source = \`https://picsum.photos/seed/wizard-image-\${version}\`;
+
+  return (
+    <div className="grid justify-items-start gap-4">
+      <Button onClick={() => setVersion((current) => current + 1)}>
+        다시 불러오기
+      </Button>
+      <Image
+        key={version}
+        src={\`\${source}/480/300\`}
+        alt="자리 표시자 예시"
+        width={320}
+        height={200}
+        placeholder
+      />
+    </div>
+  );
+}`),
+      },
+    },
+  },
+  render: () => <PlaceholderExample />,
+};
+
 export const Group: Story = {
   parameters: {
     ...storyDescription("components-image--group"),
@@ -135,5 +195,167 @@ const secondPicture = ${JSON.stringify(secondPicture)};
         <Image src={secondPicture} width={180} height={120} alt="둘째 이미지" />
       </div>
     </Image.PreviewGroup>
+  ),
+};
+
+export const PreviewOptions: Story = {
+  parameters: {
+    ...storyDescription("components-image--preview-options"),
+    docs: {
+      ...storyDescription("components-image--preview-options").docs,
+      source: {
+        type: "code",
+        code: withStoryImports(
+          `const picture = ${JSON.stringify(picture)};
+const detailImage = ${JSON.stringify(secondPicture)};
+
+<div className="flex flex-wrap gap-4">
+  <Image
+    src={picture}
+    alt="미리보기를 사용하지 않는 풍경"
+    width={240}
+    height={150}
+    preview={false}
+  />
+  <Image
+    src={picture}
+    alt="상세 이미지가 따로 있는 풍경"
+    width={240}
+    height={150}
+    preview={{ src: detailImage }}
+  />
+</div>`,
+        ),
+      },
+    },
+  },
+  render: () => (
+    <div className="flex flex-wrap gap-4">
+      <Image
+        src={picture}
+        alt="미리보기를 사용하지 않는 풍경"
+        width={240}
+        height={150}
+        preview={false}
+      />
+      <Image
+        src={picture}
+        alt="상세 이미지가 따로 있는 풍경"
+        width={240}
+        height={150}
+        preview={{ src: secondPicture }}
+      />
+    </div>
+  ),
+};
+
+function ControlledPreviewExample() {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <>
+      <Button onClick={() => setOpen(true)}>미리보기 열기</Button>
+      <Image
+        className="hidden"
+        src={picture}
+        preview={{
+          open,
+          onOpenChange: setOpen,
+        }}
+      />
+    </>
+  );
+}
+
+export const ControlledPreview: Story = {
+  parameters: {
+    ...storyDescription("components-image--controlled-preview"),
+    docs: {
+      ...storyDescription("components-image--controlled-preview").docs,
+      source: {
+        type: "code",
+        code: withStoryImports(
+          `const picture = ${JSON.stringify(picture)};
+
+function ControlledPreview() {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <>
+      <Button onClick={() => setOpen(true)}>미리보기 열기</Button>
+      <Image
+        className="hidden"
+        src={picture}
+        preview={{
+          open,
+          onOpenChange: setOpen,
+        }}
+      />
+    </>
+  );
+}`,
+        ),
+      },
+    },
+  },
+  render: () => <ControlledPreviewExample />,
+};
+
+export const Fallback: Story = {
+  parameters: {
+    ...storyDescription("components-image--fallback"),
+    docs: {
+      ...storyDescription("components-image--fallback").docs,
+      source: {
+        type: "code",
+        code: withStoryImports(
+          `const originalImage = ${JSON.stringify(picture)};
+const fallbackImage = ${JSON.stringify(secondPicture)};
+
+<div className="flex flex-wrap gap-4">
+  <div>
+    <p className="mb-2 text-sm text-[#666]">정상 원본 이미지</p>
+    <Image
+      src={originalImage}
+      alt="정상 원본 이미지"
+      width={240}
+      height={150}
+      preview={false}
+    />
+  </div>
+  <div>
+    <p className="mb-2 text-sm text-[#666]">원본 로드 실패 → 대체 이미지</p>
+    <Image
+      src="invalid-image.png"
+      fallback={fallbackImage}
+      alt="대체 이미지가 적용된 결과"
+      width={240}
+      height={150}
+      preview={false}
+    />
+  </div>
+</div>`,
+        ),
+      },
+    },
+  },
+  render: () => (
+    <div className="flex flex-wrap gap-4">
+      <div>
+        <p className="mb-2 text-sm text-[#666]">정상 원본 이미지</p>
+        <Image src={picture} alt="정상 원본 이미지" width={240} height={150} preview={false} />
+      </div>
+      <div>
+        <p className="mb-2 text-sm text-[#666]">원본 로드 실패 → 대체 이미지</p>
+        <Image
+          src="invalid-image.png"
+          fallback={secondPicture}
+          alt="대체 이미지가 적용된 결과"
+          width={240}
+          height={150}
+          preview={false}
+        />
+      </div>
+    </div>
   ),
 };

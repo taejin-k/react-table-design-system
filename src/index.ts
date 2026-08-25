@@ -180,18 +180,14 @@ export type {
   TabsSizeType,
   TabsType,
 } from "./components/Tabs";
-export { Color, ColorPicker } from "./components/ColorPicker";
+export { ColorPicker } from "./components/ColorPicker";
 export type {
   ColorFormatType,
-  ColorGradientType,
   ColorPickerPlacementType,
   ColorPickerProps,
   ColorPickerSizeType,
   ColorPickerTriggerType,
-  ColorPreset,
-  ColorValueType,
-  HsbColor,
-  RgbColor,
+  ColorPresetType,
 } from "./components/ColorPicker";
 export { Upload } from "./components/Upload";
 export type {
@@ -210,7 +206,6 @@ export type {
   AvatarProps,
   AvatarShapeType,
   AvatarSizeType,
-  AvatarTypeType,
 } from "./components/Avatar";
 export { Badge } from "./components/Badge";
 export type { BadgeProps, BadgeStatusType } from "./components/Badge";
@@ -233,10 +228,13 @@ export type {
 export { Description, Descriptions } from "./components/Description";
 export type {
   DescriptionComponent,
-  DescriptionItem,
+  DescriptionBreakpointType,
+  DescriptionColumnType,
+  DescriptionItemType,
   DescriptionItemProps,
   DescriptionLayoutType,
   DescriptionProps,
+  DescriptionResponsiveType,
   DescriptionSizeType,
   DescriptionSpanType,
 } from "./components/Description";
