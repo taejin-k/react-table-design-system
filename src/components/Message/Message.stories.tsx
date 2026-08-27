@@ -101,7 +101,7 @@ export const Basic: Story = {
     ...storyDescription("components-message--basic"),
     controls: {
       disable: false,
-      include: ["content", "type", "duration", "pauseOnHover"],
+      include: ["내용", "상태", "표시 시간", "Hover 중 정지"],
     },
     docs: {
       ...storyDescription("components-message--basic").docs,
@@ -121,7 +121,7 @@ export const Types: Story = {
   args: { duration: 3, pauseOnHover: true },
   parameters: {
     ...storyDescription("components-message--types"),
-    controls: { disable: false, include: ["duration", "pauseOnHover"] },
+    controls: { disable: false, include: ["표시 시간", "Hover 중 정지"] },
     docs: {
       ...storyDescription("components-message--types").docs,
       source: {
@@ -218,7 +218,7 @@ export const MultilineIconAlignment: Story = {
   },
   parameters: {
     ...storyDescription("components-message--multiline"),
-    controls: { disable: false, include: ["content"] },
+    controls: { disable: false, include: ["내용"] },
     docs: {
       ...storyDescription("components-message--multiline").docs,
       source: {
@@ -246,7 +246,7 @@ export const Duration: Story = {
     ...storyDescription("components-message--duration"),
     controls: {
       disable: false,
-      include: ["duration", "secondaryDuration", "pauseOnHover"],
+      include: ["표시 시간", "두 번째 표시 시간", "Hover 중 정지"],
     },
     docs: {
       ...storyDescription("components-message--duration").docs,
@@ -298,7 +298,7 @@ export const Update: Story = {
   args: { content: "저장 중이에요.", successContent: "저장했어요.", updateDelay: 1200 },
   parameters: {
     ...storyDescription("components-message--update"),
-    controls: { disable: false, include: ["content", "successContent", "updateDelay"] },
+    controls: { disable: false, include: ["내용", "완료 내용", "갱신 지연"] },
     docs: {
       ...storyDescription("components-message--update").docs,
       source: {
@@ -361,7 +361,7 @@ export const Promise: Story = {
   },
   parameters: {
     ...storyDescription("components-message--promise"),
-    controls: { disable: false, include: ["content", "successContent", "duration"] },
+    controls: { disable: false, include: ["내용", "완료 내용", "표시 시간"] },
     docs: {
       ...storyDescription("components-message--promise").docs,
       source: {
