@@ -80,6 +80,8 @@ const meta = {
           <Stories />
           <h2>API</h2>
           <Markdown>{`
+### ColorPicker
+
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
 | \`value\` | 선택된 색상을 제어해요. | \`string\` | - |
@@ -132,7 +134,6 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Basic: Story = {
-  args: { defaultValue: "#0062df", showLabel: true },
   parameters: {
     ...storyDescription("components-colorpicker--basic"),
     docs: {
@@ -143,6 +144,7 @@ export const Basic: Story = {
       },
     },
   },
+  render: () => <ColorPicker defaultValue="#0062df" showLabel />,
 };
 
 export const AllowClear: Story = {

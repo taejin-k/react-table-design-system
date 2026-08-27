@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -14,7 +14,7 @@ function ModalExample() {
 }
 
 describe("Modal", () => {
-  afterEach(() => Modal.destroyAll());
+  afterEach(() => act(() => Modal.destroyAll()));
 
   it("renders in a portal and closes from cancel", async () => {
     render(<ModalExample />);
@@ -35,6 +35,30 @@ describe("Modal", () => {
     render(<button onClick={() => Modal.confirm({ title: "확인", content: "내용" })}>열기</button>);
     await userEvent.click(screen.getByText("열기"));
     await waitFor(() => expect(screen.getAllByText("확인")).toHaveLength(2));
+  });
+
+  it("closes a static modal when its default mask is clicked", async () => {
+    render(<button onClick={() => Modal.info({ title: "안내", content: "내용" })}>열기</button>);
+    await userEvent.click(screen.getByText("열기"));
+    await waitFor(() => expect(document.querySelector("[data-modal-mask]")).toBeInTheDocument());
+
+    await userEvent.click(document.querySelector("[data-modal-mask]")!);
+
+    await waitFor(() =>
+      expect(document.querySelector("[data-modal-root]")).not.toBeInTheDocument(),
+    );
+  });
+
+  it("does not render a mask for a static modal when mask is false", async () => {
+    render(
+      <button onClick={() => Modal.info({ title: "안내", content: "내용", mask: false })}>
+        열기
+      </button>,
+    );
+    await userEvent.click(screen.getByText("열기"));
+    await waitFor(() => expect(screen.getByText("안내")).toBeInTheDocument());
+
+    expect(document.querySelector("[data-modal-mask]")).not.toBeInTheDocument();
   });
 
   it("uses the opening click position as the zoom origin after the panel is measurable", async () => {

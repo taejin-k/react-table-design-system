@@ -279,7 +279,7 @@ export function Menu({
             }
             disabled={item.disabled}
             className={twMerge(
-              "relative flex h-10 w-full items-center gap-2 rounded-md px-3 text-left text-sm transition-colors duration-200 motion-reduce:transition-none",
+              "relative flex h-10 w-full cursor-pointer items-center gap-2 rounded-md px-3 text-left text-sm transition-colors duration-200 motion-reduce:transition-none",
               theme === "dark"
                 ? "text-white/65 hover:bg-white/10 hover:text-white"
                 : "text-[#111] hover:bg-[#f5f5f5]",

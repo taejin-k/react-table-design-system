@@ -451,6 +451,7 @@ function BaseDatePicker({
                       <Icon
                         icon="close"
                         size={12}
+                        className="cursor-pointer"
                         onMouseDown={(event) => event.preventDefault()}
                         onClick={(event) => {
                           event.stopPropagation();

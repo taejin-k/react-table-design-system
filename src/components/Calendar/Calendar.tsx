@@ -140,7 +140,7 @@ export function Calendar({
                   type="button"
                   disabled={isDisabled(date)}
                   className={twMerge(
-                    "flex w-full transition-colors duration-300 hover:bg-[#e6f4ff] disabled:cursor-not-allowed disabled:text-[#bbb] motion-reduce:transition-none",
+                    "flex w-full cursor-pointer transition-colors duration-300 hover:bg-[#e6f4ff] disabled:cursor-not-allowed disabled:text-[#bbb] motion-reduce:transition-none",
                     fullscreen
                       ? "mx-1 h-[90px] w-[calc(100%-8px)] items-start justify-end border-t-2 border-[#f0f0f0] px-2 pt-1"
                       : "h-9 items-center justify-center rounded-md",
@@ -185,7 +185,7 @@ export function Calendar({
                     type="button"
                     disabled={disabled}
                     className={twMerge(
-                      "relative flex w-full transition-colors duration-300 disabled:cursor-not-allowed disabled:text-[#bbb] motion-reduce:transition-none",
+                      "relative flex w-full cursor-pointer transition-colors duration-300 disabled:cursor-not-allowed disabled:text-[#bbb] motion-reduce:transition-none",
                       fullscreen
                         ? "mx-1 h-[90px] w-[calc(100%-8px)] items-start justify-end border-t-2 border-[#f0f0f0] px-2 pt-1 hover:bg-[#e6f4ff]"
                         : "h-9 items-center justify-center p-0",

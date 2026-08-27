@@ -323,7 +323,7 @@ export function TimePanel({
         />
       ) : null}
       {use12Hours ? (
-        <ScrollFade className="w-16" viewportClassName="p-1" fadeSize={20}>
+        <ScrollFade className="w-16" viewportClassName="p-1" fadeSize={48}>
           {["AM", "PM"].map((meridiem) => {
             const isSelected = (selected.hour >= 12 ? "PM" : "AM") === meridiem;
             return (
@@ -380,7 +380,7 @@ function TimeColumn({
       data-time-column={subType}
       className="w-14"
       viewportClassName="p-1"
-      fadeSize={20}
+      fadeSize={48}
       onScroll={(event) => {
         if (!changeOnScroll) return;
         const index = Math.round(event.currentTarget.scrollTop / 32);

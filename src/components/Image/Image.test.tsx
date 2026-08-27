@@ -8,6 +8,15 @@ describe("Image", () => {
     vi.restoreAllMocks();
   });
 
+  it("applies className to the outer image wrapper without adding ARIA attributes", () => {
+    const { container } = render(
+      <Image className="w-48 rounded-xl" src="photo.png" alt="사진" preview={false} />,
+    );
+
+    expect(container.firstChild).toHaveClass("w-48", "rounded-xl");
+    expect(container.innerHTML).not.toMatch(/\saria-[\w-]+=/);
+  });
+
   it("shows an image that completed loading before the load handler was attached", () => {
     vi.spyOn(HTMLImageElement.prototype, "complete", "get").mockReturnValue(true);
     vi.spyOn(HTMLImageElement.prototype, "naturalWidth", "get").mockReturnValue(480);
@@ -31,6 +40,36 @@ describe("Image", () => {
     render(<Image src="broken.png" fallback="fallback.png" alt="사진" preview={false} />);
     fireEvent.error(screen.getByRole("img", { name: "사진" }));
     expect(screen.getByRole("img", { name: "사진" })).toHaveAttribute("src", "fallback.png");
+  });
+
+  it("shows, hides, or customizes the preview cover", () => {
+    render(
+      <>
+        <Image src="default.png" alt="기본 Cover" preview={{ cover: true }} />
+        <Image src="hidden.png" alt="Cover 없음" preview={{ cover: false }} />
+        <Image
+          src="custom.png"
+          alt="사용자 정의 Cover"
+          preview={{ cover: <span>원본 보기</span> }}
+        />
+      </>,
+    );
+    const defaultImage = screen.getByRole("img", { name: "기본 Cover" });
+    const hiddenImage = screen.getByRole("img", { name: "Cover 없음" });
+    const customImage = screen.getByRole("img", { name: "사용자 정의 Cover" });
+    fireEvent.load(defaultImage);
+    fireEvent.load(hiddenImage);
+    fireEvent.load(customImage);
+
+    expect(
+      defaultImage.parentElement?.querySelector("[data-image-preview-cover]"),
+    ).toHaveTextContent("미리보기");
+    expect(
+      hiddenImage.parentElement?.querySelector("[data-image-preview-cover]"),
+    ).not.toBeInTheDocument();
+    expect(
+      customImage.parentElement?.querySelector("[data-image-preview-cover]"),
+    ).toHaveTextContent("원본 보기");
   });
 
   it("opens and closes the preview", async () => {
@@ -75,6 +114,21 @@ describe("Image", () => {
 
     await userEvent.click(document.querySelector("[data-image-preview-close]")!);
     expect(onOpenChange).toHaveBeenLastCalledWith(false, true);
+  });
+
+  it("uses preview source and zIndex configuration", async () => {
+    render(
+      <Image src="thumbnail.png" alt="썸네일" preview={{ src: "detail.png", zIndex: 2200 }} />,
+    );
+    const image = screen.getByRole("img", { name: "썸네일" });
+    fireEvent.load(image);
+    await userEvent.click(image);
+
+    expect(document.querySelector("[data-image-preview-root]")).toHaveStyle({ zIndex: "2200" });
+    expect(document.querySelector(".wizard-image-preview-image")).toHaveAttribute(
+      "src",
+      "detail.png",
+    );
   });
 
   it("uses the six image actions and zooms between 25%, 50%, 75%, 100%, and 150%", async () => {

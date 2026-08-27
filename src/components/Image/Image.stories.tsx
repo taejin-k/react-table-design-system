@@ -49,7 +49,7 @@ const meta = {
 | --- | --- | --- | --- |
 | \`open\` | 미리보기 표시 상태를 제어해요. | \`boolean\` | - |
 | \`src\` | 미리보기에서 사용할 이미지 주소를 변경해요. | \`string\` | Image의 src |
-| \`cover\` | 이미지 hover 영역에 표시할 내용을 설정해요. | \`ReactNode\` | 미리보기 안내 |
+| \`cover\` | hover 안내를 표시하거나 직접 구성해요. | \`boolean \\| ReactNode\` | \`true\` |
 | \`zIndex\` | 미리보기의 겹침 순서를 설정해요. | \`number\` | \`1080\` |
 | \`onOpenChange\` | 미리보기 표시 상태가 바뀔 때 실행해요. | \`(open, previousOpen) => void\` | - |
 
@@ -83,6 +83,80 @@ export const Basic: Story = {
     },
   },
   render: () => <Image src={picture} alt="예시 풍경" width={320} height={200} />,
+};
+
+export const Cover: Story = {
+  parameters: {
+    ...storyDescription("components-image--cover"),
+    docs: {
+      ...storyDescription("components-image--cover").docs,
+      source: {
+        type: "code",
+        code: withStoryImports(
+          `const picture = ${JSON.stringify(picture)};
+
+<div className="flex flex-wrap gap-4">
+  <div>
+    <p className="mb-2 text-sm text-[#666]">Default</p>
+    <Image
+      src={picture}
+      alt="기본 Cover"
+      width={220}
+      height={140}
+      preview={{ cover: true }}
+    />
+  </div>
+  <div>
+    <p className="mb-2 text-sm text-[#666]">Hidden</p>
+    <Image
+      src={picture}
+      alt="Cover 없음"
+      width={220}
+      height={140}
+      preview={{ cover: false }}
+    />
+  </div>
+  <div>
+    <p className="mb-2 text-sm text-[#666]">Custom</p>
+    <Image
+      src={picture}
+      alt="사용자 정의 Cover"
+      width={220}
+      height={140}
+      preview={{
+        cover: <span className="text-sm font-semibold">원본 보기</span>,
+      }}
+    />
+  </div>
+</div>`,
+        ),
+      },
+    },
+  },
+  render: () => (
+    <div className="flex flex-wrap gap-4">
+      <div>
+        <p className="mb-2 text-sm text-[#666]">Default</p>
+        <Image src={picture} alt="기본 Cover" width={220} height={140} preview={{ cover: true }} />
+      </div>
+      <div>
+        <p className="mb-2 text-sm text-[#666]">Hidden</p>
+        <Image src={picture} alt="Cover 없음" width={220} height={140} preview={{ cover: false }} />
+      </div>
+      <div>
+        <p className="mb-2 text-sm text-[#666]">Custom</p>
+        <Image
+          src={picture}
+          alt="사용자 정의 Cover"
+          width={220}
+          height={140}
+          preview={{
+            cover: <span className="text-sm font-semibold">원본 보기</span>,
+          }}
+        />
+      </div>
+    </div>
+  ),
 };
 
 export const Dimensions: Story = {

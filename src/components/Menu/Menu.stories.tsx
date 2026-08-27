@@ -63,6 +63,8 @@ const meta = {
           <Stories />
           <h2>API</h2>
           <Markdown>{`
+### Menu
+
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
 | \`items\` | 메뉴 항목, 그룹, 구분선과 하위 메뉴를 구성해요. | \`MenuItemType[]\` | \`[]\` |

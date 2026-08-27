@@ -522,6 +522,7 @@ function NotificationCard({
         motionClassName,
         visible === false && "pointer-events-none",
         hiddenInStack && "wizard-notification-stack-hidden",
+        item.onClick && "cursor-pointer",
         item.classNames?.root,
         item.className,
       )}

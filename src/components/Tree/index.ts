@@ -1,2 +1,12 @@
 export { Tree } from "./Tree";
-export type { TreeDataNode, TreeEventInfo, TreeProps } from "./Tree.types";
+export type {
+  TreeDataNode,
+  TreeDragEnterInfo,
+  TreeDraggableConfig,
+  TreeDraggableType,
+  TreeDragInfo,
+  TreeDropInfo,
+  TreeDropPositionType,
+  TreeEventInfo,
+  TreeProps,
+} from "./Tree.types";

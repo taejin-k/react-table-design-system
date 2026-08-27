@@ -191,13 +191,19 @@ export type {
 } from "./components/ColorPicker";
 export { Upload } from "./components/Upload";
 export type {
+  UploadAcceptConfig,
   UploadChangeParam,
+  UploadCaptureType,
   UploadComponent,
+  UploadCustomRequestInfo,
   UploadFile,
   UploadFileStatusType,
   UploadListType,
+  UploadMethodType,
+  UploadProgressType,
   UploadProps,
   UploadRequestOption,
+  UploadShowListType,
 } from "./components/Upload";
 export { Avatar } from "./components/Avatar";
 export type {
@@ -248,7 +254,17 @@ export type {
   ImageTransform,
 } from "./components/Image";
 export { Tree } from "./components/Tree";
-export type { TreeDataNode, TreeEventInfo, TreeProps } from "./components/Tree";
+export type {
+  TreeDataNode,
+  TreeDragEnterInfo,
+  TreeDraggableConfig,
+  TreeDraggableType,
+  TreeDragInfo,
+  TreeDropInfo,
+  TreeDropPositionType,
+  TreeEventInfo,
+  TreeProps,
+} from "./components/Tree";
 export { Skeleton } from "./components/Skeleton";
 export type {
   SkeletonComponent,

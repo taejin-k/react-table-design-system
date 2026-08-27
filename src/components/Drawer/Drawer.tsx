@@ -259,6 +259,7 @@ export function Drawer({
               data-drawer-mask
               className={twMerge(
                 "pointer-events-auto absolute inset-0 bg-black/45",
+                canCloseMask && "cursor-pointer",
                 blurMask && "backdrop-blur-sm",
                 maskMotionClassName,
                 classNames?.mask,

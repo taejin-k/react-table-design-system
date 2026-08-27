@@ -214,7 +214,7 @@ export function ColorPicker({
     disabled,
     open,
     defaultOpen,
-    onOpenChange,
+    onOpenChange: (nextOpen) => onOpenChange?.(nextOpen),
   });
   const change = (next: InternalColor, complete = false, nextHue = next.toHsb().h) => {
     const nextColor = next.toCssString();

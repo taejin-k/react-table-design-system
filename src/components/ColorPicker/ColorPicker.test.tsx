@@ -4,6 +4,67 @@ import { describe, expect, it, vi } from "vitest";
 import { ColorPicker } from "./ColorPicker";
 
 describe("ColorPicker", () => {
+  it("applies className to the trigger root without adding ARIA attributes", async () => {
+    const { container } = render(
+      <ColorPicker className="w-48 justify-between" defaultValue="#0062df" showLabel />,
+    );
+
+    expect(container.firstChild).toHaveClass("w-48", "justify-between");
+    await userEvent.click(screen.getByRole("button"));
+    expect(document.body.innerHTML).not.toMatch(/\saria-[\w-]+=/);
+  });
+
+  it("honors disabled and controlled open state", async () => {
+    const { rerender } = render(<ColorPicker disabled />);
+
+    await userEvent.click(screen.getByRole("button"));
+    expect(document.querySelector("[data-colorpicker-popup]")).not.toBeInTheDocument();
+
+    rerender(<ColorPicker open />);
+    expect(document.querySelector("[data-colorpicker-popup]")).toBeInTheDocument();
+  });
+
+  it("uses defaultOpen and reports user-driven open changes", async () => {
+    const onOpenChange = vi.fn();
+    const { container } = render(<ColorPicker defaultOpen onOpenChange={onOpenChange} />);
+
+    expect(document.querySelector("[data-colorpicker-popup]")).toBeInTheDocument();
+    await userEvent.click(container.querySelector("button")!);
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+    expect(onOpenChange.mock.calls[0]).toHaveLength(1);
+  });
+
+  it("uses controlled value and format and reports clear actions", async () => {
+    const onClear = vi.fn();
+    render(
+      <ColorPicker
+        value="rgba(0, 98, 223, 0.5)"
+        format="rgb"
+        showLabel
+        allowClear
+        onClear={onClear}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: /rgba\(0, 98, 223, 0.5\)/ })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button"));
+    await userEvent.click(document.querySelector("[data-colorpicker-clear]")!);
+    expect(onClear).toHaveBeenCalledOnce();
+  });
+
+  it("reports format changes using the public string type", async () => {
+    const onFormatChange = vi.fn();
+    render(<ColorPicker defaultValue="#0062df" onFormatChange={onFormatChange} />);
+
+    await userEvent.click(screen.getByRole("button"));
+    await userEvent.click(screen.getByRole("button", { name: "HEX" }));
+    const formatOptions = document.querySelectorAll("[data-select-popup] button");
+    fireEvent.click(formatOptions[1]);
+
+    expect(onFormatChange).toHaveBeenCalledWith("rgb");
+    expect(onFormatChange.mock.calls[0]).toHaveLength(1);
+  });
+
   it("uses sm, md, and lg trigger sizes", () => {
     const { container } = render(
       <>

@@ -38,6 +38,8 @@ const meta = {
           <Stories />
           <h2>API</h2>
           <Markdown>{`
+### Calendar
+
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
 | \`value\` | 선택된 날짜를 제어해요. | \`Date\` | - |

@@ -267,6 +267,7 @@ function ModalBase({
               data-modal-mask
               className={twMerge(
                 "pointer-events-auto absolute inset-0 bg-black/45",
+                canCloseMask && "cursor-pointer",
                 blurMask && "backdrop-blur-sm",
                 maskMotionClassName,
                 classNames?.mask,
@@ -473,13 +474,6 @@ function ConfirmModal({
       : config.footer === undefined
         ? defaultFooter
         : config.footer;
-  const staticMask =
-    typeof config.mask === "object"
-      ? config.mask
-      : config.mask === false
-        ? false
-        : { enabled: true, closable: false };
-
   return (
     <ModalBase
       {...config}
@@ -488,15 +482,15 @@ function ConfirmModal({
       title={undefined}
       footer={footerNode}
       closable={config.closable ?? false}
-      mask={staticMask}
+      mask={config.mask ?? true}
       afterClose={onAfterClose}
       onCancel={() => void run(config.onCancel, false)}
       onOk={undefined}
     >
       <div className="flex items-start">
         {config.icon === null ? null : (
-          <span className="mt-px mr-3 inline-flex size-[22px] shrink-0 items-center justify-center leading-none">
-            {config.icon ?? <Icon icon={iconName} color={iconColor} size={22} />}
+          <span className="mt-px mr-3 inline-flex size-6 shrink-0 items-center justify-center leading-none">
+            {config.icon ?? <Icon icon={iconName} color={iconColor} size={24} />}
           </span>
         )}
         <div className="min-w-0 flex-1">

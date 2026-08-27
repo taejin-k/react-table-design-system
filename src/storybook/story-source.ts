@@ -47,6 +47,8 @@ const componentTypeExports = [
   "Key",
   "SelectOption",
   "TableRef",
+  "TreeDataNode",
+  "TreeDropInfo",
   "UploadFile",
 ] as const;
 const dndCoreExports = [

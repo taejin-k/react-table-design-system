@@ -1,12 +1,16 @@
 import { describe, expect, it } from "vitest";
 import breadcrumbMeta from "../components/Breadcrumb/Breadcrumb.stories";
+import avatarMeta from "../components/Avatar/Avatar.stories";
+import badgeMeta from "../components/Badge/Badge.stories";
 import buttonMeta from "../components/Button/Button.stories";
 import checkboxMeta from "../components/Checkbox/Checkbox.stories";
+import colorPickerMeta from "../components/ColorPicker/ColorPicker.stories";
 import dropdownMeta from "../components/Dropdown/Dropdown.stories";
 import errorMessageMeta from "../components/ErrorMessage/ErrorMessage.stories";
 import flexMeta from "../components/Flex/Flex.stories";
 import iconMeta from "../components/Icon/Icon.stories";
 import illustrationsMeta from "../components/Illustrations/Illustrations.stories";
+import imageMeta from "../components/Image/Image.stories";
 import inputMeta from "../components/Input/Input.stories";
 import labelMeta from "../components/Label/Label.stories";
 import popoverMeta from "../components/Popover/Popover.stories";
@@ -38,6 +42,10 @@ describe("component story metadata", () => {
     ["Illustrations", illustrationsMeta],
     ["Flex", flexMeta],
     ["Select", selectMeta],
+    ["Image", imageMeta],
+    ["Avatar", avatarMeta],
+    ["ColorPicker", colorPickerMeta],
+    ["Badge", badgeMeta],
   ])("does not give %s stories shared args", (_name, meta) => {
     expect(meta).not.toHaveProperty("args");
   });

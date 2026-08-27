@@ -64,6 +64,8 @@ const meta = {
           <Stories />
           <h2>API</h2>
           <Markdown>{`
+### Tabs
+
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
 | \`items\` | 탭 레이블과 콘텐츠를 구성해요. | \`TabItemType[]\` | \`[]\` |

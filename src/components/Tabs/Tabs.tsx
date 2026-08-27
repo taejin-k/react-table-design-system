@@ -179,7 +179,7 @@ export function Tabs(props: TabsProps) {
             data-tabs-item={item.key}
             data-tabs-active={item.key === selected ? "true" : "false"}
             className={twMerge(
-              "relative inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap text-[#666] hover:text-[#0062df] disabled:cursor-not-allowed disabled:text-[#bbb] motion-reduce:transition-none",
+              "relative inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 whitespace-nowrap text-[#666] hover:text-[#0062df] disabled:cursor-not-allowed disabled:text-[#bbb] motion-reduce:transition-none",
               item.key === selected && "font-medium text-[#0062df]",
               type === "line"
                 ? `${linePadding} transition-colors duration-200`
@@ -196,7 +196,7 @@ export function Tabs(props: TabsProps) {
             {type === "editable-card" && item.closable !== false ? (
               <span
                 data-tab-close={item.key}
-                className="inline-flex rounded p-0.5 hover:bg-black/5"
+                className="inline-flex cursor-pointer rounded p-0.5 hover:bg-black/5"
                 onClick={(event) => {
                   event.stopPropagation();
                   onEdit?.(item.key, "remove");
@@ -212,7 +212,7 @@ export function Tabs(props: TabsProps) {
             type="button"
             data-tabs-add=""
             className={twMerge(
-              "inline-flex shrink-0 items-center justify-center border border-[#d9d9d9] bg-[#fafafa] text-[#111] transition-[background-color,border-color,color] duration-300 ease-[cubic-bezier(0.645,0.045,0.355,1)] hover:border-[#0062df] hover:text-[#0062df] motion-reduce:transition-none",
+              "inline-flex shrink-0 cursor-pointer items-center justify-center border border-[#d9d9d9] bg-[#fafafa] text-[#111] transition-[background-color,border-color,color] duration-300 ease-[cubic-bezier(0.645,0.045,0.355,1)] hover:border-[#0062df] hover:text-[#0062df] motion-reduce:transition-none",
               cardSize,
               vertical
                 ? "w-full"

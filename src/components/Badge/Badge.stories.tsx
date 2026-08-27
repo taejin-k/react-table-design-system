@@ -28,6 +28,8 @@ const meta = {
           <Stories />
           <h2>API</h2>
           <Markdown>{`
+### Badge
+
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
 | \`status\` | 상태 점의 의미와 색상을 정해요. | [\`BadgeStatusType\`](#badge-status-type) | - |
@@ -74,7 +76,7 @@ export const Statuses: Story = {
 };
 
 export const Process: Story = {
-  args: { status: "success", process: true },
+  args: { status: "success" },
   parameters: {
     ...storyDescription("components-badge--process"),
     docs: {

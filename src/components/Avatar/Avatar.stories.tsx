@@ -10,6 +10,9 @@ import type { AvatarShapeType, AvatarSizeType } from "./Avatar.types";
 
 const avatarSizes: AvatarSizeType[] = ["md", "lg"];
 const avatarShapes: AvatarShapeType[] = ["circle", "square"];
+const avatarImage =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Crect width='80' height='80' rx='18' fill='%23d9eaff'/%3E%3Ccircle cx='40' cy='31' r='15' fill='%23ffd19a'/%3E%3Cpath d='M24 29c1-14 29-18 32 1-8-3-19-6-32-1Z' fill='%23502b12'/%3E%3Cpath d='M16 80c1-20 12-31 24-31s23 11 24 31' fill='%230062df'/%3E%3Ccircle cx='34' cy='32' r='1.5' fill='%23111'/%3E%3Ccircle cx='46' cy='32' r='1.5' fill='%23111'/%3E%3Cpath d='M35 40c3 3 7 3 10 0' fill='none' stroke='%23b5534c' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E";
+const invalidAvatarImage = "data:image/png;base64,invalid";
 
 const storyDescription = (id: string) => ({
   docs: { description: { story: storyDescriptions[id] } },
@@ -253,12 +256,7 @@ function AvatarLabelTextExample() {
           onChange={setWidth}
         />
       </div>
-      <Avatar
-        label
-        labelWidth={Number(width) || 180}
-        size="lg"
-        src="https://api.dicebear.com/9.x/miniavs/svg?seed=1"
-      >
+      <Avatar label labelWidth={Number(width) || 180} size="lg" src={avatarImage}>
         {text}
       </Avatar>
     </div>
@@ -272,7 +270,9 @@ export const LabelText: Story = {
       ...storyDescription("components-avatar--label-text").docs,
       source: {
         type: "code",
-        code: withStoryImports(`function AvatarLabelText() {
+        code: withStoryImports(`const avatarImage = ${JSON.stringify(avatarImage)};
+
+function AvatarLabelText() {
   const [text, setText] = useState('긴 라벨 텍스트를 입력해보세요');
   const [width, setWidth] = useState('180');
 
@@ -298,7 +298,7 @@ export const LabelText: Story = {
         label
         labelWidth={Number(width) || 180}
         size="lg"
-        src="https://api.dicebear.com/9.x/miniavs/svg?seed=1"
+        src={avatarImage}
       >
         {text}
       </Avatar>
@@ -318,13 +318,15 @@ export const Image: Story = {
       ...storyDescription("components-avatar--image").docs,
       source: {
         type: "code",
-        code: withStoryImports(`<div className="flex items-center gap-3">
+        code: withStoryImports(`const avatarImage = ${JSON.stringify(avatarImage)};
+
+<div className="flex items-center gap-3">
   <Avatar
-    src="https://api.dicebear.com/9.x/miniavs/svg?seed=1"
+    src={avatarImage}
     size="md"
   />
   <Avatar
-    src="https://api.dicebear.com/9.x/miniavs/svg?seed=1"
+    src={avatarImage}
     size="lg"
   />
 </div>`),
@@ -333,8 +335,8 @@ export const Image: Story = {
   },
   render: () => (
     <div className="flex items-center gap-3">
-      <Avatar src="https://api.dicebear.com/9.x/miniavs/svg?seed=1" size="md" />
-      <Avatar src="https://api.dicebear.com/9.x/miniavs/svg?seed=1" size="lg" />
+      <Avatar src={avatarImage} size="md" />
+      <Avatar src={avatarImage} size="lg" />
     </div>
   ),
 };
@@ -347,15 +349,17 @@ export const ImagePreview: Story = {
       source: {
         type: "code",
         code: withStoryImports(
-          `<div className="flex items-center gap-3">
+          `const avatarImage = ${JSON.stringify(avatarImage)};
+
+<div className="flex items-center gap-3">
   <Avatar
-    src="https://api.dicebear.com/9.x/miniavs/svg?seed=1"
+    src={avatarImage}
     size="lg"
     preview
   />
   <Avatar
     label
-    src="https://api.dicebear.com/9.x/miniavs/svg?seed=1"
+    src={avatarImage}
     size="lg"
     preview
   >
@@ -368,8 +372,8 @@ export const ImagePreview: Story = {
   },
   render: () => (
     <div className="flex items-center gap-3">
-      <Avatar src="https://api.dicebear.com/9.x/miniavs/svg?seed=1" size="lg" preview />
-      <Avatar label src="https://api.dicebear.com/9.x/miniavs/svg?seed=1" size="lg" preview>
+      <Avatar src={avatarImage} size="lg" preview />
+      <Avatar label src={avatarImage} size="lg" preview>
         manhat
       </Avatar>
     </div>
@@ -383,17 +387,19 @@ export const ImageError: Story = {
       ...storyDescription("components-avatar--image-error").docs,
       source: {
         type: "code",
-        code: withStoryImports(`<div className="flex items-center gap-3">
-  <Avatar size="md" src="/avatar-image-not-found.png" />
-  <Avatar size="lg" src="/avatar-image-not-found.png" />
+        code: withStoryImports(`const invalidAvatarImage = "data:image/png;base64,invalid";
+
+<div className="flex items-center gap-3">
+  <Avatar size="md" src={invalidAvatarImage} />
+  <Avatar size="lg" src={invalidAvatarImage} />
 </div>`),
       },
     },
   },
   render: () => (
     <div className="flex items-center gap-3">
-      <Avatar size="md" src="/avatar-image-not-found.png" />
-      <Avatar size="lg" src="/avatar-image-not-found.png" />
+      <Avatar size="md" src={invalidAvatarImage} />
+      <Avatar size="lg" src={invalidAvatarImage} />
     </div>
   ),
 };

@@ -453,13 +453,18 @@ function ImageBase({
         }}
         onClick={openPreview}
       />
-      {preview !== false && !loading ? (
-        <span className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/0 text-white opacity-0 transition-[background-color,opacity] duration-300 group-hover:bg-black/45 group-hover:opacity-100">
-          {config.cover ?? (
+      {preview !== false && !loading && config.cover !== false ? (
+        <span
+          data-image-preview-cover
+          className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/0 text-white opacity-0 transition-[background-color,opacity] duration-300 group-hover:bg-black/45 group-hover:opacity-100"
+        >
+          {config.cover === undefined || config.cover === true ? (
             <>
               <Icon icon="eye" size={20} />
               <span className="ml-2 text-sm">미리보기</span>
             </>
+          ) : (
+            config.cover
           )}
         </span>
       ) : null}

@@ -2,6 +2,13 @@ import type { CSSProperties, ReactElement, ReactNode } from "react";
 
 export type UploadFileStatusType = "error" | "done" | "uploading" | "removed";
 export type UploadListType = "text" | "picture" | "picture-card" | "picture-circle";
+export type UploadCaptureType = true | "user" | "environment";
+export type UploadMethodType = "post" | "put" | "patch" | "POST" | "PUT" | "PATCH";
+
+export interface UploadAcceptConfig {
+  format: string;
+  filter?: "native" | ((file: File) => boolean);
+}
 
 export interface UploadFile<T = unknown> {
   uid: string;
@@ -30,21 +37,45 @@ export interface UploadRequestOption {
   file: File;
   data?: Record<string, unknown>;
   headers?: Record<string, string>;
-  method?: string;
+  method?: UploadMethodType;
   withCredentials?: boolean;
   onProgress: (event: { percent: number }) => void;
   onSuccess: (body: unknown) => void;
   onError: (error: Error, body?: unknown) => void;
 }
 
+export interface UploadProgressType {
+  strokeColor?: CSSProperties["color"];
+  strokeWidth?: number;
+  showInfo?: boolean;
+}
+
+export interface UploadCustomRequestInfo {
+  defaultRequest: (options: UploadRequestOption) => XMLHttpRequest;
+}
+
+export interface UploadShowListType {
+  extra?: ReactNode | ((file: UploadFile) => ReactNode);
+  showPreviewIcon?: boolean | ((file: UploadFile) => boolean);
+  showRemoveIcon?: boolean | ((file: UploadFile) => boolean);
+  showDownloadIcon?: boolean | ((file: UploadFile) => boolean);
+  previewIcon?: ReactNode | ((file: UploadFile) => ReactNode);
+  removeIcon?: ReactNode | ((file: UploadFile) => ReactNode);
+  downloadIcon?: ReactNode | ((file: UploadFile) => ReactNode);
+}
+
 export interface UploadProps {
-  accept?: string;
+  accept?: string | UploadAcceptConfig;
   action?: string | ((file: File) => string | Promise<string>);
+  capture?: UploadCaptureType;
   beforeUpload?: (
     file: File,
     fileList: File[],
-  ) => boolean | File | Promise<boolean | File | string> | string;
-  customRequest?: (options: UploadRequestOption) => void | { abort?: () => void };
+  ) => void | boolean | string | Blob | File | Promise<void | boolean | string | Blob | File>;
+  customRequest?: (
+    options: UploadRequestOption,
+    info: UploadCustomRequestInfo,
+  ) => void | { abort?: () => void };
   data?:
     | Record<string, unknown>
     | ((file: UploadFile) => Record<string, unknown> | Promise<Record<string, unknown>>);
@@ -55,13 +86,13 @@ export interface UploadProps {
   headers?: Record<string, string>;
   listType?: UploadListType;
   maxCount?: number;
-  method?: string;
+  method?: UploadMethodType;
   multiple?: boolean;
   name?: string;
   openFileDialogOnClick?: boolean;
   pastable?: boolean;
-  showUploadList?:
-    boolean | { showPreviewIcon?: boolean; showRemoveIcon?: boolean; showDownloadIcon?: boolean };
+  progress?: UploadProgressType;
+  showUploadList?: boolean | UploadShowListType;
   withCredentials?: boolean;
   children?: ReactNode;
   className?: string;

@@ -384,6 +384,12 @@ export const storyDescriptions: Record<string, string> = {
   "components-upload--upload-progress":
     "사용자 정의 요청에서 전달한 진행률과 완료 상태를 표시해요.",
   "components-upload--file-states": "완료·업로드 중·오류 파일의 목록 상태와 동작을 비교해요.",
+  "components-upload--selection-rules":
+    "PNG 파일만 여러 개 선택하고 최대 두 개까지 등록되는 제한을 확인해요.",
+  "components-upload--directory-and-paste":
+    "폴더 단위 선택과 클립보드 파일 붙여넣기로 파일을 추가해요.",
+  "components-upload--controlled-file-list":
+    "fileList와 onChange로 목록을 제어하고 파일별 추가 상태를 표시해요.",
 
   "components-avatar--basic": "기본 아바타를 표시해요.",
   "components-avatar--sizes": "md와 lg 크기의 아바타를 비교해요.",
@@ -413,12 +419,11 @@ export const storyDescriptions: Record<string, string> = {
   "components-collapse--basic": "여러 패널을 독립적으로 열고 닫아요.",
   "components-collapse--accordion": "한 번에 하나의 패널만 펼쳐지는 아코디언을 사용해요.",
   "components-collapse--ghost": "배경과 테두리를 제거해 주변 콘텐츠에 자연스럽게 배치해요.",
+  "components-collapse--borders": "테두리가 있는 패널과 없는 패널을 비교해요.",
   "components-collapse--sizes": "세 가지 크기의 패널 여백을 비교해요.",
   "components-collapse--collapsible": "헤더 전체, 아이콘 전용과 비활성 클릭 방식을 비교해요.",
   "components-collapse--header-and-icons":
-    "추가 정보, 아이콘 위치와 사용자 정의 펼침 아이콘을 적용해요.",
-  "components-collapse--controlled-and-rendering":
-    "펼친 패널을 제어하고 접힌 콘텐츠의 상태 유지 여부를 비교해요.",
+    "추가 정보, 아이콘 위치와 아이콘을 숨긴 패널을 비교해요.",
 
   "components-description--basic":
     "레이블과 값을 열 단위로 정렬해 사용자 정보를 읽기 쉽게 표시해요.",
@@ -435,6 +440,7 @@ export const storyDescriptions: Record<string, string> = {
 
   "components-image--basic":
     "이미지를 표시하고 클릭해 반전·회전·확대·축소하거나 드래그해 이동해요.",
+  "components-image--cover": "기본, 숨김과 사용자 정의 hover 안내를 비교해요.",
   "components-image--dimensions": "width와 height로 자주 사용하는 이미지 크기를 비교해요.",
   "components-image--placeholder": "이미지를 불러오는 동안 같은 크기의 Image Skeleton을 보여줘요.",
   "components-image--group": "여러 이미지를 묶어 개수를 확인하고 이전·다음 이미지로 이동해요.",
@@ -447,6 +453,8 @@ export const storyDescriptions: Record<string, string> = {
   "components-tree--basic": "계층형 데이터를 펼치고 접으며 폴더와 파일 항목을 선택해요.",
   "components-tree--checkable": "체크박스로 부모와 자식 노드의 선택 상태를 함께 관리해요.",
   "components-tree--lines": "부모와 자식 노드 사이의 연결선을 표시해 계층을 강조해요.",
+  "components-tree--draggable":
+    "노드를 위·아래 또는 다른 노드 안으로 드래그해 계층과 순서를 변경해요.",
   "components-tree--async-loading":
     "노드를 처음 펼칠 때 하위 데이터를 불러오고 완료 후 목록에 표시해요.",
 

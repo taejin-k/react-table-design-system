@@ -83,6 +83,7 @@ export const iconGalleryNames = [
   "user-filled",
   "users-outlined",
   "users-filled",
+  "paperclip",
   "file-outlined",
   "file-filled",
   "folder-outlined",

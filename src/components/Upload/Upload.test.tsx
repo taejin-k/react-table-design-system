@@ -48,6 +48,22 @@ describe("Upload", () => {
     );
   });
 
+  it("provides the default request to a custom request", async () => {
+    const customRequest = vi.fn((options) => options.onSuccess({ ok: true }));
+    const { container } = render(
+      <Upload action="/upload" customRequest={customRequest}>
+        <button>파일 선택</button>
+      </Upload>,
+    );
+
+    await userEvent.upload(container.querySelector("input")!, new File(["x"], "saved.txt"));
+
+    await waitFor(() => expect(customRequest).toHaveBeenCalledOnce());
+    expect(customRequest).toHaveBeenCalledWith(expect.any(Object), {
+      defaultRequest: expect.any(Function),
+    });
+  });
+
   it("reports request setup failures as an error file", async () => {
     const onChange = vi.fn();
     const { container } = render(
@@ -85,6 +101,52 @@ describe("Upload", () => {
     expect(await screen.findByText("photo.png")).toBeInTheDocument();
     expect(screen.queryByText("memo.txt")).not.toBeInTheDocument();
     expect(onChange).toHaveBeenCalledTimes(1);
+  });
+
+  it("supports an accept config with a custom filter", async () => {
+    const { container } = render(
+      <Upload
+        accept={{ format: ".png,.jpg", filter: (file) => file.size <= 4 }}
+        beforeUpload={() => false}
+      >
+        <button>파일 선택</button>
+      </Upload>,
+    );
+    const input = container.querySelector("input") as HTMLInputElement;
+
+    fireEvent.change(input, {
+      target: {
+        files: [new File(["tiny"], "tiny.png"), new File(["too-large"], "large.png")],
+      },
+    });
+
+    expect(input).toHaveAttribute("accept", ".png,.jpg");
+    expect(await screen.findByText("tiny.png")).toBeInTheDocument();
+    expect(screen.queryByText("large.png")).not.toBeInTheDocument();
+  });
+
+  it("uses a Blob returned by beforeUpload as the request file", async () => {
+    const customRequest = vi.fn((options) => options.onSuccess({ ok: true }));
+    const { container } = render(
+      <Upload
+        action="/upload"
+        beforeUpload={() => new Blob(["optimized"], { type: "image/webp" })}
+        customRequest={customRequest}
+      >
+        <button>파일 선택</button>
+      </Upload>,
+    );
+
+    await userEvent.upload(
+      container.querySelector("input")!,
+      new File(["original"], "photo.png", { type: "image/png" }),
+    );
+
+    await waitFor(() => expect(customRequest).toHaveBeenCalledOnce());
+    expect(customRequest.mock.calls[0]?.[0].file).toMatchObject({
+      name: "photo.png",
+      type: "image/webp",
+    });
   });
 
   it("keeps only the last selected file when maxCount is one", async () => {
@@ -177,5 +239,68 @@ describe("Upload", () => {
 
     await userEvent.click(container.querySelector("[data-upload-preview]")!);
     expect(onPreview).toHaveBeenCalledWith(expect.objectContaining({ uid: "image" }));
+  });
+
+  it("hides the picture-card trigger when maxCount is reached", () => {
+    render(
+      <Upload
+        listType="picture-card"
+        maxCount={1}
+        defaultFileList={[{ uid: "image", name: "photo.png", status: "done" }]}
+      >
+        <span>이미지 추가</span>
+      </Upload>,
+    );
+
+    expect(screen.queryByText("이미지 추가")).not.toBeInTheDocument();
+  });
+
+  it("passes capture to the native file input", () => {
+    const { container } = render(
+      <Upload capture="environment">
+        <button>카메라 열기</button>
+      </Upload>,
+    );
+
+    expect(container.querySelector("input[type=file]")).toHaveAttribute("capture", "environment");
+  });
+
+  it("customizes progress and optionally shows its percentage", () => {
+    const { container } = render(
+      <Upload
+        progress={{ strokeColor: "#722ed1", strokeWidth: 4, showInfo: true }}
+        defaultFileList={[
+          { uid: "uploading", name: "uploading.pdf", status: "uploading", percent: 48 },
+        ]}
+      >
+        <button>파일 선택</button>
+      </Upload>,
+    );
+
+    const progress = container.querySelector("[data-upload-progress]");
+    expect(progress).toHaveTextContent("48%");
+    expect(progress?.querySelector("span > span")).toHaveStyle({
+      width: "48%",
+      backgroundColor: "#722ed1",
+    });
+  });
+
+  it("supports per-file list actions, custom icons and extra content", () => {
+    const { container } = render(
+      <Upload
+        defaultFileList={[{ uid: "done", name: "guide.pdf", status: "done", url: "/guide.pdf" }]}
+        showUploadList={{
+          extra: () => <span>완료</span>,
+          showPreviewIcon: () => false,
+          removeIcon: <span data-testid="custom-remove">지우기</span>,
+        }}
+      >
+        <button>파일 선택</button>
+      </Upload>,
+    );
+
+    expect(screen.getByText("완료")).toBeInTheDocument();
+    expect(screen.getByTestId("custom-remove")).toBeInTheDocument();
+    expect(container.querySelector("button[data-upload-preview]")).not.toBeInTheDocument();
   });
 });

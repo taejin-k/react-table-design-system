@@ -4,6 +4,25 @@ import { describe, expect, it } from "vitest";
 import { Avatar } from "./Avatar";
 
 describe("Avatar", () => {
+  it("applies className to each public root without adding ARIA attributes", () => {
+    const { container } = render(
+      <>
+        <Avatar className="ring-1">K</Avatar>
+        <Avatar label className="bg-red-50">
+          Kim
+        </Avatar>
+        <Avatar.Group className="gap-1">
+          <Avatar>A</Avatar>
+        </Avatar.Group>
+      </>,
+    );
+
+    expect(container.children[0]).toHaveClass("ring-1");
+    expect(container.children[1]).toHaveClass("bg-red-50");
+    expect(container.children[2]).toHaveClass("gap-1");
+    expect(container.innerHTML).not.toMatch(/\saria-[\w-]+=/);
+  });
+
   it("applies color as the avatar background", () => {
     const { container } = render(<Avatar color="#722ed1">KT</Avatar>);
     expect(container.firstChild).toHaveStyle({ backgroundColor: "#722ed1" });

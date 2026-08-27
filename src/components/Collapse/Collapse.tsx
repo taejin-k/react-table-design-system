@@ -3,9 +3,12 @@ import { twMerge } from "tailwind-merge";
 import { Icon } from "../Icon";
 import type { CollapseItem, CollapseKeyType, CollapseProps } from "./Collapse.types";
 
-function keys(value?: CollapseKeyType | CollapseKeyType[]) {
-  if (value === undefined) return [];
-  return Array.isArray(value) ? value : [value];
+function keys(value?: CollapseKeyType[]) {
+  return value ?? [];
+}
+
+function includesKey(values: CollapseKeyType[], key: CollapseKeyType) {
+  return values.some((value) => Object.is(value, key));
 }
 
 export function Collapse({
@@ -14,56 +17,53 @@ export function Collapse({
   activeKey,
   defaultActiveKey,
   bordered = true,
-  collapsible,
-  destroyOnHidden = false,
-  expandIcon,
   expandIconPlacement = "start",
   ghost = false,
-  size = "medium",
+  size = "md",
   className,
-  style,
   onChange,
 }: CollapseProps) {
   const [innerKeys, setInnerKeys] = useState(() => keys(defaultActiveKey));
   const opened = activeKey === undefined ? innerKeys : keys(activeKey);
-  const visitedKeys = useRef(new Set(opened.map(String)));
-  const [renderedKeys, setRenderedKeys] = useState(new Set(opened.map(String)));
+  const visitedKeys = useRef(new Set(opened));
   useEffect(() => {
-    opened.forEach((key) => visitedKeys.current.add(String(key)));
-    setRenderedKeys((current) => new Set([...current, ...opened.map(String)]));
+    opened.forEach((key) => visitedKeys.current.add(key));
   }, [activeKey, innerKeys]);
   const toggle = (item: CollapseItem) => {
     const key = item.key;
-    const isOpen = opened.some((value) => String(value) === String(key));
+    const isOpen = includesKey(opened, key);
     const next = accordion
       ? isOpen
         ? []
         : [key]
       : isOpen
-        ? opened.filter((value) => String(value) !== String(key))
+        ? opened.filter((value) => !Object.is(value, key))
         : [...opened, key];
     if (activeKey === undefined) setInnerKeys(next);
-    onChange?.(accordion ? (next[0] ?? []) : next);
+    onChange?.(next);
   };
-  const padding =
-    size === "large" ? "px-6 py-3" : size === "small" ? "px-3 py-1.5" : "px-4 py-2";
+  const headerSize =
+    size === "lg" ? "h-[46px] px-6" : size === "sm" ? "h-[30px] px-3" : "h-[38px] px-4";
+  const bodyPadding = size === "lg" ? "px-6 py-4" : size === "sm" ? "px-3 py-2" : "px-4 py-3";
   return (
     <div
       className={twMerge(
         "overflow-hidden font-pretendard text-sm leading-[22px] text-[#111]",
-        bordered && !ghost && "rounded-lg border border-[#ddd]",
+        !ghost && "rounded-lg",
+        bordered && !ghost && "border border-[#ddd]",
         ghost && "bg-transparent",
         !ghost && "bg-[#fafafa]",
         className,
       )}
-      style={style}
     >
       {items.map((item, index) => {
-        const open = opened.some((value) => String(value) === String(item.key));
-        const itemCollapsible = item.collapsible ?? collapsible;
+        const open = includesKey(opened, item.key);
+        const itemCollapsible = item.collapsible ?? "header";
         const disabled = itemCollapsible === "disabled";
-        const arrow = expandIcon?.({ isActive: open, item }) ?? (
-          <Icon icon="chevron-right" size={12} />
+        const arrow = <Icon icon="chevron-right" size={12} />;
+        const arrowClassName = twMerge(
+          "inline-flex transition-transform duration-200 ease-[cubic-bezier(0.645,0.045,0.355,1)] motion-reduce:transition-none",
+          !disabled && "cursor-pointer",
         );
         return (
           <section
@@ -72,18 +72,19 @@ export function Collapse({
               index > 0 && bordered && !ghost && "border-t border-[#ddd]",
               item.className,
             )}
-            style={item.style}
           >
             <div
               tabIndex={disabled ? -1 : 0}
               className={twMerge(
                 "flex items-center gap-3 bg-[rgba(0,0,0,0.02)] transition-colors hover:bg-[#f0f0f0] motion-reduce:transition-none",
                 ghost && "bg-transparent hover:bg-transparent",
-                disabled ? "cursor-not-allowed text-[#bbb]" : "cursor-pointer",
-                padding,
-                item.classNames?.header,
+                disabled
+                  ? "cursor-not-allowed text-[#bbb]"
+                  : itemCollapsible === "icon"
+                    ? "cursor-default"
+                    : "cursor-pointer",
+                headerSize,
               )}
-              style={item.styles?.header}
               onClick={() => itemCollapsible !== "icon" && !disabled && toggle(item)}
               onKeyDown={(event) => {
                 if (
@@ -98,7 +99,7 @@ export function Collapse({
             >
               {item.showArrow !== false && expandIconPlacement === "start" ? (
                 <span
-                  className="inline-flex transition-transform duration-200 ease-[cubic-bezier(0.645,0.045,0.355,1)] motion-reduce:transition-none"
+                  className={arrowClassName}
                   style={{ transform: open ? "rotate(90deg)" : undefined }}
                   onClick={(event) => {
                     if (itemCollapsible === "icon") {
@@ -116,7 +117,7 @@ export function Collapse({
               ) : null}
               {item.showArrow !== false && expandIconPlacement === "end" ? (
                 <span
-                  className="inline-flex transition-transform duration-200"
+                  className={arrowClassName}
                   style={{ transform: open ? "rotate(90deg)" : undefined }}
                   onClick={(event) => {
                     if (itemCollapsible === "icon") {
@@ -132,35 +133,10 @@ export function Collapse({
             <div
               className="grid transition-[grid-template-rows] duration-200 ease-[cubic-bezier(0.645,0.045,0.355,1)] motion-reduce:transition-none"
               style={{ gridTemplateRows: open ? "1fr" : "0fr" }}
-              onTransitionEnd={(event) => {
-                if (
-                  event.propertyName !== "grid-template-rows" ||
-                  open ||
-                  !destroyOnHidden ||
-                  item.forceRender
-                )
-                  return;
-                setRenderedKeys((current) => {
-                  const next = new Set(current);
-                  next.delete(String(item.key));
-                  return next;
-                });
-              }}
             >
               <div className="overflow-hidden">
-                {open ||
-                item.forceRender ||
-                renderedKeys.has(String(item.key)) ||
-                (!destroyOnHidden && visitedKeys.current.has(String(item.key))) ? (
-                  <div
-                    className={twMerge(
-                      "bg-white",
-                      ghost && "bg-transparent",
-                      padding,
-                      item.classNames?.body,
-                    )}
-                    style={item.styles?.body}
-                  >
+                {open || visitedKeys.current.has(item.key) ? (
+                  <div className={twMerge("bg-white", ghost && "bg-transparent", bodyPadding)}>
                     {item.children}
                   </div>
                 ) : null}

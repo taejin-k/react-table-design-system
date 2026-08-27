@@ -3,6 +3,15 @@ import { describe, expect, it } from "vitest";
 import { Badge } from "./Badge";
 
 describe("Badge", () => {
+  it("applies className to the outer element without adding ARIA attributes", () => {
+    const { container } = render(
+      <Badge className="rounded bg-slate-50" status="success" text="정상" />,
+    );
+
+    expect(container.firstChild).toHaveClass("rounded", "bg-slate-50");
+    expect(container.innerHTML).not.toMatch(/\saria-[\w-]+=/);
+  });
+
   it("renders status text", () => {
     render(<Badge status="processing" text="처리 중" />);
     expect(screen.getByText("처리 중")).toBeInTheDocument();
