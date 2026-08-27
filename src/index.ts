@@ -114,10 +114,8 @@ export { notification } from "./components/Notification";
 export type {
   NotificationApi,
   NotificationArgsProps,
-  NotificationGlobalConfig,
   NotificationInstance,
   NotificationPlacementType,
-  NotificationSemanticNameType,
   NotificationStatusType,
 } from "./components/Notification";
 export { Illustrations } from "./components/Illustrations";

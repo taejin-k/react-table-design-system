@@ -69,13 +69,12 @@ const meta = {
 
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
-| \`open\` | 설정한 내용으로 알림을 표시해요. | \`(config) => void\` | - |
-| \`success\` | 성공 알림을 표시해요. | \`(config) => void\` | - |
-| \`error\` | 오류 알림을 표시해요. | \`(config) => void\` | - |
-| \`info\` | 정보 알림을 표시해요. | \`(config) => void\` | - |
-| \`warning\` | 경고 알림을 표시해요. | \`(config) => void\` | - |
+| \`open\` | 설정한 내용으로 알림을 표시해요. | (config: [\`Config\`](#config)) => void | - |
+| \`success\` | 성공 알림을 표시해요. | (config: [\`Config\`](#config)) => void | - |
+| \`error\` | 오류 알림을 표시해요. | (config: [\`Config\`](#config)) => void | - |
+| \`info\` | 정보 알림을 표시해요. | (config: [\`Config\`](#config)) => void | - |
+| \`warning\` | 경고 알림을 표시해요. | (config: [\`Config\`](#config)) => void | - |
 | \`destroy\` | key의 알림 또는 모든 알림을 닫아요. | \`(key?) => void\` | - |
-| \`config\` | 전역 알림 설정을 변경해요. | \`(config) => void\` | - |
 
 ### Config
 
@@ -85,32 +84,17 @@ const meta = {
 | \`description\` | 알림 설명을 설정해요. | \`ReactNode\` | - |
 | \`type\` | 알림 상태를 설정해요. | [\`NotificationStatusType\`](#notification-status-type) | - |
 | \`actions\` | 알림 아래 작업을 추가해요. | \`ReactNode\` | - |
-| \`closable\` | 닫기 버튼 표시·아이콘·비활성을 설정해요. | \`boolean \\| object\` | \`true\` |
+| \`closable\` | 닫기 버튼을 표시해요. | \`boolean\` | \`true\` |
 | \`duration\` | 자동으로 닫히기까지의 초를 설정해요. 0이면 유지해요. | \`number\` | \`4.5\` |
 | \`showProgress\` | 남은 시간을 하단 막대로 표시해요. | \`boolean\` | \`false\` |
 | \`pauseOnHover\` | 마우스를 올리면 닫힘 시간을 멈춰요. | \`boolean\` | \`true\` |
 | \`icon\` | 상태 아이콘을 변경해요. | \`ReactNode\` | - |
 | \`key\` | 알림을 갱신하거나 제거할 key예요. | \`string\` | - |
 | \`placement\` | 화면 배치 위치를 설정해요. | [\`NotificationPlacementType\`](#notification-placement-type) | \`topRight\` |
-| \`classNames\` | 각 영역의 클래스를 설정해요. | \`Record<SemanticName, string>\` | - |
-| \`styles\` | 각 영역의 스타일을 설정해요. | \`Record<SemanticName, CSSProperties>\` | - |
 | \`className\` | 알림에 Tailwind 클래스를 추가해요. | \`string\` | - |
 | \`onClick\` | 알림을 누르면 실행해요. | \`() => void\` | - |
 | \`onClose\` | 알림이 닫히면 실행해요. | \`() => void\` | - |
 
-### Global config
-
-| Name | Description | Type | Default |
-| --- | --- | --- | --- |
-| \`top\` | 위쪽 알림의 화면 간격을 정해요. | \`number\` | \`24\` |
-| \`bottom\` | 아래쪽 알림의 화면 간격을 정해요. | \`number\` | \`24\` |
-| \`placement\` | 기본 표시 위치를 정해요. | [\`NotificationPlacementType\`](#notification-placement-type) | \`topRight\` |
-| \`duration\` | 자동으로 닫히기까지의 초를 정해요. 0이면 유지해요. | \`number\` | \`4.5\` |
-| \`getContainer\` | 알림을 렌더링할 컨테이너를 정해요. | \`() => HTMLElement\` | \`document.body\` |
-| \`maxCount\` | 동시에 유지할 최대 알림 수를 정해요. | \`number\` | - |
-| \`stack\` | 알림이 많을 때 겹쳐 표시해요. | \`boolean \\| { threshold?: number }\` | \`{ threshold: 3 }\` |
-| \`showProgress\` | 남은 시간을 하단 막대로 표시해요. | \`boolean\` | \`false\` |
-| \`pauseOnHover\` | hover 중 닫힘 시간을 멈춰요. | \`boolean\` | \`true\` |
       `}</Markdown>
           <h2 className="component-docs-types-heading">Types</h2>
           <h3 id="notification-status-type">NotificationStatusType</h3>

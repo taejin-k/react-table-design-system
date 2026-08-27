@@ -20,7 +20,6 @@ import { MOTION_DURATION_MID } from "../_internal/motion";
 import type {
   NotificationApi,
   NotificationArgsProps,
-  NotificationGlobalConfig,
   NotificationInstance,
   NotificationPlacementType,
   NotificationStatusType,
@@ -30,20 +29,7 @@ interface NotificationItem extends NotificationArgsProps {
   key: string;
 }
 
-const globalConfig: NotificationGlobalConfig = {
-  bottom: 24,
-  duration: 4.5,
-  pauseOnHover: true,
-  placement: "topRight",
-  showProgress: false,
-  stack: { threshold: 3 },
-  top: 24,
-};
-
-function useNotificationHolder(
-  config: NotificationGlobalConfig = {},
-): [NotificationInstance, ReactNode] {
-  const resolvedConfig = { ...globalConfig, ...config };
+function useNotificationHolder(): [NotificationInstance, ReactNode] {
   const [items, setItems] = useState<NotificationItem[]>([]);
   const onCloseCallbacks = useRef(new Map<string, (() => void) | undefined>());
   const close = useCallback((key?: string) => {
@@ -53,34 +39,24 @@ function useNotificationHolder(
     onCloseCallbacks.current.get(key)?.();
     onCloseCallbacks.current.delete(key);
   }, []);
-  const open = useCallback(
-    (input: NotificationArgsProps) => {
-      const key = input.key ?? `notification-${Date.now()}-${Math.random()}`;
-      onCloseCallbacks.current.set(key, input.onClose);
-      setItems((current) => {
-        const item = {
-          ...input,
-          key,
-          duration: input.duration ?? resolvedConfig.duration,
-          pauseOnHover: input.pauseOnHover ?? resolvedConfig.pauseOnHover,
-          placement: input.placement ?? resolvedConfig.placement,
-          showProgress: input.showProgress ?? resolvedConfig.showProgress,
-        };
-        const next = current.some((currentItem) => currentItem.key === key)
-          ? current.map((currentItem) => (currentItem.key === key ? item : currentItem))
-          : [...current, item];
-        if (!resolvedConfig.maxCount || next.length <= resolvedConfig.maxCount) return next;
-        return next.slice(-resolvedConfig.maxCount);
-      });
-    },
-    [
-      resolvedConfig.duration,
-      resolvedConfig.maxCount,
-      resolvedConfig.pauseOnHover,
-      resolvedConfig.placement,
-      resolvedConfig.showProgress,
-    ],
-  );
+  const open = useCallback((input: NotificationArgsProps) => {
+    const key = input.key ?? `notification-${Date.now()}-${Math.random()}`;
+    onCloseCallbacks.current.set(key, input.onClose);
+    setItems((current) => {
+      const item = {
+        ...input,
+        key,
+        duration: input.duration ?? 4.5,
+        pauseOnHover: input.pauseOnHover ?? true,
+        placement: input.placement ?? "topRight",
+        showProgress: input.showProgress ?? false,
+      };
+      const next = current.some((currentItem) => currentItem.key === key)
+        ? current.map((currentItem) => (currentItem.key === key ? item : currentItem))
+        : [...current, item];
+      return next;
+    });
+  }, []);
   const api = useMemo<NotificationInstance>(
     () => ({
       open,
@@ -92,18 +68,9 @@ function useNotificationHolder(
     }),
     [close, open],
   );
-  return [
-    api,
-    <NotificationHolder
-      items={items}
-      config={resolvedConfig}
-      onClose={close}
-      onAfterClose={finishClose}
-    />,
-  ];
+  return [api, <NotificationHolder items={items} onClose={close} onAfterClose={finishClose} />];
 }
 
-const NOTIFICATION_EDGE = 24;
 const NOTIFICATION_GAP = 16;
 const NOTIFICATION_STACK_OFFSET = 8;
 const NOTIFICATION_ESTIMATED_HEIGHT = 86;
@@ -119,12 +86,10 @@ const placementClasses: Record<NotificationPlacementType, string> = {
 
 function NotificationHolder({
   items,
-  config,
   onClose,
   onAfterClose,
 }: {
   items: NotificationItem[];
-  config: NotificationGlobalConfig;
   onClose: (key?: string) => void;
   onAfterClose: (key: string) => void;
 }) {
@@ -155,7 +120,6 @@ function NotificationHolder({
             key={placement}
             items={placedItems}
             placement={placement}
-            config={config}
             expanded={expandedPlacements.has(placement)}
             onExpandedChange={(expanded) => {
               setExpandedPlacements((current) => {
@@ -183,14 +147,13 @@ function NotificationHolder({
         );
       })}
     </>,
-    config.getContainer?.() ?? document.body,
+    document.body,
   );
 }
 
 function NotificationPlacementList({
   items,
   placement,
-  config,
   expanded,
   onExpandedChange,
   onClose,
@@ -199,7 +162,6 @@ function NotificationPlacementList({
 }: {
   items: NotificationItem[];
   placement: NotificationPlacementType;
-  config: NotificationGlobalConfig;
   expanded: boolean;
   onExpandedChange: (expanded: boolean) => void;
   onClose: (key?: string) => void;
@@ -208,8 +170,8 @@ function NotificationPlacementList({
 }) {
   const listRef = useRef<HTMLDivElement>(null);
   const collapseTimerRef = useRef<number | undefined>(undefined);
-  const threshold = typeof config.stack === "object" ? (config.stack.threshold ?? 3) : 3;
-  const stackEnabled = config.stack !== false;
+  const threshold = 3;
+  const stackEnabled = true;
   const stackCollapsed = stackEnabled && items.length > threshold && !expanded;
   const { positions, totalHeight, setNodeSize } = useNotificationLayout(
     items,
@@ -255,12 +217,6 @@ function NotificationPlacementList({
         isBottom ? "flex-col-reverse" : "flex-col",
         placementClasses[placement],
       )}
-      style={
-        isBottom
-          ? { bottom: (config.bottom ?? NOTIFICATION_EDGE) - NOTIFICATION_EDGE }
-          : { top: (config.top ?? NOTIFICATION_EDGE) - NOTIFICATION_EDGE }
-      }
-      dir={config.rtl ? "rtl" : undefined}
       onMouseEnter={() => {
         window.clearTimeout(collapseTimerRef.current);
         if (stackEnabled && items.length > threshold) onExpandedChange(true);
@@ -316,7 +272,6 @@ function NotificationPlacementList({
                   false
                 }
                 forcedPaused={expanded}
-                globalCloseIcon={config.closeIcon}
                 motionClassName={motionClassName}
                 motionStyle={motionStyle}
                 motionRef={motionRef as Ref<HTMLDivElement>}
@@ -433,7 +388,6 @@ function NotificationCard({
   hiddenInStack,
   entering,
   forcedPaused,
-  globalCloseIcon,
   motionClassName,
   motionStyle,
   motionRef,
@@ -450,7 +404,6 @@ function NotificationCard({
   hiddenInStack: boolean;
   entering: boolean;
   forcedPaused: boolean;
-  globalCloseIcon?: ReactNode;
   motionClassName?: string;
   motionStyle?: CSSProperties;
   motionRef: Ref<HTMLDivElement>;
@@ -499,8 +452,6 @@ function NotificationCard({
     else if (!hoveringRef.current) resumeTimer();
   }, [forcedPaused, item.pauseOnHover, pauseTimer, resumeTimer]);
   const closable = item.closable !== false;
-  const closeDisabled = typeof item.closable === "object" && item.closable.disabled;
-  const closeIcon = typeof item.closable === "object" ? item.closable.closeIcon : undefined;
   const title = item.title;
   const description = item.description;
   const isBottom = placement.startsWith("bottom");
@@ -522,7 +473,6 @@ function NotificationCard({
         visible === false && "pointer-events-none",
         hiddenInStack && "wizard-notification-stack-hidden",
         item.onClick && "cursor-pointer",
-        item.classNames?.root,
         item.className,
       )}
       style={
@@ -538,7 +488,6 @@ function NotificationCard({
           transformOrigin: isBottom ? "center top" : "center bottom",
           zIndex: notificationIndex === 0 ? 1000 : 1000 - notificationIndex,
           ...item.style,
-          ...item.styles?.root,
           ...motionStyle,
         } as CSSProperties
       }
@@ -561,9 +510,7 @@ function NotificationCard({
           className={twMerge(
             "inline-flex shrink-0 leading-none",
             title != null ? "-mt-0.5" : "-mt-[3px]",
-            item.classNames?.icon,
           )}
-          style={item.styles?.icon}
         >
           {item.icon ?? <NotificationIcon type={item.type ?? "info"} />}
         </span>
@@ -578,9 +525,7 @@ function NotificationCard({
               className={twMerge(
                 "text-base leading-6 font-normal whitespace-pre-line",
                 closable && "pr-6",
-                item.classNames?.title,
               )}
-              style={item.styles?.title}
             >
               {title}
             </div>
@@ -590,29 +535,17 @@ function NotificationCard({
               className={twMerge(
                 "text-sm whitespace-pre-line text-[#111]",
                 closable && title == null && "pr-6",
-                item.classNames?.description,
               )}
-              style={item.styles?.description}
             >
               {description}
             </div>
           ) : null}
         </div>
       </div>
-      {item.actions ? (
-        <div
-          className={twMerge("mt-3 flex justify-end gap-2", item.classNames?.actions)}
-          style={item.styles?.actions}
-        >
-          {item.actions}
-        </div>
-      ) : null}
+      {item.actions ? <div className="mt-3 flex justify-end gap-2">{item.actions}</div> : null}
       {closable ? (
         <OverlayCloseButton
-          icon={closeIcon ?? globalCloseIcon}
-          disabled={closeDisabled}
-          className={twMerge("absolute top-[14px] right-5", item.classNames?.close)}
-          style={item.styles?.close}
+          className="absolute top-[14px] right-5"
           onClick={(event) => {
             event.stopPropagation();
             onClose();
@@ -621,14 +554,10 @@ function NotificationCard({
       ) : null}
       {item.showProgress && item.duration ? (
         <div
-          className={twMerge(
-            "absolute right-2 bottom-0 left-2 h-0.5 origin-left rounded-lg bg-[linear-gradient(90deg,#69b1ff,#0062df)]",
-            item.classNames?.progress,
-          )}
+          className="absolute right-2 bottom-0 left-2 h-0.5 origin-left rounded-lg bg-[linear-gradient(90deg,#69b1ff,#0062df)]"
           style={{
             animation: `wizard-notification-progress ${item.duration}s linear forwards`,
             animationPlayState: paused ? "paused" : "running",
-            ...item.styles?.progress,
           }}
         />
       ) : null}
@@ -715,8 +644,4 @@ export const notification: NotificationApi = {
   info: (config) => invoke("info", config),
   warning: (config) => invoke("warning", config),
   destroy: (key) => staticInstance?.destroy(key),
-  config: (next) => {
-    Object.assign(globalConfig, next);
-    if (root) root.render(createElement(StaticNotificationHost));
-  },
 };
