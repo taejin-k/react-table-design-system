@@ -1,7 +1,8 @@
 /** Canvas와 Docs에서 각 Story가 무엇을 검증하는지 바로 알 수 있도록 제공하는 설명이다. */
 export const storyDescriptions: Record<string, string> = {
   "components-button--variants":
-    "다섯 가지 버튼 종류를 비교해요. ghost는 hover하면 tertiary 배경으로 바뀌어요.",
+    "여섯 가지 버튼 종류를 비교해요. ghost는 hover하면 tertiary 배경으로 바뀌어요.",
+  "components-button--danger": "삭제처럼 주의가 필요한 동작에 danger 버튼과 주요 상태를 사용해요.",
   "components-button--sizes": "화면과 작업 환경에 맞게 세 가지 버튼 크기를 선택할 수 있어요.",
   "components-button--states": "기본, 그림자, 비활성, 전체 너비 상태를 사용할 수 있어요.",
   "components-button--rounded":

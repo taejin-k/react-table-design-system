@@ -53,6 +53,45 @@ describe("Button", () => {
     );
   });
 
+  it("uses the secondary border color when a tertiary button is hovered", () => {
+    render(<Button variant="tertiary">Tertiary</Button>);
+
+    expect(screen.getByRole("button", { name: "Tertiary" })).toHaveClass(
+      "ring-transparent",
+      "hover:ring-[#ddd]",
+    );
+  });
+
+  it("uses Ant Design danger colors across interaction states", () => {
+    const { rerender } = render(<Button variant="danger">삭제</Button>);
+
+    const button = screen.getByRole("button", { name: "삭제" });
+    expect(button).toHaveClass(
+      "bg-[#ff4d4f]",
+      "text-white",
+      "hover:bg-[#ff7875]",
+      "active:bg-[#d9363e]",
+    );
+
+    rerender(
+      <Button variant="danger" loading>
+        삭제
+      </Button>,
+    );
+    expect(button).toHaveClass("hover:bg-[#ff4d4f]", "active:bg-[#ff4d4f]");
+
+    rerender(
+      <Button variant="danger" disabled>
+        삭제
+      </Button>,
+    );
+    expect(button).toHaveClass(
+      "disabled:bg-[#f5f5f5]",
+      "disabled:text-[#999999]",
+      "disabled:ring-[#dddddd]",
+    );
+  });
+
   it("keeps icon interaction owned by the button", async () => {
     const user = userEvent.setup();
     const iconClick = vi.fn();

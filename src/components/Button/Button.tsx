@@ -106,10 +106,12 @@ const buttonVariants = cva(
       variant: {
         primary:
           "bg-[#0062df] text-white ring-1 ring-transparent ring-inset hover:bg-[#227cef] disabled:bg-[#f5f5f5] disabled:text-[#999999] disabled:ring-[#dddddd]",
+        danger:
+          "bg-[#ff4d4f] text-white ring-1 ring-transparent ring-inset hover:bg-[#ff7875] active:bg-[#d9363e] disabled:bg-[#f5f5f5] disabled:text-[#999999] disabled:ring-[#dddddd]",
         secondary:
           "bg-white text-[#111111] ring-1 ring-[#ddd] ring-inset hover:bg-[#f5f5f5] disabled:bg-[#f5f5f5] disabled:text-[#999999] disabled:ring-[#dddddd]",
         tertiary:
-          "bg-[#f5f5f5] text-[#111111] ring-1 ring-transparent ring-inset hover:ring-[#999999] disabled:text-[#999999] disabled:ring-[#dddddd]",
+          "bg-[#f5f5f5] text-[#111111] ring-1 ring-transparent ring-inset hover:ring-[#ddd] disabled:text-[#999999] disabled:ring-[#dddddd]",
         dark: "bg-[#111111] text-white ring-1 ring-transparent ring-inset hover:bg-[#303030] disabled:bg-[#f5f5f5] disabled:text-[#999999] disabled:ring-[#dddddd]",
         ghost:
           "bg-white text-[#111111] ring-1 ring-transparent ring-inset hover:bg-[#f5f5f5] disabled:bg-[#f5f5f5] disabled:text-[#999999] disabled:ring-[#dddddd]",
@@ -148,6 +150,11 @@ const buttonVariants = cva(
       { rounded: true, size: "md", className: "rounded-[30px]" },
       { rounded: true, size: "sm", className: "rounded-[20px]" },
       { loading: true, variant: "primary", className: "hover:bg-[#0062df]" },
+      {
+        loading: true,
+        variant: "danger",
+        className: "hover:bg-[#ff4d4f] active:bg-[#ff4d4f]",
+      },
       { loading: true, variant: "secondary", className: "hover:bg-white" },
       { loading: true, variant: "tertiary", className: "hover:ring-transparent" },
       { loading: true, variant: "dark", className: "hover:bg-[#111111]" },
