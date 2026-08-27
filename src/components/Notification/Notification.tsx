@@ -489,8 +489,7 @@ function NotificationCard({
     window.clearTimeout(timer.current);
   }, []);
   useEffect(() => {
-    remainingRef.current =
-      item.duration !== false && item.duration && item.duration > 0 ? item.duration * 1000 : 0;
+    remainingRef.current = item.duration && item.duration > 0 ? item.duration * 1000 : 0;
     resumeTimer();
     return () => window.clearTimeout(timer.current);
   }, [item.duration, item.key, resumeTimer]);
@@ -626,7 +625,7 @@ function NotificationCard({
           }}
         />
       ) : null}
-      {item.showProgress && item.duration !== false && item.duration ? (
+      {item.showProgress && item.duration ? (
         <div
           className={twMerge(
             "absolute right-2 bottom-0 left-2 h-0.5 origin-left rounded-lg bg-[linear-gradient(90deg,#69b1ff,#0062df)]",
@@ -646,12 +645,12 @@ function NotificationCard({
 function NotificationIcon({ type }: { type: NotificationStatusType }) {
   if (type === "success") {
     return (
-      <Icon icon="check-circle-filled" color="#52c41a" size={24} data-icon="check-circle-filled" />
+      <Icon icon="check-circle-filled" color="#52c41a" size={28} data-icon="check-circle-filled" />
     );
   }
   if (type === "error") {
     return (
-      <Icon icon="close-circle-filled" color="#ff4d4f" size={24} data-icon="close-circle-filled" />
+      <Icon icon="close-circle-filled" color="#ff4d4f" size={28} data-icon="close-circle-filled" />
     );
   }
   if (type === "warning") {
@@ -659,13 +658,13 @@ function NotificationIcon({ type }: { type: NotificationStatusType }) {
       <Icon
         icon="warning-circle-filled"
         color="#faad14"
-        size={24}
+        size={28}
         data-icon="warning-circle-filled"
       />
     );
   }
   return (
-    <Icon icon="info-circle-filled" color="#0062df" size={24} data-icon="info-circle-filled" />
+    <Icon icon="info-circle-filled" color="#0062df" size={28} data-icon="info-circle-filled" />
   );
 }
 

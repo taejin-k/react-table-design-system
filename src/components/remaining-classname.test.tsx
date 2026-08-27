@@ -75,7 +75,7 @@ describe("remaining component className convention", () => {
     notification.success({
       description: "알림",
       className: "notification-root",
-      duration: false,
+      duration: 0,
     });
     await waitFor(() => expect(document.querySelector(".message-root")).toBeInTheDocument());
     await waitFor(() => expect(document.querySelector(".notification-root")).toBeInTheDocument());

@@ -279,13 +279,22 @@ function ImperativeScrollTable() {
   return (
     <>
       <div className="mb-4 flex gap-2">
-        <Button variant="secondary" onClick={() => tableRef.current?.scrollTo({ index: 0, align: 'start' })}>
+        <Button
+          variant="secondary"
+          onClick={() => tableRef.current?.scrollTo({ index: 0, align: 'start' })}
+        >
           첫 행
         </Button>
-        <Button variant="secondary" onClick={() => tableRef.current?.scrollTo({ key: 'M-75', align: 'center' })}>
+        <Button
+          variant="secondary"
+          onClick={() => tableRef.current?.scrollTo({ key: 'M-75', align: 'center' })}
+        >
           75번째 행
         </Button>
-        <Button variant="secondary" onClick={() => tableRef.current?.scrollTo({ index: 99, align: 'end' })}>
+        <Button
+          variant="secondary"
+          onClick={() => tableRef.current?.scrollTo({ index: 99, align: 'end' })}
+        >
           마지막 행
         </Button>
       </div>

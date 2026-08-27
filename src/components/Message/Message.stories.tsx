@@ -47,14 +47,13 @@ const meta = {
 
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
-| \`open\` | 설정한 내용으로 메시지를 표시해요. | \`(config) => MessageType\` | - |
-| \`success\` | 성공 메시지를 표시해요. | \`(content, duration?, onClose?) => MessageType\` | - |
-| \`error\` | 오류 메시지를 표시해요. | \`(content, duration?, onClose?) => MessageType\` | - |
-| \`info\` | 정보 메시지를 표시해요. | \`(content, duration?, onClose?) => MessageType\` | - |
-| \`warning\` | 경고 메시지를 표시해요. | \`(content, duration?, onClose?) => MessageType\` | - |
-| \`loading\` | 기본적으로 유지되는 로딩 메시지를 표시해요. | \`(content, duration?, onClose?) => MessageType\` | \`duration: 0\` |
+| \`open\` | 설정한 내용으로 메시지를 표시해요. | ([\`Config\`](#config)) => MessageType | - |
+| \`success\` | 성공 메시지를 표시해요. | ([\`Config\`](#config)) => MessageType | - |
+| \`error\` | 오류 메시지를 표시해요. | ([\`Config\`](#config)) => MessageType | - |
+| \`info\` | 정보 메시지를 표시해요. | ([\`Config\`](#config)) => MessageType | - |
+| \`warning\` | 경고 메시지를 표시해요. | ([\`Config\`](#config)) => MessageType | - |
+| \`loading\` | 유지되는 로딩 메시지를 표시해요. | ([\`Config\`](#config)) => MessageType | - |
 | \`destroy\` | key의 메시지 또는 모든 메시지를 닫아요. | \`(key?) => void\` | - |
-| \`config\` | 전역 메시지 설정을 변경해요. | \`(config) => void\` | - |
 
 ### Config
 
@@ -62,25 +61,13 @@ const meta = {
 | --- | --- | --- | --- |
 | \`content\` | 표시할 내용을 설정해요. | \`ReactNode\` | - |
 | \`type\` | 상태 타입을 설정해요. | [\`MessageStatusType\`](#message-status-type) | \`info\` |
-| \`duration\` | 자동으로 닫히기까지의 초를 설정해요. 0이면 유지해요. | \`number\` | \`3\` |
+| \`duration\` | 닫히기까지의 초예요. 0이면 유지해요. | \`number\` | \`3\` (loading: \`0\`) |
 | \`icon\` | 상태 아이콘을 변경해요. | \`ReactNode\` | - |
 | \`key\` | 같은 메시지를 갱신하거나 제거할 key예요. | \`string \\| number\` | - |
 | \`pauseOnHover\` | 마우스를 올리면 닫힘 시간을 멈춰요. | \`boolean\` | \`true\` |
-| \`classNames\` | 각 영역의 클래스를 설정해요. | \`Record<SemanticName, string>\` | - |
-| \`styles\` | 각 영역의 스타일을 설정해요. | \`Record<SemanticName, CSSProperties>\` | - |
 | \`className\` | 메시지에 Tailwind 클래스를 추가해요. | \`string\` | - |
 | \`onClick\` | 메시지를 누르면 실행해요. | \`() => void\` | - |
 | \`onClose\` | 메시지가 닫히면 실행해요. | \`() => void\` | - |
-
-### Global config
-
-| Name | Description | Type | Default |
-| --- | --- | --- | --- |
-| \`duration\` | 자동으로 닫히기까지의 초를 정해요. | \`number\` | \`3\` |
-| \`getContainer\` | 메시지를 렌더링할 컨테이너를 정해요. | \`() => HTMLElement\` | \`document.body\` |
-| \`maxCount\` | 동시에 유지할 최대 메시지 수를 정해요. | \`number\` | - |
-| \`rtl\` | 내용을 오른쪽에서 왼쪽 방향으로 표시해요. | \`boolean\` | \`false\` |
-| \`top\` | 화면 위쪽 간격을 px로 정해요. | \`number\` | \`8\` |
       `}</Markdown>
           <h2 className="component-docs-types-heading">Types</h2>
           <h3 id="message-status-type">MessageStatusType</h3>
@@ -112,14 +99,7 @@ export const Basic: Story = {
       ...storyDescription("components-message--basic").docs,
       source: {
         code: withStoryImports(`<Button
-  onClick={() =>
-    message.open({
-      content: '새 소식이 있어요.',
-      type: 'info',
-      duration: 3,
-      pauseOnHover: true,
-    })
-  }
+  onClick={() => message.open({ content: '새 소식이 있어요.' })}
 >
   Message 열기
 </Button>`),
@@ -138,11 +118,23 @@ export const Types: Story = {
         code: withStoryImports(`function MessageTypes() {
   return (
     <div className="flex flex-wrap gap-2">
-      <Button onClick={() => message.success('저장했어요.')}>Success</Button>
-      <Button onClick={() => message.error('저장하지 못했어요.')}>Error</Button>
-      <Button onClick={() => message.info('새 소식이 있어요.')}>Info</Button>
-      <Button onClick={() => message.warning('변경사항을 확인해 주세요.')}>Warning</Button>
-      <Button onClick={() => message.loading('불러오는 중이에요.')}>Loading</Button>
+      <Button onClick={() => message.success({ content: '저장했어요.' })}>
+        Success
+      </Button>
+      <Button onClick={() => message.error({ content: '저장하지 못했어요.' })}>
+        Error
+      </Button>
+      <Button onClick={() => message.info({ content: '새 소식이 있어요.' })}>
+        Info
+      </Button>
+      <Button
+        onClick={() => message.warning({ content: '변경사항을 확인해 주세요.' })}
+      >
+        Warning
+      </Button>
+      <Button onClick={() => message.loading({ content: '불러오는 중이에요.' })}>
+        Loading
+      </Button>
     </div>
   );
 }`),
@@ -151,11 +143,13 @@ export const Types: Story = {
   },
   render: () => (
     <div className="flex flex-wrap gap-2">
-      <Button onClick={() => message.success("저장했어요.")}>Success</Button>
-      <Button onClick={() => message.error("저장하지 못했어요.")}>Error</Button>
-      <Button onClick={() => message.info("새 소식이 있어요.")}>Info</Button>
-      <Button onClick={() => message.warning("변경사항을 확인해 주세요.")}>Warning</Button>
-      <Button onClick={() => message.loading("불러오는 중이에요.")}>Loading</Button>
+      <Button onClick={() => message.success({ content: "저장했어요." })}>Success</Button>
+      <Button onClick={() => message.error({ content: "저장하지 못했어요." })}>Error</Button>
+      <Button onClick={() => message.info({ content: "새 소식이 있어요." })}>Info</Button>
+      <Button onClick={() => message.warning({ content: "변경사항을 확인해 주세요." })}>
+        Warning
+      </Button>
+      <Button onClick={() => message.loading({ content: "불러오는 중이에요." })}>Loading</Button>
     </div>
   ),
 };
@@ -259,7 +253,7 @@ export const Promise: Story = {
         code: withStoryImports(`function MessagePromise() {
   const sequence = async () => {
     await message.success({ content: '첫 메시지', duration: 1 });
-    message.info('첫 메시지가 닫혔어요.');
+    message.info({ content: '첫 메시지가 닫혔어요.' });
   };
 
   return <Button onClick={sequence}>순서대로</Button>;
@@ -273,7 +267,8 @@ export const Promise: Story = {
 function MessagePromiseExample() {
   const sequence = async () => {
     await message.success({ content: "첫 메시지", duration: 1 });
-    message.info("첫 메시지가 닫혔어요.");
+    message.info({ content: "첫 메시지가 닫혔어요." });
   };
+
   return <Button onClick={sequence}>순서대로</Button>;
 }

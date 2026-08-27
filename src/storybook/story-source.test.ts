@@ -61,7 +61,7 @@ arrayMove([], 0, 0);`);
   });
 
   it("imports lowercase APIs when their methods are called", () => {
-    const source = withStoryImports("message.success('저장했어요.');");
+    const source = withStoryImports("message.success({ content: '저장했어요.' });");
 
     expect(source).toContain("import { message } from '@taejin-k/wizard-design';");
   });

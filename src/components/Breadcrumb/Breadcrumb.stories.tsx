@@ -247,8 +247,18 @@ export const ItemColors: Story = {
   return (
     <Breadcrumb
       items={[
-        { title: '홈', href: '#', icon: <Icon icon="home-outlined" />, color: '#0062df' },
-        { title: '프로젝트', href: '#projects', icon: <Icon icon="folder-outlined" />, color: '#4f19c4' },
+        {
+          title: '홈',
+          href: '#',
+          icon: <Icon icon="home-outlined" />,
+          color: '#0062df',
+        },
+        {
+          title: '프로젝트',
+          href: '#projects',
+          icon: <Icon icon="folder-outlined" />,
+          color: '#4f19c4',
+        },
         { title: '현재 위치', icon: <Icon icon="edit" />, color: '#d92626' },
       ]}
     />

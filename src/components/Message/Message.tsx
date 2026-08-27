@@ -18,7 +18,6 @@ import { MOTION_DURATION_MID } from "../_internal/motion";
 import type {
   MessageApi,
   MessageArgsProps,
-  MessageGlobalConfig,
   MessageInstance,
   MessageKeyType,
   MessageType,
@@ -30,21 +29,10 @@ interface MessageItem extends MessageArgsProps {
   resolve: (value: boolean) => void;
 }
 
-const globalConfig: MessageGlobalConfig = { duration: 3, top: 8 };
+const MESSAGE_DURATION = 3;
+const MESSAGE_TOP = 8;
 
-function normalize(
-  type: MessageStatusType,
-  content: ReactNode | MessageArgsProps,
-  duration?: number,
-  onClose?: () => void,
-): MessageArgsProps {
-  return typeof content === "object" && content !== null && "content" in content
-    ? { ...content, type: content.type ?? type, duration: content.duration ?? duration }
-    : { content, type, duration, onClose };
-}
-
-function useMessageHolder(config: MessageGlobalConfig = {}): [MessageInstance, ReactNode] {
-  const resolvedConfig = { ...globalConfig, ...config };
+function useMessageHolder(): [MessageInstance, ReactNode] {
   const [items, setItems] = useState<MessageItem[]>([]);
   const resolvers = useRef(new Map<MessageKeyType, Array<(value: boolean) => void>>());
   const onCloseCallbacks = useRef(new Map<MessageKeyType, (() => void) | undefined>());
@@ -70,57 +58,44 @@ function useMessageHolder(config: MessageGlobalConfig = {}): [MessageInstance, R
         const nextItem = {
           ...input,
           key,
-          duration: input.duration ?? resolvedConfig.duration,
+          duration: input.duration ?? (input.type === "loading" ? 0 : MESSAGE_DURATION),
           resolve: resolvePromise,
         };
         const exists = current.some((item) => item.key === key);
         const next = exists
           ? current.map((item) => (item.key === key ? nextItem : item))
           : [...current, nextItem];
-        if (!resolvedConfig.maxCount || next.length <= resolvedConfig.maxCount) return next;
-        return next.slice(-resolvedConfig.maxCount);
+        return next;
       });
       const result = (() => close(key)) as MessageType;
       // oxlint-disable-next-line unicorn/no-thenable -- Ant Design-compatible awaitable message API.
       result.then = promise.then.bind(promise);
       return result;
     },
-    [close, resolvedConfig.duration, resolvedConfig.maxCount],
+    [close],
   );
   const api = useMemo<MessageInstance>(
     () => ({
       open,
-      success: (content, duration, onClose) =>
-        open(normalize("success", content, duration, onClose)),
-      error: (content, duration, onClose) => open(normalize("error", content, duration, onClose)),
-      info: (content, duration, onClose) => open(normalize("info", content, duration, onClose)),
-      warning: (content, duration, onClose) =>
-        open(normalize("warning", content, duration, onClose)),
-      loading: (content, duration = 0, onClose) =>
-        open(normalize("loading", content, duration, onClose)),
+      success: (config) => open({ ...config, type: "success" }),
+      error: (config) => open({ ...config, type: "error" }),
+      info: (config) => open({ ...config, type: "info" }),
+      warning: (config) => open({ ...config, type: "warning" }),
+      loading: (config) => open({ ...config, type: "loading" }),
       destroy: close,
     }),
     [close, open],
   );
-  const holder = (
-    <MessageHolder
-      items={items}
-      config={resolvedConfig}
-      onClose={close}
-      onAfterClose={finishClose}
-    />
-  );
+  const holder = <MessageHolder items={items} onClose={close} onAfterClose={finishClose} />;
   return [api, holder];
 }
 
 function MessageHolder({
   items,
-  config,
   onClose,
   onAfterClose,
 }: {
   items: MessageItem[];
-  config: MessageGlobalConfig;
   onClose: (key?: MessageKeyType) => void;
   onAfterClose: (key: MessageKeyType) => void;
 }) {
@@ -136,8 +111,7 @@ function MessageHolder({
   const content = (
     <div
       className="pointer-events-none fixed inset-x-0 px-4 font-pretendard"
-      dir={config.rtl ? "rtl" : undefined}
-      style={{ top: config.top ?? 8, zIndex: 2010 }}
+      style={{ top: MESSAGE_TOP, zIndex: 2010 }}
     >
       <div
         className={twMerge(
@@ -174,7 +148,7 @@ function MessageHolder({
     </div>
   );
   if (typeof document === "undefined") return null;
-  return createPortal(content, config.getContainer?.() ?? document.body);
+  return createPortal(content, document.body);
 }
 
 function useMessageLayout(items: MessageItem[]) {
@@ -295,7 +269,6 @@ function MessageCard({
         "wizard-message-card pointer-events-auto absolute left-1/2 flex min-h-10 max-w-[calc(100vw-32px)] items-center gap-1.5 rounded-lg bg-white px-3 py-2.5 text-sm text-[#111] shadow-[0_6px_16px_rgba(0,0,0,0.08),0_3px_6px_-4px_rgba(0,0,0,0.12),0_9px_28px_8px_rgba(0,0,0,0.05)]",
         motionClassName,
         visible === false && "pointer-events-none",
-        item.classNames?.root,
         item.className,
       )}
       style={
@@ -305,7 +278,6 @@ function MessageCard({
           top: offset,
           transformOrigin: "center top",
           ...item.style,
-          ...item.styles?.root,
           ...motionStyle,
         } as CSSProperties
       }
@@ -320,15 +292,8 @@ function MessageCard({
       }}
       onMouseLeave={() => item.pauseOnHover !== false && resumeTimer()}
     >
-      <span
-        className={twMerge("inline-flex shrink-0", item.classNames?.icon)}
-        style={item.styles?.icon}
-      >
-        {icon}
-      </span>
-      <span className={twMerge("min-w-0", item.classNames?.content)} style={item.styles?.content}>
-        {item.content}
-      </span>
+      <span className="inline-flex shrink-0">{icon}</span>
+      <span className="min-w-0">{item.content}</span>
     </div>
   );
 }
@@ -363,10 +328,9 @@ function ensureHost() {
   root.render(createElement(StaticMessageHost));
 }
 
-function invoke(method: keyof Omit<MessageInstance, "destroy">, ...args: unknown[]) {
+function invoke(method: keyof Omit<MessageInstance, "destroy">, config: MessageArgsProps) {
   ensureHost();
-  if (staticInstance)
-    return (staticInstance[method] as (...values: unknown[]) => MessageType)(...args);
+  if (staticInstance) return staticInstance[method](config);
 
   let result: MessageType | undefined;
   let closeRequested = false;
@@ -381,7 +345,7 @@ function invoke(method: keyof Omit<MessageInstance, "destroy">, ...args: unknown
   // oxlint-disable-next-line unicorn/no-thenable -- Ant Design-compatible awaitable message API.
   handle.then = pending.then.bind(pending);
   queue.push((api) => {
-    result = (api[method] as (...values: unknown[]) => MessageType)(...args);
+    result = api[method](config);
     result.then(resolvePending);
     if (closeRequested) result();
   });
@@ -390,14 +354,10 @@ function invoke(method: keyof Omit<MessageInstance, "destroy">, ...args: unknown
 
 export const message: MessageApi = {
   open: (config) => invoke("open", config),
-  success: (content, duration, onClose) => invoke("success", content, duration, onClose),
-  error: (content, duration, onClose) => invoke("error", content, duration, onClose),
-  info: (content, duration, onClose) => invoke("info", content, duration, onClose),
-  warning: (content, duration, onClose) => invoke("warning", content, duration, onClose),
-  loading: (content, duration, onClose) => invoke("loading", content, duration, onClose),
+  success: (config) => invoke("success", config),
+  error: (config) => invoke("error", config),
+  info: (config) => invoke("info", config),
+  warning: (config) => invoke("warning", config),
+  loading: (config) => invoke("loading", config),
   destroy: (key) => staticInstance?.destroy(key),
-  config: (next) => {
-    Object.assign(globalConfig, next);
-    if (root) root.render(createElement(StaticMessageHost));
-  },
 };

@@ -155,43 +155,6 @@ export const Variants: Story = {
   ),
 };
 
-export const Danger: Story = {
-  parameters: {
-    ...storyDescription("components-button--danger"),
-    docs: {
-      ...storyDescription("components-button--danger").docs,
-      source: {
-        code: withStoryImports(`<div className="flex flex-wrap items-center gap-2">
-  <Button variant="danger">삭제</Button>
-  <Button variant="danger" prefixIcon={<Icon icon="delete-outlined" />}>
-    삭제
-  </Button>
-  <Button variant="danger" rounded>삭제</Button>
-  <Button variant="danger" loading>삭제</Button>
-  <Button variant="danger" disabled>삭제</Button>
-</div>`),
-      },
-    },
-  },
-  render: () => (
-    <div className="flex flex-wrap items-center gap-2">
-      <Button variant="danger">삭제</Button>
-      <Button variant="danger" prefixIcon={<Icon icon="delete-outlined" />}>
-        삭제
-      </Button>
-      <Button variant="danger" rounded>
-        삭제
-      </Button>
-      <Button variant="danger" loading>
-        삭제
-      </Button>
-      <Button variant="danger" disabled>
-        삭제
-      </Button>
-    </div>
-  ),
-};
-
 export const Sizes: Story = {
   argTypes: {
     iconMode: { control: false, table: { disable: true } },

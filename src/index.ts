@@ -104,10 +104,8 @@ export { message } from "./components/Message";
 export type {
   MessageApi,
   MessageArgsProps,
-  MessageGlobalConfig,
   MessageInstance,
   MessageKeyType,
-  MessageSemanticNameType,
   MessageType,
   MessageStatusType,
 } from "./components/Message";

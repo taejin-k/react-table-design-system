@@ -12,7 +12,7 @@ export interface NotificationArgsProps {
   type?: NotificationStatusType;
   actions?: ReactNode;
   closable?: boolean | { closeIcon?: ReactNode; disabled?: boolean };
-  duration?: number | false;
+  duration?: number;
   showProgress?: boolean;
   pauseOnHover?: boolean;
   icon?: ReactNode;
@@ -29,7 +29,7 @@ export interface NotificationArgsProps {
 export interface NotificationGlobalConfig {
   bottom?: number;
   closeIcon?: ReactNode;
-  duration?: number | false;
+  duration?: number;
   getContainer?: () => HTMLElement;
   maxCount?: number;
   pauseOnHover?: boolean;

@@ -75,7 +75,8 @@ const preview: Preview = {
           if (title === "Components/Image") return 22;
           if (title === "Components/Collapse") return 23;
           if (title === "Components/Message") return 24;
-          return 25;
+          if (title === "Components/Notification") return 25;
+          return 26;
         };
         const rankDifference = componentRank(a.title) - componentRank(b.title);
 

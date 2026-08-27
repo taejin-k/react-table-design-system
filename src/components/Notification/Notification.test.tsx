@@ -20,7 +20,7 @@ describe("notification", () => {
               key: "save",
               title: "저장",
               description: "완료",
-              duration: false,
+              duration: 0,
             })
           }
         >
@@ -32,7 +32,7 @@ describe("notification", () => {
               key: "save",
               title: "수정",
               description: "갱신",
-              duration: false,
+              duration: 0,
             })
           }
         >
@@ -95,7 +95,7 @@ describe("notification", () => {
               key: String(index),
               title: `알림 ${index}`,
               description: "내용",
-              duration: false,
+              duration: 0,
             });
           }
         }}
@@ -126,14 +126,14 @@ describe("notification", () => {
     });
   });
 
-  it("uses filled 24px status icons", async () => {
+  it("uses filled 28px status icons", async () => {
     render(
       <button
         onClick={() =>
           notification.success({
             title: "저장 완료",
             description: "저장했어요.",
-            duration: false,
+            duration: 0,
           })
         }
       >
@@ -147,8 +147,8 @@ describe("notification", () => {
       expect(element).toBeInTheDocument();
       return element;
     });
-    expect(icon).toHaveAttribute("width", "24");
-    expect(icon).toHaveAttribute("height", "24");
+    expect(icon).toHaveAttribute("width", "28");
+    expect(icon).toHaveAttribute("height", "28");
   });
 
   it("keeps the newest rapidly opened card fully visible in a collapsed stack", async () => {
@@ -160,7 +160,7 @@ describe("notification", () => {
               key: String(index),
               title: `알림 ${index}`,
               description: "내용",
-              duration: false,
+              duration: 0,
             });
           }
         }}

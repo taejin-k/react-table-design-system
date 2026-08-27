@@ -2,7 +2,6 @@
 export const storyDescriptions: Record<string, string> = {
   "components-button--variants":
     "여섯 가지 버튼 종류를 비교해요. ghost는 hover하면 tertiary 배경으로 바뀌어요.",
-  "components-button--danger": "삭제처럼 주의가 필요한 동작에 danger 버튼과 주요 상태를 사용해요.",
   "components-button--sizes": "화면과 작업 환경에 맞게 세 가지 버튼 크기를 선택할 수 있어요.",
   "components-button--states": "기본, 그림자, 비활성, 전체 너비 상태를 사용할 수 있어요.",
   "components-button--rounded":
@@ -260,14 +259,14 @@ export const storyDescriptions: Record<string, string> = {
   "components-drawer--nested":
     "Drawer 안에서 하위 Drawer를 열면 부모 패널을 밀어내며 계층을 구분해요.",
 
-  "components-message--basic":
-    "내용, 상태, 표시 시간과 Hover 동작을 설정해 기본 Message를 열어보세요.",
+  "components-message--basic": "설정한 내용으로 기본 정보 Message를 열어보세요.",
   "components-message--types":
     "정보, 성공, 경고, 오류와 로딩 상태에 맞는 전역 메시지를 화면에 표시해요.",
   "components-message--duration": "메시지가 자동으로 닫히기까지의 시간을 비교해요.",
   "components-message--update": "같은 key의 로딩 메시지를 완료 메시지로 갱신해요.",
   "components-message--promise": "메시지가 닫힌 뒤 다음 메시지를 표시해요.",
 
+  "components-notification--basic": "제목과 설명을 설정해 기본 Notification을 열어보세요.",
   "components-notification--types": "성공, 오류, 정보와 경고 상태의 알림을 비교해요.",
   "components-notification--actions": "알림 아래에 작업 버튼을 추가해 후속 동작을 실행해요.",
   "components-notification--placements":
