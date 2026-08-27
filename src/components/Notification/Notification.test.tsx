@@ -151,6 +151,30 @@ describe("notification", () => {
     expect(icon).toHaveAttribute("height", "28");
   });
 
+  it("anchors top and bottom placements to the viewport", async () => {
+    act(() => {
+      notification.info({
+        key: "top",
+        description: "위 알림",
+        duration: 0,
+      });
+      notification.info({
+        key: "bottom",
+        description: "아래 알림",
+        duration: 0,
+        placement: "bottomRight",
+      });
+    });
+
+    await waitFor(() =>
+      expect(document.querySelectorAll(".wizard-notification-list")).toHaveLength(2),
+    );
+
+    const lists = document.querySelectorAll<HTMLElement>(".wizard-notification-list");
+    expect(lists[0]).toHaveStyle({ top: "0px" });
+    expect(lists[1]).toHaveStyle({ bottom: "0px" });
+  });
+
   it("uses the shared overlay close button", async () => {
     act(() =>
       notification.info({

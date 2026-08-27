@@ -1,4 +1,4 @@
-import { render, waitFor } from "@testing-library/react";
+import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { Avatar } from "./Avatar";
 import { Badge } from "./Badge";
@@ -11,7 +11,6 @@ import { Drawer } from "./Drawer";
 import { Image } from "./Image";
 import { Menu } from "./Menu";
 import { Modal } from "./Modal";
-import { notification } from "./Notification";
 import { Skeleton } from "./Skeleton";
 import { Tabs } from "./Tabs";
 import { TimePicker } from "./TimePicker";
@@ -59,7 +58,7 @@ describe("remaining component className convention", () => {
     }
   });
 
-  it("applies className to portal roots and global notices", async () => {
+  it("applies className to portal roots", () => {
     const { rerender } = render(
       <>
         <Modal open className="modal-root" />
@@ -70,14 +69,6 @@ describe("remaining component className convention", () => {
     expect(document.querySelector("[data-modal-root]")).toHaveClass("modal-root");
     expect(document.querySelector("[data-drawer-root]")).toHaveClass("drawer-root");
 
-    notification.success({
-      description: "알림",
-      className: "notification-root",
-      duration: 0,
-    });
-    await waitFor(() => expect(document.querySelector(".notification-root")).toBeInTheDocument());
-
-    notification.destroy();
     rerender(
       <>
         <Modal className="modal-root" />

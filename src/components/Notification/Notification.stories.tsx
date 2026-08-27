@@ -91,7 +91,6 @@ const meta = {
 | \`icon\` | 상태 아이콘을 변경해요. | \`ReactNode\` | - |
 | \`key\` | 알림을 갱신하거나 제거할 key예요. | \`string\` | - |
 | \`placement\` | 화면 배치 위치를 설정해요. | [\`NotificationPlacementType\`](#notification-placement-type) | \`topRight\` |
-| \`className\` | 알림에 Tailwind 클래스를 추가해요. | \`string\` | - |
 | \`onClick\` | 알림을 누르면 실행해요. | \`() => void\` | - |
 | \`onClose\` | 알림이 닫히면 실행해요. | \`() => void\` | - |
 

@@ -217,6 +217,7 @@ function NotificationPlacementList({
         isBottom ? "flex-col-reverse" : "flex-col",
         placementClasses[placement],
       )}
+      style={isBottom ? { bottom: 0 } : { top: 0 }}
       onMouseEnter={() => {
         window.clearTimeout(collapseTimerRef.current);
         if (stackEnabled && items.length > threshold) onExpandedChange(true);
@@ -473,7 +474,6 @@ function NotificationCard({
         visible === false && "pointer-events-none",
         hiddenInStack && "wizard-notification-stack-hidden",
         item.onClick && "cursor-pointer",
-        item.className,
       )}
       style={
         {

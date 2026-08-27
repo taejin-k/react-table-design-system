@@ -16,7 +16,6 @@ export interface NotificationArgsProps {
   icon?: ReactNode;
   key?: string;
   placement?: NotificationPlacementType;
-  className?: string;
   style?: CSSProperties;
   onClick?: () => void;
   onClose?: () => void;
