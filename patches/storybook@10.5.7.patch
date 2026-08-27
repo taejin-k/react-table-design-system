@@ -1,0 +1,13 @@
+diff --git a/dist/core-server/presets/common-manager.js b/dist/core-server/presets/common-manager.js
+index cd1a500a0de21a5ba2065d07fbc40f499a32ada4..277cf16eb0e97cca8c796623b3ca32dacd83dde4 100644
+--- a/dist/core-server/presets/common-manager.js
++++ b/dist/core-server/presets/common-manager.js
+@@ -2781,7 +2781,7 @@ var Controls2 = {
+   let { key, control } = row, [isFocused, setFocused] = useState6(!1), [boxedValue, setBoxedValue] = useState6({ value: arg });
+   useEffect6(() => {
+     isFocused || setBoxedValue({ value: arg });
+-  }, [isFocused, arg]);
++  }, [arg]);
+   let onChange = useCallback5(
+     (argVal) => (setBoxedValue({ value: argVal }), updateArgs({ [key]: argVal }), argVal),
+     [updateArgs, key]
