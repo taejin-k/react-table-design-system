@@ -120,7 +120,10 @@ export function formatTooltipStorySource(source: string) {
     .replace(/\s+autoAdjustOverflow(?=\s|\/?>)/g, "")
     .replace(/\s+mouseEnterDelay=\{0\.1\}/g, "")
     .replace(/\s+mouseLeaveDelay=\{0\.1\}/g, "")
-    .replace(/\s+>/g, ">");
+    .replace(/\s+>/g, ">")
+    .replace(/<Tooltip\s+([^<>\n]+)>/g, (_match, props: string) => {
+      return `<Tooltip ${props.trim()}>`;
+    });
 
   return withStoryImports(withoutDefaults);
 }

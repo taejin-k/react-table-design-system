@@ -42,24 +42,17 @@ describe("Image", () => {
     expect(screen.getByRole("img", { name: "사진" })).toHaveAttribute("src", "fallback.png");
   });
 
-  it("shows, hides, or customizes the preview cover", () => {
+  it("shows or hides the preview cover", () => {
     render(
       <>
         <Image src="default.png" alt="기본 Cover" preview={{ cover: true }} />
         <Image src="hidden.png" alt="Cover 없음" preview={{ cover: false }} />
-        <Image
-          src="custom.png"
-          alt="사용자 정의 Cover"
-          preview={{ cover: <span>원본 보기</span> }}
-        />
       </>,
     );
     const defaultImage = screen.getByRole("img", { name: "기본 Cover" });
     const hiddenImage = screen.getByRole("img", { name: "Cover 없음" });
-    const customImage = screen.getByRole("img", { name: "사용자 정의 Cover" });
     fireEvent.load(defaultImage);
     fireEvent.load(hiddenImage);
-    fireEvent.load(customImage);
 
     expect(
       defaultImage.parentElement?.querySelector("[data-image-preview-cover]"),
@@ -67,16 +60,6 @@ describe("Image", () => {
     expect(
       hiddenImage.parentElement?.querySelector("[data-image-preview-cover]"),
     ).not.toBeInTheDocument();
-    expect(
-      customImage.parentElement?.querySelector("[data-image-preview-cover]"),
-    ).toHaveTextContent("원본 보기");
-    expect(customImage.parentElement?.querySelector("[data-image-preview-cover]")).toHaveClass(
-      "min-w-0",
-      "overflow-hidden",
-    );
-    expect(
-      customImage.parentElement?.querySelector("[data-image-preview-cover] > span"),
-    ).toHaveClass("[overflow-wrap:anywhere]", "whitespace-pre-wrap");
   });
 
   it("opens and closes the preview", async () => {
@@ -94,6 +77,7 @@ describe("Image", () => {
     expect(document.querySelector("[data-image-preview-body]")).toHaveStyle({
       transformOrigin: "70px 60px",
     });
+    expect(document.querySelector("[data-image-preview-close]")).toHaveClass("cursor-pointer");
     await userEvent.click(document.querySelector("[data-image-preview-close]")!);
     await waitFor(() =>
       expect(document.querySelector("[data-image-preview-root]")).not.toBeInTheDocument(),
@@ -266,6 +250,14 @@ describe("Image", () => {
       transformOrigin: "140px 220px",
     });
     expect(document.querySelector("[data-image-preview-next]")).toBeEnabled();
+    expect(document.querySelector("[data-image-preview-previous]")).toHaveClass(
+      "cursor-pointer",
+      "disabled:cursor-not-allowed",
+    );
+    expect(document.querySelector("[data-image-preview-next]")).toHaveClass(
+      "cursor-pointer",
+      "disabled:cursor-not-allowed",
+    );
     expect(document.querySelector("[data-image-preview-count]")).toHaveTextContent("1 / 2");
   });
 });

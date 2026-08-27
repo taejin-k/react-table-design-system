@@ -147,10 +147,9 @@ function TextAreaTypeCode({
 }
 
 export const Sizes: Story = {
-  args: { placeholder: "내용을 입력하세요" },
   parameters: {
     ...storyDescription("components-textarea--sizes"),
-    controls: { disable: false, include: ["placeholder", "크기", "가로 길이"] },
+    controls: { disable: true },
     docs: {
       ...storyDescription("components-textarea--sizes").docs,
       source: {
@@ -162,26 +161,19 @@ export const Sizes: Story = {
       },
     },
   },
-  render: (args, { viewMode }) =>
-    viewMode === "docs" ? (
-      <div className="grid max-w-xl gap-4">
-        <TextArea size="lg" placeholder="Large" />
-        <TextArea size="md" placeholder="Medium" />
-        <TextArea size="sm" placeholder="Small" />
-      </div>
-    ) : (
-      <TextArea {...args} className="max-w-xl" />
-    ),
+  render: () => (
+    <div className="grid max-w-xl gap-4">
+      <TextArea size="lg" placeholder="Large" />
+      <TextArea size="md" placeholder="Medium" />
+      <TextArea size="sm" placeholder="Small" />
+    </div>
+  ),
 };
 
 export const Widths: Story = {
-  args: {
-    placeholder: "가로 길이 320px",
-    width: 320,
-  },
   parameters: {
     ...storyDescription("components-textarea--widths"),
-    controls: { disable: false, include: ["placeholder", "가로 길이"] },
+    controls: { disable: true },
     docs: {
       ...storyDescription("components-textarea--widths").docs,
       source: {
@@ -193,23 +185,19 @@ export const Widths: Story = {
       },
     },
   },
-  render: (args, { viewMode }) =>
-    viewMode === "docs" ? (
-      <div className="grid max-w-xl gap-4">
-        <TextArea placeholder="부모 너비 100%" />
-        <TextArea width={240} placeholder="가로 길이 240px" />
-        <TextArea width={320} placeholder="가로 길이 320px" />
-      </div>
-    ) : (
-      <TextArea {...args} />
-    ),
+  render: () => (
+    <div className="grid max-w-xl gap-4">
+      <TextArea placeholder="부모 너비 100%" />
+      <TextArea width={240} placeholder="가로 길이 240px" />
+      <TextArea width={320} placeholder="가로 길이 320px" />
+    </div>
+  ),
 };
 
 export const Variants: Story = {
-  args: { placeholder: "기본" },
   parameters: {
     ...storyDescription("components-textarea--variants"),
-    controls: { disable: false, include: ["표현 방식"] },
+    controls: { disable: true },
     docs: {
       ...storyDescription("components-textarea--variants").docs,
       source: {
@@ -220,22 +208,18 @@ export const Variants: Story = {
       },
     },
   },
-  render: (args, { viewMode }) =>
-    viewMode === "docs" ? (
-      <div className="grid max-w-xl gap-4">
-        <TextArea placeholder="기본" />
-        <TextArea placeholder="채움" variant="filled" />
-      </div>
-    ) : (
-      <TextArea {...args} className="max-w-xl" />
-    ),
+  render: () => (
+    <div className="grid max-w-xl gap-4">
+      <TextArea placeholder="기본" />
+      <TextArea placeholder="채움" variant="filled" />
+    </div>
+  ),
 };
 
 export const States: Story = {
-  args: { placeholder: "기본" },
   parameters: {
     ...storyDescription("components-textarea--states"),
-    controls: { disable: false, include: ["읽기 전용", "비활성"] },
+    controls: { disable: true },
     docs: {
       ...storyDescription("components-textarea--states").docs,
       source: {
@@ -247,26 +231,19 @@ export const States: Story = {
       },
     },
   },
-  render: (args, { viewMode }) =>
-    viewMode === "docs" ? (
-      <div className="grid max-w-xl gap-4">
-        <TextArea placeholder="기본" />
-        <TextArea readOnly defaultValue="읽기만 할 수 있어요" />
-        <TextArea disabled defaultValue="수정할 수 없어요" />
-      </div>
-    ) : (
-      <TextArea {...args} className="max-w-xl" />
-    ),
+  render: () => (
+    <div className="grid max-w-xl gap-4">
+      <TextArea placeholder="기본" />
+      <TextArea readOnly defaultValue="읽기만 할 수 있어요" />
+      <TextArea disabled defaultValue="수정할 수 없어요" />
+    </div>
+  ),
 };
 
 export const AllowedCharacters: Story = {
-  args: {
-    allowOnly: "korean",
-    placeholder: "한글만 입력하세요",
-  },
   parameters: {
     ...storyDescription("components-textarea--allowed-characters"),
-    controls: { disable: false, include: ["placeholder", "입력 문자"] },
+    controls: { disable: true },
     docs: {
       ...storyDescription("components-textarea--allowed-characters").docs,
       source: {
@@ -278,23 +255,19 @@ export const AllowedCharacters: Story = {
       },
     },
   },
-  render: (args, { viewMode }) =>
-    viewMode === "docs" ? (
-      <div className="grid max-w-xl gap-4">
-        <TextArea allowOnly="korean" placeholder="한글만 입력하세요" />
-        <TextArea allowOnly="english" placeholder="영어만 입력하세요" />
-        <TextArea allowOnly="number" placeholder="숫자만 입력하세요" />
-      </div>
-    ) : (
-      <TextArea {...args} className="max-w-xl" />
-    ),
+  render: () => (
+    <div className="grid max-w-xl gap-4">
+      <TextArea allowOnly="korean" placeholder="한글만 입력하세요" />
+      <TextArea allowOnly="english" placeholder="영어만 입력하세요" />
+      <TextArea allowOnly="number" placeholder="숫자만 입력하세요" />
+    </div>
+  ),
 };
 
 export const AutoSize: Story = {
-  args: { autoSize: true, placeholder: "내용을 입력하세요" },
   parameters: {
     ...storyDescription("components-textarea--auto-size"),
-    controls: { disable: false, include: ["자동 높이"] },
+    controls: { disable: true },
     docs: {
       ...storyDescription("components-textarea--auto-size").docs,
       source: {
@@ -309,24 +282,20 @@ export const AutoSize: Story = {
       },
     },
   },
-  render: (args, { viewMode }) =>
-    viewMode === "docs" ? (
-      <div className="grid max-w-xl gap-4">
-        <TextArea autoSize placeholder="내용에 따라 제한 없이 높이가 늘어나요" />
-        <TextArea size="lg" autoSize={{ minRows: 1, maxRows: 6 }} placeholder="Large" />
-        <TextArea size="md" autoSize={{ minRows: 1, maxRows: 6 }} placeholder="Medium" />
-        <TextArea size="sm" autoSize={{ minRows: 1, maxRows: 6 }} placeholder="Small" />
-      </div>
-    ) : (
-      <TextArea {...args} className="max-w-xl" />
-    ),
+  render: () => (
+    <div className="grid max-w-xl gap-4">
+      <TextArea autoSize placeholder="내용에 따라 제한 없이 높이가 늘어나요" />
+      <TextArea size="lg" autoSize={{ minRows: 1, maxRows: 6 }} placeholder="Large" />
+      <TextArea size="md" autoSize={{ minRows: 1, maxRows: 6 }} placeholder="Medium" />
+      <TextArea size="sm" autoSize={{ minRows: 1, maxRows: 6 }} placeholder="Small" />
+    </div>
+  ),
 };
 
 export const Resize: Story = {
-  args: { resize: true, placeholder: "내용을 입력하세요" },
   parameters: {
     ...storyDescription("components-textarea--resize"),
-    controls: { disable: false, include: ["크기 조절"] },
+    controls: { disable: true },
     docs: {
       ...storyDescription("components-textarea--resize").docs,
       source: {
@@ -337,23 +306,15 @@ export const Resize: Story = {
       },
     },
   },
-  render: (args, { viewMode }) =>
-    viewMode === "docs" ? (
-      <div className="grid max-w-xl gap-4">
-        <TextArea placeholder="크기 조절 가능" />
-        <TextArea resize={false} placeholder="크기 조절 불가" />
-      </div>
-    ) : (
-      <TextArea {...args} className="max-w-xl" />
-    ),
+  render: () => (
+    <div className="grid max-w-xl gap-4">
+      <TextArea placeholder="크기 조절 가능" />
+      <TextArea resize={false} placeholder="크기 조절 불가" />
+    </div>
+  ),
 };
 
 export const Count: Story = {
-  args: {
-    defaultValue: "최대 글자 수도 함께 보여줘요",
-    maxLength: 50,
-    showCount: true,
-  },
   parameters: {
     ...storySource(
       "components-textarea--count",
@@ -362,20 +323,14 @@ export const Count: Story = {
   <TextArea showCount maxLength={50} defaultValue="최대 글자 수도 함께 보여줘요" />
 </div>`,
     ),
-    controls: {
-      disable: false,
-      include: ["글자 수", "최대 글자 수"],
-    },
+    controls: { disable: true },
   },
-  render: (args, { viewMode }) =>
-    viewMode === "docs" ? (
-      <div className="grid max-w-xl gap-6">
-        <TextArea showCount defaultValue="현재 글자 수만 보여줘요" />
-        <TextArea showCount maxLength={50} defaultValue="최대 글자 수도 함께 보여줘요" />
-      </div>
-    ) : (
-      <TextArea {...args} className="max-w-xl" />
-    ),
+  render: () => (
+    <div className="grid max-w-xl gap-6">
+      <TextArea showCount defaultValue="현재 글자 수만 보여줘요" />
+      <TextArea showCount maxLength={50} defaultValue="최대 글자 수도 함께 보여줘요" />
+    </div>
+  ),
 };
 
 export const StaticError: Story = {
@@ -395,7 +350,6 @@ export const StaticError: Story = {
       ...storyDescription("components-textarea--static-error").docs,
       source: {
         code: withStoryImports(`<TextArea
-  className="max-w-xl"
   label="소개"
   required
   defaultValue="짧은 소개"
@@ -404,7 +358,7 @@ export const StaticError: Story = {
       },
     },
   },
-  render: (args) => <TextArea {...args} className="max-w-xl" />,
+  render: (args) => <TextArea {...args} />,
 };
 
 export const ClientError: Story = {
@@ -423,7 +377,6 @@ function RequestTextArea() {
 
   return (
     <TextArea
-      className="max-w-xl"
       label="요청 내용"
       required
       value={content}
@@ -436,15 +389,7 @@ function RequestTextArea() {
   },
   render: function ClientErrorStory(args) {
     const [content, setContent] = useState("");
-    return (
-      <TextArea
-        {...args}
-        className="max-w-xl"
-        value={content}
-        validate={validateRequest}
-        onChange={setContent}
-      />
-    );
+    return <TextArea {...args} value={content} validate={validateRequest} onChange={setContent} />;
   },
 };
 
@@ -463,7 +408,6 @@ function ServerErrorTextArea() {
 
   return (
     <TextArea
-      className="max-w-xl"
       label="요청 내용"
       value={content}
       validate={checkRequestAvailability}
@@ -478,7 +422,6 @@ function ServerErrorTextArea() {
     return (
       <TextArea
         {...args}
-        className="max-w-xl"
         value={content}
         validate={checkRequestAvailability}
         onChange={setContent}

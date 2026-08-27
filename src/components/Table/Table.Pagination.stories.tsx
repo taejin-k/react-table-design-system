@@ -2,11 +2,17 @@ import { useState, type ComponentType } from "react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { storyDescriptions } from "../../storybook/story-descriptions";
 import { withStoryImports } from "../../storybook/story-source";
-import { formatTableStorySource } from "../../storybook/table-story-source";
+import {
+  formatTableDataSourceDeclaration,
+  formatTableStorySource,
+} from "../../storybook/table-story-source";
 import { Button } from "../Button";
 import { largeData, columns, members, type Member } from "./Table.playground-data";
 import { Table } from "./Table";
 import type { TableProps } from "./Table.types";
+
+const paginationDataSource = largeData.slice(0, 185);
+const singlePageDataSource = members.slice(0, 4);
 
 const meta: Meta<TableProps<Member>> = {
   id: "components-table-pagination",
@@ -23,7 +29,7 @@ const meta: Meta<TableProps<Member>> = {
       },
     },
   },
-  args: { dataSource: largeData.slice(0, 185), columns },
+  args: { dataSource: paginationDataSource, columns },
 };
 
 const storyDescription = (id: string) => ({
@@ -59,16 +65,7 @@ export const ControlledPagination: Story = {
     docs: {
       ...storyDescription("components-table-pagination--controlled-pagination").docs,
       source: {
-        code: withStoryImports(`const members = [
-  {
-    id: 'M-1001',
-    name: '김민준',
-    role: 'Product Designer',
-    team: 'Design',
-    projects: 8,
-  },
-  // ...나머지 184개 항목
-];
+        code: withStoryImports(`${formatTableDataSourceDeclaration(paginationDataSource)}
 
 const columns = [
   {
@@ -149,16 +146,7 @@ export const PaginationHideOnSinglePage: Story = {
     docs: {
       ...storyDescription("components-table-pagination--pagination-hide-on-single-page").docs,
       source: {
-        code: withStoryImports(`const members = [
-  {
-    id: 'M-1001',
-    name: '김민준',
-    role: 'Product Designer',
-    team: 'Design',
-    projects: 8,
-  },
-  // ...나머지 3개 항목
-];
+        code: withStoryImports(`${formatTableDataSourceDeclaration(singlePageDataSource)}
 
 const columns = [
   {
@@ -199,7 +187,7 @@ function PaginationHideOnSinglePageTable() {
         hideOnSinglePage: {String(hideOnSinglePage)}
       </Button>
       <Table
-        dataSource={members.slice(0, 4)}
+        dataSource={singlePageDataSource}
         columns={columns}
         pagination={{ hideOnSinglePage }}
       />
@@ -240,7 +228,7 @@ function ControlledPaginationTable(args: Partial<TableProps<Member>>) {
   return (
     <Table
       {...args}
-      dataSource={largeData.slice(0, 185)}
+      dataSource={paginationDataSource}
       columns={columns}
       pagination={{
         page,

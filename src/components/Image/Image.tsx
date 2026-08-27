@@ -242,7 +242,7 @@ function Preview({
           <button
             type="button"
             data-image-preview-close
-            className="absolute top-3 right-3 z-[2] inline-flex size-[42px] items-center justify-center rounded-full border-0 bg-black/10 p-3 text-white transition-colors hover:bg-black/20 motion-reduce:transition-none"
+            className="absolute top-3 right-3 z-[2] inline-flex size-[42px] cursor-pointer items-center justify-center rounded-full border-0 bg-black/10 p-3 text-white transition-colors hover:bg-black/20 motion-reduce:transition-none"
             onClick={onClose}
           >
             <Icon icon="close" size={18} />
@@ -253,7 +253,7 @@ function Preview({
                 type="button"
                 data-image-preview-previous
                 disabled={active === 0}
-                className="absolute left-3 z-[2] inline-flex size-[42px] items-center justify-center rounded-full border-0 bg-black/10 p-3 text-white transition-colors hover:bg-black/20 disabled:cursor-not-allowed disabled:bg-transparent disabled:text-[rgba(255,255,255,0.25)] motion-reduce:transition-none"
+                className="absolute left-3 z-[2] inline-flex size-[42px] cursor-pointer items-center justify-center rounded-full border-0 bg-black/10 p-3 text-white transition-colors hover:bg-black/20 disabled:cursor-not-allowed disabled:bg-transparent disabled:text-[rgba(255,255,255,0.25)] motion-reduce:transition-none"
                 onClick={() => actions.onActive(active - 1)}
               >
                 <Icon icon="chevron-left" size={18} />
@@ -262,7 +262,7 @@ function Preview({
                 type="button"
                 data-image-preview-next
                 disabled={active === sources.length - 1}
-                className="absolute right-3 z-[2] inline-flex size-[42px] items-center justify-center rounded-full border-0 bg-black/10 p-3 text-white transition-colors hover:bg-black/20 disabled:cursor-not-allowed disabled:bg-transparent disabled:text-[rgba(255,255,255,0.25)] motion-reduce:transition-none"
+                className="absolute right-3 z-[2] inline-flex size-[42px] cursor-pointer items-center justify-center rounded-full border-0 bg-black/10 p-3 text-white transition-colors hover:bg-black/20 disabled:cursor-not-allowed disabled:bg-transparent disabled:text-[rgba(255,255,255,0.25)] motion-reduce:transition-none"
                 onClick={() => actions.onActive(active + 1)}
               >
                 <Icon icon="chevron-right" size={18} />
@@ -458,18 +458,12 @@ function ImageBase({
           data-image-preview-cover
           className="pointer-events-none absolute inset-0 flex min-w-0 items-center justify-center overflow-hidden bg-black/0 px-2 text-center text-white opacity-0 transition-[background-color,opacity] duration-300 group-hover:bg-black/45 group-hover:opacity-100"
         >
-          {config.cover === undefined || config.cover === true ? (
-            <span className="inline-flex max-w-full min-w-0 items-center">
-              <Icon icon="eye" size={20} className="shrink-0" />
-              <span className="ml-2 min-w-0 text-sm [overflow-wrap:anywhere] break-words whitespace-pre-wrap">
-                미리보기
-              </span>
+          <span className="inline-flex max-w-full min-w-0 items-center">
+            <Icon icon="eye" size={20} className="shrink-0" />
+            <span className="ml-2 min-w-0 text-sm [overflow-wrap:anywhere] break-words whitespace-pre-wrap">
+              미리보기
             </span>
-          ) : (
-            <span className="max-w-full min-w-0 [overflow-wrap:anywhere] break-words whitespace-pre-wrap">
-              {config.cover}
-            </span>
-          )}
+          </span>
         </span>
       ) : null}
       {!group && actualSrc ? (

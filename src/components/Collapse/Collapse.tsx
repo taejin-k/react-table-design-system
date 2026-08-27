@@ -43,7 +43,11 @@ export function Collapse({
     onChange?.(next);
   };
   const headerSize =
-    size === "lg" ? "min-h-[46px] px-6" : size === "sm" ? "min-h-[30px] px-3" : "min-h-[38px] px-4";
+    size === "lg"
+      ? "min-h-[46px] px-6 py-3"
+      : size === "sm"
+        ? "min-h-[30px] px-3 py-1"
+        : "min-h-[38px] px-4 py-2";
   const bodyPadding = size === "lg" ? "px-6 py-4" : size === "sm" ? "px-3 py-2" : "px-4 py-3";
   return (
     <div

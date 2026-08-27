@@ -451,7 +451,7 @@ export const storyDescriptions: Record<string, string> = {
 
   "components-image--basic":
     "이미지를 표시하고 클릭해 반전·회전·확대·축소하거나 드래그해 이동해요.",
-  "components-image--cover": "기본, 숨김과 사용자 정의 hover 안내를 비교해요.",
+  "components-image--cover": "hover 미리보기 안내의 표시 여부를 비교해요.",
   "components-image--dimensions": "width와 height로 자주 사용하는 이미지 크기를 비교해요.",
   "components-image--placeholder": "이미지를 불러오는 동안 같은 크기의 Image Skeleton을 보여줘요.",
   "components-image--group": "여러 이미지를 묶어 개수를 확인하고 이전·다음 이미지로 이동해요.",

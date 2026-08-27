@@ -153,10 +153,9 @@ function InputTypeCode({
 }
 
 export const Sizes: Story = {
-  args: { placeholder: "입력하세요" },
   parameters: {
     ...storyDescription("components-input--sizes"),
-    controls: { disable: false, include: ["placeholder", "크기", "가로 길이"] },
+    controls: { disable: true },
     docs: {
       ...storyDescription("components-input--sizes").docs,
       source: {
@@ -168,26 +167,19 @@ export const Sizes: Story = {
       },
     },
   },
-  render: (args, { viewMode }) =>
-    viewMode === "docs" ? (
-      <div className="grid max-w-xl gap-4">
-        <Input placeholder="입력하세요" size="lg" />
-        <Input placeholder="입력하세요" size="md" />
-        <Input placeholder="입력하세요" size="sm" />
-      </div>
-    ) : (
-      <Input {...args} />
-    ),
+  render: () => (
+    <div className="grid max-w-xl gap-4">
+      <Input placeholder="입력하세요" size="lg" />
+      <Input placeholder="입력하세요" size="md" />
+      <Input placeholder="입력하세요" size="sm" />
+    </div>
+  ),
 };
 
 export const Widths: Story = {
-  args: {
-    placeholder: "가로 길이 320px",
-    width: 320,
-  },
   parameters: {
     ...storyDescription("components-input--widths"),
-    controls: { disable: false, include: ["placeholder", "가로 길이"] },
+    controls: { disable: true },
     docs: {
       ...storyDescription("components-input--widths").docs,
       source: {
@@ -199,23 +191,19 @@ export const Widths: Story = {
       },
     },
   },
-  render: (args, { viewMode }) =>
-    viewMode === "docs" ? (
-      <div className="grid max-w-xl gap-4">
-        <Input placeholder="부모 너비 100%" />
-        <Input width={240} placeholder="가로 길이 240px" />
-        <Input width={320} placeholder="가로 길이 320px" />
-      </div>
-    ) : (
-      <Input {...args} />
-    ),
+  render: () => (
+    <div className="grid max-w-xl gap-4">
+      <Input placeholder="부모 너비 100%" />
+      <Input width={240} placeholder="가로 길이 240px" />
+      <Input width={320} placeholder="가로 길이 320px" />
+    </div>
+  ),
 };
 
 export const Variants: Story = {
-  args: { placeholder: "기본" },
   parameters: {
     ...storyDescription("components-input--variants"),
-    controls: { disable: false, include: ["placeholder", "표현 방식"] },
+    controls: { disable: true },
     docs: {
       ...storyDescription("components-input--variants").docs,
       source: {
@@ -228,24 +216,20 @@ export const Variants: Story = {
       },
     },
   },
-  render: (args, { viewMode }) =>
-    viewMode === "docs" ? (
-      <div className="grid max-w-xl gap-4">
-        <Input placeholder="기본" />
-        <Input placeholder="채움" variant="filled" />
-        <Input placeholder="테두리 없음" variant="borderless" />
-        <Input placeholder="밑줄" variant="underlined" />
-      </div>
-    ) : (
-      <Input {...args} />
-    ),
+  render: () => (
+    <div className="grid max-w-xl gap-4">
+      <Input placeholder="기본" />
+      <Input placeholder="채움" variant="filled" />
+      <Input placeholder="테두리 없음" variant="borderless" />
+      <Input placeholder="밑줄" variant="underlined" />
+    </div>
+  ),
 };
 
 export const States: Story = {
-  args: { placeholder: "기본" },
   parameters: {
     ...storyDescription("components-input--states"),
-    controls: { disable: false, include: ["placeholder", "읽기 전용", "비활성"] },
+    controls: { disable: true },
     docs: {
       ...storyDescription("components-input--states").docs,
       source: {
@@ -257,26 +241,19 @@ export const States: Story = {
       },
     },
   },
-  render: (args, { viewMode }) =>
-    viewMode === "docs" ? (
-      <div className="grid max-w-xl gap-4">
-        <Input placeholder="기본" />
-        <Input defaultValue="읽기 전용 입력값" readOnly />
-        <Input defaultValue="입력값" disabled />
-      </div>
-    ) : (
-      <Input {...args} />
-    ),
+  render: () => (
+    <div className="grid max-w-xl gap-4">
+      <Input placeholder="기본" />
+      <Input defaultValue="읽기 전용 입력값" readOnly />
+      <Input defaultValue="입력값" disabled />
+    </div>
+  ),
 };
 
 export const AllowedCharacters: Story = {
-  args: {
-    allowOnly: "korean",
-    placeholder: "한글만 입력하세요",
-  },
   parameters: {
     ...storyDescription("components-input--allowed-characters"),
-    controls: { disable: false, include: ["placeholder", "입력 문자"] },
+    controls: { disable: true },
     docs: {
       ...storyDescription("components-input--allowed-characters").docs,
       source: {
@@ -288,16 +265,13 @@ export const AllowedCharacters: Story = {
       },
     },
   },
-  render: (args, { viewMode }) =>
-    viewMode === "docs" ? (
-      <div className="grid max-w-xl gap-4">
-        <Input allowOnly="korean" placeholder="한글만 입력하세요" />
-        <Input allowOnly="english" placeholder="영어만 입력하세요" />
-        <Input allowOnly="number" placeholder="숫자만 입력하세요" />
-      </div>
-    ) : (
-      <Input {...args} />
-    ),
+  render: () => (
+    <div className="grid max-w-xl gap-4">
+      <Input allowOnly="korean" placeholder="한글만 입력하세요" />
+      <Input allowOnly="english" placeholder="영어만 입력하세요" />
+      <Input allowOnly="number" placeholder="숫자만 입력하세요" />
+    </div>
+  ),
 };
 
 export const Password: Story = {

@@ -530,6 +530,76 @@ describe("Select", () => {
     }
   });
 
+  it("continues an interrupted height animation from its rendered height", () => {
+    let trigger: HTMLElement | null = null;
+    let naturalHeight = 32;
+    let heightAnimationRunning = false;
+    let triggerAnimationCount = 0;
+    const originalAnimate = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "animate");
+    const getBoundingClientRect = vi
+      .spyOn(HTMLElement.prototype, "getBoundingClientRect")
+      .mockImplementation(function (this: HTMLElement) {
+        const height =
+          this === trigger && heightAnimationRunning ? 48 : this === trigger ? naturalHeight : 32;
+        return {
+          bottom: height,
+          height,
+          left: 0,
+          right: 320,
+          top: 0,
+          width: 320,
+          x: 0,
+          y: 0,
+          toJSON: () => ({}),
+        };
+      });
+
+    Object.defineProperty(HTMLElement.prototype, "animate", {
+      configurable: true,
+      value: function (this: HTMLElement) {
+        const isTriggerAnimation = this === trigger;
+        if (isTriggerAnimation) {
+          triggerAnimationCount += 1;
+          heightAnimationRunning = true;
+        }
+        return {
+          addEventListener: vi.fn(),
+          cancel: vi.fn(() => {
+            if (isTriggerAnimation) heightAnimationRunning = false;
+          }),
+        } as unknown as Animation;
+      },
+    });
+
+    const { rerender } = render(
+      <Select mode="tags" options={options} searchValue="" value={["design"]} />,
+    );
+    trigger = screen.getByRole("textbox").parentElement?.parentElement as HTMLElement;
+    naturalHeight = 64;
+
+    rerender(
+      <Select mode="tags" options={options} searchValue="" value={["design", "platform"]} />,
+    );
+    expect(triggerAnimationCount).toBe(1);
+
+    rerender(
+      <Select
+        mode="tags"
+        options={options}
+        searchValue=""
+        value={["design", "platform", "mobile"]}
+      />,
+    );
+    expect(triggerAnimationCount).toBe(2);
+
+    getBoundingClientRect.mockRestore();
+    if (originalAnimate) {
+      Object.defineProperty(HTMLElement.prototype, "animate", originalAnimate);
+    } else {
+      Reflect.deleteProperty(HTMLElement.prototype, "animate");
+    }
+  });
+
   it("keeps the tags search focused while pressing inside the Select", () => {
     render(<Select mode="tags" options={options} defaultValue={["design"]} />);
 

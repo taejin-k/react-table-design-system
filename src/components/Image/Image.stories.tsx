@@ -59,7 +59,7 @@ const meta = {
 | --- | --- | --- | --- |
 | \`open\` | 미리보기 표시 상태를 제어해요. | \`boolean\` | - |
 | \`src\` | 미리보기에서 사용할 이미지 주소를 변경해요. | \`string\` | Image의 src |
-| \`cover\` | hover 안내를 표시하거나 직접 구성해요. | \`boolean \\| ReactNode\` | \`true\` |
+| \`cover\` | hover 미리보기 안내를 표시해요. | \`boolean\` | \`true\` |
 | \`zIndex\` | 미리보기의 겹침 순서를 설정해요. | \`number\` | \`1080\` |
 | \`onOpenChange\` | 미리보기 표시 상태가 바뀔 때 실행해요. | \`(open, previousOpen) => void\` | - |
 
@@ -142,18 +142,6 @@ export const Cover: Story = {
       preview={{ cover: false }}
     />
   </div>
-  <div>
-    <p className="mb-2 text-sm text-[#666]">Custom</p>
-    <Image
-      src={picture}
-      alt="사용자 정의 Cover"
-      width={220}
-      height={140}
-      preview={{
-        cover: <span className="text-sm font-semibold">원본 보기</span>,
-      }}
-    />
-  </div>
 </div>`,
         ),
       },
@@ -168,16 +156,6 @@ export const Cover: Story = {
       <div>
         <p className="mb-2 text-sm text-[#666]">Hidden</p>
         <Image {...args} src={picture} preview={{ cover: false }} />
-      </div>
-      <div>
-        <p className="mb-2 text-sm text-[#666]">Custom</p>
-        <Image
-          {...args}
-          src={picture}
-          preview={{
-            cover: <span className="text-sm font-semibold">원본 보기</span>,
-          }}
-        />
       </div>
     </div>
   ),

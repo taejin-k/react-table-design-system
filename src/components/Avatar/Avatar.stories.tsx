@@ -111,10 +111,10 @@ export const Basic: Story = {
 };
 
 export const Sizes: Story = {
-  args: { children: "Avatar", shape: "circle", color: "#bfbfbf", label: false },
+  args: { shape: "circle", color: "#bfbfbf", label: false },
   parameters: {
     ...storyDescription("components-avatar--sizes"),
-    controls: { disable: false, include: ["텍스트", "모양", "배경색", "라벨"] },
+    controls: { disable: false, include: ["모양", "배경색", "라벨"] },
     docs: {
       ...storyDescription("components-avatar--sizes").docs,
       source: {
@@ -128,17 +128,21 @@ export const Sizes: Story = {
   },
   render: (args) => (
     <div className="flex items-center gap-3">
-      <Avatar {...args} size="md" />
-      <Avatar {...args} size="lg" />
+      <Avatar {...args} size="md">
+        MD
+      </Avatar>
+      <Avatar {...args} size="lg">
+        LG
+      </Avatar>
     </div>
   ),
 };
 
 export const Shapes: Story = {
-  args: { children: "Avatar", color: "#bfbfbf", label: false },
+  args: { color: "#bfbfbf", label: false },
   parameters: {
     ...storyDescription("components-avatar--shapes"),
-    controls: { disable: false, include: ["텍스트", "배경색", "라벨"] },
+    controls: { disable: false, include: ["배경색", "라벨"] },
     docs: {
       ...storyDescription("components-avatar--shapes").docs,
       source: {
@@ -161,7 +165,9 @@ export const Shapes: Story = {
       {avatarShapes.map((shape) => (
         <div key={shape} className="flex items-center gap-3">
           {avatarSizes.map((size) => (
-            <Avatar {...args} key={size} size={size} shape={shape} />
+            <Avatar {...args} key={size} size={size} shape={shape}>
+              {size.toUpperCase()}
+            </Avatar>
           ))}
         </div>
       ))}
@@ -170,10 +176,10 @@ export const Shapes: Story = {
 };
 
 export const Color: Story = {
-  args: { children: "Avatar", size: "md", shape: "circle", label: false },
+  args: { size: "md", shape: "circle", label: false },
   parameters: {
     ...storyDescription("components-avatar--color"),
-    controls: { disable: false, include: ["텍스트", "크기", "모양", "라벨"] },
+    controls: { disable: false, include: ["크기", "모양", "라벨"] },
     docs: {
       ...storyDescription("components-avatar--color").docs,
       source: {
@@ -198,10 +204,18 @@ export const Color: Story = {
   render: (args) => (
     <div className="flex flex-col items-start gap-3">
       <div className="flex items-center gap-3">
-        <Avatar {...args} color="#0062df" />
-        <Avatar {...args} color="#52c41a" />
-        <Avatar {...args} color="#faad14" />
-        <Avatar {...args} color="#722ed1" />
+        <Avatar {...args} color="#0062df">
+          K
+        </Avatar>
+        <Avatar {...args} color="#52c41a">
+          L
+        </Avatar>
+        <Avatar {...args} color="#faad14">
+          P
+        </Avatar>
+        <Avatar {...args} color="#722ed1">
+          C
+        </Avatar>
       </div>
       <div className="flex items-center gap-3">
         <Avatar color="#0062df" label>

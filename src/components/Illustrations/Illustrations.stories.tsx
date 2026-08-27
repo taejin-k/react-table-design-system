@@ -115,10 +115,9 @@ function IllustrationSizeExample({ size }: { size: IllustrationSizeType }) {
 }
 
 export const Types: Story = {
-  args: { type: "noResults", description: "표시할 내용이 없어요" },
   parameters: {
     ...storyDescription("components-illustrations--types"),
-    controls: { disable: false },
+    controls: { disable: true },
     docs: {
       ...storyDescription("components-illustrations--types").docs,
       source: {
@@ -175,32 +174,28 @@ export const Types: Story = {
       },
     },
   },
-  render: (args, { viewMode }) =>
-    viewMode === "docs" ? (
-      <div className="grid grid-cols-1 gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
-        <IllustrationExample type="list" description="표시할 목록이 없어요" />
-        <IllustrationExample type="noResults" description="검색 결과가 없어요" />
-        <IllustrationExample type="error" description="내용을 불러오지 못했어요" />
-        <IllustrationExample type="network" description="네트워크 연결을 확인해 주세요" />
-        <IllustrationExample type="permission" description="접근 권한이 없어요" />
-        <IllustrationExample type="file" description="등록된 파일이 없어요" />
-        <IllustrationExample type="notification" description="새로운 알림이 없어요" />
-        <IllustrationExample type="message" description="받은 메시지가 없어요" />
-        <IllustrationExample type="calendar" description="등록된 일정이 없어요" />
-        <IllustrationExample type="chart" description="표시할 통계가 없어요" />
-        <IllustrationExample type="comingSoon" description="곧 제공할 기능이에요" />
-        <IllustrationExample type="completed" description="모든 작업을 완료했어요" />
-      </div>
-    ) : (
-      <Illustrations {...args} />
-    ),
+  render: () => (
+    <div className="grid grid-cols-1 gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
+      <IllustrationExample type="list" description="표시할 목록이 없어요" />
+      <IllustrationExample type="noResults" description="검색 결과가 없어요" />
+      <IllustrationExample type="error" description="내용을 불러오지 못했어요" />
+      <IllustrationExample type="network" description="네트워크 연결을 확인해 주세요" />
+      <IllustrationExample type="permission" description="접근 권한이 없어요" />
+      <IllustrationExample type="file" description="등록된 파일이 없어요" />
+      <IllustrationExample type="notification" description="새로운 알림이 없어요" />
+      <IllustrationExample type="message" description="받은 메시지가 없어요" />
+      <IllustrationExample type="calendar" description="등록된 일정이 없어요" />
+      <IllustrationExample type="chart" description="표시할 통계가 없어요" />
+      <IllustrationExample type="comingSoon" description="곧 제공할 기능이에요" />
+      <IllustrationExample type="completed" description="모든 작업을 완료했어요" />
+    </div>
+  ),
 };
 
 export const Sizes: Story = {
-  args: { type: "noResults", size: "md", description: "표시할 내용이 없어요" },
   parameters: {
     ...storyDescription("components-illustrations--sizes"),
-    controls: { disable: false },
+    controls: { disable: true },
     docs: {
       ...storyDescription("components-illustrations--sizes").docs,
       source: {
@@ -212,14 +207,11 @@ export const Sizes: Story = {
       },
     },
   },
-  render: (args, { viewMode }) =>
-    viewMode === "docs" ? (
-      <div className="flex flex-wrap items-end gap-12">
-        <IllustrationSizeExample size="sm" />
-        <IllustrationSizeExample size="md" />
-        <IllustrationSizeExample size="lg" />
-      </div>
-    ) : (
-      <Illustrations {...args} />
-    ),
+  render: () => (
+    <div className="flex flex-wrap items-end gap-12">
+      <IllustrationSizeExample size="sm" />
+      <IllustrationSizeExample size="md" />
+      <IllustrationSizeExample size="lg" />
+    </div>
+  ),
 };

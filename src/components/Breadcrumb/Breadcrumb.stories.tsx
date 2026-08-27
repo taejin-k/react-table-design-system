@@ -8,7 +8,6 @@ import { Breadcrumb } from "./Breadcrumb";
 import type { BreadcrumbItem, BreadcrumbProps } from "./Breadcrumb.types";
 
 interface BreadcrumbStoryArgs extends BreadcrumbProps {
-  itemCount?: number;
   showIcons?: boolean;
   firstColor?: string;
   secondColor?: string;
@@ -93,18 +92,9 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Items: Story = {
-  args: { itemCount: 3 },
-  argTypes: {
-    itemCount: {
-      name: "항목 개수",
-      control: "select",
-      options: [1, 2, 3, 4, 5],
-      description: "표시할 경로 항목의 개수를 선택해요.",
-    },
-  },
   parameters: {
     ...storyDescription("components-breadcrumb--items"),
-    controls: { disable: false },
+    controls: { disable: true },
     docs: {
       ...storyDescription("components-breadcrumb--items").docs,
       source: {
@@ -144,16 +134,13 @@ export const Items: Story = {
       },
     },
   },
-  render: ({ itemCount = 3 }, { viewMode }) =>
-    viewMode === "docs" ? (
-      <div className="grid gap-5">
-        {itemExamples.map((items) => (
-          <Breadcrumb key={items.length} items={items} />
-        ))}
-      </div>
-    ) : (
-      <Breadcrumb items={itemExamples[Math.min(Math.max(itemCount, 1), itemExamples.length) - 1]} />
-    ),
+  render: () => (
+    <div className="grid gap-5">
+      {itemExamples.map((items) => (
+        <Breadcrumb key={items.length} items={items} />
+      ))}
+    </div>
+  ),
 };
 
 export const WithIcons: Story = {

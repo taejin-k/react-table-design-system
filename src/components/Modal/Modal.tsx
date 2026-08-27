@@ -486,7 +486,7 @@ function ConfirmModal({
         {config.icon === null ? null : (
           <span
             className={twMerge(
-              "mr-3 inline-flex size-7 shrink-0 items-center justify-center leading-none",
+              "mr-2.5 inline-flex size-7 shrink-0 items-center justify-center leading-none",
               config.title !== undefined ? "-mt-0.5" : "-mt-[3px]",
             )}
           >

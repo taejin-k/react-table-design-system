@@ -280,7 +280,6 @@ export const Rounded: Story = {
 };
 
 export const Icons: Story = {
-  args: { iconMode: "default" },
   argTypes: {
     variant: { control: false, table: { disable: true } },
     size: { control: false, table: { disable: true } },
@@ -288,24 +287,11 @@ export const Icons: Story = {
     shadow: { control: false, table: { disable: true } },
     fullWidth: { control: false, table: { disable: true } },
     loading: { control: false, table: { disable: true } },
-    iconMode: {
-      name: "아이콘 구성",
-      control: {
-        type: "select",
-        labels: {
-          default: "None",
-          prefix: "Prefix",
-          suffix: "Suffix",
-          both: "Both",
-          iconOnly: "Icon only",
-        },
-      },
-      options: ["default", "prefix", "suffix", "both", "iconOnly"],
-    },
+    iconMode: { control: false, table: { disable: true } },
   },
   parameters: {
     ...storyDescription("components-button--icons"),
-    controls: { disable: false },
+    controls: { disable: true },
     docs: {
       ...storyDescription("components-button--icons").docs,
       source: {
@@ -324,16 +310,13 @@ export const Icons: Story = {
       },
     },
   },
-  render: (args, { viewMode }) =>
-    viewMode === "docs" ? (
-      <div className="flex flex-wrap items-center gap-2">
-        {(["default", "prefix", "suffix", "both", "iconOnly"] as const).map((mode) =>
-          renderIconButton(args, mode),
-        )}
-      </div>
-    ) : (
-      <div className="flex items-center">{renderIconButton(args, args.iconMode ?? "default")}</div>
-    ),
+  render: (args) => (
+    <div className="flex flex-wrap items-center gap-2">
+      {(["default", "prefix", "suffix", "both", "iconOnly"] as const).map((mode) =>
+        renderIconButton(args, mode),
+      )}
+    </div>
+  ),
 };
 
 export const Loading: Story = {

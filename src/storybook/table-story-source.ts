@@ -185,6 +185,14 @@ function serialize(value: unknown, indent: number, options: SerializeOptions): s
   return "/* ReactNode */";
 }
 
+export function formatTableDataSourceDeclaration(dataSource: unknown[], variableName = "members") {
+  return `const ${variableName} = ${serialize(dataSource, 0, {
+    arrayReferences: new Map(),
+    maxItems: 1,
+    preferredKeys: memberPropOrder,
+  })};`;
+}
+
 function filterConstantName(column: Record<string, unknown>, index: number) {
   const dataIndex = typeof column.dataIndex === "string" ? column.dataIndex : `column${index + 1}`;
   return `${dataIndex}Filters`;
@@ -225,13 +233,7 @@ export function formatTableStorySource(source: string, context: StorySourceConte
 
   if (dataSource?.length) {
     arrayReferences.set(dataSource, "members");
-    declarations.push(
-      `const members = ${serialize(dataSource, 0, {
-        arrayReferences: new Map(),
-        maxItems: 1,
-        preferredKeys: memberPropOrder,
-      })};`,
-    );
+    declarations.push(formatTableDataSourceDeclaration(dataSource));
   }
 
   if (columns?.length) {

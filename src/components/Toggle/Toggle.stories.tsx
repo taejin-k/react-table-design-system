@@ -73,10 +73,9 @@ function ToggleSizeCode({ size }: { size: ToggleSizeType }) {
 }
 
 export const Sizes: Story = {
-  args: { checked: false },
   parameters: {
     ...storyDescription("components-toggle--sizes"),
-    controls: { disable: false, include: ["크기"] },
+    controls: { disable: true },
     docs: {
       ...storyDescription("components-toggle--sizes").docs,
       source: {
@@ -96,23 +95,19 @@ export const Sizes: Story = {
       },
     },
   },
-  render: (args, { viewMode }) =>
-    viewMode === "docs" ? (
-      <div className="flex flex-wrap items-center gap-8">
-        {sizes.map((size) => (
-          <ControlledToggle key={size} {...args} size={size} />
-        ))}
-      </div>
-    ) : (
-      <ControlledToggle {...args} />
-    ),
+  render: () => (
+    <div className="flex flex-wrap items-center gap-8">
+      {sizes.map((size) => (
+        <ControlledToggle key={size} size={size} />
+      ))}
+    </div>
+  ),
 };
 
 export const States: Story = {
-  args: { checked: false },
   parameters: {
     ...storyDescription("components-toggle--states"),
-    controls: { disable: false, include: ["선택", "비활성"] },
+    controls: { disable: true },
     docs: {
       ...storyDescription("components-toggle--states").docs,
       source: {
@@ -132,17 +127,14 @@ export const States: Story = {
       },
     },
   },
-  render: (args, { viewMode }) =>
-    viewMode === "docs" ? (
-      <div className="flex flex-wrap items-center gap-8">
-        <ControlledToggle checked={false} />
-        <ControlledToggle checked />
-        <Toggle checked={false} disabled />
-        <Toggle checked disabled />
-      </div>
-    ) : (
-      <ControlledToggle {...args} />
-    ),
+  render: () => (
+    <div className="flex flex-wrap items-center gap-8">
+      <ControlledToggle checked={false} />
+      <ControlledToggle checked />
+      <Toggle checked={false} disabled />
+      <Toggle checked disabled />
+    </div>
+  ),
 };
 
 export const Loading: Story = {

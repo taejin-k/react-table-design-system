@@ -167,7 +167,7 @@ describe("Modal", () => {
     await userEvent.click(screen.getByText("열기"));
 
     const title = await screen.findByText(/제목 첫 줄\s+제목 둘째 줄/);
-    expect(title.parentElement?.parentElement?.firstElementChild).toHaveClass("-mt-0.5");
+    expect(title.parentElement?.parentElement?.firstElementChild).toHaveClass("-mt-0.5", "mr-2.5");
     expect(title).toHaveClass("whitespace-pre-wrap");
     expect(title.parentElement).toHaveClass("[overflow-wrap:anywhere]");
     expect(screen.getByText(/내용 첫 줄\s+내용 둘째 줄/)).toHaveClass("whitespace-pre-wrap");

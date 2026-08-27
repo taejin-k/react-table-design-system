@@ -213,12 +213,12 @@ export const Borders: Story = {
         type: "code",
         code: withStoryImports(`${itemsSource}
 
-<div className="grid gap-4">
-  <div>
+<div className="grid w-full min-w-0 gap-4">
+  <div className="min-w-0">
     <p className="mb-2 text-sm text-[#666]">Bordered</p>
     <Collapse defaultActiveKey={['one']} items={items} />
   </div>
-  <div>
+  <div className="min-w-0">
     <p className="mb-2 text-sm text-[#666]">Borderless</p>
     <Collapse bordered={false} defaultActiveKey={['one']} items={items} />
   </div>
@@ -227,12 +227,12 @@ export const Borders: Story = {
     },
   },
   render: (args) => (
-    <div className="grid gap-4">
-      <div>
+    <div className="grid w-full min-w-0 gap-4">
+      <div className="min-w-0">
         <p className="mb-2 text-sm text-[#666]">Bordered</p>
         <Collapse {...args} defaultActiveKey={["one"]} items={items} bordered />
       </div>
-      <div>
+      <div className="min-w-0">
         <p className="mb-2 text-sm text-[#666]">Borderless</p>
         <Collapse {...args} bordered={false} defaultActiveKey={["one"]} items={items} />
       </div>
@@ -254,16 +254,16 @@ export const Sizes: Story = {
         type: "code",
         code: withStoryImports(`${itemsSource}
 
-<div className="grid gap-4">
-  <div>
+<div className="grid w-full min-w-0 gap-4">
+  <div className="min-w-0">
     <p className="mb-2 text-sm text-[#666]">LG</p>
     <Collapse size="lg" items={items} />
   </div>
-  <div>
+  <div className="min-w-0">
     <p className="mb-2 text-sm text-[#666]">MD</p>
     <Collapse size="md" items={items} />
   </div>
-  <div>
+  <div className="min-w-0">
     <p className="mb-2 text-sm text-[#666]">SM</p>
     <Collapse size="sm" items={items} />
   </div>
@@ -272,16 +272,16 @@ export const Sizes: Story = {
     },
   },
   render: (args) => (
-    <div className="grid gap-4">
-      <div>
+    <div className="grid w-full min-w-0 gap-4">
+      <div className="min-w-0">
         <p className="mb-2 text-sm text-[#666]">LG</p>
         <Collapse {...args} size="lg" items={items} />
       </div>
-      <div>
+      <div className="min-w-0">
         <p className="mb-2 text-sm text-[#666]">MD</p>
         <Collapse {...args} size="md" items={items} />
       </div>
-      <div>
+      <div className="min-w-0">
         <p className="mb-2 text-sm text-[#666]">SM</p>
         <Collapse {...args} size="sm" items={items} />
       </div>

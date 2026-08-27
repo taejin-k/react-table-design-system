@@ -126,7 +126,7 @@ describe("formatTooltipStorySource", () => {
 </Tooltip>`);
 
     expect(source).toContain("import { Button, Tooltip } from '@taejin-k/wizard-design';");
-    expect(source).toContain('title="도움말"');
+    expect(source).toContain('<Tooltip title="도움말">');
     expect(source).not.toContain("placement=");
     expect(source).not.toContain("trigger=");
     expect(source).not.toContain("autoAdjustOverflow");

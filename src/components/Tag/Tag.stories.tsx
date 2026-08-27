@@ -83,15 +83,14 @@ function TagTypeCode({ value }: { value: TagColorType | TagVariantType }) {
 }
 
 export const Variants: Story = {
-  args: { children: "Tag" },
   argTypes: {
-    children: { name: "텍스트", control: "text" },
+    children: { control: false, table: { disable: true } },
     color: { control: false, table: { disable: true } },
     variant: { control: false, table: { disable: true } },
   },
   parameters: {
     ...storyDescription("components-tag--variants"),
-    controls: { disable: false, include: ["텍스트"] },
+    controls: { disable: true },
     docs: {
       ...storyDescription("components-tag--variants").docs,
       description: { story: storyDescriptions["components-tag--variants"] },
@@ -163,7 +162,9 @@ export const Variants: Story = {
           <h3 className="m-0 text-sm font-semibold">{variant}</h3>
           <div className="flex flex-wrap items-center gap-3">
             {colors.map((color) => (
-              <Tag {...args} key={color} color={color} variant={variant} />
+              <Tag {...args} key={color} color={color} variant={variant}>
+                {color}
+              </Tag>
             ))}
           </div>
         </section>

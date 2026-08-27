@@ -137,10 +137,13 @@ export const Label: Story = {
 };
 
 export const Group: Story = {
-  args: { label: "선택 항목", disabled: false, error: false },
+  args: { disabled: false, error: false },
+  argTypes: {
+    label: { control: false, table: { disable: true } },
+  },
   parameters: {
     ...storyDescription("components-radio--group"),
-    controls: { disable: false, include: ["레이블", "비활성", "오류"] },
+    controls: { disable: false, include: ["비활성", "오류"] },
     docs: {
       ...storyDescription("components-radio--group").docs,
       source: {
@@ -231,7 +234,7 @@ function RadioGroupStory(args: RadioProps) {
           {...args}
           key={option.value}
           name="payment-method"
-          label={`${args.label ?? "선택 항목"} · ${option.label}`}
+          label={option.label}
           checked={value === option.value}
           onChange={() => setValue(option.value)}
         />

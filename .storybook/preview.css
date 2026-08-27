@@ -183,12 +183,16 @@ body.sb-show-main {
   text-decoration: none !important;
 }
 
+.table-docs table :is(th, td):nth-child(1) {
+  width: 21%;
+}
+
 .table-docs table :is(th, td):nth-child(2) {
   width: 29%;
 }
 
 .table-docs table :is(th, td):nth-child(3) {
-  width: 36.5%;
+  width: 35.5%;
 }
 
 .table-docs table :is(th, td):nth-child(4) {

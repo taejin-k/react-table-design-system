@@ -184,13 +184,9 @@ export const Sizes: Story = {
 };
 
 export const Widths: Story = {
-  args: {
-    placeholder: "가로 길이 320px",
-    width: 320,
-  },
   parameters: {
     ...storyDescription("components-timepicker--widths"),
-    controls: { disable: false, include: ["안내 문구", "가로 길이"] },
+    controls: { disable: true },
     docs: {
       ...storyDescription("components-timepicker--widths").docs,
       source: {
@@ -202,16 +198,13 @@ export const Widths: Story = {
       },
     },
   },
-  render: (args, { viewMode }) =>
-    viewMode === "docs" ? (
-      <div className="grid max-w-xl gap-3">
-        <TimePicker placeholder="부모 너비 100%" />
-        <TimePicker width={240} placeholder="가로 길이 240px" />
-        <TimePicker width={320} placeholder="가로 길이 320px" />
-      </div>
-    ) : (
-      <TimePicker {...args} />
-    ),
+  render: () => (
+    <div className="grid max-w-xl gap-3">
+      <TimePicker placeholder="부모 너비 100%" />
+      <TimePicker width={240} placeholder="가로 길이 240px" />
+      <TimePicker width={320} placeholder="가로 길이 320px" />
+    </div>
+  ),
 };
 
 export const States: Story = {

@@ -1,7 +1,22 @@
 import { createElement } from "react";
 import { describe, expect, it } from "vitest";
 import { Illustrations } from "../components/Illustrations";
-import { formatTableStorySource } from "./table-story-source";
+import { formatTableDataSourceDeclaration, formatTableStorySource } from "./table-story-source";
+
+describe("formatTableDataSourceDeclaration", () => {
+  it("builds manual Show code from the same data used by the rendered story", () => {
+    const dataSource = [
+      { id: "V-1", name: "구성원 0001" },
+      { id: "V-2", name: "구성원 0002" },
+    ];
+
+    const source = formatTableDataSourceDeclaration(dataSource);
+
+    expect(source).toContain("id: 'V-1'");
+    expect(source).toContain("name: '구성원 0001'");
+    expect(source).toContain("// ...나머지 1개 항목");
+  });
+});
 
 describe("formatTableStorySource", () => {
   it("includes merged story args so the copied example does not depend on meta args", () => {

@@ -461,18 +461,17 @@ export const Select = forwardRef<SelectRef, SelectProps>(
       const nextHeight = trigger.getBoundingClientRect().height;
       const previousHeight = previousCompositeHeightRef.current;
       previousCompositeHeightRef.current = nextHeight;
+      const startHeight = renderedHeight ?? previousHeight;
 
       if (
-        previousHeight === null ||
-        Math.abs(previousHeight - nextHeight) < 0.5 ||
+        startHeight === null ||
+        Math.abs(startHeight - nextHeight) < 0.5 ||
         typeof trigger.animate !== "function" ||
         (typeof window !== "undefined" &&
           window.matchMedia?.("(prefers-reduced-motion: reduce)").matches)
       ) {
         return;
       }
-
-      const startHeight = renderedHeight ?? previousHeight;
 
       const animation = trigger.animate(
         [
