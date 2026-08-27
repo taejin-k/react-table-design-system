@@ -1,6 +1,7 @@
 import { Description, Markdown, Stories, Title } from "@storybook/addon-docs/blocks";
 import type { Meta, StoryObj } from "@storybook/react";
 import { useEffect, useRef } from "react";
+import { useArgs } from "storybook/preview-api";
 import { storyDescriptions } from "../../storybook/story-descriptions";
 import { withStoryImports } from "../../storybook/story-source";
 import { TypeTokens } from "../../storybook/type-tokens";
@@ -11,6 +12,7 @@ import type { MessageStatusType } from "./Message.types";
 const messageStatuses: MessageStatusType[] = ["success", "error", "info", "warning", "loading"];
 
 interface MessageStoryArgs {
+  controlsSync?: number;
   content: string;
   successContent: string;
   type: MessageStatusType;
@@ -27,7 +29,31 @@ const storyDescription = (id: string) => ({
 const meta = {
   title: "Components/Message",
   tags: ["autodocs"],
+  decorators: [
+    function SyncControlsBeforeAction(Story, context) {
+      const [args, updateArgs] = useArgs<MessageStoryArgs>();
+      const syncRef = useRef(0);
+      const hasChangedControls = Object.entries(args).some(
+        ([key, value]) =>
+          key !== "controlsSync" && value !== context.initialArgs[key as keyof MessageStoryArgs],
+      );
+
+      return (
+        <div
+          className="contents"
+          onPointerDownCapture={() => {
+            if (hasChangedControls) {
+              updateArgs({ ...args, controlsSync: (syncRef.current += 1) });
+            }
+          }}
+        >
+          <Story />
+        </div>
+      );
+    },
+  ],
   argTypes: {
+    controlsSync: { control: false, table: { disable: true } },
     content: { name: "내용", control: "text" },
     successContent: { name: "완료 내용", control: "text" },
     type: { name: "상태", control: "select", options: messageStatuses },
@@ -114,7 +140,11 @@ export const Basic: Story = {
       },
     },
   },
-  render: (args) => <Button onClick={() => message.open(args)}>Message 열기</Button>,
+  render: ({ content, type, duration, pauseOnHover }) => (
+    <Button onClick={() => message.open({ content, type, duration, pauseOnHover })}>
+      Message 열기
+    </Button>
+  ),
 };
 
 export const Types: Story = {
