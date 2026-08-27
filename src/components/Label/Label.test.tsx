@@ -32,4 +32,10 @@ describe("Label", () => {
 
     expect(screen.getByText("이름")).toHaveClass("custom-label", "text-[14px]");
   });
+
+  it("preserves newlines in its text", () => {
+    render(<Label label={"첫 줄\n둘째 줄"} />);
+
+    expect(screen.getByText(/첫 줄\s+둘째 줄/)).toHaveClass("whitespace-pre-line");
+  });
 });

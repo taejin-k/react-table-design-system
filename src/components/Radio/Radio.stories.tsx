@@ -31,7 +31,7 @@ const meta = {
     onChange: { control: false, table: { disable: true } },
   },
   parameters: {
-    controls: { disable: true },
+    controls: { disable: false },
     docs: {
       description: {
         component:
@@ -67,9 +67,10 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const States: Story = {
+  args: { label: "기본", checked: true },
   parameters: {
     ...storyDescription("components-radio--states"),
-    controls: { disable: true },
+    controls: { disable: false, include: ["레이블", "선택"] },
     docs: {
       ...storyDescription("components-radio--states").docs,
       source: {
@@ -99,7 +100,7 @@ export const States: Story = {
       },
     },
   },
-  render: () => <RadioStatesStory />,
+  render: (args) => <RadioStatesStory {...args} />,
 };
 
 export const Label: Story = {
@@ -136,8 +137,10 @@ export const Label: Story = {
 };
 
 export const Group: Story = {
+  args: { label: "선택 항목", disabled: false, error: false },
   parameters: {
     ...storyDescription("components-radio--group"),
+    controls: { disable: false, include: ["레이블", "비활성", "오류"] },
     docs: {
       ...storyDescription("components-radio--group").docs,
       source: {
@@ -167,17 +170,19 @@ function PaymentMethods() {
       },
     },
   },
-  render: () => <RadioGroupStory />,
+  render: (args) => <RadioGroupStory {...args} />,
 };
 
-function RadioStatesStory() {
+function RadioStatesStory(args: RadioProps) {
   const [selected, setSelected] = useState("basic");
+
+  useEffect(() => setSelected(args.checked ? "basic" : ""), [args.checked]);
 
   return (
     <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
       <Radio
+        {...args}
         checked={selected === "basic"}
-        label="기본"
         name="radio-state"
         onChange={() => setSelected("basic")}
       />
@@ -216,16 +221,17 @@ function RadioLabelsStory({ checked, label }: Pick<RadioProps, "checked" | "labe
   );
 }
 
-function RadioGroupStory() {
+function RadioGroupStory(args: RadioProps) {
   const [value, setValue] = useState("card");
 
   return (
     <div className="flex flex-wrap items-center gap-8">
       {paymentOptions.map((option) => (
         <Radio
+          {...args}
           key={option.value}
           name="payment-method"
-          label={option.label}
+          label={`${args.label ?? "선택 항목"} · ${option.label}`}
           checked={value === option.value}
           onChange={() => setValue(option.value)}
         />

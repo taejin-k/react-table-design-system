@@ -14,8 +14,8 @@ import { CSSMotionList } from "@rc-component/motion";
 import { createRoot, type Root } from "react-dom/client";
 import { createPortal } from "react-dom";
 import { twMerge } from "tailwind-merge";
-import { Button } from "../Button";
 import { Icon } from "../Icon";
+import { OverlayCloseButton } from "../_internal/OverlayCloseButton";
 import { MOTION_DURATION_MID } from "../_internal/motion";
 import type {
   NotificationApi,
@@ -558,7 +558,11 @@ function NotificationCard({
     >
       <div className="flex items-start gap-3">
         <span
-          className={twMerge("inline-flex shrink-0 leading-none", item.classNames?.icon)}
+          className={twMerge(
+            "inline-flex shrink-0 leading-none",
+            title != null ? "-mt-0.5" : "-mt-[3px]",
+            item.classNames?.icon,
+          )}
           style={item.styles?.icon}
         >
           {item.icon ?? <NotificationIcon type={item.type ?? "info"} />}
@@ -572,7 +576,7 @@ function NotificationCard({
           {title != null ? (
             <div
               className={twMerge(
-                "text-base leading-6 font-normal",
+                "text-base leading-6 font-normal whitespace-pre-line",
                 closable && "pr-6",
                 item.classNames?.title,
               )}
@@ -584,7 +588,7 @@ function NotificationCard({
           {description != null ? (
             <div
               className={twMerge(
-                "text-sm text-[#111]",
+                "text-sm whitespace-pre-line text-[#111]",
                 closable && title == null && "pr-6",
                 item.classNames?.description,
               )}
@@ -604,20 +608,10 @@ function NotificationCard({
         </div>
       ) : null}
       {closable ? (
-        <Button
-          variant="ghost"
-          size="md"
-          iconOnly
-          prefixIcon={
-            <span className="inline-flex">
-              {closeIcon ?? globalCloseIcon ?? <Icon icon="close" size={16} />}
-            </span>
-          }
+        <OverlayCloseButton
+          icon={closeIcon ?? globalCloseIcon}
           disabled={closeDisabled}
-          className={twMerge(
-            "absolute top-[14px] right-5 inline-flex size-7 cursor-pointer items-center justify-center rounded text-[#999] transition-[color,background-color] duration-200 hover:bg-[#f5f5f5] hover:text-[#666] active:bg-[#e8e8e8] disabled:cursor-not-allowed disabled:opacity-40",
-            item.classNames?.close,
-          )}
+          className={twMerge("absolute top-[14px] right-5", item.classNames?.close)}
           style={item.styles?.close}
           onClick={(event) => {
             event.stopPropagation();

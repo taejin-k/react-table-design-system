@@ -12,7 +12,7 @@ const meta = {
     className: { control: false, table: { disable: true } },
   },
   parameters: {
-    controls: { disable: true },
+    controls: { disable: false },
     docs: {
       description: {
         component:

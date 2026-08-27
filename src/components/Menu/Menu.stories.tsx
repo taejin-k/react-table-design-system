@@ -49,8 +49,22 @@ const meta = {
   title: "Components/Menu",
   component: Menu,
   tags: ["autodocs"],
+  argTypes: {
+    mode: { name: "배치", control: "select", options: menuModes },
+    theme: { name: "테마", control: "select", options: menuThemes },
+    selectable: { name: "선택 가능", control: "boolean" },
+    multiple: { name: "다중 선택", control: "boolean" },
+    inlineCollapsed: { name: "인라인 접기", control: "boolean" },
+    inlineIndent: { name: "들여쓰기", control: "number" },
+    triggerSubMenuAction: { name: "하위 메뉴 동작", control: "select", options: menuTriggers },
+    items: { control: false, table: { disable: true } },
+    selectedKeys: { control: false, table: { disable: true } },
+    openKeys: { control: false, table: { disable: true } },
+    className: { control: false, table: { disable: true } },
+    onClick: { control: false, table: { disable: true } },
+  },
   parameters: {
-    controls: { disable: true },
+    controls: { disable: false },
     docs: {
       description: {
         component:
@@ -126,6 +140,14 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Basic: Story = {
+  args: {
+    theme: "light",
+    selectable: true,
+    multiple: false,
+    inlineCollapsed: false,
+    inlineIndent: 24,
+    triggerSubMenuAction: "hover",
+  },
   parameters: {
     ...storyDescription("components-menu--basic"),
     docs: {
@@ -152,15 +174,16 @@ export const Basic: Story = {
       },
     },
   },
-  render: () => (
+  render: (args) => (
     <div className="grid gap-6 md:grid-cols-2">
       <div>
         <strong className="mb-2 block">Vertical</strong>
-        <Menu defaultSelectedKeys={["home"]} items={items} />
+        <Menu {...args} mode="vertical" defaultSelectedKeys={["home"]} items={items} />
       </div>
       <div>
         <strong className="mb-2 block">Inline</strong>
         <Menu
+          {...args}
           mode="inline"
           defaultSelectedKeys={["home"]}
           defaultOpenKeys={["workspace"]}

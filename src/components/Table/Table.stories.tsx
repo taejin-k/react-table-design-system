@@ -26,7 +26,7 @@ const meta: Meta<TableProps<Member>> = {
     className: { control: false, table: { disable: true } },
   },
   parameters: {
-    controls: { disable: true },
+    controls: { disable: false },
     docs: {
       source: { transform: formatTableStorySource },
       description: {
@@ -652,7 +652,7 @@ function DragRowTable() {
       },
     },
   },
-  render: () => <DragStory />,
+  render: (args) => <DragStory {...args} />,
 };
 export const DragColumnSorting: Story = {
   name: "Drag Column",
@@ -685,14 +685,15 @@ function DragColumnTable() {
       },
     },
   },
-  render: () => <DragColumnStory />,
+  render: (args) => <DragColumnStory {...args} />,
 };
 
-function DragStory() {
+function DragStory(args: Partial<TableProps<Member>>) {
   const [rows, setRows] = useState(members.slice(0, 5));
 
   return (
     <Table<Member>
+      {...args}
       dataSource={rows}
       columns={columns}
       pagination={false}
@@ -701,11 +702,12 @@ function DragStory() {
   );
 }
 
-function DragColumnStory() {
+function DragColumnStory(args: Partial<TableProps<Member>>) {
   const [currentColumns, setCurrentColumns] = useState(columns);
 
   return (
     <Table<Member>
+      {...args}
       dataSource={members.slice(0, 5)}
       columns={currentColumns}
       pagination={false}

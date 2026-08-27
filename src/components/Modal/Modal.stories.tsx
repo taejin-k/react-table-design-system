@@ -6,7 +6,7 @@ import { withStoryImports } from "../../storybook/story-source";
 import { TypeTokens } from "../../storybook/type-tokens";
 import { Button } from "../Button";
 import { Modal } from "./Modal";
-import type { ModalStatusType, ModalWidthType } from "./Modal.types";
+import type { ModalFuncConfig, ModalProps, ModalStatusType, ModalWidthType } from "./Modal.types";
 
 const modalWidths = ["number", "string", "BreakpointMap"] satisfies readonly ModalWidthType[];
 const modalStatuses: ModalStatusType[] = ["info", "success", "error", "warning", "confirm"];
@@ -19,8 +19,25 @@ const meta = {
   title: "Components/Modal",
   component: Modal,
   tags: ["autodocs"],
+  argTypes: {
+    title: { name: "제목", control: "text" },
+    centered: { name: "가운데 정렬", control: "boolean" },
+    width: { name: "가로 길이", control: "text" },
+    closable: { name: "닫기 버튼", control: "boolean" },
+    keyboard: { name: "Escape 닫기", control: "boolean" },
+    mask: { name: "배경 마스크", control: "boolean" },
+    scrollLock: { name: "스크롤 잠금", control: "boolean" },
+    okText: { name: "확인 버튼", control: "text" },
+    cancelText: { name: "취소 버튼", control: "text" },
+    open: { control: false, table: { disable: true } },
+    children: { control: false, table: { disable: true } },
+    className: { control: false, table: { disable: true } },
+    footer: { control: false, table: { disable: true } },
+    onOk: { control: false, table: { disable: true } },
+    onCancel: { control: false, table: { disable: true } },
+  },
   parameters: {
-    controls: { disable: true },
+    controls: { disable: false },
     docs: {
       description: {
         component: "현재 화면 위에서 중요한 정보나 작업을 확인해요.",
@@ -93,6 +110,17 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Basic: Story = {
+  args: {
+    title: "구성원 추가",
+    centered: false,
+    width: 520,
+    closable: true,
+    keyboard: true,
+    mask: true,
+    scrollLock: true,
+    okText: "확인",
+    cancelText: "취소",
+  },
   parameters: {
     ...storyDescription("components-modal--basic"),
     docs: {
@@ -112,20 +140,15 @@ export const Basic: Story = {
       },
     },
   },
-  render: () => <BasicModalExample />,
+  render: (args) => <BasicModalExample {...args} />,
 };
 
-function BasicModalExample() {
+function BasicModalExample(args: Partial<ModalProps>) {
   const [open, setOpen] = useState(false);
   return (
     <>
       <Button onClick={() => setOpen(true)}>Modal 열기</Button>
-      <Modal
-        open={open}
-        title="구성원 추가"
-        onCancel={() => setOpen(false)}
-        onOk={() => setOpen(false)}
-      >
+      <Modal {...args} open={open} onCancel={() => setOpen(false)} onOk={() => setOpen(false)}>
         새 구성원을 프로젝트에 추가할까요?
       </Modal>
     </>
@@ -133,6 +156,17 @@ function BasicModalExample() {
 }
 
 export const Async: Story = {
+  args: {
+    title: "변경사항 저장",
+    centered: false,
+    width: 520,
+    closable: true,
+    keyboard: true,
+    mask: true,
+    scrollLock: true,
+    okText: "확인",
+    cancelText: "취소",
+  },
   parameters: {
     ...storyDescription("components-modal--async"),
     docs: {
@@ -172,10 +206,10 @@ export const Async: Story = {
       },
     },
   },
-  render: () => <AsyncModalExample />,
+  render: (args) => <AsyncModalExample {...args} />,
 };
 
-function AsyncModalExample() {
+function AsyncModalExample(args: Partial<ModalProps>) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const timerRef = useRef<number | undefined>(undefined);
@@ -194,8 +228,8 @@ function AsyncModalExample() {
     <>
       <Button onClick={() => setOpen(true)}>비동기 저장</Button>
       <Modal
+        {...args}
         open={open}
-        title="변경사항 저장"
         confirmLoading={loading}
         onCancel={() => setOpen(false)}
         onOk={save}
@@ -207,6 +241,17 @@ function AsyncModalExample() {
 }
 
 export const Footer: Story = {
+  args: {
+    title: "Footer 구성",
+    centered: false,
+    width: 520,
+    closable: true,
+    keyboard: true,
+    mask: true,
+    scrollLock: true,
+    okText: "확인",
+    cancelText: "취소",
+  },
   parameters: {
     ...storyDescription("components-modal--footer"),
     docs: {
@@ -238,18 +283,18 @@ export const Footer: Story = {
       },
     },
   },
-  render: () => <FooterExample />,
+  render: (args) => <FooterExample {...args} />,
 };
 
-function FooterExample() {
+function FooterExample(args: Partial<ModalProps>) {
   const [open, setOpen] = useState(false);
 
   return (
     <>
       <Button onClick={() => setOpen(true)}>Footer Modal</Button>
       <Modal
+        {...args}
         open={open}
-        title="Footer 구성"
         footer={(origin) => (
           <div className="flex items-center justify-between">
             <span className="text-[#666]">자동 저장</span>
@@ -266,6 +311,17 @@ function FooterExample() {
 }
 
 export const StaticMethods: Story = {
+  args: {
+    title: "상태",
+    centered: false,
+    width: 520,
+    closable: true,
+    keyboard: true,
+    mask: true,
+    scrollLock: true,
+    okText: "확인",
+    cancelText: "취소",
+  },
   parameters: {
     ...storyDescription("components-modal--static-methods"),
     docs: {
@@ -285,30 +341,97 @@ export const StaticMethods: Story = {
       },
     },
   },
-  render: () => (
+  render: (args) => (
     <div className="flex flex-wrap gap-2">
-      <Button onClick={() => Modal.info({ title: "안내", content: "확인할 내용이에요." })}>
+      <Button onClick={() => Modal.info(createStaticConfig(args, "안내", "확인할 내용이에요."))}>
         Info
       </Button>
-      <Button onClick={() => Modal.success({ title: "완료", content: "저장했어요." })}>
+      <Button onClick={() => Modal.success(createStaticConfig(args, "완료", "저장했어요."))}>
         Success
       </Button>
-      <Button onClick={() => Modal.error({ title: "오류", content: "다시 시도해 주세요." })}>
+      <Button onClick={() => Modal.error(createStaticConfig(args, "오류", "다시 시도해 주세요."))}>
         Error
       </Button>
       <Button
-        onClick={() => Modal.warning({ title: "주의", content: "변경사항을 확인해 주세요." })}
+        onClick={() => Modal.warning(createStaticConfig(args, "주의", "변경사항을 확인해 주세요."))}
       >
         Warning
       </Button>
-      <Button onClick={() => Modal.confirm({ title: "삭제", content: "정말 삭제할까요?" })}>
+      <Button onClick={() => Modal.confirm(createStaticConfig(args, "삭제", "정말 삭제할까요?"))}>
         Confirm
       </Button>
     </div>
   ),
 };
 
+function createStaticConfig(
+  args: Partial<ModalProps>,
+  statusTitle: string,
+  content: string,
+): ModalFuncConfig {
+  const prefix = typeof args.title === "string" ? args.title.trim() : "";
+
+  return {
+    title: prefix ? `${prefix} · ${statusTitle}` : statusTitle,
+    content,
+    centered: args.centered,
+    width: args.width,
+    closable: args.closable,
+    keyboard: args.keyboard,
+    mask: args.mask,
+    scrollLock: args.scrollLock,
+    okText: args.okText,
+    cancelText: args.cancelText,
+  };
+}
+
+export const MultilineIconAlignment: Story = {
+  args: {
+    title: "첫 번째 제목 줄\n두 번째 제목 줄",
+  },
+  parameters: {
+    ...storyDescription("components-modal--multiline"),
+    controls: { disable: false, include: ["title"] },
+    docs: {
+      ...storyDescription("components-modal--multiline").docs,
+      source: {
+        code: withStoryImports(`<Button
+  onClick={() =>
+    Modal.info({
+      title: '첫 번째 제목 줄\\n두 번째 제목 줄',
+      content: '첫 번째 내용 줄의 중앙에 아이콘을 맞춰요.\\n두 번째 내용 줄도 이어져요.',
+    })
+  }
+>
+  여러 줄 Modal
+</Button>`),
+      },
+    },
+  },
+  render: (args) => (
+    <Button
+      onClick={() =>
+        Modal.info({
+          title: args.title,
+          content: "첫 번째 내용 줄의 중앙에 아이콘을 맞춰요.\n두 번째 내용 줄도 이어져요.",
+        })
+      }
+    >
+      여러 줄 Modal
+    </Button>
+  ),
+};
+
 export const PositionAndWidth: Story = {
+  args: {
+    title: "반응형 너비",
+    closable: true,
+    keyboard: true,
+    mask: true,
+    scrollLock: true,
+    okText: "확인",
+    cancelText: "취소",
+  },
   parameters: {
     ...storyDescription("components-modal--position-width"),
     docs: {
@@ -328,18 +451,18 @@ export const PositionAndWidth: Story = {
       },
     },
   },
-  render: () => <PositionExample />,
+  render: (args) => <PositionExample {...args} />,
 };
 
-function PositionExample() {
+function PositionExample(args: Partial<ModalProps>) {
   const [open, setOpen] = useState(false);
   return (
     <>
       <Button onClick={() => setOpen(true)}>넓은 중앙 Modal</Button>
       <Modal
+        {...args}
         centered
         open={open}
-        title="반응형 너비"
         width={{ xs: 320, md: 720 }}
         onCancel={() => setOpen(false)}
       >

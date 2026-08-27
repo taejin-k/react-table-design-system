@@ -17,7 +17,7 @@ const meta: Meta<TableProps<Member>> = {
   component: Table as ComponentType<TableProps<Member>>,
   tags: ["!autodocs"],
   parameters: {
-    controls: { disable: true },
+    controls: { disable: false },
     docs: {
       source: { transform: formatTableStorySource },
       description: {
@@ -194,10 +194,10 @@ function StickyOffsetsTable() {
       },
     },
   },
-  render: () => <StickyOffsetsTable />,
+  render: (args) => <StickyOffsetsTable {...args} />,
 };
 
-function StickyOffsetsTable() {
+function StickyOffsetsTable(args: Partial<TableProps<Member>>) {
   const [headerOffset, setHeaderOffset] = useState("64");
   const [scrollBarOffset, setScrollBarOffset] = useState("32");
 
@@ -222,6 +222,7 @@ function StickyOffsetsTable() {
         />
       </Flex>
       <Table
+        {...args}
         className="mt-4"
         dataSource={largeData.slice(0, 20)}
         columns={fixedColumns}

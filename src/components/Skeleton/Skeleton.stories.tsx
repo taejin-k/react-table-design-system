@@ -1,5 +1,6 @@
 import { Description, Markdown, Stories, Title } from "@storybook/addon-docs/blocks";
 import type { Meta, StoryObj } from "@storybook/react";
+import type { ComponentProps } from "react";
 import { useState } from "react";
 import { storyDescriptions } from "../../storybook/story-descriptions";
 import { withStoryImports } from "../../storybook/story-source";
@@ -21,8 +22,18 @@ const meta = {
   title: "Components/Skeleton",
   component: Skeleton,
   tags: ["autodocs"],
+  argTypes: {
+    active: { name: "애니메이션", control: "boolean" },
+    loading: { name: "로딩", control: "boolean" },
+    avatar: { name: "아바타", control: "boolean" },
+    title: { name: "제목", control: "boolean" },
+    paragraph: { name: "문단", control: "boolean" },
+    round: { name: "둥근 모양", control: "boolean" },
+    children: { control: false, table: { disable: true } },
+    className: { control: false, table: { disable: true } },
+  },
   parameters: {
-    controls: { disable: true },
+    controls: { disable: false },
     docs: {
       description: {
         component:
@@ -98,6 +109,7 @@ export const Basic: Story = {
   },
 };
 export const Elements: Story = {
+  args: { active: true },
   parameters: {
     ...storyDescription("components-skeleton--elements"),
     docs: {
@@ -118,19 +130,20 @@ export const Elements: Story = {
       },
     },
   },
-  render: () => (
+  render: (args) => (
     <div className="flex flex-wrap items-center gap-3">
-      <Skeleton.Avatar active />
-      <Skeleton.Button active />
-      <Skeleton.Input active width={180} />
-      <Skeleton.Image active />
-      <Skeleton.Node active width={96} height={96}>
+      <Skeleton.Avatar active={args.active} />
+      <Skeleton.Button active={args.active} />
+      <Skeleton.Input active={args.active} width={180} />
+      <Skeleton.Image active={args.active} />
+      <Skeleton.Node active={args.active} width={96} height={96}>
         <Icon icon="file-outlined" />
       </Skeleton.Node>
     </div>
   ),
 };
 export const Loaded: Story = {
+  args: { active: true, avatar: true, round: false },
   parameters: {
     ...storyDescription("components-skeleton--loaded"),
     docs: {
@@ -159,17 +172,17 @@ export const Loaded: Story = {
       },
     },
   },
-  render: () => <LoadingContent />,
+  render: (args) => <LoadingContent {...args} />,
 };
 
-function LoadingContent() {
+function LoadingContent(args: ComponentProps<typeof Skeleton>) {
   const [loading, setLoading] = useState(true);
   return (
     <div className="grid gap-4">
       <Button className="w-fit" onClick={() => setLoading((current) => !current)}>
         {loading ? "불러오기 완료" : "다시 불러오기"}
       </Button>
-      <Skeleton loading={loading} active avatar paragraph={{ rows: 2 }}>
+      <Skeleton {...args} loading={loading} paragraph={{ rows: 2 }}>
         <div className="rounded-lg border border-[#eee] p-4">
           <strong>프로젝트 현황</strong>
           <p className="mt-2 text-[#666]">최신 데이터를 모두 불러왔어요.</p>

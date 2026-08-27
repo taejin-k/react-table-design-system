@@ -54,6 +54,19 @@ describe("Avatar", () => {
     expect(Array.from(icons, (icon) => icon.getAttribute("width"))).toEqual(["18", "24"]);
   });
 
+  it("keeps the user fallback visible and hides a broken image", () => {
+    const { container } = render(<Avatar src="broken.png" />);
+    const image = container.querySelector("img")!;
+
+    expect(image).toHaveClass("opacity-0");
+    expect(container.querySelector("svg")).toBeInTheDocument();
+
+    fireEvent.error(image);
+
+    expect(container.querySelector("img")).not.toBeInTheDocument();
+    expect(container.querySelector("svg")).toBeInTheDocument();
+  });
+
   it("uses 30px for md and 40px for lg", () => {
     const { container } = render(
       <>

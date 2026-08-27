@@ -17,6 +17,16 @@ describe("message", () => {
     expect(await screen.findByText("저장했어요")).toBeInTheDocument();
   });
 
+  it("preserves newlines in its content", async () => {
+    act(() => {
+      message.info({ content: "첫 줄\n둘째 줄", duration: 0 });
+    });
+
+    const content = await screen.findByText(/첫 줄\s+둘째 줄/);
+    expect(content).toHaveClass("leading-5", "whitespace-pre-line");
+    expect(content.parentElement).toHaveClass("items-start");
+  });
+
   it("keeps existing messages above rapidly opened messages", async () => {
     const heightMock = vi.spyOn(HTMLElement.prototype, "offsetHeight", "get").mockReturnValue(40);
 

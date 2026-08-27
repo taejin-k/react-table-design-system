@@ -50,4 +50,10 @@ describe("Checkbox", () => {
 
     expect(screen.getByRole("checkbox")).toBePartiallyChecked();
   });
+
+  it("preserves newlines in its label", () => {
+    render(<Checkbox label={"첫 줄\n둘째 줄"} />);
+
+    expect(screen.getByText(/첫 줄\s+둘째 줄/)).toHaveClass("whitespace-pre-line");
+  });
 });

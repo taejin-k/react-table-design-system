@@ -5,7 +5,7 @@ import { storyDescriptions } from "../../storybook/story-descriptions";
 import { withStoryImports } from "../../storybook/story-source";
 import { Icon } from "../Icon";
 import { Tree } from "./Tree";
-import type { TreeDataNode, TreeDropInfo } from "./Tree.types";
+import type { TreeDataNode, TreeDropInfo, TreeProps } from "./Tree.types";
 
 const treeData = [
   {
@@ -81,8 +81,26 @@ const meta = {
   title: "Components/Tree",
   component: Tree,
   tags: ["autodocs"],
+  argTypes: {
+    blockNode: { name: "가로 채우기", control: "boolean" },
+    checkable: { name: "체크박스", control: "boolean" },
+    checkStrictly: { name: "독립 체크", control: "boolean" },
+    selectable: { name: "선택 가능", control: "boolean" },
+    multiple: { name: "다중 선택", control: "boolean" },
+    disabled: { name: "비활성", control: "boolean" },
+    draggable: { name: "드래그", control: "boolean" },
+    showIcon: { name: "아이콘", control: "boolean" },
+    showLine: { name: "연결선", control: "boolean" },
+    height: { name: "높이", control: "number" },
+    treeData: { control: false, table: { disable: true } },
+    expandedKeys: { control: false, table: { disable: true } },
+    selectedKeys: { control: false, table: { disable: true } },
+    checkedKeys: { control: false, table: { disable: true } },
+    className: { control: false, table: { disable: true } },
+    onDrop: { control: false, table: { disable: true } },
+  },
   parameters: {
-    controls: { disable: true },
+    controls: { disable: false },
     docs: {
       description: {
         component:
@@ -246,6 +264,15 @@ export const Lines: Story = {
 };
 
 export const Draggable: Story = {
+  args: {
+    blockNode: true,
+    checkable: false,
+    selectable: true,
+    multiple: false,
+    disabled: false,
+    showIcon: false,
+    showLine: false,
+  },
   parameters: {
     ...storyDescription("components-tree--draggable"),
     docs: {
@@ -312,13 +339,14 @@ export const Draggable: Story = {
       },
     },
   },
-  render: () => <DraggableTreeExample />,
+  render: (args) => <DraggableTreeExample {...args} />,
 };
 
-function DraggableTreeExample() {
+function DraggableTreeExample(args: Partial<TreeProps>) {
   const [data, setData] = useState(draggableTreeData);
   return (
     <Tree
+      {...args}
       blockNode
       draggable
       defaultExpandAll
@@ -329,6 +357,15 @@ function DraggableTreeExample() {
 }
 
 export const AsyncLoading: Story = {
+  args: {
+    blockNode: false,
+    checkable: false,
+    selectable: true,
+    multiple: false,
+    disabled: false,
+    showIcon: true,
+    showLine: false,
+  },
   parameters: {
     ...storyDescription("components-tree--async-loading"),
     docs: {
@@ -367,10 +404,10 @@ export const AsyncLoading: Story = {
       },
     },
   },
-  render: () => <AsyncTreeExample />,
+  render: (args) => <AsyncTreeExample {...args} />,
 };
 
-function AsyncTreeExample() {
+function AsyncTreeExample(args: Partial<TreeProps>) {
   const [data, setData] = useState<TreeDataNode[]>([
     {
       key: "team",
@@ -397,5 +434,5 @@ function AsyncTreeExample() {
     );
   };
 
-  return <Tree showIcon treeData={data} loadData={loadData} />;
+  return <Tree {...args} showIcon treeData={data} loadData={loadData} />;
 }

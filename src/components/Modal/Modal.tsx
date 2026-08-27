@@ -14,6 +14,7 @@ import { createPortal } from "react-dom";
 import { twMerge } from "tailwind-merge";
 import { Button } from "../Button";
 import { Icon } from "../Icon";
+import { OverlayCloseButton } from "../_internal/OverlayCloseButton";
 import { MOTION_DURATION_MID } from "../_internal/motion";
 import { lockBodyScroll } from "../_internal/body-scroll-lock";
 import type {
@@ -159,12 +160,12 @@ function ModalBase({
   }, [open, scrollLock]);
 
   const close = (event: MouseEvent<HTMLButtonElement | HTMLDivElement>) => onCancel?.(event);
-  const CancelBtn = () => (
+  const renderCancelButton = () => (
     <Button variant="secondary" {...cancelButtonProps} onClick={(event) => close(event)}>
       {cancelText}
     </Button>
   );
-  const OkBtn = () => (
+  const renderOkButton = () => (
     <Button
       variant={okType}
       {...okButtonProps}
@@ -177,13 +178,13 @@ function ModalBase({
   );
   const defaultFooter = (
     <div className="flex justify-end gap-2">
-      <CancelBtn />
-      <OkBtn />
+      {renderCancelButton()}
+      {renderOkButton()}
     </div>
   );
   const footerNode =
     typeof footer === "function"
-      ? footer(defaultFooter, { OkBtn, CancelBtn })
+      ? footer(defaultFooter, { OkBtn: renderOkButton, CancelBtn: renderCancelButton })
       : footer === undefined
         ? defaultFooter
         : footer;
@@ -205,24 +206,20 @@ function ModalBase({
     >
       {title !== undefined ? (
         <div
-          className={twMerge("mb-2 text-base leading-6 font-semibold", classNames?.header)}
+          className={twMerge(
+            "mb-2 text-base leading-6 font-semibold whitespace-pre-line",
+            classNames?.header,
+          )}
           style={styles?.header}
         >
           {title}
         </div>
       ) : null}
       {showClose ? (
-        <Button
-          variant="ghost"
-          size="md"
-          iconOnly
-          prefixIcon={
-            <span className="inline-flex">
-              {resolvedCloseIcon ?? <Icon icon="close" size={16} />}
-            </span>
-          }
+        <OverlayCloseButton
+          icon={resolvedCloseIcon}
           disabled={closeDisabled}
-          className="absolute top-3 right-3 size-7 text-[#666]"
+          className="absolute top-3 right-3"
           onClick={close}
         />
       ) : null}
@@ -230,7 +227,11 @@ function ModalBase({
         className={twMerge("max-h-[calc(100vh-152px)] overflow-auto", classNames?.body)}
         style={styles?.body}
       >
-        {children}
+        {typeof children === "string" || typeof children === "number" ? (
+          <span className="whitespace-pre-line">{children}</span>
+        ) : (
+          children
+        )}
       </div>
       {footerNode !== null ? (
         <div className={twMerge("mt-3", classNames?.footer)} style={styles?.footer}>
@@ -443,7 +444,7 @@ function ConfirmModal({
       setLoading(false);
     }
   };
-  const CancelBtn = () => (
+  const renderCancelButton = () => (
     <Button
       variant="secondary"
       {...config.cancelButtonProps}
@@ -452,7 +453,7 @@ function ConfirmModal({
       {config.cancelText ?? "취소"}
     </Button>
   );
-  const OkBtn = () => (
+  const renderOkButton = () => (
     <Button
       variant={config.okType ?? "primary"}
       {...config.okButtonProps}
@@ -464,13 +465,16 @@ function ConfirmModal({
   );
   const defaultFooter = (
     <div className="flex justify-end gap-2">
-      {config.type === "confirm" ? <CancelBtn /> : null}
-      <OkBtn />
+      {config.type === "confirm" ? renderCancelButton() : null}
+      {renderOkButton()}
     </div>
   );
   const footerNode =
     typeof config.footer === "function"
-      ? config.footer(defaultFooter, { OkBtn, CancelBtn })
+      ? config.footer(defaultFooter, {
+          OkBtn: renderOkButton,
+          CancelBtn: renderCancelButton,
+        })
       : config.footer === undefined
         ? defaultFooter
         : config.footer;
@@ -489,17 +493,27 @@ function ConfirmModal({
     >
       <div className="flex items-start">
         {config.icon === null ? null : (
-          <span className="mt-px mr-3 inline-flex size-6 shrink-0 items-center justify-center leading-none">
-            {config.icon ?? <Icon icon={iconName} color={iconColor} size={24} />}
+          <span
+            className={twMerge(
+              "mr-3 inline-flex size-7 shrink-0 items-center justify-center leading-none",
+              config.title !== undefined ? "-mt-0.5" : "-mt-[3px]",
+            )}
+          >
+            {config.icon ?? <Icon icon={iconName} color={iconColor} size={28} />}
           </span>
         )}
         <div className="min-w-0 flex-1">
           {config.title !== undefined ? (
-            <div className="text-base leading-6 font-semibold">{config.title}</div>
+            <div className="text-base leading-6 font-semibold whitespace-pre-line">
+              {config.title}
+            </div>
           ) : null}
           {config.content !== undefined ? (
             <div
-              className={twMerge("text-sm leading-[22px]", config.title !== undefined && "mt-2")}
+              className={twMerge(
+                "text-sm leading-[22px] whitespace-pre-line",
+                config.title !== undefined && "mt-2",
+              )}
             >
               {config.content}
             </div>

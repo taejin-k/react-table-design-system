@@ -14,7 +14,7 @@ const meta: Meta<TableProps<Member>> = {
   component: Table as ComponentType<TableProps<Member>>,
   tags: ["!autodocs"],
   parameters: {
-    controls: { disable: true },
+    controls: { disable: false },
     docs: {
       source: { transform: formatTableStorySource },
       description: {
@@ -120,7 +120,7 @@ function ControlledPaginationTable() {
       },
     },
   },
-  render: () => <ControlledPaginationTable />,
+  render: (args) => <ControlledPaginationTable {...args} />,
 };
 
 export const PaginationPlacement: Story = {
@@ -209,10 +209,10 @@ function PaginationHideOnSinglePageTable() {
       },
     },
   },
-  render: () => <PaginationHideOnSinglePageTable />,
+  render: (args) => <PaginationHideOnSinglePageTable {...args} />,
 };
 
-function PaginationHideOnSinglePageTable() {
+function PaginationHideOnSinglePageTable(args: Partial<TableProps<Member>>) {
   const [hideOnSinglePage, setHideOnSinglePage] = useState(true);
 
   return (
@@ -223,17 +223,23 @@ function PaginationHideOnSinglePageTable() {
       >
         hideOnSinglePage: {String(hideOnSinglePage)}
       </Button>
-      <Table dataSource={members.slice(0, 4)} columns={columns} pagination={{ hideOnSinglePage }} />
+      <Table
+        {...args}
+        dataSource={members.slice(0, 4)}
+        columns={columns}
+        pagination={{ hideOnSinglePage }}
+      />
     </div>
   );
 }
 
-function ControlledPaginationTable() {
+function ControlledPaginationTable(args: Partial<TableProps<Member>>) {
   const [page, setPage] = useState(2);
   const [pageSize, setPageSize] = useState(20);
 
   return (
     <Table
+      {...args}
       dataSource={largeData.slice(0, 185)}
       columns={columns}
       pagination={{

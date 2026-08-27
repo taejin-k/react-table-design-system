@@ -21,7 +21,11 @@ export const Tag = forwardRef<HTMLSpanElement, TagProps>(
     return (
       <span ref={ref} className={twMerge(tagVariants({ color, variant }), className)} {...rest}>
         {hasContent(prefixIcon) ? <IconSocket>{prefixIcon}</IconSocket> : null}
-        {children}
+        {typeof children === "string" || typeof children === "number" ? (
+          <span className="whitespace-pre-line">{children}</span>
+        ) : (
+          children
+        )}
         {hasContent(suffixIcon) ? <IconSocket>{suffixIcon}</IconSocket> : null}
       </span>
     );
@@ -31,7 +35,7 @@ export const Tag = forwardRef<HTMLSpanElement, TagProps>(
 Tag.displayName = "Tag";
 
 const tagVariants = cva(
-  "inline-flex h-[22px] items-center gap-1 rounded px-[6px] py-0.5 font-pretendard text-[11px] leading-[1.6] font-medium whitespace-nowrap",
+  "inline-flex min-h-[22px] items-center gap-1 rounded px-[6px] py-0.5 font-pretendard text-[11px] leading-[1.6] font-medium",
   {
     variants: {
       color: {

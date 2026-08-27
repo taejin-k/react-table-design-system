@@ -24,7 +24,7 @@ const meta = {
     onChange: { control: false, table: { disable: true } },
   },
   parameters: {
-    controls: { disable: true },
+    controls: { disable: false },
     docs: {
       description: {
         component: "설정을 켜거나 꺼요.  \n크기를 선택하고 켜짐·비활성 상태를 설정할 수 있어요.",

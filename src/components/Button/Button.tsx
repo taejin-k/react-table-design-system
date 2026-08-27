@@ -90,7 +90,13 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         {...rest}
       >
         {displayedPrefixIcon}
-        {!effectiveIconOnly && children}
+        {!effectiveIconOnly ? (
+          typeof children === "string" || typeof children === "number" ? (
+            <span className="whitespace-pre-line">{children}</span>
+          ) : (
+            children
+          )
+        ) : null}
         {displayedSuffixIcon}
       </button>
     );
@@ -100,7 +106,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 Button.displayName = "Button";
 
 const buttonVariants = cva(
-  "inline-flex cursor-pointer items-center justify-center gap-1 rounded font-pretendard font-medium whitespace-nowrap transition-[width,opacity,color,background-color,box-shadow] duration-200 ease-out disabled:cursor-not-allowed motion-reduce:transition-none",
+  "inline-flex cursor-pointer items-center justify-center gap-1 rounded font-pretendard font-medium transition-[width,opacity,color,background-color,box-shadow] duration-200 ease-out disabled:cursor-not-allowed motion-reduce:transition-none",
   {
     variants: {
       variant: {
@@ -117,9 +123,9 @@ const buttonVariants = cva(
           "bg-white text-[#111111] ring-1 ring-transparent ring-inset hover:bg-[#f5f5f5] disabled:bg-[#f5f5f5] disabled:text-[#999999] disabled:ring-[#dddddd]",
       },
       size: {
-        lg: "h-10 px-3.5 text-base",
-        md: "h-[30px] px-2.5 text-sm",
-        sm: "h-5 px-1.5 text-xs",
+        lg: "min-h-10 px-3.5 text-base",
+        md: "min-h-[30px] px-2.5 text-sm",
+        sm: "min-h-5 px-1.5 text-xs",
       },
       iconOnly: {
         true: "",

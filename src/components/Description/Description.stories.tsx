@@ -100,8 +100,20 @@ const meta = {
   title: "Components/Description",
   component: Description,
   tags: ["autodocs"],
+  argTypes: {
+    title: { name: "제목", control: "text" },
+    bordered: { name: "테두리", control: "boolean" },
+    colon: { name: "콜론", control: "boolean" },
+    column: { name: "열 개수", control: "number" },
+    layout: { name: "배치", control: "select", options: descriptionLayouts },
+    size: { name: "크기", control: "select", options: descriptionSizes },
+    items: { control: false, table: { disable: true } },
+    children: { control: false, table: { disable: true } },
+    extra: { control: false, table: { disable: true } },
+    className: { control: false, table: { disable: true } },
+  },
   parameters: {
-    controls: { disable: true },
+    controls: { disable: false },
     docs: {
       description: {
         component:
@@ -182,6 +194,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Basic: Story = {
+  args: { title: "사용자 정보", bordered: false, colon: true, column: 3, size: "large" },
   parameters: {
     ...storyDescription("components-description--basic"),
     docs: {
@@ -194,10 +207,11 @@ export const Basic: Story = {
       },
     },
   },
-  render: () => <Description title="사용자 정보" items={basicItems} />,
+  render: (args) => <Description {...args} items={basicItems} />,
 };
 
 export const Bordered: Story = {
+  args: { title: "상품 정보", bordered: true, colon: true, column: 3, size: "large" },
   parameters: {
     ...storyDescription("components-description--bordered"),
     docs: {
@@ -210,10 +224,11 @@ export const Bordered: Story = {
       },
     },
   },
-  render: () => <Description bordered title="상품 정보" items={detailItems} />,
+  render: (args) => <Description {...args} items={detailItems} />,
 };
 
 export const Sizes: Story = {
+  args: { bordered: true, colon: true, column: 3 },
   parameters: {
     ...storyDescription("components-description--sizes"),
     docs: {
@@ -236,16 +251,17 @@ export const Sizes: Story = {
       },
     },
   },
-  render: () => (
+  render: (args) => (
     <div className="grid gap-8">
-      <Description bordered size="large" title="Large" items={basicItems.slice(0, 3)} />
-      <Description bordered size="medium" title="Medium" items={basicItems.slice(0, 3)} />
-      <Description bordered size="small" title="Small" items={basicItems.slice(0, 3)} />
+      <Description {...args} size="large" title="Large" items={basicItems.slice(0, 3)} />
+      <Description {...args} size="medium" title="Medium" items={basicItems.slice(0, 3)} />
+      <Description {...args} size="small" title="Small" items={basicItems.slice(0, 3)} />
     </div>
   ),
 };
 
 export const Responsive: Story = {
+  args: { title: "반응형 사용자 정보", bordered: true, colon: true, size: "large" },
   parameters: {
     ...storyDescription("components-description--responsive"),
     docs: {
@@ -263,17 +279,13 @@ export const Responsive: Story = {
       },
     },
   },
-  render: () => (
-    <Description
-      bordered
-      title="반응형 사용자 정보"
-      column={{ xs: 1, sm: 1, md: 2, lg: 3 }}
-      items={basicItems}
-    />
+  render: (args) => (
+    <Description {...args} bordered column={{ xs: 1, sm: 1, md: 2, lg: 3 }} items={basicItems} />
   ),
 };
 
 export const Vertical: Story = {
+  args: { title: "사용자 정보", bordered: false, colon: true, column: 3, size: "large" },
   parameters: {
     ...storyDescription("components-description--vertical"),
     docs: {
@@ -286,10 +298,11 @@ export const Vertical: Story = {
       },
     },
   },
-  render: () => <Description layout="vertical" title="사용자 정보" items={basicItems} />,
+  render: (args) => <Description {...args} layout="vertical" items={basicItems} />,
 };
 
 export const VerticalBordered: Story = {
+  args: { title: "상품 정보", bordered: true, colon: true, column: 3, size: "large" },
   parameters: {
     ...storyDescription("components-description--vertical-bordered"),
     docs: {
@@ -302,10 +315,11 @@ export const VerticalBordered: Story = {
       },
     },
   },
-  render: () => <Description bordered layout="vertical" title="상품 정보" items={detailItems} />,
+  render: (args) => <Description {...args} layout="vertical" items={detailItems} />,
 };
 
 export const TitleAndExtra: Story = {
+  args: { title: "사용자 정보", bordered: false, colon: true, column: 3, size: "large" },
   parameters: {
     ...storyDescription("components-description--title-and-extra"),
     docs: {
@@ -322,12 +336,11 @@ export const TitleAndExtra: Story = {
       },
     },
   },
-  render: () => (
-    <Description title="사용자 정보" extra={<Button>수정</Button>} items={basicItems} />
-  ),
+  render: (args) => <Description {...args} extra={<Button>수정</Button>} items={basicItems} />,
 };
 
 export const SpanAndFilled: Story = {
+  args: { bordered: true, colon: true, size: "large" },
   parameters: {
     ...storyDescription("components-description--span-and-filled"),
     docs: {
@@ -353,8 +366,9 @@ export const SpanAndFilled: Story = {
       },
     },
   },
-  render: () => (
+  render: (args) => (
     <Description
+      {...args}
       bordered
       column={3}
       items={[
@@ -372,6 +386,7 @@ export const SpanAndFilled: Story = {
 };
 
 export const ItemComponent: Story = {
+  args: { title: "사용자 정보", bordered: true, colon: true, column: 3, size: "large" },
   parameters: {
     ...storyDescription("components-description--item-component"),
     docs: {
@@ -390,8 +405,8 @@ export const ItemComponent: Story = {
       },
     },
   },
-  render: () => (
-    <Description bordered title="사용자 정보">
+  render: (args) => (
+    <Description {...args}>
       <Description.Item label="이름">김태진</Description.Item>
       <Description.Item label="팀">Product Design</Description.Item>
       <Description.Item label="상태">

@@ -34,7 +34,7 @@ const meta = {
     onChange: { control: false, table: { disable: true } },
   },
   parameters: {
-    controls: { disable: true },
+    controls: { disable: false },
     docs: {
       description: {
         component:
@@ -208,8 +208,13 @@ export const FullWidth: Story = {
 };
 
 export const IconsAndTooltip: Story = {
+  args: { size: "md", disabled: false, fullWidth: false, vertical: false },
   parameters: {
     ...storyDescription("components-segmented--icons-tooltip"),
+    controls: {
+      disable: false,
+      include: ["크기", "비활성", "전체 너비", "세로 방향"],
+    },
     docs: {
       ...storyDescription("components-segmented--icons-tooltip").docs,
       source: {
@@ -225,8 +230,9 @@ function SegmentedIcons() {
       },
     },
   },
-  render: () => (
+  render: (args) => (
     <Segmented
+      {...args}
       options={[
         { value: "list", label: "목록", icon: <Icon icon="menu" />, tooltip: "목록으로 보기" },
         {
@@ -242,9 +248,14 @@ function SegmentedIcons() {
 };
 
 export const Controlled: Story = {
+  args: { size: "md", disabled: false, fullWidth: false, vertical: false },
   tags: ["!dev"],
   parameters: {
     ...storyDescription("components-segmented--controlled"),
+    controls: {
+      disable: false,
+      include: ["크기", "비활성", "전체 너비", "세로 방향"],
+    },
     docs: {
       ...storyDescription("components-segmented--controlled").docs,
       source: {
@@ -261,11 +272,11 @@ export const Controlled: Story = {
       },
     },
   },
-  render: () => <ControlledSegmented />,
+  render: (args) => <ControlledSegmented {...args} />,
 };
 
-function ControlledSegmented() {
+function ControlledSegmented(args: Partial<SegmentedProps>) {
   const [value, setValue] = useState<string | number>("week");
 
-  return <Segmented options={periodOptions} value={value} onChange={setValue} />;
+  return <Segmented {...args} options={periodOptions} value={value} onChange={setValue} />;
 }

@@ -83,7 +83,7 @@ const meta = {
     onOpenChange: { control: false, table: { disable: true } },
   },
   parameters: {
-    controls: { disable: true },
+    controls: { disable: false },
     docs: {
       description: {
         component:
@@ -227,9 +227,13 @@ function BasicDropdown() {
 };
 
 export const Triggers: Story = {
+  args: { placement: "bottomLeft", arrow: false, disabled: false, autoAdjustOverflow: true },
   parameters: {
     ...storyDescription("components-dropdown--triggers"),
-    controls: { disable: true },
+    controls: {
+      disable: false,
+      include: ["위치", "화살표", "비활성", "화면 이탈 보정"],
+    },
     docs: {
       ...storyDescription("components-dropdown--triggers").docs,
       source: {
@@ -263,14 +267,14 @@ function DropdownTriggers() {
       },
     },
   },
-  render: () => (
+  render: (args) => (
     <div className="flex min-h-32 flex-wrap items-center justify-center gap-3">
       {triggers.map((trigger) => (
-        <Dropdown key={trigger} menu={{ items: basicItems }} trigger={trigger}>
+        <Dropdown {...args} key={trigger} menu={{ items: basicItems }} trigger={trigger}>
           <Button>{trigger === "contextMenu" ? "contextMenu (우클릭)" : trigger}</Button>
         </Dropdown>
       ))}
-      <Dropdown menu={{ items: basicItems }} trigger={["hover", "focus"]}>
+      <Dropdown {...args} menu={{ items: basicItems }} trigger={["hover", "focus"]}>
         <Button>hover + focus</Button>
       </Dropdown>
     </div>
@@ -278,9 +282,13 @@ function DropdownTriggers() {
 };
 
 export const Placements: Story = {
+  args: { trigger: "click", arrow: false, disabled: false, autoAdjustOverflow: true },
   parameters: {
     ...storyDescription("components-dropdown--placements"),
-    controls: { disable: true },
+    controls: {
+      disable: false,
+      include: ["표시 동작", "화살표", "비활성", "화면 이탈 보정"],
+    },
     docs: {
       ...storyDescription("components-dropdown--placements").docs,
       source: {
@@ -335,15 +343,10 @@ function DropdownPlacements() {
       },
     },
   },
-  render: () => (
+  render: (args) => (
     <div className="grid min-h-[360px] grid-cols-3 place-items-center gap-x-24 gap-y-10 px-24 py-16">
       {placements.map((placement) => (
-        <Dropdown
-          key={placement}
-          menu={{ items: basicItems }}
-          placement={placement}
-          trigger="click"
-        >
+        <Dropdown {...args} key={placement} menu={{ items: basicItems }} placement={placement}>
           <Button>{placement}</Button>
         </Dropdown>
       ))}
@@ -352,9 +355,19 @@ function DropdownPlacements() {
 };
 
 export const MenuItems: Story = {
+  args: {
+    placement: "bottomLeft",
+    trigger: "click",
+    arrow: false,
+    disabled: false,
+    autoAdjustOverflow: true,
+  },
   parameters: {
     ...storyDescription("components-dropdown--menu-items"),
-    controls: { disable: true },
+    controls: {
+      disable: false,
+      include: ["위치", "표시 동작", "화살표", "비활성", "화면 이탈 보정"],
+    },
     docs: {
       ...storyDescription("components-dropdown--menu-items").docs,
       source: {
@@ -393,9 +406,9 @@ function DropdownMenuItems() {
       },
     },
   },
-  render: () => (
+  render: (args) => (
     <div className="flex min-h-40 items-center justify-center">
-      <Dropdown menu={{ items: richItems }} trigger="click">
+      <Dropdown {...args} menu={{ items: richItems }}>
         <Button>다양한 메뉴</Button>
       </Dropdown>
     </div>
@@ -403,9 +416,10 @@ function DropdownMenuItems() {
 };
 
 export const Selectable: Story = {
+  args: { placement: "bottomLeft", arrow: false, disabled: false, autoAdjustOverflow: true },
   parameters: {
     ...storyDescription("components-dropdown--selectable"),
-    controls: { disable: true },
+    controls: { disable: false, include: ["위치", "화살표", "비활성", "화면 이탈 보정"] },
     docs: {
       ...storyDescription("components-dropdown--selectable").docs,
       source: {
@@ -434,13 +448,14 @@ function SelectableDropdown() {
       },
     },
   },
-  render: () => <SelectableDropdown />,
+  render: (args) => <SelectableDropdown {...args} />,
 };
 
 export const ItemClick: Story = {
+  args: { placement: "bottomLeft", arrow: false, disabled: false, autoAdjustOverflow: true },
   parameters: {
     ...storyDescription("components-dropdown--item-click"),
-    controls: { disable: true },
+    controls: { disable: false, include: ["위치", "화살표", "비활성", "화면 이탈 보정"] },
     docs: {
       ...storyDescription("components-dropdown--item-click").docs,
       source: {
@@ -462,13 +477,17 @@ export const ItemClick: Story = {
       },
     },
   },
-  render: () => <ItemClickDropdown />,
+  render: (args) => <ItemClickDropdown {...args} />,
 };
 
 export const Arrow: Story = {
+  args: { placement: "bottomLeft", trigger: "click", disabled: false, autoAdjustOverflow: true },
   parameters: {
     ...storyDescription("components-dropdown--arrow"),
-    controls: { disable: true },
+    controls: {
+      disable: false,
+      include: ["위치", "표시 동작", "비활성", "화면 이탈 보정"],
+    },
     docs: {
       ...storyDescription("components-dropdown--arrow").docs,
       source: {
@@ -493,12 +512,12 @@ function ArrowDropdown() {
       },
     },
   },
-  render: () => (
+  render: (args) => (
     <div className="flex min-h-32 items-center justify-center gap-3">
-      <Dropdown menu={{ items: basicItems }} trigger="click">
+      <Dropdown {...args} menu={{ items: basicItems }}>
         <Button>기본</Button>
       </Dropdown>
-      <Dropdown arrow menu={{ items: basicItems }} trigger="click">
+      <Dropdown {...args} arrow menu={{ items: basicItems }}>
         <Button>화살표</Button>
       </Dropdown>
     </div>
@@ -506,9 +525,10 @@ function ArrowDropdown() {
 };
 
 export const MultipleSelectable: Story = {
+  args: { placement: "bottomLeft", arrow: false, disabled: false, autoAdjustOverflow: true },
   parameters: {
     ...storyDescription("components-dropdown--multiple-selectable"),
-    controls: { disable: true },
+    controls: { disable: false, include: ["위치", "화살표", "비활성", "화면 이탈 보정"] },
     docs: {
       ...storyDescription("components-dropdown--multiple-selectable").docs,
       source: {
@@ -540,13 +560,17 @@ export const MultipleSelectable: Story = {
       },
     },
   },
-  render: () => <MultipleSelectableDropdown />,
+  render: (args) => <MultipleSelectableDropdown {...args} />,
 };
 
 export const Disabled: Story = {
+  args: { placement: "bottomLeft", trigger: "click", arrow: false, autoAdjustOverflow: true },
   parameters: {
     ...storyDescription("components-dropdown--disabled"),
-    controls: { disable: true },
+    controls: {
+      disable: false,
+      include: ["위치", "표시 동작", "화살표", "화면 이탈 보정"],
+    },
     docs: {
       ...storyDescription("components-dropdown--disabled").docs,
       source: {
@@ -571,12 +595,12 @@ function DisabledDropdown() {
       },
     },
   },
-  render: () => (
+  render: (args) => (
     <div className="flex min-h-32 items-center justify-center gap-3">
-      <Dropdown menu={{ items: basicItems }} trigger="click">
+      <Dropdown {...args} menu={{ items: basicItems }}>
         <Button>사용 가능</Button>
       </Dropdown>
-      <Dropdown disabled menu={{ items: basicItems }} trigger="click">
+      <Dropdown {...args} disabled menu={{ items: basicItems }}>
         <Button>비활성</Button>
       </Dropdown>
     </div>
@@ -584,9 +608,10 @@ function DisabledDropdown() {
 };
 
 export const Controlled: Story = {
+  args: { placement: "bottomLeft", arrow: false, disabled: false, autoAdjustOverflow: true },
   parameters: {
     ...storyDescription("components-dropdown--controlled"),
-    controls: { disable: true },
+    controls: { disable: false, include: ["위치", "화살표", "비활성", "화면 이탈 보정"] },
     docs: {
       ...storyDescription("components-dropdown--controlled").docs,
       source: {
@@ -613,10 +638,10 @@ export const Controlled: Story = {
       },
     },
   },
-  render: () => <ControlledDropdown />,
+  render: (args) => <ControlledDropdown {...args} />,
 };
 
-function SelectableDropdown() {
+function SelectableDropdown(args: Partial<DropdownProps>) {
   const items = [
     { value: "design", label: "Design" },
     { value: "platform", label: "Platform" },
@@ -626,6 +651,7 @@ function SelectableDropdown() {
   return (
     <div className="flex min-h-32 items-center justify-center">
       <Dropdown
+        {...args}
         menu={{
           items,
           selectable: true,
@@ -639,7 +665,7 @@ function SelectableDropdown() {
   );
 }
 
-function ItemClickDropdown() {
+function ItemClickDropdown(args: Partial<DropdownProps>) {
   const [action, setAction] = useState("작업 선택");
   const items = [
     { value: "edit", label: "수정", onClick: () => setAction("수정 선택됨") },
@@ -648,14 +674,14 @@ function ItemClickDropdown() {
 
   return (
     <div className="flex min-h-32 items-center justify-center">
-      <Dropdown menu={{ items }} trigger="click">
+      <Dropdown {...args} menu={{ items }} trigger="click">
         <Button>{action}</Button>
       </Dropdown>
     </div>
   );
 }
 
-function MultipleSelectableDropdown() {
+function MultipleSelectableDropdown(args: Partial<DropdownProps>) {
   const [selectedValues, setSelectedValues] = useState(["design", "platform"]);
   const items = [
     { value: "design", label: "Design" },
@@ -666,6 +692,7 @@ function MultipleSelectableDropdown() {
   return (
     <div className="flex min-h-32 items-center justify-center">
       <Dropdown
+        {...args}
         menu={{
           items,
           selectable: true,
@@ -681,7 +708,7 @@ function MultipleSelectableDropdown() {
   );
 }
 
-function ControlledDropdown() {
+function ControlledDropdown(args: Partial<DropdownProps>) {
   const [open, setOpen] = useState(false);
   const items = [
     { value: "edit", label: "수정" },
@@ -690,7 +717,7 @@ function ControlledDropdown() {
 
   return (
     <div className="flex min-h-32 items-center justify-center">
-      <Dropdown menu={{ items }} open={open} trigger="click" onOpenChange={setOpen}>
+      <Dropdown {...args} menu={{ items }} open={open} trigger="click" onOpenChange={setOpen}>
         <Button>{open ? "닫기" : "열기"}</Button>
       </Dropdown>
     </div>

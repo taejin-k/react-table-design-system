@@ -20,8 +20,9 @@ describe("Tag", () => {
   });
 
   it("renders icon sockets only for provided icons", () => {
-    const { container, rerender } = render(<Tag>텍스트</Tag>);
-    expect(container.querySelectorAll("span span")).toHaveLength(0);
+    const { rerender } = render(<Tag>텍스트</Tag>);
+    expect(screen.queryByTestId("prefix")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("suffix")).not.toBeInTheDocument();
 
     rerender(
       <Tag prefixIcon={<span data-testid="prefix" />} suffixIcon={<span data-testid="suffix" />}>
@@ -68,5 +69,11 @@ describe("Tag", () => {
       "text-[#4f19c4]",
       "shadow-[inset_0_0_0_1px_#d7c8f4]",
     );
+  });
+
+  it("preserves newlines in text children", () => {
+    render(<Tag>{"첫 줄\n둘째 줄"}</Tag>);
+
+    expect(screen.getByText(/첫 줄\s+둘째 줄/)).toHaveClass("whitespace-pre-line");
   });
 });

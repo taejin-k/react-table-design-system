@@ -61,7 +61,7 @@ const meta = {
     onOpenChange: { control: false },
   },
   parameters: {
-    controls: { disable: true },
+    controls: { disable: false },
     docs: {
       description: {
         component:
@@ -174,11 +174,11 @@ export const Sizes: Story = {
       },
     },
   },
-  render: () => (
+  render: (args) => (
     <div className="grid max-w-xs gap-3">
-      <TimePicker size="lg" />
-      <TimePicker size="md" />
-      <TimePicker size="sm" />
+      <TimePicker {...args} size="lg" />
+      <TimePicker {...args} size="md" />
+      <TimePicker {...args} size="sm" />
     </div>
   ),
 };
@@ -228,11 +228,11 @@ export const States: Story = {
       },
     },
   },
-  render: () => (
+  render: (args) => (
     <div className="grid max-w-xs gap-3">
-      <TimePicker placeholder="기본" />
-      <TimePicker readOnly defaultValue="08:30:00" />
-      <TimePicker disabled defaultValue="09:00:00" />
+      <TimePicker {...args} placeholder="기본" />
+      <TimePicker {...args} readOnly defaultValue="08:30:00" />
+      <TimePicker {...args} disabled defaultValue="09:00:00" />
     </div>
   ),
 };
@@ -250,10 +250,10 @@ export const Variants: Story = {
       },
     },
   },
-  render: () => (
+  render: (args) => (
     <div className="grid max-w-xs gap-3">
-      <TimePicker placeholder="기본" />
-      <TimePicker variant="filled" placeholder="채움" />
+      <TimePicker {...args} placeholder="기본" />
+      <TimePicker {...args} variant="filled" placeholder="채움" />
     </div>
   ),
 };
@@ -273,8 +273,14 @@ export const StaticError: Story = {
       },
     },
   },
-  render: () => (
-    <TimePicker label="업무 시작" required width={320} errorMessage="시간을 선택해 주세요." />
+  render: (args) => (
+    <TimePicker
+      {...args}
+      label="업무 시작"
+      required
+      width={320}
+      errorMessage="시간을 선택해 주세요."
+    />
   ),
 };
 
@@ -292,16 +298,24 @@ export const FormatAndSteps: Story = {
       },
     },
   },
-  render: () => (
+  render: (args) => (
     <div className="grid max-w-xs gap-3">
-      <TimePicker use12Hours />
-      <TimePicker showSecond={false} minuteStep={10} />
-      <TimePicker minuteStep={15} needConfirm />
+      <TimePicker {...args} use12Hours />
+      <TimePicker {...args} showSecond={false} minuteStep={10} />
+      <TimePicker {...args} minuteStep={15} needConfirm />
     </div>
   ),
 };
 
 export const Range: Story = {
+  args: {
+    size: "md",
+    variant: "default",
+    disabled: false,
+    readOnly: false,
+    allowClear: true,
+    width: 576,
+  },
   parameters: {
     ...storyDescription("components-timepicker--range"),
     docs: {
@@ -318,9 +332,20 @@ export const Range: Story = {
       },
     },
   },
-  render: function TimeRangeStory() {
+  render: function TimeRangeStory(args) {
     const [hours, setHours] = useState<[string | null, string | null]>(["09:00:00", "18:00:00"]);
-    return <TimePicker.RangePicker width={576} value={hours} onChange={setHours} />;
+    return (
+      <TimePicker.RangePicker
+        size={args.size}
+        variant={args.variant}
+        disabled={args.disabled}
+        readOnly={args.readOnly}
+        allowClear={args.allowClear}
+        width={args.width}
+        value={hours}
+        onChange={setHours}
+      />
+    );
   },
 };
 
@@ -340,8 +365,9 @@ export const DisabledTime: Story = {
       },
     },
   },
-  render: () => (
+  render: (args) => (
     <TimePicker
+      {...args}
       width={320}
       disabledTime={() => ({
         disabledHours: () => [0, 1, 2, 3, 4, 5, 22, 23],
@@ -362,8 +388,9 @@ export const HideDisabledOptions: Story = {
   })}
 />`,
   ),
-  render: () => (
+  render: (args) => (
     <TimePicker
+      {...args}
       width={320}
       hideDisabledOptions
       disabledTime={() => ({ disabledHours: () => Array.from({ length: 9 }, (_, index) => index) })}
@@ -382,10 +409,10 @@ export const ShowNowAndExtraFooter: Story = {
   />
 </div>`,
   ),
-  render: () => (
+  render: (args) => (
     <div className="grid max-w-xs gap-3">
-      <TimePicker />
-      <TimePicker showNow={false} renderExtraFooter={() => "운영 시간: 09:00-18:00"} />
+      <TimePicker {...args} />
+      <TimePicker {...args} showNow={false} renderExtraFooter={() => "운영 시간: 09:00-18:00"} />
     </div>
   ),
 };
@@ -403,8 +430,9 @@ export const CustomCell: Story = {
   )}
 />`,
   ),
-  render: () => (
+  render: (args) => (
     <TimePicker
+      {...args}
       width={320}
       minuteStep={10}
       cellRender={(current, { originNode, subType }) => (
@@ -421,7 +449,7 @@ export const PreviewOnHover: Story = {
     "components-timepicker--preview-on-hover",
     '<TimePicker width={320} previewValue="hover" />',
   ),
-  render: () => <TimePicker width={320} previewValue="hover" />,
+  render: (args) => <TimePicker {...args} width={320} previewValue="hover" />,
 };
 
 export const ChangeOnScroll: Story = {
@@ -429,7 +457,7 @@ export const ChangeOnScroll: Story = {
     "components-timepicker--change-on-scroll",
     "<TimePicker width={320} changeOnScroll minuteStep={5} />",
   ),
-  render: () => <TimePicker width={320} changeOnScroll minuteStep={5} />,
+  render: (args) => <TimePicker {...args} width={320} changeOnScroll minuteStep={5} />,
 };
 
 export const PrefixAndSuffix: Story = {
@@ -441,8 +469,9 @@ export const PrefixAndSuffix: Story = {
   suffixIcon={<Icon icon="clock-outlined" />}
 />`,
   ),
-  render: () => (
+  render: (args) => (
     <TimePicker
+      {...args}
       width={320}
       prefix={<span>시작</span>}
       suffixIcon={<Icon icon="clock-outlined" />}
@@ -451,6 +480,14 @@ export const PrefixAndSuffix: Story = {
 };
 
 export const Controlled: Story = {
+  args: {
+    size: "md",
+    variant: "default",
+    disabled: false,
+    readOnly: false,
+    allowClear: true,
+    width: 320,
+  },
   parameters: storySource(
     "components-timepicker--controlled",
     `function ControlledTimePicker() {
@@ -459,9 +496,9 @@ export const Controlled: Story = {
   return <TimePicker width={320} value={time} onChange={setTime} />;
 }`,
   ),
-  render: function ControlledTimeStory() {
+  render: function ControlledTimeStory(args) {
     const [time, setTime] = useState<string | null>("09:00:00");
-    return <TimePicker width={320} value={time} onChange={setTime} />;
+    return <TimePicker {...args} value={time} onChange={setTime} />;
   },
 };
 
@@ -475,12 +512,12 @@ export const Placements: Story = {
   <TimePicker placement="bottomRight" />
 </div>`,
   ),
-  render: () => (
+  render: (args) => (
     <div className="grid max-w-2xl grid-cols-2 gap-3">
-      <TimePicker placement="topLeft" />
-      <TimePicker placement="topRight" />
-      <TimePicker placement="bottomLeft" />
-      <TimePicker placement="bottomRight" />
+      <TimePicker {...args} placement="topLeft" />
+      <TimePicker {...args} placement="topRight" />
+      <TimePicker {...args} placement="bottomLeft" />
+      <TimePicker {...args} placement="bottomRight" />
     </div>
   ),
 };

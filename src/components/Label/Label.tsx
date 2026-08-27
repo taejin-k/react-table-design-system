@@ -17,7 +17,7 @@ export const Label = forwardRef<HTMLLabelElement, LabelProps>(
 Label.displayName = "Label";
 
 const labelVariants = cva(
-  "inline-flex items-start gap-[2px] pl-[4px] font-pretendard whitespace-nowrap text-black",
+  "inline-flex items-start gap-[2px] pl-[4px] font-pretendard whitespace-pre-line text-black",
   {
     variants: {
       size: {

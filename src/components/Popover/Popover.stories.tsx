@@ -34,8 +34,11 @@ const meta = {
   argTypes: {
     title: { name: "제목", control: "text" },
     content: { name: "내용", control: "text" },
-    placement: { control: false, table: { disable: true } },
+    placement: { name: "위치", control: "select", options: placements },
     trigger: { name: "표시 동작", control: "select", options: triggers },
+    arrow: { name: "화살표", control: "boolean" },
+    color: { name: "배경 색상", control: "color" },
+    autoAdjustOverflow: { name: "위치 자동 보정", control: "boolean" },
     children: { control: false, table: { disable: true } },
     open: { control: false, table: { disable: true } },
     defaultOpen: { control: false, table: { disable: true } },
@@ -46,7 +49,7 @@ const meta = {
     onOpenChange: { control: false, table: { disable: true } },
   },
   parameters: {
-    controls: { disable: true },
+    controls: { disable: false },
     docs: {
       description: {
         component:
@@ -146,9 +149,10 @@ export const Basic: Story = {
 };
 
 export const Placements: Story = {
+  args: { title: "Popover", content: "추가 내용", trigger: "click", arrow: true },
   parameters: {
     ...storyDescription("components-popover--placements"),
-    controls: { disable: true },
+    controls: { disable: false, include: ["제목", "내용", "화살표"] },
     docs: {
       ...storyDescription("components-popover--placements").docs,
       source: {
@@ -197,15 +201,14 @@ export const Placements: Story = {
       },
     },
   },
-  render: () => (
+  render: (args) => (
     <div className="grid min-h-[420px] grid-cols-3 place-items-center gap-x-24 gap-y-10 px-24 py-16">
       {placements.map((placement) => (
         <Popover
+          {...args}
           key={placement}
-          content="추가 내용"
+          content={args.content ?? "추가 내용"}
           placement={placement}
-          title="Popover"
-          trigger="click"
         >
           <Button>{placement}</Button>
         </Popover>
@@ -215,9 +218,10 @@ export const Placements: Story = {
 };
 
 export const Triggers: Story = {
+  args: { title: "Popover", placement: "top", arrow: true, color: "#ffffff" },
   parameters: {
     ...storyDescription("components-popover--triggers"),
-    controls: { disable: true },
+    controls: { disable: false, include: ["제목", "위치", "화살표", "배경 색상"] },
     docs: {
       ...storyDescription("components-popover--triggers").docs,
       source: {
@@ -245,14 +249,14 @@ export const Triggers: Story = {
       },
     },
   },
-  render: () => (
+  render: (args) => (
     <div className="flex min-h-32 flex-wrap items-center justify-center gap-3">
       {triggers.map((trigger) => (
-        <Popover key={trigger} content={`${trigger}로 열었어요.`} trigger={trigger}>
+        <Popover {...args} key={trigger} content={`${trigger}로 열었어요.`} trigger={trigger}>
           <Button>{trigger === "contextMenu" ? "contextMenu (우클릭)" : trigger}</Button>
         </Popover>
       ))}
-      <Popover content="hover + focus로 열었어요." trigger={["hover", "focus"]}>
+      <Popover {...args} content="hover + focus로 열었어요." trigger={["hover", "focus"]}>
         <Button>hover + focus</Button>
       </Popover>
     </div>
@@ -260,17 +264,18 @@ export const Triggers: Story = {
 };
 
 export const Appearance: Story = {
+  args: { placement: "top", trigger: "hover", autoAdjustOverflow: true },
   argTypes: {
     title: { control: false, table: { disable: true } },
     content: { control: false, table: { disable: true } },
-    placement: { control: false, table: { disable: true } },
-    trigger: { control: false, table: { disable: true } },
+    placement: { name: "위치", control: "select", options: placements },
+    trigger: { name: "표시 동작", control: "select", options: triggers },
     color: { control: false, table: { disable: true } },
     arrow: { control: false, table: { disable: true } },
   },
   parameters: {
     ...storyDescription("components-popover--appearance"),
-    controls: { disable: true },
+    controls: { disable: false, include: ["위치", "표시 동작", "위치 자동 보정"] },
     docs: {
       ...storyDescription("components-popover--appearance").docs,
       source: {
@@ -292,15 +297,15 @@ export const Appearance: Story = {
       },
     },
   },
-  render: () => (
+  render: (args) => (
     <div className="flex min-h-32 flex-wrap items-center justify-center gap-3">
-      <Popover content="추가 내용" title="기본 색상">
+      <Popover {...args} content="추가 내용" title="기본 색상">
         <Button>기본</Button>
       </Popover>
-      <Popover color="#0062df" content="추가 내용" title="파란색">
+      <Popover {...args} color="#0062df" content="추가 내용" title="파란색">
         <Button>색상</Button>
       </Popover>
-      <Popover arrow={false} content="추가 내용" title="화살표 없음">
+      <Popover {...args} arrow={false} content="추가 내용" title="화살표 없음">
         <Button>화살표 없음</Button>
       </Popover>
     </div>
@@ -308,9 +313,10 @@ export const Appearance: Story = {
 };
 
 export const Actions: Story = {
+  args: { title: "항목 삭제", placement: "top", color: "#ffffff", arrow: true },
   parameters: {
     ...storyDescription("components-popover--actions"),
-    controls: { disable: true },
+    controls: { disable: false, include: ["제목", "위치", "배경 색상", "화살표"] },
     docs: {
       ...storyDescription("components-popover--actions").docs,
       source: {
@@ -342,15 +348,16 @@ export const Actions: Story = {
       },
     },
   },
-  render: () => <PopoverActionsExample />,
+  render: (args) => <PopoverActionsExample {...args} />,
 };
 
-function PopoverActionsExample() {
+function PopoverActionsExample(args: Partial<PopoverProps>) {
   const [open, setOpen] = useState(false);
 
   return (
     <div className="flex min-h-40 items-center justify-center">
       <Popover
+        {...args}
         content={
           <div className="grid gap-3">
             <span>선택한 항목을 삭제할까요?</span>
@@ -363,7 +370,7 @@ function PopoverActionsExample() {
           </div>
         }
         open={open}
-        title="항목 삭제"
+        title={args.title}
         trigger="click"
         onOpenChange={setOpen}
       >
@@ -374,9 +381,19 @@ function PopoverActionsExample() {
 }
 
 export const Controlled: Story = {
+  args: {
+    title: "제목",
+    content: "추가 내용",
+    placement: "top",
+    color: "#ffffff",
+    arrow: true,
+  },
   parameters: {
     ...storyDescription("components-popover--controlled"),
-    controls: { disable: true },
+    controls: {
+      disable: false,
+      include: ["제목", "내용", "위치", "배경 색상", "화살표"],
+    },
     docs: {
       ...storyDescription("components-popover--controlled").docs,
       source: {
@@ -400,15 +417,21 @@ export const Controlled: Story = {
       },
     },
   },
-  render: () => <ControlledPopover />,
+  render: (args) => <ControlledPopover {...args} />,
 };
 
-function ControlledPopover() {
+function ControlledPopover(args: Partial<PopoverProps>) {
   const [open, setOpen] = useState(false);
 
   return (
     <div className="flex min-h-32 items-center justify-center">
-      <Popover content="추가 내용" open={open} title="제목" trigger="click" onOpenChange={setOpen}>
+      <Popover
+        {...args}
+        content={args.content ?? "추가 내용"}
+        open={open}
+        trigger="click"
+        onOpenChange={setOpen}
+      >
         <Button>{open ? "닫기" : "열기"}</Button>
       </Popover>
     </div>

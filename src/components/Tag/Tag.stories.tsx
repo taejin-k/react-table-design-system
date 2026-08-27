@@ -27,7 +27,7 @@ const meta = {
     className: { control: false, table: { disable: true } },
   },
   parameters: {
-    controls: { disable: true },
+    controls: { disable: false },
     docs: {
       description: {
         component:
@@ -83,14 +83,15 @@ function TagTypeCode({ value }: { value: TagColorType | TagVariantType }) {
 }
 
 export const Variants: Story = {
+  args: { children: "Tag" },
   argTypes: {
-    children: { control: false, table: { disable: true } },
+    children: { name: "텍스트", control: "text" },
     color: { control: false, table: { disable: true } },
     variant: { control: false, table: { disable: true } },
   },
   parameters: {
     ...storyDescription("components-tag--variants"),
-    controls: { disable: true },
+    controls: { disable: false, include: ["텍스트"] },
     docs: {
       ...storyDescription("components-tag--variants").docs,
       description: { story: storyDescriptions["components-tag--variants"] },
@@ -155,115 +156,18 @@ export const Variants: Story = {
       },
     },
   },
-  render: () => (
+  render: (args) => (
     <div className="grid gap-6">
-      <section className="grid gap-3">
-        <h3 className="m-0 text-sm font-semibold">filled</h3>
-        <div className="flex flex-wrap items-center gap-3">
-          <Tag color="black" variant="filled">
-            black
-          </Tag>
-          <Tag color="green" variant="filled">
-            green
-          </Tag>
-          <Tag color="navy" variant="filled">
-            navy
-          </Tag>
-          <Tag color="red" variant="filled">
-            red
-          </Tag>
-          <Tag color="grey" variant="filled">
-            grey
-          </Tag>
-          <Tag color="purple" variant="filled">
-            purple
-          </Tag>
-          <Tag color="blue" variant="filled">
-            blue
-          </Tag>
-        </div>
-      </section>
-
-      <section className="grid gap-3">
-        <h3 className="m-0 text-sm font-semibold">outlined</h3>
-        <div className="flex flex-wrap items-center gap-3">
-          <Tag color="black" variant="outlined">
-            black
-          </Tag>
-          <Tag color="green" variant="outlined">
-            green
-          </Tag>
-          <Tag color="navy" variant="outlined">
-            navy
-          </Tag>
-          <Tag color="red" variant="outlined">
-            red
-          </Tag>
-          <Tag color="grey" variant="outlined">
-            grey
-          </Tag>
-          <Tag color="purple" variant="outlined">
-            purple
-          </Tag>
-          <Tag color="blue" variant="outlined">
-            blue
-          </Tag>
-        </div>
-      </section>
-
-      <section className="grid gap-3">
-        <h3 className="m-0 text-sm font-semibold">solid</h3>
-        <div className="flex flex-wrap items-center gap-3">
-          <Tag color="black" variant="solid">
-            black
-          </Tag>
-          <Tag color="green" variant="solid">
-            green
-          </Tag>
-          <Tag color="navy" variant="solid">
-            navy
-          </Tag>
-          <Tag color="red" variant="solid">
-            red
-          </Tag>
-          <Tag color="grey" variant="solid">
-            grey
-          </Tag>
-          <Tag color="purple" variant="solid">
-            purple
-          </Tag>
-          <Tag color="blue" variant="solid">
-            blue
-          </Tag>
-        </div>
-      </section>
-
-      <section className="grid gap-3">
-        <h3 className="m-0 text-sm font-semibold">soft-outlined</h3>
-        <div className="flex flex-wrap items-center gap-3">
-          <Tag color="black" variant="soft-outlined">
-            black
-          </Tag>
-          <Tag color="green" variant="soft-outlined">
-            green
-          </Tag>
-          <Tag color="navy" variant="soft-outlined">
-            navy
-          </Tag>
-          <Tag color="red" variant="soft-outlined">
-            red
-          </Tag>
-          <Tag color="grey" variant="soft-outlined">
-            grey
-          </Tag>
-          <Tag color="purple" variant="soft-outlined">
-            purple
-          </Tag>
-          <Tag color="blue" variant="soft-outlined">
-            blue
-          </Tag>
-        </div>
-      </section>
+      {variants.map((variant) => (
+        <section key={variant} className="grid gap-3">
+          <h3 className="m-0 text-sm font-semibold">{variant}</h3>
+          <div className="flex flex-wrap items-center gap-3">
+            {colors.map((color) => (
+              <Tag {...args} key={color} color={color} variant={variant} />
+            ))}
+          </div>
+        </section>
+      ))}
     </div>
   ),
 };

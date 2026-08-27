@@ -11,7 +11,7 @@ export const Radio = forwardRef<HTMLInputElement, RadioProps>(
       <label
         htmlFor={inputId}
         className={twMerge(
-          "inline-flex items-center gap-1.5",
+          "inline-flex items-start gap-1.5",
           disabled ? "cursor-not-allowed" : "cursor-pointer",
           className,
         )}
@@ -27,7 +27,7 @@ export const Radio = forwardRef<HTMLInputElement, RadioProps>(
         {label != null ? (
           <span
             className={twMerge(
-              "font-pretendard text-[14px] leading-4 whitespace-nowrap",
+              "font-pretendard text-[14px] leading-4 whitespace-pre-line",
               disabled ? "text-[#aaa]" : "text-[#111]",
             )}
           >

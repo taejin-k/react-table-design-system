@@ -65,7 +65,7 @@ const meta = {
     onOpenChange: { control: false },
   },
   parameters: {
-    controls: { disable: true },
+    controls: { disable: false },
     docs: {
       description: {
         component:
@@ -200,11 +200,11 @@ export const Sizes: Story = {
       },
     },
   },
-  render: () => (
+  render: (args) => (
     <div className="grid max-w-xs gap-3">
-      <DatePicker size="lg" />
-      <DatePicker size="md" />
-      <DatePicker size="sm" />
+      <DatePicker {...args} size="lg" />
+      <DatePicker {...args} size="md" />
+      <DatePicker {...args} size="sm" />
     </div>
   ),
 };
@@ -254,11 +254,11 @@ export const States: Story = {
       },
     },
   },
-  render: () => (
+  render: (args) => (
     <div className="grid max-w-xs gap-3">
-      <DatePicker placeholder="기본" />
-      <DatePicker readOnly defaultValue="2026-08-10" />
-      <DatePicker disabled defaultValue="2026-08-11" />
+      <DatePicker {...args} placeholder="기본" />
+      <DatePicker {...args} readOnly defaultValue="2026-08-10" />
+      <DatePicker {...args} disabled defaultValue="2026-08-11" />
     </div>
   ),
 };
@@ -276,10 +276,10 @@ export const Variants: Story = {
       },
     },
   },
-  render: () => (
+  render: (args) => (
     <div className="grid max-w-xs gap-3">
-      <DatePicker placeholder="기본" />
-      <DatePicker variant="filled" placeholder="채움" />
+      <DatePicker {...args} placeholder="기본" />
+      <DatePicker {...args} variant="filled" placeholder="채움" />
     </div>
   ),
 };
@@ -296,8 +296,14 @@ export const StaticError: Story = {
       },
     },
   },
-  render: () => (
-    <DatePicker label="예약일" required errorMessage="예약일을 선택해 주세요." width={320} />
+  render: (args) => (
+    <DatePicker
+      {...args}
+      label="예약일"
+      required
+      errorMessage="예약일을 선택해 주세요."
+      width={320}
+    />
   ),
 };
 
@@ -317,13 +323,13 @@ export const PickerTypes: Story = {
       },
     },
   },
-  render: () => (
+  render: (args) => (
     <div className="grid max-w-xs gap-3">
-      <DatePicker />
-      <DatePicker picker="week" />
-      <DatePicker picker="month" />
-      <DatePicker picker="quarter" />
-      <DatePicker picker="year" />
+      <DatePicker {...args} />
+      <DatePicker {...args} picker="week" />
+      <DatePicker {...args} picker="month" />
+      <DatePicker {...args} picker="quarter" />
+      <DatePicker {...args} picker="year" />
     </div>
   ),
 };
@@ -341,10 +347,14 @@ export const Format: Story = {
       },
     },
   },
-  render: () => (
+  render: (args) => (
     <div className="grid max-w-xs gap-3">
-      <DatePicker defaultValue="2026-08-11" format="YYYY년 MM월 DD일" />
-      <DatePicker defaultValue="2026-08-11" format={(pickerValue) => `선택일: ${pickerValue}`} />
+      <DatePicker {...args} defaultValue="2026-08-11" format="YYYY년 MM월 DD일" />
+      <DatePicker
+        {...args}
+        defaultValue="2026-08-11"
+        format={(pickerValue) => `선택일: ${pickerValue}`}
+      />
     </div>
   ),
 };
@@ -356,9 +366,9 @@ export const MinMaxDate: Story = {
   <DatePicker minDate="2026-08-05" maxDate="2026-08-20" />
 </div>`,
   ),
-  render: () => (
+  render: (args) => (
     <div className="max-w-xs">
-      <DatePicker minDate="2026-08-05" maxDate="2026-08-20" />
+      <DatePicker {...args} minDate="2026-08-05" maxDate="2026-08-20" />
     </div>
   ),
 };
@@ -375,9 +385,10 @@ export const Presets: Story = {
   />
 </div>`,
   ),
-  render: () => (
+  render: (args) => (
     <div className="max-w-xs">
       <DatePicker
+        {...args}
         presets={[
           { label: "오늘", value: "2026-08-11" },
           { label: "프로젝트 시작일", value: "2026-08-17" },
@@ -394,9 +405,9 @@ export const Multiple: Story = {
   <DatePicker multiple defaultValue={["2026-08-11", "2026-08-14"]} />
 </div>`,
   ),
-  render: () => (
+  render: (args) => (
     <div className="max-w-md">
-      <DatePicker multiple defaultValue={["2026-08-11", "2026-08-14"]} />
+      <DatePicker {...args} multiple defaultValue={["2026-08-11", "2026-08-14"]} />
     </div>
   ),
 };
@@ -408,9 +419,9 @@ export const ShowTimeAndConfirm: Story = {
   <DatePicker showTime={{ minuteStep: 5, showSecond: false }} needConfirm />
 </div>`,
   ),
-  render: () => (
+  render: (args) => (
     <div className="max-w-xs">
-      <DatePicker showTime={{ minuteStep: 5, showSecond: false }} needConfirm />
+      <DatePicker {...args} showTime={{ minuteStep: 5, showSecond: false }} needConfirm />
     </div>
   ),
 };
@@ -422,9 +433,9 @@ export const WeekNumber: Story = {
   <DatePicker showWeek />
 </div>`,
   ),
-  render: () => (
+  render: (args) => (
     <div className="max-w-xs">
-      <DatePicker showWeek />
+      <DatePicker {...args} showWeek />
     </div>
   ),
 };
@@ -442,9 +453,10 @@ export const CustomCell: Story = {
   />
 </div>`,
   ),
-  render: () => (
+  render: (args) => (
     <div className="max-w-xs">
       <DatePicker
+        {...args}
         cellRender={(date, { originNode }) => (
           <span className={date.getDay() === 0 ? "text-[#fe5150]" : ""}>{originNode}</span>
         )}
@@ -464,9 +476,10 @@ export const ExtraFooter: Story = {
   />
 </div>`,
   ),
-  render: () => (
+  render: (args) => (
     <div className="max-w-xs">
       <DatePicker
+        {...args}
         renderExtraFooter={(mode) => <span className="text-xs text-[#777]">현재 패널: {mode}</span>}
       />
     </div>
@@ -474,9 +487,18 @@ export const ExtraFooter: Story = {
 };
 
 export const RangePresets: Story = {
-  parameters: storySource(
-    "components-datepicker--range-presets",
-    `<div className="max-w-xl">
+  args: {
+    size: "md",
+    variant: "default",
+    disabled: false,
+    readOnly: false,
+    allowClear: true,
+    width: "100%",
+  },
+  parameters: {
+    ...storySource(
+      "components-datepicker--range-presets",
+      `<div className="max-w-xl">
   <DatePicker.RangePicker
     presets={[
       { label: '이번 주', value: ['2026-08-10', '2026-08-16'] },
@@ -484,10 +506,21 @@ export const RangePresets: Story = {
     ]}
   />
 </div>`,
-  ),
-  render: () => (
+    ),
+    controls: {
+      disable: false,
+      include: ["크기", "표현 방식", "지우기", "읽기 전용", "비활성", "가로 길이"],
+    },
+  },
+  render: (args) => (
     <div className="max-w-xl">
       <DatePicker.RangePicker
+        size={args.size}
+        variant={args.variant}
+        disabled={args.disabled}
+        readOnly={args.readOnly}
+        allowClear={args.allowClear}
+        width={args.width}
         presets={[
           { label: "이번 주", value: ["2026-08-10", "2026-08-16"] },
           { label: "이번 달", value: ["2026-08-01", "2026-08-31"] },
@@ -498,6 +531,13 @@ export const RangePresets: Story = {
 };
 
 export const ControlledPanel: Story = {
+  args: {
+    size: "md",
+    variant: "default",
+    disabled: false,
+    readOnly: false,
+    allowClear: true,
+  },
   parameters: storySource(
     "components-datepicker--controlled-panel",
     `function ControlledDatePanel() {
@@ -510,11 +550,11 @@ export const ControlledPanel: Story = {
   );
 }`,
   ),
-  render: function ControlledPanelStory() {
+  render: function ControlledPanelStory(args) {
     const [panelValue, setPanelValue] = useState("2026-08-01");
     return (
       <div className="max-w-xs">
-        <DatePicker pickerValue={panelValue} onPanelChange={setPanelValue} />
+        <DatePicker {...args} pickerValue={panelValue} onPanelChange={setPanelValue} />
       </div>
     );
   },
@@ -530,17 +570,25 @@ export const Placements: Story = {
   <DatePicker placement="bottomRight" />
 </div>`,
   ),
-  render: () => (
+  render: (args) => (
     <div className="grid max-w-2xl grid-cols-2 gap-3">
-      <DatePicker placement="topLeft" />
-      <DatePicker placement="topRight" />
-      <DatePicker placement="bottomLeft" />
-      <DatePicker placement="bottomRight" />
+      <DatePicker {...args} placement="topLeft" />
+      <DatePicker {...args} placement="topRight" />
+      <DatePicker {...args} placement="bottomLeft" />
+      <DatePicker {...args} placement="bottomRight" />
     </div>
   ),
 };
 
 export const Range: Story = {
+  args: {
+    size: "md",
+    variant: "default",
+    disabled: false,
+    readOnly: false,
+    allowClear: true,
+    width: "100%",
+  },
   parameters: {
     ...storyDescription("components-datepicker--range"),
     docs: {
@@ -558,11 +606,20 @@ export const Range: Story = {
       },
     },
   },
-  render: function DateRangeStory() {
+  render: function DateRangeStory(args) {
     const [period, setPeriod] = useState<[string | null, string | null]>([null, null]);
     return (
       <div className="max-w-xl">
-        <DatePicker.RangePicker value={period} onChange={setPeriod} />
+        <DatePicker.RangePicker
+          size={args.size}
+          variant={args.variant}
+          disabled={args.disabled}
+          readOnly={args.readOnly}
+          allowClear={args.allowClear}
+          width={args.width}
+          value={period}
+          onChange={setPeriod}
+        />
       </div>
     );
   },
@@ -580,9 +637,12 @@ export const DisabledDate: Story = {
       },
     },
   },
-  render: () => (
+  render: (args) => (
     <div className="max-w-xs">
-      <DatePicker disabledDate={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))} />
+      <DatePicker
+        {...args}
+        disabledDate={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+      />
     </div>
   ),
 };

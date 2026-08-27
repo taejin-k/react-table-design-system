@@ -17,6 +17,12 @@ describe("Badge", () => {
     expect(screen.getByText("처리 중")).toBeInTheDocument();
   });
 
+  it("preserves newlines in status text", () => {
+    render(<Badge status="processing" text={"처리 중\n잠시만 기다려 주세요"} />);
+
+    expect(screen.getByText(/처리 중\s+잠시만 기다려 주세요/)).toHaveClass("whitespace-pre-line");
+  });
+
   it("applies a custom status color", () => {
     const { container } = render(<Badge status="default" color="#722ed1" />);
     expect(container.querySelector("span > span")).toHaveStyle({

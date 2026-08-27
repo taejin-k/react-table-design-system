@@ -78,7 +78,7 @@ const meta = {
     onChange: { control: false, table: { disable: true } },
   },
   parameters: {
-    controls: { disable: true },
+    controls: { disable: false },
     docs: {
       description: {
         component:
@@ -165,6 +165,10 @@ export const Accordion: Story = {
   args: { items, accordion: true, defaultActiveKey: ["one"] },
   parameters: {
     ...storyDescription("components-collapse--accordion"),
+    controls: {
+      disable: false,
+      include: ["아코디언", "테두리", "배경 제거", "크기", "아이콘 위치"],
+    },
     docs: {
       ...storyDescription("components-collapse--accordion").docs,
       source: {
@@ -180,6 +184,10 @@ export const Ghost: Story = {
   args: { items, ghost: true, defaultActiveKey: ["one"] },
   parameters: {
     ...storyDescription("components-collapse--ghost"),
+    controls: {
+      disable: false,
+      include: ["아코디언", "테두리", "배경 제거", "크기", "아이콘 위치"],
+    },
     docs: {
       ...storyDescription("components-collapse--ghost").docs,
       source: {
@@ -193,8 +201,13 @@ export const Ghost: Story = {
 };
 
 export const Borders: Story = {
+  args: { accordion: false, ghost: false, size: "md", expandIconPlacement: "start" },
   parameters: {
     ...storyDescription("components-collapse--borders"),
+    controls: {
+      disable: false,
+      include: ["아코디언", "배경 제거", "크기", "아이콘 위치"],
+    },
     docs: {
       ...storyDescription("components-collapse--borders").docs,
       source: {
@@ -214,23 +227,28 @@ export const Borders: Story = {
       },
     },
   },
-  render: () => (
+  render: (args) => (
     <div className="grid gap-4">
       <div>
         <p className="mb-2 text-sm text-[#666]">Bordered</p>
-        <Collapse defaultActiveKey={["one"]} items={items} />
+        <Collapse {...args} defaultActiveKey={["one"]} items={items} bordered />
       </div>
       <div>
         <p className="mb-2 text-sm text-[#666]">Borderless</p>
-        <Collapse bordered={false} defaultActiveKey={["one"]} items={items} />
+        <Collapse {...args} bordered={false} defaultActiveKey={["one"]} items={items} />
       </div>
     </div>
   ),
 };
 
 export const Sizes: Story = {
+  args: { accordion: false, bordered: true, ghost: false, expandIconPlacement: "start" },
   parameters: {
     ...storyDescription("components-collapse--sizes"),
+    controls: {
+      disable: false,
+      include: ["아코디언", "테두리", "배경 제거", "아이콘 위치"],
+    },
     docs: {
       ...storyDescription("components-collapse--sizes").docs,
       source: {
@@ -254,27 +272,32 @@ export const Sizes: Story = {
       },
     },
   },
-  render: () => (
+  render: (args) => (
     <div className="grid gap-4">
       <div>
         <p className="mb-2 text-sm text-[#666]">LG</p>
-        <Collapse size="lg" items={items} />
+        <Collapse {...args} size="lg" items={items} />
       </div>
       <div>
         <p className="mb-2 text-sm text-[#666]">MD</p>
-        <Collapse size="md" items={items} />
+        <Collapse {...args} size="md" items={items} />
       </div>
       <div>
         <p className="mb-2 text-sm text-[#666]">SM</p>
-        <Collapse size="sm" items={items} />
+        <Collapse {...args} size="sm" items={items} />
       </div>
     </div>
   ),
 };
 
 export const Collapsible: Story = {
+  args: { bordered: true, ghost: false, size: "md", expandIconPlacement: "start" },
   parameters: {
     ...storyDescription("components-collapse--collapsible"),
+    controls: {
+      disable: false,
+      include: ["테두리", "배경 제거", "크기", "아이콘 위치"],
+    },
     docs: {
       ...storyDescription("components-collapse--collapsible").docs,
       source: {
@@ -304,8 +327,9 @@ export const Collapsible: Story = {
       },
     },
   },
-  render: () => (
+  render: (args) => (
     <Collapse
+      {...args}
       items={[
         {
           key: "header",
@@ -331,8 +355,10 @@ export const Collapsible: Story = {
 };
 
 export const HeaderAndIcons: Story = {
+  args: { accordion: false, bordered: true, ghost: false, size: "md" },
   parameters: {
     ...storyDescription("components-collapse--header-and-icons"),
+    controls: { disable: false, include: ["아코디언", "테두리", "배경 제거", "크기"] },
     docs: {
       ...storyDescription("components-collapse--header-and-icons").docs,
       source: {
@@ -360,7 +386,12 @@ export const HeaderAndIcons: Story = {
       },
     },
   },
-  render: () => (
-    <Collapse defaultActiveKey={["extra"]} expandIconPlacement="end" items={headerAndIconItems} />
+  render: (args) => (
+    <Collapse
+      {...args}
+      defaultActiveKey={["extra"]}
+      expandIconPlacement="end"
+      items={headerAndIconItems}
+    />
   ),
 };

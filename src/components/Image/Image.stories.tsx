@@ -1,6 +1,6 @@
 import { Description, Markdown, Stories, Title } from "@storybook/addon-docs/blocks";
 import type { Meta, StoryObj } from "@storybook/react";
-import { useState } from "react";
+import { useState, type ComponentProps } from "react";
 import { storyDescriptions } from "../../storybook/story-descriptions";
 import { withStoryImports } from "../../storybook/story-source";
 import { Button } from "../Button";
@@ -28,7 +28,7 @@ const meta = {
     className: { control: false, table: { disable: true } },
   },
   parameters: {
-    controls: { disable: true },
+    controls: { disable: false },
     docs: {
       description: {
         component:
@@ -107,8 +107,13 @@ export const Basic: Story = {
 };
 
 export const Cover: Story = {
+  args: { width: 220, height: 140, alt: "Cover 예시", placeholder: false },
   parameters: {
     ...storyDescription("components-image--cover"),
+    controls: {
+      disable: false,
+      include: ["가로 길이", "세로 길이", "대체 텍스트", "로딩 Skeleton"],
+    },
     docs: {
       ...storyDescription("components-image--cover").docs,
       source: {
@@ -154,23 +159,21 @@ export const Cover: Story = {
       },
     },
   },
-  render: () => (
+  render: (args) => (
     <div className="flex flex-wrap gap-4">
       <div>
         <p className="mb-2 text-sm text-[#666]">Default</p>
-        <Image src={picture} alt="기본 Cover" width={220} height={140} preview={{ cover: true }} />
+        <Image {...args} src={picture} preview={{ cover: true }} />
       </div>
       <div>
         <p className="mb-2 text-sm text-[#666]">Hidden</p>
-        <Image src={picture} alt="Cover 없음" width={220} height={140} preview={{ cover: false }} />
+        <Image {...args} src={picture} preview={{ cover: false }} />
       </div>
       <div>
         <p className="mb-2 text-sm text-[#666]">Custom</p>
         <Image
+          {...args}
           src={picture}
-          alt="사용자 정의 Cover"
-          width={220}
-          height={140}
           preview={{
             cover: <span className="text-sm font-semibold">원본 보기</span>,
           }}
@@ -181,8 +184,10 @@ export const Cover: Story = {
 };
 
 export const Dimensions: Story = {
+  args: { alt: "크기 비교 풍경", placeholder: false, preview: true },
   parameters: {
     ...storyDescription("components-image--dimensions"),
+    controls: { disable: false, include: ["대체 텍스트", "로딩 Skeleton", "미리보기"] },
     docs: {
       ...storyDescription("components-image--dimensions").docs,
       source: {
@@ -199,37 +204,35 @@ export const Dimensions: Story = {
       },
     },
   },
-  render: () => (
+  render: (args) => (
     <div className="flex flex-wrap items-end gap-4">
-      <Image src={picture} alt="작은 풍경" width={160} height={100} />
-      <Image src={picture} alt="중간 풍경" width={240} height={150} />
-      <Image src={picture} alt="큰 풍경" width={320} height={200} />
+      <Image {...args} src={picture} width={160} height={100} />
+      <Image {...args} src={picture} width={240} height={150} />
+      <Image {...args} src={picture} width={320} height={200} />
     </div>
   ),
 };
 
-function PlaceholderExample() {
+function PlaceholderExample(args: ComponentProps<typeof Image>) {
   const [version, setVersion] = useState(0);
   const source = `https://picsum.photos/seed/wizard-image-${version}`;
 
   return (
     <div className="grid justify-items-start gap-4">
       <Button onClick={() => setVersion((current) => current + 1)}>다시 불러오기</Button>
-      <Image
-        key={version}
-        src={`${source}/480/300`}
-        alt="자리 표시자 예시"
-        width={320}
-        height={200}
-        placeholder
-      />
+      <Image key={version} src={`${source}/480/300`} {...args} placeholder />
     </div>
   );
 }
 
 export const Placeholder: Story = {
+  args: { alt: "자리 표시자 예시", width: 320, height: 200, preview: true },
   parameters: {
     ...storyDescription("components-image--placeholder"),
+    controls: {
+      disable: false,
+      include: ["가로 길이", "세로 길이", "대체 텍스트", "미리보기"],
+    },
     docs: {
       ...storyDescription("components-image--placeholder").docs,
       source: {
@@ -257,12 +260,14 @@ export const Placeholder: Story = {
       },
     },
   },
-  render: () => <PlaceholderExample />,
+  render: (args) => <PlaceholderExample {...args} />,
 };
 
 export const Group: Story = {
+  args: { width: 180, height: 120, placeholder: false },
   parameters: {
     ...storyDescription("components-image--group"),
+    controls: { disable: false, include: ["가로 길이", "세로 길이", "로딩 Skeleton"] },
     docs: {
       ...storyDescription("components-image--group").docs,
       source: {
@@ -281,19 +286,24 @@ const secondPicture = ${JSON.stringify(secondPicture)};
       },
     },
   },
-  render: () => (
+  render: (args) => (
     <Image.PreviewGroup>
       <div className="flex gap-3">
-        <Image src={picture} width={180} height={120} alt="첫 이미지" />
-        <Image src={secondPicture} width={180} height={120} alt="둘째 이미지" />
+        <Image {...args} src={picture} alt="첫 이미지" />
+        <Image {...args} src={secondPicture} alt="둘째 이미지" />
       </div>
     </Image.PreviewGroup>
   ),
 };
 
 export const PreviewOptions: Story = {
+  args: { width: 240, height: 150, alt: "미리보기 옵션 풍경", placeholder: false },
   parameters: {
     ...storyDescription("components-image--preview-options"),
+    controls: {
+      disable: false,
+      include: ["가로 길이", "세로 길이", "대체 텍스트", "로딩 Skeleton"],
+    },
     docs: {
       ...storyDescription("components-image--preview-options").docs,
       source: {
@@ -322,33 +332,22 @@ const detailImage = ${JSON.stringify(secondPicture)};
       },
     },
   },
-  render: () => (
+  render: (args) => (
     <div className="flex flex-wrap gap-4">
-      <Image
-        src={picture}
-        alt="미리보기를 사용하지 않는 풍경"
-        width={240}
-        height={150}
-        preview={false}
-      />
-      <Image
-        src={picture}
-        alt="상세 이미지가 따로 있는 풍경"
-        width={240}
-        height={150}
-        preview={{ src: secondPicture }}
-      />
+      <Image {...args} src={picture} preview={false} />
+      <Image {...args} src={picture} preview={{ src: secondPicture }} />
     </div>
   ),
 };
 
-function ControlledPreviewExample() {
+function ControlledPreviewExample(args: ComponentProps<typeof Image>) {
   const [open, setOpen] = useState(false);
 
   return (
     <>
       <Button onClick={() => setOpen(true)}>미리보기 열기</Button>
       <Image
+        {...args}
         className="hidden"
         src={picture}
         preview={{
@@ -361,8 +360,10 @@ function ControlledPreviewExample() {
 }
 
 export const ControlledPreview: Story = {
+  args: { alt: "제어형 미리보기" },
   parameters: {
     ...storyDescription("components-image--controlled-preview"),
+    controls: { disable: false, include: ["대체 텍스트"] },
     docs: {
       ...storyDescription("components-image--controlled-preview").docs,
       source: {
@@ -391,12 +392,17 @@ function ControlledPreview() {
       },
     },
   },
-  render: () => <ControlledPreviewExample />,
+  render: (args) => <ControlledPreviewExample {...args} />,
 };
 
 export const Fallback: Story = {
+  args: { width: 240, height: 150, placeholder: false, preview: false },
   parameters: {
     ...storyDescription("components-image--fallback"),
+    controls: {
+      disable: false,
+      include: ["가로 길이", "세로 길이", "로딩 Skeleton", "미리보기"],
+    },
     docs: {
       ...storyDescription("components-image--fallback").docs,
       source: {
@@ -432,21 +438,19 @@ const fallbackImage = ${JSON.stringify(secondPicture)};
       },
     },
   },
-  render: () => (
+  render: (args) => (
     <div className="flex flex-wrap gap-4">
       <div>
         <p className="mb-2 text-sm text-[#666]">정상 원본 이미지</p>
-        <Image src={picture} alt="정상 원본 이미지" width={240} height={150} preview={false} />
+        <Image {...args} src={picture} alt="정상 원본 이미지" />
       </div>
       <div>
         <p className="mb-2 text-sm text-[#666]">원본 로드 실패 → 대체 이미지</p>
         <Image
+          {...args}
           src="invalid-image.png"
           fallback={secondPicture}
           alt="대체 이미지가 적용된 결과"
-          width={240}
-          height={150}
-          preview={false}
         />
       </div>
     </div>

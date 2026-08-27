@@ -112,6 +112,17 @@ describe("Popover", () => {
     expect(document.querySelector("[data-popover]")).not.toBeInTheDocument();
   });
 
+  it("preserves newlines in its title and content", async () => {
+    render(
+      <Popover content={"내용 첫 줄\n내용 둘째 줄"} open title={"제목 첫 줄\n제목 둘째 줄"}>
+        <button type="button">대상</button>
+      </Popover>,
+    );
+
+    expect(await screen.findByText(/제목 첫 줄\s+제목 둘째 줄/)).toHaveClass("whitespace-pre-line");
+    expect(screen.getByText(/내용 첫 줄\s+내용 둘째 줄/)).toHaveClass("whitespace-pre-line");
+  });
+
   it("uses leftTop when leftBottom cannot preserve its bottom alignment", async () => {
     const user = userEvent.setup();
     Object.defineProperty(window, "innerWidth", { configurable: true, value: 1000 });

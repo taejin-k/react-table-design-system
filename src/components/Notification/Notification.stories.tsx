@@ -21,12 +21,15 @@ const notificationPlacements: NotificationPlacementType[] = [
 interface NotificationStoryArgs {
   title: string;
   description: string;
+  successTitle: string;
+  successDescription: string;
   type: NotificationStatusType;
   duration: number;
   placement: NotificationPlacementType;
   closable: boolean;
   showProgress: boolean;
   pauseOnHover: boolean;
+  updateDelay: number;
 }
 
 const storyDescription = (id: string) => ({
@@ -39,15 +42,18 @@ const meta = {
   argTypes: {
     title: { name: "제목", control: "text" },
     description: { name: "설명", control: "text" },
+    successTitle: { name: "완료 제목", control: "text" },
+    successDescription: { name: "완료 설명", control: "text" },
     type: { name: "상태", control: "select", options: notificationStatuses },
     duration: { name: "표시 시간", control: { type: "number", min: 0, step: 0.5 } },
     placement: { name: "위치", control: "select", options: notificationPlacements },
     closable: { name: "닫기 버튼", control: "boolean" },
     showProgress: { name: "진행 표시", control: "boolean" },
     pauseOnHover: { name: "Hover 중 정지", control: "boolean" },
+    updateDelay: { name: "갱신 지연", control: { type: "number", min: 0, step: 100 } },
   },
   parameters: {
-    controls: { disable: true },
+    controls: { disable: false },
     docs: {
       description: {
         component: "제목과 설명이 있는 전역 알림을 화면 가장자리에 표시해요.",
@@ -138,14 +144,14 @@ export const Basic: Story = {
     controls: {
       disable: false,
       include: [
-        "제목",
-        "설명",
-        "상태",
-        "표시 시간",
-        "위치",
-        "닫기 버튼",
-        "진행 표시",
-        "Hover 중 정지",
+        "title",
+        "description",
+        "type",
+        "duration",
+        "placement",
+        "closable",
+        "showProgress",
+        "pauseOnHover",
       ],
     },
     docs: {
@@ -168,8 +174,19 @@ export const Basic: Story = {
 };
 
 export const Types: Story = {
+  args: {
+    title: "상태 알림",
+    description: "상태별 알림을 확인해요.",
+    duration: 4.5,
+    placement: "topRight",
+    closable: true,
+  },
   parameters: {
     ...storyDescription("components-notification--types"),
+    controls: {
+      disable: false,
+      include: ["title", "description", "duration", "placement", "closable"],
+    },
     docs: {
       ...storyDescription("components-notification--types").docs,
       source: {
@@ -226,15 +243,14 @@ export const Types: Story = {
       },
     },
   },
-  render: () => {
+  render: (args) => {
     return (
       <div className="flex flex-wrap gap-2">
         <Button
           size="md"
           onClick={() =>
             notification.success({
-              title: "저장 완료",
-              description: "변경사항을 저장했어요.",
+              ...args,
             })
           }
         >
@@ -244,8 +260,7 @@ export const Types: Story = {
           size="md"
           onClick={() =>
             notification.error({
-              title: "저장 실패",
-              description: "잠시 뒤 다시 시도해 주세요.",
+              ...args,
             })
           }
         >
@@ -255,8 +270,7 @@ export const Types: Story = {
           size="md"
           onClick={() =>
             notification.info({
-              title: "새 소식",
-              description: "업데이트 내용을 확인해 주세요.",
+              ...args,
             })
           }
         >
@@ -266,8 +280,7 @@ export const Types: Story = {
           size="md"
           onClick={() =>
             notification.warning({
-              title: "확인 필요",
-              description: "입력값을 확인해 주세요.",
+              ...args,
             })
           }
         >
@@ -278,9 +291,54 @@ export const Types: Story = {
   },
 };
 
+export const MultilineIconAlignment: Story = {
+  args: {
+    title: "첫 번째 제목 줄\n두 번째 제목 줄",
+    description: "첫 번째 설명 줄의 중앙에 아이콘을 맞춰요.\n두 번째 설명 줄도 이어져요.",
+    duration: 0,
+  },
+  parameters: {
+    ...storyDescription("components-notification--multiline"),
+    controls: { disable: false, include: ["title", "description"] },
+    docs: {
+      ...storyDescription("components-notification--multiline").docs,
+      source: {
+        code: withStoryImports(`<Button
+  onClick={() =>
+    notification.info({
+      title: '첫 번째 제목 줄\\n두 번째 제목 줄',
+      description:
+        '첫 번째 설명 줄의 중앙에 아이콘을 맞춰요.\\n두 번째 설명 줄도 이어져요.',
+      duration: 0,
+    })
+  }
+>
+  여러 줄 Notification
+</Button>`),
+      },
+    },
+  },
+  render: ({ title, description }) => (
+    <Button onClick={() => notification.info({ title, description, duration: 0 })}>
+      여러 줄 Notification
+    </Button>
+  ),
+};
+
 export const Actions: Story = {
+  args: {
+    title: "저장 완료",
+    description: "저장된 내용을 확인할 수 있어요.",
+    duration: 0,
+    placement: "topRight",
+    closable: true,
+  },
   parameters: {
     ...storyDescription("components-notification--actions"),
+    controls: {
+      disable: false,
+      include: ["title", "description", "duration", "placement", "closable"],
+    },
     docs: {
       ...storyDescription("components-notification--actions").docs,
       source: {
@@ -319,16 +377,18 @@ export const Actions: Story = {
       },
     },
   },
-  render: () => <NotificationActionsExample />,
+  render: (args) => <NotificationActionsExample {...args} />,
 };
 
-function NotificationActionsExample() {
+function NotificationActionsExample(args: NotificationStoryArgs) {
   const open = () => {
     notification.success({
       key: "notification-actions",
-      title: "저장 완료",
-      description: "저장된 내용을 확인할 수 있어요.",
-      duration: 0,
+      title: args.title,
+      description: args.description,
+      duration: args.duration,
+      placement: args.placement,
+      closable: args.closable,
       actions: (
         <div className="flex gap-2">
           <Button
@@ -360,8 +420,10 @@ function NotificationActionsExample() {
 }
 
 export const Placements: Story = {
+  args: { title: "선택한 위치", description: "선택한 위치에 표시돼요.", duration: 4.5 },
   parameters: {
     ...storyDescription("components-notification--placements"),
+    controls: { disable: false, include: ["title", "description", "duration"] },
     docs: {
       ...storyDescription("components-notification--placements").docs,
       source: {
@@ -398,7 +460,7 @@ function NotificationPlacements() {
       },
     },
   },
-  render: () => (
+  render: (args) => (
     <div className="flex flex-wrap gap-2">
       {(
         [
@@ -415,8 +477,9 @@ function NotificationPlacements() {
           variant="secondary"
           onClick={() =>
             notification.info({
-              title: placement,
-              description: "선택한 위치에 표시돼요.",
+              title: `${args.title} · ${placement}`,
+              description: args.description,
+              duration: args.duration,
               placement,
             })
           }
@@ -429,8 +492,19 @@ function NotificationPlacements() {
 };
 
 export const Progress: Story = {
+  args: {
+    title: "작업 진행 중",
+    description: "남은 시간이 하단 진행 바로 표시돼요.",
+    duration: 6,
+    showProgress: true,
+    pauseOnHover: true,
+  },
   parameters: {
     ...storyDescription("components-notification--progress"),
+    controls: {
+      disable: false,
+      include: ["title", "description", "duration", "showProgress", "pauseOnHover"],
+    },
     docs: {
       ...storyDescription("components-notification--progress").docs,
       source: {
@@ -453,14 +527,15 @@ export const Progress: Story = {
       },
     },
   },
-  render: () => (
+  render: (args) => (
     <Button
       onClick={() =>
         notification.info({
-          title: "작업 진행 중",
-          description: "남은 시간이 하단 진행 바로 표시돼요.",
-          duration: 6,
-          showProgress: true,
+          title: args.title,
+          description: args.description,
+          duration: args.duration,
+          showProgress: args.showProgress,
+          pauseOnHover: args.pauseOnHover,
         })
       }
     >
@@ -470,8 +545,19 @@ export const Progress: Story = {
 };
 
 export const Update: Story = {
+  args: {
+    title: "업로드 중",
+    description: "파일을 전송하고 있어요.",
+    successTitle: "업로드 완료",
+    successDescription: "파일을 전송했어요.",
+    updateDelay: 1200,
+  },
   parameters: {
     ...storyDescription("components-notification--update"),
+    controls: {
+      disable: false,
+      include: ["title", "description", "successTitle", "successDescription", "updateDelay"],
+    },
     docs: {
       ...storyDescription("components-notification--update").docs,
       source: {
@@ -504,10 +590,10 @@ export const Update: Story = {
       },
     },
   },
-  render: () => <NotificationUpdateExample />,
+  render: (args) => <NotificationUpdateExample {...args} />,
 };
 
-function NotificationUpdateExample() {
+function NotificationUpdateExample(args: NotificationStoryArgs) {
   const timerRef = useRef<number | undefined>(undefined);
 
   useEffect(() => () => window.clearTimeout(timerRef.current), []);
@@ -515,8 +601,8 @@ function NotificationUpdateExample() {
   const update = () => {
     notification.open({
       key: "upload",
-      title: "업로드 중",
-      description: "파일을 전송하고 있어요.",
+      title: args.title,
+      description: args.description,
       duration: 0,
     });
     window.clearTimeout(timerRef.current);
@@ -524,10 +610,10 @@ function NotificationUpdateExample() {
       () =>
         notification.success({
           key: "upload",
-          title: "업로드 완료",
-          description: "파일을 전송했어요.",
+          title: args.successTitle,
+          description: args.successDescription,
         }),
-      1200,
+      args.updateDelay,
     );
   };
 

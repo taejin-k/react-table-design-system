@@ -266,7 +266,7 @@ function MessageCard({
     <div
       ref={combinedRef}
       className={twMerge(
-        "wizard-message-card pointer-events-auto absolute left-1/2 flex min-h-10 max-w-[calc(100vw-32px)] items-center gap-1.5 rounded-lg bg-white px-3 py-2.5 text-sm text-[#111] shadow-[0_6px_16px_rgba(0,0,0,0.08),0_3px_6px_-4px_rgba(0,0,0,0.12),0_9px_28px_8px_rgba(0,0,0,0.05)]",
+        "wizard-message-card pointer-events-auto absolute left-1/2 flex min-h-10 max-w-[calc(100vw-32px)] items-start gap-1.5 rounded-lg bg-white px-3 py-2.5 text-sm text-[#111] shadow-[0_6px_16px_rgba(0,0,0,0.08),0_3px_6px_-4px_rgba(0,0,0,0.12),0_9px_28px_8px_rgba(0,0,0,0.05)]",
         motionClassName,
         visible === false && "pointer-events-none",
         item.className,
@@ -293,7 +293,7 @@ function MessageCard({
       onMouseLeave={() => item.pauseOnHover !== false && resumeTimer()}
     >
       <span className="inline-flex shrink-0">{icon}</span>
-      <span className="min-w-0">{item.content}</span>
+      <span className="min-w-0 leading-5 whitespace-pre-line">{item.content}</span>
     </div>
   );
 }

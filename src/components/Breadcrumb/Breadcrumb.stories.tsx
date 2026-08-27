@@ -52,7 +52,7 @@ const meta = {
     items: { control: false, table: { disable: true } },
   },
   parameters: {
-    controls: { disable: true },
+    controls: { disable: false },
     docs: {
       description: {
         component:
@@ -198,8 +198,13 @@ export const WithIcons: Story = {
 };
 
 export const SingleIcon: Story = {
+  args: { showIcons: true },
+  argTypes: {
+    showIcons: { name: "아이콘 표시", control: "boolean" },
+  },
   parameters: {
     ...storyDescription("components-breadcrumb--single-icon"),
+    controls: { disable: false, include: ["아이콘 표시"] },
     docs: {
       ...storyDescription("components-breadcrumb--single-icon").docs,
       source: {
@@ -218,10 +223,10 @@ export const SingleIcon: Story = {
       },
     },
   },
-  render: () => (
+  render: ({ showIcons }) => (
     <Breadcrumb
       items={[
-        { icon: <Icon icon="home-outlined" />, href: "#" },
+        { icon: showIcons ? <Icon icon="home-outlined" /> : undefined, href: "#" },
         { title: "프로젝트", href: "#projects" },
         { title: "디자인 시스템" },
       ]}

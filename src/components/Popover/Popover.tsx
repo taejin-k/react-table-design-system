@@ -116,9 +116,9 @@ export function Popover({
                   style={{ backgroundColor: color, color: getTextColor(color) }}
                 >
                   {title !== null && title !== undefined && title !== "" ? (
-                    <div className="mb-1 font-semibold">{title}</div>
+                    <div className="mb-1 font-semibold whitespace-pre-line">{title}</div>
                   ) : null}
-                  <div>{resolvedContent}</div>
+                  <div className="whitespace-pre-line">{resolvedContent}</div>
                 </div>
                 {arrow ? (
                   <span

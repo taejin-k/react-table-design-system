@@ -70,7 +70,7 @@ const meta = {
     onEnter: { control: false, table: { disable: true } },
   },
   parameters: {
-    controls: { disable: true },
+    controls: { disable: false },
     docs: {
       description: {
         component:
@@ -556,8 +556,20 @@ function EmailInput() {
 };
 
 export const ServerError: Story = {
+  args: {
+    label: "이메일",
+    value: "member@example.com",
+    size: "md",
+    variant: "default",
+    width: 360,
+    disabled: false,
+  },
   parameters: {
     ...storyDescription("components-input--server-error"),
+    controls: {
+      disable: false,
+      include: ["레이블", "입력값", "크기", "표현 방식", "가로 길이", "비활성"],
+    },
     docs: {
       ...storyDescription("components-input--server-error").docs,
       source: {
@@ -581,13 +593,13 @@ function ServerErrorInput() {
       },
     },
   },
-  render: () => <ServerErrorInput />,
+  render: (args) => <ServerErrorInput {...args} />,
 };
 
-function ServerErrorInput() {
-  const [email, setEmail] = useState("member@example.com");
+function ServerErrorInput(args: InputProps) {
+  const [email, setEmail] = useState(args.value ?? "member@example.com");
 
-  return (
-    <Input label="이메일" value={email} validate={checkEmailAvailability} onChange={setEmail} />
-  );
+  useEffect(() => setEmail(args.value ?? ""), [args.value]);
+
+  return <Input {...args} value={email} validate={checkEmailAvailability} onChange={setEmail} />;
 }

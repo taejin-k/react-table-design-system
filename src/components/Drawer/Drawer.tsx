@@ -10,9 +10,8 @@ import {
 import CSSMotion from "@rc-component/motion";
 import { createPortal } from "react-dom";
 import { twMerge } from "tailwind-merge";
-import { Button } from "../Button";
-import { Icon } from "../Icon";
 import { Skeleton } from "../Skeleton";
+import { OverlayCloseButton } from "../_internal/OverlayCloseButton";
 import { MOTION_DURATION_SLOW } from "../_internal/motion";
 import { lockBodyScroll } from "../_internal/body-scroll-lock";
 import type {
@@ -168,19 +167,7 @@ export function Drawer({
   const close = (event: MouseEvent<HTMLButtonElement | HTMLDivElement>) => onClose?.(event);
   const closeButton =
     closable === false ? null : (
-      <Button
-        variant="ghost"
-        size="md"
-        iconOnly
-        prefixIcon={
-          <span className="inline-flex">
-            {resolvedCloseIcon ?? <Icon icon="close" size={16} />}
-          </span>
-        }
-        disabled={closeDisabled}
-        className="size-7 text-[#666]"
-        onClick={close}
-      />
+      <OverlayCloseButton icon={resolvedCloseIcon} disabled={closeDisabled} onClick={close} />
     );
   const panel = (
     <div
@@ -214,7 +201,7 @@ export function Drawer({
           style={styles?.header}
         >
           {closePlacement === "start" ? closeButton : null}
-          <div className="min-w-0 flex-1 truncate text-base font-semibold">{title}</div>
+          <div className="min-w-0 flex-1 text-base font-semibold whitespace-pre-line">{title}</div>
           {extra ? <div className="shrink-0">{extra}</div> : null}
           {closePlacement === "end" ? closeButton : null}
         </div>
@@ -223,7 +210,13 @@ export function Drawer({
         className={twMerge("min-h-0 flex-1 overflow-auto p-5", classNames?.body)}
         style={styles?.body}
       >
-        {loading ? <Skeleton active /> : children}
+        {loading ? (
+          <Skeleton active />
+        ) : typeof children === "string" || typeof children === "number" ? (
+          <span className="whitespace-pre-line">{children}</span>
+        ) : (
+          children
+        )}
       </div>
       {footer !== undefined ? (
         <div

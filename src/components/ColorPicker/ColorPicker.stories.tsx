@@ -1,6 +1,6 @@
 import { Description, Markdown, Stories, Title } from "@storybook/addon-docs/blocks";
 import type { Meta, StoryObj } from "@storybook/react";
-import { useState } from "react";
+import { useState, type ComponentProps } from "react";
 import { storyDescriptions } from "../../storybook/story-descriptions";
 import { withStoryImports } from "../../storybook/story-source";
 import { TypeTokens } from "../../storybook/type-tokens";
@@ -88,7 +88,7 @@ const meta = {
     onClear: { control: false, table: { disable: true } },
   },
   parameters: {
-    controls: { disable: true },
+    controls: { disable: false },
     docs: {
       description: {
         component:
@@ -192,8 +192,10 @@ export const Basic: Story = {
 };
 
 export const AllowClear: Story = {
+  args: { defaultValue: "#0062df", allowClear: true, showLabel: true },
   parameters: {
     ...storyDescription("components-colorpicker--allow-clear"),
+    controls: { disable: false, include: ["기본 색상", "초기화", "색상값 표시"] },
     docs: {
       ...storyDescription("components-colorpicker--allow-clear").docs,
       source: {
@@ -202,12 +204,14 @@ export const AllowClear: Story = {
       },
     },
   },
-  render: () => <ColorPicker defaultValue="#0062df" showLabel allowClear />,
+  render: (args) => <ColorPicker {...args} key={args.defaultValue} />,
 };
 
 export const Sizes: Story = {
+  args: { defaultValue: "#0062df", disabled: false, showLabel: false },
   parameters: {
     ...storyDescription("components-colorpicker--sizes"),
+    controls: { disable: false, include: ["기본 색상", "비활성", "색상값 표시"] },
     docs: {
       ...storyDescription("components-colorpicker--sizes").docs,
       source: {
@@ -218,18 +222,20 @@ export const Sizes: Story = {
       },
     },
   },
-  render: () => (
+  render: (args) => (
     <div className="flex items-center gap-3">
-      <ColorPicker defaultValue="#0062df" size="sm" />
-      <ColorPicker defaultValue="#0062df" size="md" />
-      <ColorPicker defaultValue="#0062df" size="lg" />
+      <ColorPicker {...args} size="sm" />
+      <ColorPicker {...args} size="md" />
+      <ColorPicker {...args} size="lg" />
     </div>
   ),
 };
 
 export const Formats: Story = {
+  args: { defaultValue: "#0062df", disabled: false, showLabel: true },
   parameters: {
     ...storyDescription("components-colorpicker--formats"),
+    controls: { disable: false, include: ["기본 색상", "비활성", "색상값 표시"] },
     docs: {
       ...storyDescription("components-colorpicker--formats").docs,
       source: {
@@ -240,18 +246,20 @@ export const Formats: Story = {
       },
     },
   },
-  render: () => (
+  render: (args) => (
     <div className="flex flex-wrap items-center gap-3">
-      <ColorPicker defaultValue="#0062df" defaultFormat="hex" showLabel />
-      <ColorPicker defaultValue="#0062df" defaultFormat="rgb" showLabel />
-      <ColorPicker defaultValue="#0062df" defaultFormat="hsb" showLabel />
+      <ColorPicker {...args} defaultFormat="hex" />
+      <ColorPicker {...args} defaultFormat="rgb" />
+      <ColorPicker {...args} defaultFormat="hsb" />
     </div>
   ),
 };
 
 export const Transparency: Story = {
+  args: { disabled: false, allowClear: false, showLabel: true },
   parameters: {
     ...storyDescription("components-colorpicker--transparency"),
+    controls: { disable: false, include: ["비활성", "초기화", "색상값 표시"] },
     docs: {
       ...storyDescription("components-colorpicker--transparency").docs,
       source: {
@@ -262,18 +270,20 @@ export const Transparency: Story = {
       },
     },
   },
-  render: () => (
+  render: (args) => (
     <div className="flex flex-wrap items-center gap-3">
-      <ColorPicker defaultValue="#0062df" showLabel />
-      <ColorPicker defaultValue="#0062df99" showLabel />
-      <ColorPicker defaultValue="#0062df33" showLabel />
+      <ColorPicker {...args} defaultValue="#0062df" />
+      <ColorPicker {...args} defaultValue="#0062df99" />
+      <ColorPicker {...args} defaultValue="#0062df33" />
     </div>
   ),
 };
 
 export const Presets: Story = {
+  args: { defaultValue: "#0062df", disabled: false, showLabel: true },
   parameters: {
     ...storyDescription("components-colorpicker--presets"),
+    controls: { disable: false, include: ["기본 색상", "비활성", "색상값 표시"] },
     docs: {
       ...storyDescription("components-colorpicker--presets").docs,
       source: {
@@ -284,12 +294,14 @@ export const Presets: Story = {
       },
     },
   },
-  render: () => <ColorPicker defaultValue="#0062df" showLabel presets={presetGroups} />,
+  render: (args) => <ColorPicker {...args} presets={presetGroups} />,
 };
 
 export const Triggers: Story = {
+  args: { disabled: false, showLabel: false },
   parameters: {
     ...storyDescription("components-colorpicker--triggers"),
+    controls: { disable: false, include: ["비활성", "색상값 표시"] },
     docs: {
       ...storyDescription("components-colorpicker--triggers").docs,
       source: {
@@ -300,23 +312,25 @@ export const Triggers: Story = {
       },
     },
   },
-  render: () => (
+  render: (args) => (
     <div className="flex flex-wrap items-center gap-6">
       <div className="flex items-center gap-2">
         <span>Click</span>
-        <ColorPicker defaultValue="#0062df" />
+        <ColorPicker {...args} defaultValue="#0062df" />
       </div>
       <div className="flex items-center gap-2">
         <span>Hover</span>
-        <ColorPicker defaultValue="#52c41a" trigger="hover" />
+        <ColorPicker {...args} defaultValue="#52c41a" trigger="hover" />
       </div>
     </div>
   ),
 };
 
 export const Controlled: Story = {
+  args: { disabled: false, allowClear: false, showLabel: true },
   parameters: {
     ...storyDescription("components-colorpicker--controlled"),
+    controls: { disable: false, include: ["비활성", "초기화", "색상값 표시"] },
     docs: {
       ...storyDescription("components-colorpicker--controlled").docs,
       source: {
@@ -341,15 +355,25 @@ export const Controlled: Story = {
       },
     },
   },
-  render: () => <ControlledColorPicker />,
+  render: (args) => <ControlledColorPicker {...args} />,
 };
 
-function ControlledColorPicker() {
+function ControlledColorPicker({
+  disabled,
+  allowClear,
+  showLabel,
+}: Pick<ComponentProps<typeof ColorPicker>, "disabled" | "allowClear" | "showLabel">) {
   const [color, setColor] = useState("#0062df");
 
   return (
     <div className="flex items-center gap-3">
-      <ColorPicker value={color} showLabel onChange={setColor} />
+      <ColorPicker
+        value={color}
+        disabled={disabled}
+        allowClear={allowClear}
+        showLabel={showLabel}
+        onChange={setColor}
+      />
       <span className="size-8 rounded-md border border-black/10" style={{ background: color }} />
     </div>
   );

@@ -52,7 +52,7 @@ const meta = {
     onOpenChange: { control: false, table: { disable: true } },
   },
   parameters: {
-    controls: { disable: true },
+    controls: { disable: false },
     docs: {
       source: { transform: formatTooltipStorySource },
       description: {
@@ -305,9 +305,10 @@ export const Appearance: Story = {
 };
 
 export const Controlled: Story = {
+  args: { title: "Tooltip", placement: "top", arrow: true, color: "#111111" },
   parameters: {
     ...storyDescription("components-tooltip--controlled"),
-    controls: { disable: true },
+    controls: { disable: false, include: ["내용", "위치", "화살표", "배경 색상"] },
     docs: {
       ...storyDescription("components-tooltip--controlled").docs,
       source: {
@@ -325,15 +326,15 @@ export const Controlled: Story = {
       },
     },
   },
-  render: () => <ControlledTooltip />,
+  render: (args) => <ControlledTooltip {...args} />,
 };
 
-function ControlledTooltip() {
+function ControlledTooltip(args: Partial<TooltipProps>) {
   const [open, setOpen] = useState(false);
 
   return (
     <div className="flex min-h-28 items-center justify-center">
-      <Tooltip open={open} title="Tooltip" onOpenChange={setOpen}>
+      <Tooltip {...args} open={open} onOpenChange={setOpen}>
         <Button onClick={() => setOpen((current) => !current)}>{open ? "닫기" : "열기"}</Button>
       </Tooltip>
     </div>

@@ -1,6 +1,6 @@
 import { Description, Markdown, Stories, Title } from "@storybook/addon-docs/blocks";
 import type { Meta, StoryObj } from "@storybook/react";
-import { useState } from "react";
+import { useState, type ComponentProps } from "react";
 import { storyDescriptions } from "../../storybook/story-descriptions";
 import { withStoryImports } from "../../storybook/story-source";
 import { TypeTokens } from "../../storybook/type-tokens";
@@ -34,7 +34,7 @@ const meta = {
     className: { control: false, table: { disable: true } },
   },
   parameters: {
-    controls: { disable: true },
+    controls: { disable: false },
     docs: {
       description: {
         component:
@@ -111,8 +111,10 @@ export const Basic: Story = {
 };
 
 export const Sizes: Story = {
+  args: { children: "Avatar", shape: "circle", color: "#bfbfbf", label: false },
   parameters: {
     ...storyDescription("components-avatar--sizes"),
+    controls: { disable: false, include: ["텍스트", "모양", "배경색", "라벨"] },
     docs: {
       ...storyDescription("components-avatar--sizes").docs,
       source: {
@@ -124,17 +126,19 @@ export const Sizes: Story = {
       },
     },
   },
-  render: () => (
+  render: (args) => (
     <div className="flex items-center gap-3">
-      <Avatar size="md">MD</Avatar>
-      <Avatar size="lg">LG</Avatar>
+      <Avatar {...args} size="md" />
+      <Avatar {...args} size="lg" />
     </div>
   ),
 };
 
 export const Shapes: Story = {
+  args: { children: "Avatar", color: "#bfbfbf", label: false },
   parameters: {
     ...storyDescription("components-avatar--shapes"),
+    controls: { disable: false, include: ["텍스트", "배경색", "라벨"] },
     docs: {
       ...storyDescription("components-avatar--shapes").docs,
       source: {
@@ -152,14 +156,12 @@ export const Shapes: Story = {
       },
     },
   },
-  render: () => (
+  render: (args) => (
     <div className="flex flex-col items-start gap-3">
       {avatarShapes.map((shape) => (
         <div key={shape} className="flex items-center gap-3">
           {avatarSizes.map((size) => (
-            <Avatar key={size} size={size} shape={shape}>
-              {size.toUpperCase()}
-            </Avatar>
+            <Avatar {...args} key={size} size={size} shape={shape} />
           ))}
         </div>
       ))}
@@ -168,8 +170,10 @@ export const Shapes: Story = {
 };
 
 export const Color: Story = {
+  args: { children: "Avatar", size: "md", shape: "circle", label: false },
   parameters: {
     ...storyDescription("components-avatar--color"),
+    controls: { disable: false, include: ["텍스트", "크기", "모양", "라벨"] },
     docs: {
       ...storyDescription("components-avatar--color").docs,
       source: {
@@ -191,13 +195,13 @@ export const Color: Story = {
       },
     },
   },
-  render: () => (
+  render: (args) => (
     <div className="flex flex-col items-start gap-3">
       <div className="flex items-center gap-3">
-        <Avatar color="#0062df">K</Avatar>
-        <Avatar color="#52c41a">L</Avatar>
-        <Avatar color="#faad14">P</Avatar>
-        <Avatar color="#722ed1">C</Avatar>
+        <Avatar {...args} color="#0062df" />
+        <Avatar {...args} color="#52c41a" />
+        <Avatar {...args} color="#faad14" />
+        <Avatar {...args} color="#722ed1" />
       </div>
       <div className="flex items-center gap-3">
         <Avatar color="#0062df" label>
@@ -218,8 +222,10 @@ export const Color: Story = {
 };
 
 export const Text: Story = {
+  args: { size: "md", shape: "circle", color: "#bfbfbf" },
   parameters: {
     ...storyDescription("components-avatar--text"),
+    controls: { disable: false, include: ["크기", "모양", "배경색"] },
     docs: {
       ...storyDescription("components-avatar--text").docs,
       source: {
@@ -245,24 +251,23 @@ export const Text: Story = {
       },
     },
   },
-  render: () => <AvatarTextExample />,
+  render: (args) => <AvatarTextExample {...args} />,
 };
 
-function AvatarTextExample() {
+function AvatarTextExample(args: ComponentProps<typeof Avatar>) {
   const [text, setText] = useState("김");
 
   return (
     <div className="flex flex-col items-start gap-3">
       <Input label="아바타 글자" value={text} width={160} onChange={setText} />
       <div className="flex items-center gap-3">
-        <Avatar size="md">{text}</Avatar>
-        <Avatar size="lg">{text}</Avatar>
+        <Avatar {...args}>{text}</Avatar>
       </div>
     </div>
   );
 }
 
-function AvatarLabelTextExample() {
+function AvatarLabelTextExample(args: ComponentProps<typeof Avatar>) {
   const [text, setText] = useState("긴 라벨 텍스트를 입력해보세요");
   const [width, setWidth] = useState("180");
 
@@ -279,7 +284,7 @@ function AvatarLabelTextExample() {
           onChange={setWidth}
         />
       </div>
-      <Avatar label labelWidth={Number(width) || 180} size="lg" src={avatarImage}>
+      <Avatar {...args} label labelWidth={Number(width) || 180} src={avatarImage}>
         {text}
       </Avatar>
     </div>
@@ -287,8 +292,13 @@ function AvatarLabelTextExample() {
 }
 
 export const LabelText: Story = {
+  args: { size: "lg", shape: "circle", color: "#bfbfbf", preview: false },
   parameters: {
     ...storyDescription("components-avatar--label-text"),
+    controls: {
+      disable: false,
+      include: ["크기", "모양", "배경색", "이미지 미리보기"],
+    },
     docs: {
       ...storyDescription("components-avatar--label-text").docs,
       source: {
@@ -331,12 +341,14 @@ function AvatarLabelText() {
       },
     },
   },
-  render: () => <AvatarLabelTextExample />,
+  render: (args) => <AvatarLabelTextExample {...args} />,
 };
 
 export const Image: Story = {
+  args: { shape: "circle", preview: false },
   parameters: {
     ...storyDescription("components-avatar--image"),
+    controls: { disable: false, include: ["모양", "이미지 미리보기"] },
     docs: {
       ...storyDescription("components-avatar--image").docs,
       source: {
@@ -356,17 +368,22 @@ export const Image: Story = {
       },
     },
   },
-  render: () => (
+  render: (args) => (
     <div className="flex items-center gap-3">
-      <Avatar src={avatarImage} size="md" />
-      <Avatar src={avatarImage} size="lg" />
+      <Avatar {...args} src={avatarImage} size="md" />
+      <Avatar {...args} src={avatarImage} size="lg" />
     </div>
   ),
 };
 
 export const ImagePreview: Story = {
+  args: { shape: "circle", preview: true, labelWidth: 160 },
   parameters: {
     ...storyDescription("components-avatar--image-preview"),
+    controls: {
+      disable: false,
+      include: ["모양", "라벨 너비", "이미지 미리보기"],
+    },
     docs: {
       ...storyDescription("components-avatar--image-preview").docs,
       source: {
@@ -393,10 +410,10 @@ export const ImagePreview: Story = {
       },
     },
   },
-  render: () => (
+  render: (args) => (
     <div className="flex items-center gap-3">
-      <Avatar src={avatarImage} size="lg" preview />
-      <Avatar label src={avatarImage} size="lg" preview>
+      <Avatar {...args} src={avatarImage} size="lg" />
+      <Avatar {...args} label src={avatarImage} size="lg">
         manhat
       </Avatar>
     </div>
@@ -404,8 +421,10 @@ export const ImagePreview: Story = {
 };
 
 export const ImageError: Story = {
+  args: { shape: "circle", color: "#bfbfbf" },
   parameters: {
     ...storyDescription("components-avatar--image-error"),
+    controls: { disable: false, include: ["모양", "배경색"] },
     docs: {
       ...storyDescription("components-avatar--image-error").docs,
       source: {
@@ -419,17 +438,19 @@ export const ImageError: Story = {
       },
     },
   },
-  render: () => (
+  render: (args) => (
     <div className="flex items-center gap-3">
-      <Avatar size="md" src={invalidAvatarImage} />
-      <Avatar size="lg" src={invalidAvatarImage} />
+      <Avatar {...args} size="md" src={invalidAvatarImage} />
+      <Avatar {...args} size="lg" src={invalidAvatarImage} />
     </div>
   ),
 };
 
 export const Group: Story = {
+  args: { size: "md", shape: "circle" },
   parameters: {
     ...storyDescription("components-avatar--group"),
+    controls: { disable: false, include: ["크기", "모양"] },
     docs: {
       ...storyDescription("components-avatar--group").docs,
       source: {
@@ -445,12 +466,20 @@ export const Group: Story = {
       },
     },
   },
-  render: () => (
-    <Avatar.Group maxCount={3}>
-      <Avatar>KIM</Avatar>
-      <Avatar color="#0062df">LEE</Avatar>
-      <Avatar color="#52c41a">PARK</Avatar>
-      <Avatar color="#722ed1">CHOI</Avatar>
+  render: (args) => (
+    <Avatar.Group maxCount={3} size={args.size} shape={args.shape}>
+      <Avatar size={args.size} shape={args.shape}>
+        KIM
+      </Avatar>
+      <Avatar size={args.size} shape={args.shape} color="#0062df">
+        LEE
+      </Avatar>
+      <Avatar size={args.size} shape={args.shape} color="#52c41a">
+        PARK
+      </Avatar>
+      <Avatar size={args.size} shape={args.shape} color="#722ed1">
+        CHOI
+      </Avatar>
     </Avatar.Group>
   ),
 };

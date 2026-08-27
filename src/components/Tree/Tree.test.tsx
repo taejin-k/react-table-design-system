@@ -43,6 +43,12 @@ describe("Tree", () => {
     expect(screen.getByText("하위")).toHaveClass("flex-1");
   });
 
+  it("preserves newlines in node titles", () => {
+    render(<Tree treeData={[{ key: "multiline", title: "첫 줄\n둘째 줄" }]} />);
+
+    expect(screen.getByText(/첫 줄\s+둘째 줄/)).toHaveClass("whitespace-pre-line");
+  });
+
   it("reports a node drop with its descendants and inside position", () => {
     const onDrop = vi.fn();
     render(

@@ -104,4 +104,68 @@ describe("Modal", () => {
     );
     rectSpy.mockRestore();
   });
+
+  it("preserves the confirm button while its loading state changes", () => {
+    const { rerender } = render(
+      <Modal open confirmLoading={false} onCancel={() => undefined} onOk={() => undefined}>
+        내용
+      </Modal>,
+    );
+    const button = screen.getByText("확인").closest("button");
+
+    rerender(
+      <Modal open confirmLoading onCancel={() => undefined} onOk={() => undefined}>
+        내용
+      </Modal>,
+    );
+
+    expect(screen.getByText("확인").closest("button")).toBe(button);
+    expect(button?.querySelector("svg")).toBeInTheDocument();
+  });
+
+  it("uses the shared overlay close button", () => {
+    render(
+      <Modal open title="제목" onCancel={() => undefined}>
+        내용
+      </Modal>,
+    );
+
+    expect(document.querySelector("[data-overlay-close-button]")).toHaveClass(
+      "size-7",
+      "text-[#666]",
+    );
+  });
+
+  it("preserves newlines in its title and text content", () => {
+    render(
+      <Modal open title={"제목 첫 줄\n제목 둘째 줄"} onCancel={() => undefined}>
+        {"내용 첫 줄\n내용 둘째 줄"}
+      </Modal>,
+    );
+
+    expect(screen.getByText(/제목 첫 줄\s+제목 둘째 줄/)).toHaveClass("whitespace-pre-line");
+    expect(screen.getByText(/내용 첫 줄\s+내용 둘째 줄/)).toHaveClass("whitespace-pre-line");
+  });
+
+  it("aligns a static status icon with the first title line", async () => {
+    render(
+      <button
+        onClick={() =>
+          Modal.info({
+            title: "제목 첫 줄\n제목 둘째 줄",
+            content: "내용 첫 줄\n내용 둘째 줄",
+          })
+        }
+      >
+        열기
+      </button>,
+    );
+
+    await userEvent.click(screen.getByText("열기"));
+
+    const title = await screen.findByText(/제목 첫 줄\s+제목 둘째 줄/);
+    expect(title.parentElement?.parentElement?.firstElementChild).toHaveClass("-mt-0.5");
+    expect(title).toHaveClass("whitespace-pre-line");
+    expect(screen.getByText(/내용 첫 줄\s+내용 둘째 줄/)).toHaveClass("whitespace-pre-line");
+  });
 });

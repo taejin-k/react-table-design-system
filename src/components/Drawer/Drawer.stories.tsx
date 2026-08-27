@@ -6,7 +6,7 @@ import { withStoryImports } from "../../storybook/story-source";
 import { TypeTokens } from "../../storybook/type-tokens";
 import { Button } from "../Button";
 import { Drawer } from "./Drawer";
-import type { DrawerPlacementType, DrawerSizeType } from "./Drawer.types";
+import type { DrawerPlacementType, DrawerProps, DrawerSizeType } from "./Drawer.types";
 
 const drawerPlacements: DrawerPlacementType[] = ["top", "right", "bottom", "left"];
 const drawerSizes = ["default", "large", "number", "string"] satisfies readonly DrawerSizeType[];
@@ -19,8 +19,22 @@ const meta = {
   title: "Components/Drawer",
   component: Drawer,
   tags: ["autodocs"],
+  argTypes: {
+    title: { name: "제목", control: "text" },
+    placement: { name: "위치", control: "select", options: drawerPlacements },
+    size: { name: "크기", control: "select", options: ["default", "large"] },
+    closable: { name: "닫기 버튼", control: "boolean" },
+    keyboard: { name: "Escape 닫기", control: "boolean" },
+    mask: { name: "배경 마스크", control: "boolean" },
+    scrollLock: { name: "스크롤 잠금", control: "boolean" },
+    loading: { name: "로딩", control: "boolean" },
+    open: { control: false, table: { disable: true } },
+    children: { control: false, table: { disable: true } },
+    className: { control: false, table: { disable: true } },
+    onClose: { control: false, table: { disable: true } },
+  },
   parameters: {
-    controls: { disable: true },
+    controls: { disable: false },
     docs: {
       description: {
         component:
@@ -81,6 +95,15 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Basic: Story = {
+  args: {
+    title: "구성원 정보",
+    placement: "right",
+    size: "default",
+    closable: true,
+    keyboard: true,
+    mask: true,
+    scrollLock: true,
+  },
   parameters: {
     ...storyDescription("components-drawer--basic"),
     docs: {
@@ -101,15 +124,15 @@ export const Basic: Story = {
       },
     },
   },
-  render: () => <BasicDrawerExample />,
+  render: (args) => <BasicDrawerExample {...args} />,
 };
 
-function BasicDrawerExample() {
+function BasicDrawerExample(args: Partial<DrawerProps>) {
   const [open, setOpen] = useState(false);
   return (
     <>
       <Button onClick={() => setOpen(true)}>Drawer 열기</Button>
-      <Drawer open={open} title="구성원 정보" onClose={() => setOpen(false)}>
+      <Drawer {...args} open={open} onClose={() => setOpen(false)}>
         Drawer 본문이에요.
       </Drawer>
     </>
@@ -117,6 +140,7 @@ function BasicDrawerExample() {
 }
 
 export const Placements: Story = {
+  args: { size: "default", closable: true, keyboard: true, mask: true, scrollLock: true },
   parameters: {
     ...storyDescription("components-drawer--placements"),
     docs: {
@@ -156,10 +180,10 @@ function DrawerPlacements() {
       },
     },
   },
-  render: () => <PlacementExample />,
+  render: (args) => <PlacementExample {...args} />,
 };
 
-function PlacementExample() {
+function PlacementExample(args: Partial<DrawerProps>) {
   const [open, setOpen] = useState(false);
   const [placement, setPlacement] = useState<DrawerPlacementType>("right");
 
@@ -177,7 +201,13 @@ function PlacementExample() {
           </Button>
         ))}
       </div>
-      <Drawer open={open} placement={placement} title={placement} onClose={() => setOpen(false)}>
+      <Drawer
+        {...args}
+        open={open}
+        placement={placement}
+        title={placement}
+        onClose={() => setOpen(false)}
+      >
         선택한 방향에서 열려요.
       </Drawer>
     </>
@@ -185,6 +215,7 @@ function PlacementExample() {
 }
 
 export const SizeAndResizable: Story = {
+  args: { placement: "right", closable: true, keyboard: true, mask: true, scrollLock: true },
   parameters: {
     ...storyDescription("components-drawer--size-resizable"),
     docs: {
@@ -211,15 +242,16 @@ export const SizeAndResizable: Story = {
       },
     },
   },
-  render: () => <ResizableExample />,
+  render: (args) => <ResizableExample {...args} />,
 };
 
-function ResizableExample() {
+function ResizableExample(args: Partial<DrawerProps>) {
   const [open, setOpen] = useState(false);
   return (
     <>
       <Button onClick={() => setOpen(true)}>크기 조절 Drawer</Button>
       <Drawer
+        {...args}
         open={open}
         title="크기 조절"
         size="large"
@@ -233,6 +265,14 @@ function ResizableExample() {
 }
 
 export const ExtraFooterAndLoading: Story = {
+  args: {
+    placement: "right",
+    size: "default",
+    closable: true,
+    keyboard: true,
+    mask: true,
+    scrollLock: true,
+  },
   parameters: {
     ...storyDescription("components-drawer--extra-footer-loading"),
     docs: {
@@ -262,15 +302,16 @@ export const ExtraFooterAndLoading: Story = {
       },
     },
   },
-  render: () => <LayoutExample />,
+  render: (args) => <LayoutExample {...args} />,
 };
 
-function LayoutExample() {
+function LayoutExample(args: Partial<DrawerProps>) {
   const [open, setOpen] = useState(false);
   return (
     <>
       <Button onClick={() => setOpen(true)}>작업 Drawer</Button>
       <Drawer
+        {...args}
         open={open}
         title="상세 정보"
         loading
@@ -287,6 +328,14 @@ function LayoutExample() {
 }
 
 export const Nested: Story = {
+  args: {
+    placement: "right",
+    size: "default",
+    closable: true,
+    keyboard: true,
+    mask: true,
+    scrollLock: true,
+  },
   parameters: {
     ...storyDescription("components-drawer--nested"),
     docs: {
@@ -311,18 +360,18 @@ export const Nested: Story = {
       },
     },
   },
-  render: () => <NestedExample />,
+  render: (args) => <NestedExample {...args} />,
 };
 
-function NestedExample() {
+function NestedExample(args: Partial<DrawerProps>) {
   const [open, setOpen] = useState(false);
   const [childOpen, setChildOpen] = useState(false);
   return (
     <>
       <Button onClick={() => setOpen(true)}>부모 Drawer</Button>
-      <Drawer open={open} title="부모" onClose={() => setOpen(false)}>
+      <Drawer {...args} open={open} title="부모" onClose={() => setOpen(false)}>
         <Button onClick={() => setChildOpen(true)}>자식 Drawer</Button>
-        <Drawer open={childOpen} title="자식" onClose={() => setChildOpen(false)}>
+        <Drawer {...args} open={childOpen} title="자식" onClose={() => setChildOpen(false)}>
           중첩된 내용이에요.
         </Drawer>
       </Drawer>

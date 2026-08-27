@@ -38,11 +38,15 @@ function AvatarBase({
 }: AvatarProps) {
   const pixelSize = resolveSize(size);
   const [imageFailed, setImageFailed] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
   const [textScale, setTextScale] = useState(1);
   const rootRef = useRef<HTMLSpanElement>(null);
   const textRef = useRef<HTMLSpanElement>(null);
 
-  useEffect(() => setImageFailed(false), [src]);
+  useEffect(() => {
+    setImageFailed(false);
+    setImageLoaded(false);
+  }, [src]);
 
   useLayoutEffect(() => {
     const text = textRef.current;
@@ -63,44 +67,64 @@ function AvatarBase({
       ? (Array.from(String(children))[0] ?? "")
       : children;
   const fallbackIconSize = { md: 18, lg: 24 }[size];
+  const fallbackContent = icon ? (
+    <span className="inline-flex" style={{ fontSize: pixelSize * 0.56 }}>
+      {icon}
+    </span>
+  ) : displayedChildren !== undefined && displayedChildren !== null ? (
+    <span
+      ref={textRef}
+      className="absolute left-1/2 whitespace-nowrap"
+      style={{ transform: `translateX(-50%) scale(${textScale})` }}
+    >
+      {displayedChildren}
+    </span>
+  ) : (
+    <Icon icon="user-outlined" size={imageSource ? fallbackIconSize : pixelSize * 0.56} />
+  );
   const content =
     imageSource && !imageFailed ? (
-      preview ? (
-        <Image
-          {...imageProps}
-          src={imageSource}
-          alt={alt ?? imageElement?.props.alt ?? ""}
-          width="100%"
-          height="100%"
-          preview
-          className="size-full [&>span]:hidden"
-          onError={() => setImageFailed(true)}
-        />
-      ) : (
-        <img
-          {...imageProps}
-          src={imageSource}
-          alt={alt ?? imageElement?.props.alt ?? ""}
-          className="size-full object-cover"
-          onError={() => setImageFailed(true)}
-        />
-      )
+      <>
+        {fallbackContent}
+        {preview ? (
+          <Image
+            {...imageProps}
+            src={imageSource}
+            alt={alt ?? imageElement?.props.alt ?? ""}
+            width="100%"
+            height="100%"
+            preview
+            className={twMerge(
+              "absolute inset-0 size-full [&>img]:transition-opacity [&>img]:duration-200 [&>span]:hidden",
+              imageLoaded ? "[&>img]:opacity-100" : "[&>img]:opacity-0",
+            )}
+            onLoad={(event) => {
+              setImageLoaded(true);
+              imageProps.onLoad?.(event);
+            }}
+            onError={() => setImageFailed(true)}
+          />
+        ) : (
+          <img
+            {...imageProps}
+            src={imageSource}
+            alt={alt ?? imageElement?.props.alt ?? ""}
+            className={twMerge(
+              "absolute inset-0 size-full object-cover transition-opacity duration-200",
+              imageLoaded ? "opacity-100" : "opacity-0",
+            )}
+            onLoad={(event) => {
+              setImageLoaded(true);
+              imageProps.onLoad?.(event);
+            }}
+            onError={() => setImageFailed(true)}
+          />
+        )}
+      </>
     ) : isValidElement(src) && !imageFailed ? (
       src
-    ) : icon ? (
-      <span className="inline-flex" style={{ fontSize: pixelSize * 0.56 }}>
-        {icon}
-      </span>
-    ) : displayedChildren !== undefined && displayedChildren !== null ? (
-      <span
-        ref={textRef}
-        className="absolute left-1/2 whitespace-nowrap"
-        style={{ transform: `translateX(-50%) scale(${textScale})` }}
-      >
-        {displayedChildren}
-      </span>
     ) : (
-      <Icon icon="user-outlined" size={imageFailed ? fallbackIconSize : pixelSize * 0.56} />
+      fallbackContent
     );
 
   const avatar = (

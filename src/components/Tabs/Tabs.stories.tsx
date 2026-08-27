@@ -5,7 +5,7 @@ import { storyDescriptions } from "../../storybook/story-descriptions";
 import { withStoryImports } from "../../storybook/story-source";
 import { TypeTokens } from "../../storybook/type-tokens";
 import { Tabs } from "./Tabs";
-import type { TabsPlacementType, TabsSizeType, TabsType } from "./Tabs.types";
+import type { TabsPlacementType, TabsProps, TabsSizeType, TabsType } from "./Tabs.types";
 
 const tabsTypes: TabsType[] = ["line", "card", "editable-card"];
 const tabsSizes: TabsSizeType[] = ["large", "medium", "small"];
@@ -25,7 +25,7 @@ const storyDescription = (id: string) => ({
   docs: { description: { story: storyDescriptions[id] } },
 });
 
-function EditableTabsExample({ size }: { size: TabsSizeType }) {
+function EditableTabsExample({ size, ...args }: Partial<TabsProps> & { size: TabsSizeType }) {
   const [editableItems, setEditableItems] = useState(items);
   const [nextTab, setNextTab] = useState(1);
 
@@ -43,15 +43,31 @@ function EditableTabsExample({ size }: { size: TabsSizeType }) {
     setEditableItems((current) => current.filter((item) => item.key !== targetKey));
   };
 
-  return <Tabs type="editable-card" size={size} items={editableItems} onEdit={handleEdit} />;
+  return (
+    <Tabs {...args} type="editable-card" size={size} items={editableItems} onEdit={handleEdit} />
+  );
 }
 
 const meta = {
   title: "Components/Tabs",
   component: Tabs,
   tags: ["autodocs"],
+  argTypes: {
+    type: { name: "종류", control: "select", options: tabsTypes },
+    size: { name: "크기", control: "select", options: tabsSizes },
+    tabPlacement: { name: "위치", control: "select", options: tabsPlacements },
+    animated: { name: "애니메이션", control: "boolean" },
+    centered: { name: "가운데 정렬", control: "boolean" },
+    tabBarGutter: { name: "탭 간격", control: "number" },
+    hideAdd: { name: "추가 버튼 숨김", control: "boolean" },
+    items: { control: false, table: { disable: true } },
+    activeKey: { control: false, table: { disable: true } },
+    className: { control: false, table: { disable: true } },
+    onChange: { control: false, table: { disable: true } },
+    onEdit: { control: false, table: { disable: true } },
+  },
   parameters: {
-    controls: { disable: true },
+    controls: { disable: false },
     docs: {
       description: {
         component:
@@ -122,6 +138,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Basic: Story = {
+  args: { type: "line", tabPlacement: "top", animated: true, centered: false, tabBarGutter: 0 },
   parameters: {
     ...storyDescription("components-tabs--basic"),
     docs: {
@@ -138,11 +155,11 @@ export const Basic: Story = {
       },
     },
   },
-  render: () => (
+  render: (args) => (
     <div className="grid gap-3">
-      <Tabs size="small" defaultActiveKey="overview" items={items} />
-      <Tabs size="medium" defaultActiveKey="overview" items={items} />
-      <Tabs size="large" defaultActiveKey="overview" items={items} />
+      <Tabs {...args} size="small" defaultActiveKey="overview" items={items} />
+      <Tabs {...args} size="medium" defaultActiveKey="overview" items={items} />
+      <Tabs {...args} size="large" defaultActiveKey="overview" items={items} />
     </div>
   ),
 };
@@ -160,6 +177,7 @@ export const Card: Story = {
   },
 };
 export const Editable: Story = {
+  args: { tabPlacement: "top", animated: true, centered: false, tabBarGutter: 0, hideAdd: false },
   parameters: {
     ...storyDescription("components-tabs--editable"),
     docs: {
@@ -197,11 +215,11 @@ function EditableTabsExample({ size }) {
       },
     },
   },
-  render: () => (
+  render: (args) => (
     <div className="grid gap-3">
-      <EditableTabsExample size="small" />
-      <EditableTabsExample size="medium" />
-      <EditableTabsExample size="large" />
+      <EditableTabsExample {...args} size="small" />
+      <EditableTabsExample {...args} size="medium" />
+      <EditableTabsExample {...args} size="large" />
     </div>
   ),
 };

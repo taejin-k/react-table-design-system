@@ -24,8 +24,19 @@ const meta = {
   title: "Components/Calendar",
   component: Calendar,
   tags: ["autodocs"],
+  argTypes: {
+    mode: { name: "패널", control: "select", options: calendarModes },
+    fullscreen: { name: "전체 너비", control: "boolean" },
+    value: { control: false, table: { disable: true } },
+    defaultValue: { control: false, table: { disable: true } },
+    validRange: { control: false, table: { disable: true } },
+    disabledDate: { control: false, table: { disable: true } },
+    cellRender: { control: false, table: { disable: true } },
+    className: { control: false, table: { disable: true } },
+    onChange: { control: false, table: { disable: true } },
+  },
   parameters: {
-    controls: { disable: true },
+    controls: { disable: false },
     docs: {
       description: {
         component:
@@ -115,6 +126,7 @@ export const Year: Story = {
 };
 
 export const SelectionRulesAndCell: Story = {
+  args: { mode: "month", fullscreen: true },
   parameters: {
     ...storyDescription("components-calendar--selection-rules-and-cell"),
     docs: {
@@ -146,8 +158,9 @@ const dateKey = (date) =>
       },
     },
   },
-  render: () => (
+  render: (args) => (
     <Calendar
+      {...args}
       defaultValue={new Date(2026, 7, 12)}
       validRange={[new Date(2026, 7, 5), new Date(2026, 7, 25)]}
       disabledDate={(date) => date.getDay() === 0 || date.getDay() === 6}

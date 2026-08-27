@@ -246,6 +246,8 @@ export const storyDescriptions: Record<string, string> = {
   "components-modal--footer": "footer의 콘텐츠와 기본 버튼을 함께 구성해요.",
   "components-modal--static-methods":
     "정적 메서드를 호출해 안내, 성공, 오류와 확인 용도의 Modal을 바로 열 수 있어요.",
+  "components-modal--multiline":
+    "여러 줄 제목과 내용에서 상태 아이콘이 첫 번째 줄 중앙에 맞춰지는 모습을 확인해요.",
   "components-modal--position-width":
     "Modal의 화면 내 세로 위치와 px·문자열 단위 가로 길이를 설정할 수 있어요.",
 
@@ -262,12 +264,16 @@ export const storyDescriptions: Record<string, string> = {
   "components-message--basic": "설정한 내용으로 기본 정보 Message를 열어보세요.",
   "components-message--types":
     "정보, 성공, 경고, 오류와 로딩 상태에 맞는 전역 메시지를 화면에 표시해요.",
+  "components-message--multiline":
+    "여러 줄 내용에서 상태 아이콘이 첫 번째 줄 중앙에 맞춰지는 모습을 확인해요.",
   "components-message--duration": "메시지가 자동으로 닫히기까지의 시간을 비교해요.",
   "components-message--update": "같은 key의 로딩 메시지를 완료 메시지로 갱신해요.",
   "components-message--promise": "메시지가 닫힌 뒤 다음 메시지를 표시해요.",
 
   "components-notification--basic": "제목과 설명을 설정해 기본 Notification을 열어보세요.",
   "components-notification--types": "성공, 오류, 정보와 경고 상태의 알림을 비교해요.",
+  "components-notification--multiline":
+    "여러 줄 제목과 설명에서 상태 아이콘이 첫 번째 줄 중앙에 맞춰지는 모습을 확인해요.",
   "components-notification--actions": "알림 아래에 작업 버튼을 추가해 후속 동작을 실행해요.",
   "components-notification--placements":
     "화면의 상단과 하단을 기준으로 여섯 가지 위치에 알림을 표시할 수 있어요.",

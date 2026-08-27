@@ -24,7 +24,7 @@ const meta = {
     style: { control: false, table: { disable: true } },
   },
   parameters: {
-    controls: { disable: true },
+    controls: { disable: false },
     docs: {
       description: {
         component: "콘텐츠의 상태를 작은 점과 텍스트로 전달해요.",
@@ -81,9 +81,10 @@ export const Basic: Story = {
 };
 
 export const Statuses: Story = {
-  args: { status: "success" },
+  args: { status: "success", process: false },
   parameters: {
     ...storyDescription("components-badge--statuses"),
+    controls: { disable: false, include: ["퍼짐 애니메이션"] },
     docs: {
       ...storyDescription("components-badge--statuses").docs,
       source: {
@@ -94,21 +95,22 @@ export const Statuses: Story = {
       },
     },
   },
-  render: () => (
+  render: (args) => (
     <div className="flex gap-5">
-      <Badge status="success" text="정상" />
-      <Badge status="processing" text="처리 중" />
-      <Badge status="default" text="기본" />
-      <Badge status="error" text="오류" />
-      <Badge status="warning" text="주의" />
+      <Badge status="success" process={args.process} text="정상" />
+      <Badge status="processing" process={args.process} text="처리 중" />
+      <Badge status="default" process={args.process} text="기본" />
+      <Badge status="error" process={args.process} text="오류" />
+      <Badge status="warning" process={args.process} text="주의" />
     </div>
   ),
 };
 
 export const Process: Story = {
-  args: { status: "success" },
+  args: { status: "success", process: true },
   parameters: {
     ...storyDescription("components-badge--process"),
+    controls: { disable: false, include: ["퍼짐 애니메이션"] },
     docs: {
       ...storyDescription("components-badge--process").docs,
       source: {
@@ -119,13 +121,13 @@ export const Process: Story = {
       },
     },
   },
-  render: () => (
+  render: (args) => (
     <div className="flex gap-5">
-      <Badge status="success" process text="정상" />
-      <Badge status="processing" process text="처리 중" />
-      <Badge status="default" process text="기본" />
-      <Badge status="error" process text="오류" />
-      <Badge status="warning" process text="주의" />
+      <Badge status="success" process={args.process} text="정상" />
+      <Badge status="processing" process={args.process} text="처리 중" />
+      <Badge status="default" process={args.process} text="기본" />
+      <Badge status="error" process={args.process} text="오류" />
+      <Badge status="warning" process={args.process} text="주의" />
     </div>
   ),
 };

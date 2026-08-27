@@ -151,6 +151,39 @@ describe("notification", () => {
     expect(icon).toHaveAttribute("height", "28");
   });
 
+  it("uses the shared overlay close button", async () => {
+    act(() =>
+      notification.info({
+        title: "안내",
+        description: "내용",
+        duration: 0,
+      }),
+    );
+
+    await waitFor(() =>
+      expect(document.querySelector("[data-overlay-close-button]")).toHaveClass(
+        "size-7",
+        "text-[#666]",
+      ),
+    );
+  });
+
+  it("preserves newlines in its title and description", async () => {
+    act(() =>
+      notification.info({
+        title: "제목 첫 줄\n제목 둘째 줄",
+        description: "내용 첫 줄\n내용 둘째 줄",
+        duration: 0,
+      }),
+    );
+
+    expect(await screen.findByText(/제목 첫 줄\s+제목 둘째 줄/)).toHaveClass("whitespace-pre-line");
+    expect(screen.getByText(/내용 첫 줄\s+내용 둘째 줄/)).toHaveClass("whitespace-pre-line");
+    expect(document.querySelector('[data-icon="info-circle-filled"]')?.parentElement).toHaveClass(
+      "-mt-0.5",
+    );
+  });
+
   it("keeps the newest rapidly opened card fully visible in a collapsed stack", async () => {
     render(
       <button

@@ -15,4 +15,10 @@ describe("ErrorMessage", () => {
     expect(container.firstElementChild).toHaveClass("custom-error");
     expect(screen.getByText("입력값을 확인해 주세요.")).toHaveAttribute("id", "field-error");
   });
+
+  it("preserves newlines in its message", () => {
+    render(<ErrorMessage errorMessage={"첫 오류\n둘째 오류"} />);
+
+    expect(screen.getByText(/첫 오류\s+둘째 오류/)).toHaveClass("whitespace-pre-line");
+  });
 });

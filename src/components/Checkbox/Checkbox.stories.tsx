@@ -25,7 +25,7 @@ const meta = {
     onChange: { control: false, table: { disable: true } },
   },
   parameters: {
-    controls: { disable: true },
+    controls: { disable: false },
     docs: {
       description: {
         component:
@@ -61,9 +61,10 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const States: Story = {
+  args: { label: "기본", checked: false, partiallyChecked: false },
   parameters: {
     ...storyDescription("components-checkbox--states"),
-    controls: { disable: true },
+    controls: { disable: false, include: ["레이블", "선택", "일부 선택"] },
     docs: {
       ...storyDescription("components-checkbox--states").docs,
       source: {
@@ -86,7 +87,7 @@ export const States: Story = {
       },
     },
   },
-  render: () => <CheckboxStatesStory />,
+  render: (args) => <CheckboxStatesStory {...args} />,
 };
 
 export const Label: Story = {
@@ -125,14 +126,16 @@ export const Label: Story = {
   render: (args) => <CheckboxLabelsStory {...args} />,
 };
 
-function CheckboxStatesStory() {
-  const [checked, setChecked] = useState(false);
+function CheckboxStatesStory(args: CheckboxProps) {
+  const [checked, setChecked] = useState(Boolean(args.checked));
+
+  useEffect(() => setChecked(Boolean(args.checked)), [args.checked]);
 
   return (
     <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
       <Checkbox
+        {...args}
         checked={checked}
-        label="기본"
         onChange={(event) => setChecked(event.target.checked)}
       />
       <Checkbox error label="오류" />

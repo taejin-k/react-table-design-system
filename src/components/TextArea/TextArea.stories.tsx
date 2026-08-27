@@ -57,7 +57,7 @@ const meta = {
     onEnter: { control: false },
   },
   parameters: {
-    controls: { disable: true },
+    controls: { disable: false },
     docs: {
       description: {
         component:

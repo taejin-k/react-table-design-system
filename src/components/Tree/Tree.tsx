@@ -431,7 +431,7 @@ export function Tree({
               ) : null}
               <span
                 className={twMerge(
-                  "flex min-h-6 min-w-0 cursor-pointer items-center rounded-md px-1 leading-6 transition-colors hover:bg-[#f5f5f5]",
+                  "flex min-h-6 min-w-0 cursor-pointer items-center rounded-md px-1 leading-6 whitespace-pre-line transition-colors hover:bg-[#f5f5f5]",
                   blockNode && "flex-1",
                   isSelected && "bg-[#e6f4ff] text-[#0062df] hover:bg-[#e6f4ff]",
                   dragOverPosition === 0 && "bg-[#e6f4ff] outline-1 outline-[#0062df]",

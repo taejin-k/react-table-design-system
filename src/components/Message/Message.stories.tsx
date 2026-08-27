@@ -12,8 +12,11 @@ const messageStatuses: MessageStatusType[] = ["success", "error", "info", "warni
 
 interface MessageStoryArgs {
   content: string;
+  successContent: string;
   type: MessageStatusType;
   duration: number;
+  secondaryDuration: number;
+  updateDelay: number;
   pauseOnHover: boolean;
 }
 
@@ -26,12 +29,18 @@ const meta = {
   tags: ["autodocs"],
   argTypes: {
     content: { name: "내용", control: "text" },
+    successContent: { name: "완료 내용", control: "text" },
     type: { name: "상태", control: "select", options: messageStatuses },
     duration: { name: "표시 시간", control: { type: "number", min: 0, step: 0.5 } },
+    secondaryDuration: {
+      name: "두 번째 표시 시간",
+      control: { type: "number", min: 0, step: 0.5 },
+    },
+    updateDelay: { name: "갱신 지연", control: { type: "number", min: 0, step: 100 } },
     pauseOnHover: { name: "Hover 중 정지", control: "boolean" },
   },
   parameters: {
-    controls: { disable: true },
+    controls: { disable: false },
     docs: {
       description: {
         component: "작업 결과나 짧은 안내를 화면 위에 표시해요.",
@@ -93,7 +102,7 @@ export const Basic: Story = {
     ...storyDescription("components-message--basic"),
     controls: {
       disable: false,
-      include: ["내용", "상태", "표시 시간", "Hover 중 정지"],
+      include: ["content", "type", "duration", "pauseOnHover"],
     },
     docs: {
       ...storyDescription("components-message--basic").docs,
@@ -110,8 +119,10 @@ export const Basic: Story = {
 };
 
 export const Types: Story = {
+  args: { content: "상태 메시지예요.", duration: 3, pauseOnHover: true },
   parameters: {
     ...storyDescription("components-message--types"),
+    controls: { disable: false, include: ["content", "duration", "pauseOnHover"] },
     docs: {
       ...storyDescription("components-message--types").docs,
       source: {
@@ -141,22 +152,54 @@ export const Types: Story = {
       },
     },
   },
-  render: () => (
+  render: (args) => (
     <div className="flex flex-wrap gap-2">
-      <Button onClick={() => message.success({ content: "저장했어요." })}>Success</Button>
-      <Button onClick={() => message.error({ content: "저장하지 못했어요." })}>Error</Button>
-      <Button onClick={() => message.info({ content: "새 소식이 있어요." })}>Info</Button>
-      <Button onClick={() => message.warning({ content: "변경사항을 확인해 주세요." })}>
-        Warning
-      </Button>
-      <Button onClick={() => message.loading({ content: "불러오는 중이에요." })}>Loading</Button>
+      <Button onClick={() => message.success(args)}>Success</Button>
+      <Button onClick={() => message.error(args)}>Error</Button>
+      <Button onClick={() => message.info(args)}>Info</Button>
+      <Button onClick={() => message.warning(args)}>Warning</Button>
+      <Button onClick={() => message.loading(args)}>Loading</Button>
     </div>
   ),
 };
 
+export const MultilineIconAlignment: Story = {
+  args: {
+    content: "첫 번째 줄의 중앙에 아이콘을 맞춰요.\n두 번째 줄도 자연스럽게 이어져요.",
+    duration: 0,
+  },
+  parameters: {
+    ...storyDescription("components-message--multiline"),
+    controls: { disable: false, include: ["content"] },
+    docs: {
+      ...storyDescription("components-message--multiline").docs,
+      source: {
+        code: withStoryImports(`<Button
+  onClick={() =>
+    message.info({
+      content: '첫 번째 줄의 중앙에 아이콘을 맞춰요.\\n두 번째 줄도 자연스럽게 이어져요.',
+      duration: 0,
+    })
+  }
+>
+  여러 줄 Message
+</Button>`),
+      },
+    },
+  },
+  render: ({ content }) => (
+    <Button onClick={() => message.info({ content, duration: 0 })}>여러 줄 Message</Button>
+  ),
+};
+
 export const Duration: Story = {
+  args: { content: "표시 시간을 확인해요.", duration: 1, secondaryDuration: 5, pauseOnHover: true },
   parameters: {
     ...storyDescription("components-message--duration"),
+    controls: {
+      disable: false,
+      include: ["content", "duration", "secondaryDuration", "pauseOnHover"],
+    },
     docs: {
       ...storyDescription("components-message--duration").docs,
       source: {
@@ -175,21 +218,39 @@ export const Duration: Story = {
       },
     },
   },
-  render: () => (
+  render: (args) => (
     <div className="flex gap-2">
-      <Button onClick={() => message.info({ content: "1초 동안 표시해요.", duration: 1 })}>
-        1초
+      <Button
+        onClick={() =>
+          message.info({
+            content: args.content,
+            duration: args.duration,
+            pauseOnHover: args.pauseOnHover,
+          })
+        }
+      >
+        {args.duration}초
       </Button>
-      <Button onClick={() => message.info({ content: "5초 동안 표시해요.", duration: 5 })}>
-        5초
+      <Button
+        onClick={() =>
+          message.info({
+            content: args.content,
+            duration: args.secondaryDuration,
+            pauseOnHover: args.pauseOnHover,
+          })
+        }
+      >
+        {args.secondaryDuration}초
       </Button>
     </div>
   ),
 };
 
 export const Update: Story = {
+  args: { content: "저장 중이에요.", successContent: "저장했어요.", updateDelay: 1200 },
   parameters: {
     ...storyDescription("components-message--update"),
+    controls: { disable: false, include: ["content", "successContent", "updateDelay"] },
     docs: {
       ...storyDescription("components-message--update").docs,
       source: {
@@ -218,10 +279,10 @@ export const Update: Story = {
       },
     },
   },
-  render: () => <MessageUpdateExample />,
+  render: (args) => <MessageUpdateExample {...args} />,
 };
 
-function MessageUpdateExample() {
+function MessageUpdateExample({ content, successContent, updateDelay }: MessageStoryArgs) {
   const timerRef = useRef<number | undefined>(undefined);
 
   useEffect(
@@ -233,11 +294,11 @@ function MessageUpdateExample() {
   );
 
   const update = () => {
-    message.loading({ key: "save", content: "저장 중이에요." });
+    message.loading({ key: "save", content });
     window.clearTimeout(timerRef.current);
     timerRef.current = window.setTimeout(
-      () => message.success({ key: "save", content: "저장했어요." }),
-      1200,
+      () => message.success({ key: "save", content: successContent }),
+      updateDelay,
     );
   };
 
@@ -245,8 +306,14 @@ function MessageUpdateExample() {
 }
 
 export const Promise: Story = {
+  args: {
+    content: "첫 메시지",
+    successContent: "첫 메시지가 닫혔어요.",
+    duration: 1,
+  },
   parameters: {
     ...storyDescription("components-message--promise"),
+    controls: { disable: false, include: ["content", "successContent", "duration"] },
     docs: {
       ...storyDescription("components-message--promise").docs,
       source: {
@@ -261,13 +328,13 @@ export const Promise: Story = {
       },
     },
   },
-  render: () => <MessagePromiseExample />,
+  render: (args) => <MessagePromiseExample {...args} />,
 };
 
-function MessagePromiseExample() {
+function MessagePromiseExample({ content, successContent, duration }: MessageStoryArgs) {
   const sequence = async () => {
-    await message.success({ content: "첫 메시지", duration: 1 });
-    message.info({ content: "첫 메시지가 닫혔어요." });
+    await message.success({ content, duration });
+    message.info({ content: successContent });
   };
 
   return <Button onClick={sequence}>순서대로</Button>;

@@ -21,6 +21,15 @@ describe("Drawer", () => {
     await waitFor(() => expect(document.querySelector("[data-drawer-root]")).not.toBeVisible());
   });
 
+  it("uses the shared overlay close button", () => {
+    render(<DrawerExample />);
+
+    expect(document.querySelector("[data-overlay-close-button]")).toHaveClass(
+      "size-7",
+      "text-[#666]",
+    );
+  });
+
   it("closes when the enabled mask is clicked", async () => {
     render(<DrawerExample />);
 
@@ -63,5 +72,16 @@ describe("Drawer", () => {
 
     expect(document.querySelector("[data-drawer-root]")).toBeVisible();
     expect(document.querySelector("[data-drawer-motion]")).toBeVisible();
+  });
+
+  it("preserves newlines in its title and text content", () => {
+    render(
+      <Drawer open title={"제목 첫 줄\n제목 둘째 줄"} onClose={() => undefined}>
+        {"내용 첫 줄\n내용 둘째 줄"}
+      </Drawer>,
+    );
+
+    expect(screen.getByText(/제목 첫 줄\s+제목 둘째 줄/)).toHaveClass("whitespace-pre-line");
+    expect(screen.getByText(/내용 첫 줄\s+내용 둘째 줄/)).toHaveClass("whitespace-pre-line");
   });
 });

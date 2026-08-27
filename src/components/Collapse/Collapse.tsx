@@ -43,7 +43,7 @@ export function Collapse({
     onChange?.(next);
   };
   const headerSize =
-    size === "lg" ? "h-[46px] px-6" : size === "sm" ? "h-[30px] px-3" : "h-[38px] px-4";
+    size === "lg" ? "min-h-[46px] px-6" : size === "sm" ? "min-h-[30px] px-3" : "min-h-[38px] px-4";
   const bodyPadding = size === "lg" ? "px-6 py-4" : size === "sm" ? "px-3 py-2" : "px-4 py-3";
   return (
     <div
@@ -111,7 +111,7 @@ export function Collapse({
                   {arrow}
                 </span>
               ) : null}
-              <span className="min-w-0 flex-1">{item.label}</span>
+              <span className="min-w-0 flex-1 whitespace-pre-line">{item.label}</span>
               {item.extra ? (
                 <span onClick={(event) => event.stopPropagation()}>{item.extra}</span>
               ) : null}
@@ -136,7 +136,13 @@ export function Collapse({
             >
               <div className="overflow-hidden">
                 {open || visitedKeys.current.has(item.key) ? (
-                  <div className={twMerge("bg-white", ghost && "bg-transparent", bodyPadding)}>
+                  <div
+                    className={twMerge(
+                      "bg-white whitespace-pre-line",
+                      ghost && "bg-transparent",
+                      bodyPadding,
+                    )}
+                  >
                     {item.children}
                   </div>
                 ) : null}

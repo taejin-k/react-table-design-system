@@ -16,7 +16,7 @@ describe("Button", () => {
     const button = screen.getByRole("button", { name: "저장" });
     expect(button).toHaveAttribute("type", "button");
     expect(button).toHaveAttribute("name", "save");
-    expect(button).toHaveClass("bg-[#0062df]", "h-[30px]");
+    expect(button).toHaveClass("bg-[#0062df]", "min-h-[30px]");
     expect(ref.current).toBe(button);
   });
 
@@ -115,7 +115,7 @@ describe("Button", () => {
     render(<Button iconOnly loading prefixIcon={<span />} />);
 
     const button = screen.getByRole("button");
-    expect(button).toHaveClass("h-[30px]", "w-[30px]", "px-0");
+    expect(button).toHaveClass("min-h-[30px]", "w-[30px]", "px-0");
     expect(button.style.width).toBe("");
   });
 
@@ -126,7 +126,7 @@ describe("Button", () => {
       </Button>,
     );
 
-    expect(screen.getByRole("button", { name: "Large" })).toHaveClass("h-10", "rounded-[40px]");
+    expect(screen.getByRole("button", { name: "Large" })).toHaveClass("min-h-10", "rounded-[40px]");
 
     rerender(
       <Button rounded size="md">
@@ -134,7 +134,7 @@ describe("Button", () => {
       </Button>,
     );
     expect(screen.getByRole("button", { name: "Medium" })).toHaveClass(
-      "h-[30px]",
+      "min-h-[30px]",
       "rounded-[30px]",
     );
 
@@ -143,7 +143,7 @@ describe("Button", () => {
         Small
       </Button>,
     );
-    expect(screen.getByRole("button", { name: "Small" })).toHaveClass("h-5", "rounded-[20px]");
+    expect(screen.getByRole("button", { name: "Small" })).toHaveClass("min-h-5", "rounded-[20px]");
   });
 
   it("replaces the expected icon slot while loading and blocks clicks", async () => {
@@ -178,5 +178,11 @@ describe("Button", () => {
     expect(screen.getByRole("button", { name: "저장" }).querySelector("svg")).toHaveClass(
       "animate-spin",
     );
+  });
+
+  it("preserves newlines in text children", () => {
+    render(<Button>{"첫 줄\n둘째 줄"}</Button>);
+
+    expect(screen.getByText(/첫 줄\s+둘째 줄/)).toHaveClass("whitespace-pre-line");
   });
 });

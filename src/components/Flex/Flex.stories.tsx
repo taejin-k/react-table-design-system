@@ -26,11 +26,11 @@ const flexJustifyOptions = [
 ];
 const flexAlignOptions = ["flex-start", "center", "flex-end", "stretch", "baseline"];
 
-function JustifyExample({ value }: { value: FlexProps["justify"] }) {
+function JustifyExample({ value, gap }: { value: FlexProps["justify"]; gap: number }) {
   return (
     <div className="grid gap-2">
       <p className={label}>{value}</p>
-      <Flex justify={value} gap={8} className="rounded border border-[#ddd] p-3">
+      <Flex justify={value} gap={gap} className="rounded border border-[#ddd] p-3">
         <span className={item}>1</span>
         <span className={item}>2</span>
         <span className={item}>3</span>
@@ -39,11 +39,11 @@ function JustifyExample({ value }: { value: FlexProps["justify"] }) {
   );
 }
 
-function GapExample({ value }: { value: number }) {
+function GapExample({ value, align }: { value: number; align: FlexProps["align"] }) {
   return (
     <div className="grid gap-2">
       <p className={label}>gap={value}</p>
-      <Flex gap={value}>
+      <Flex gap={value} align={align}>
         <Button>첫 번째</Button>
         <Button>두 번째</Button>
         <Button>세 번째</Button>
@@ -68,7 +68,7 @@ const meta = {
     className: { control: false, table: { disable: true } },
   },
   parameters: {
-    controls: { disable: true },
+    controls: { disable: false },
     docs: {
       description: {
         component:
@@ -142,8 +142,10 @@ export const Basic: Story = {
 };
 
 export const Vertical: Story = {
+  args: { gap: 8, align: "flex-start" },
   parameters: {
     ...storyDescription("components-flex--vertical"),
+    controls: { disable: false, include: ["교차축 정렬", "간격"] },
     docs: {
       ...storyDescription("components-flex--vertical").docs,
       source: {
@@ -172,11 +174,11 @@ export const Vertical: Story = {
       },
     },
   },
-  render: () => (
+  render: (args) => (
     <div className="grid gap-6">
       <div className="grid gap-2">
         <p className={label}>vertical=false</p>
-        <Flex vertical={false} gap={8}>
+        <Flex vertical={false} gap={args.gap} align={args.align}>
           <Button>첫 번째</Button>
           <Button>두 번째</Button>
           <Button>세 번째</Button>
@@ -184,7 +186,7 @@ export const Vertical: Story = {
       </div>
       <div className="grid gap-2">
         <p className={label}>vertical=true</p>
-        <Flex vertical gap={8} align="flex-start">
+        <Flex vertical gap={args.gap} align={args.align}>
           <Button>첫 번째</Button>
           <Button>두 번째</Button>
           <Button>세 번째</Button>
@@ -195,8 +197,10 @@ export const Vertical: Story = {
 };
 
 export const Wrap: Story = {
+  args: { gap: 8, align: "center" },
   parameters: {
     ...storyDescription("components-flex--wrap"),
+    controls: { disable: false, include: ["교차축 정렬", "간격"] },
     docs: {
       ...storyDescription("components-flex--wrap").docs,
       source: {
@@ -236,11 +240,16 @@ export const Wrap: Story = {
       },
     },
   },
-  render: () => (
+  render: (args) => (
     <div className="grid max-w-xl gap-6">
       <div className="grid gap-2">
         <p className={label}>nowrap</p>
-        <Flex gap={8} wrap="nowrap" className="overflow-hidden rounded border border-[#ddd] p-3">
+        <Flex
+          gap={args.gap}
+          align={args.align}
+          wrap="nowrap"
+          className="overflow-hidden rounded border border-[#ddd] p-3"
+        >
           <Button>첫 번째</Button>
           <Button>두 번째</Button>
           <Button>세 번째</Button>
@@ -249,7 +258,7 @@ export const Wrap: Story = {
       </div>
       <div className="grid gap-2">
         <p className={label}>wrap</p>
-        <Flex gap={8} wrap className="rounded border border-[#ddd] p-3">
+        <Flex gap={args.gap} align={args.align} wrap className="rounded border border-[#ddd] p-3">
           <Button>첫 번째</Button>
           <Button>두 번째</Button>
           <Button>세 번째</Button>
@@ -258,7 +267,12 @@ export const Wrap: Story = {
       </div>
       <div className="grid gap-2">
         <p className={label}>wrap-reverse</p>
-        <Flex gap={8} wrap="wrap-reverse" className="rounded border border-[#ddd] p-3">
+        <Flex
+          gap={args.gap}
+          align={args.align}
+          wrap="wrap-reverse"
+          className="rounded border border-[#ddd] p-3"
+        >
           <Button>첫 번째</Button>
           <Button>두 번째</Button>
           <Button>세 번째</Button>
@@ -270,8 +284,10 @@ export const Wrap: Story = {
 };
 
 export const Justify: Story = {
+  args: { gap: 8 },
   parameters: {
     ...storyDescription("components-flex--justify"),
+    controls: { disable: false, include: ["간격"] },
     docs: {
       ...storyDescription("components-flex--justify").docs,
       source: {
@@ -336,21 +352,23 @@ function FlexJustify() {
       },
     },
   },
-  render: () => (
+  render: (args) => (
     <div className="grid gap-4">
-      <JustifyExample value="flex-start" />
-      <JustifyExample value="center" />
-      <JustifyExample value="flex-end" />
-      <JustifyExample value="space-between" />
-      <JustifyExample value="space-around" />
-      <JustifyExample value="space-evenly" />
+      <JustifyExample value="flex-start" gap={args.gap ?? 8} />
+      <JustifyExample value="center" gap={args.gap ?? 8} />
+      <JustifyExample value="flex-end" gap={args.gap ?? 8} />
+      <JustifyExample value="space-between" gap={args.gap ?? 8} />
+      <JustifyExample value="space-around" gap={args.gap ?? 8} />
+      <JustifyExample value="space-evenly" gap={args.gap ?? 8} />
     </div>
   ),
 };
 
 export const Align: Story = {
+  args: { gap: 8, justify: "flex-start" },
   parameters: {
     ...storyDescription("components-flex--align"),
+    controls: { disable: false, include: ["주축 정렬", "간격"] },
     docs: {
       ...storyDescription("components-flex--align").docs,
       source: {
@@ -405,39 +423,64 @@ function FlexAlign() {
       },
     },
   },
-  render: () => (
+  render: (args) => (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
       <div className="grid gap-2">
         <p className={label}>flex-start</p>
-        <Flex align="flex-start" gap={8} className="h-32 rounded border border-[#ddd] p-3">
+        <Flex
+          align="flex-start"
+          justify={args.justify}
+          gap={args.gap}
+          className="h-32 rounded border border-[#ddd] p-3"
+        >
           <span className={alignItem}>첫 요소</span>
           <span className={`${alignItem} h-20`}>두 번째 요소</span>
         </Flex>
       </div>
       <div className="grid gap-2">
         <p className={label}>center</p>
-        <Flex align="center" gap={8} className="h-32 rounded border border-[#ddd] p-3">
+        <Flex
+          align="center"
+          justify={args.justify}
+          gap={args.gap}
+          className="h-32 rounded border border-[#ddd] p-3"
+        >
           <span className={alignItem}>첫 요소</span>
           <span className={`${alignItem} h-20`}>두 번째 요소</span>
         </Flex>
       </div>
       <div className="grid gap-2">
         <p className={label}>flex-end</p>
-        <Flex align="flex-end" gap={8} className="h-32 rounded border border-[#ddd] p-3">
+        <Flex
+          align="flex-end"
+          justify={args.justify}
+          gap={args.gap}
+          className="h-32 rounded border border-[#ddd] p-3"
+        >
           <span className={alignItem}>첫 요소</span>
           <span className={`${alignItem} h-20`}>두 번째 요소</span>
         </Flex>
       </div>
       <div className="grid gap-2">
         <p className={label}>stretch</p>
-        <Flex align="stretch" gap={8} className="h-32 rounded border border-[#ddd] p-3">
+        <Flex
+          align="stretch"
+          justify={args.justify}
+          gap={args.gap}
+          className="h-32 rounded border border-[#ddd] p-3"
+        >
           <span className={`${alignItem} h-auto`}>첫 요소</span>
           <span className={`${alignItem} h-auto`}>두 번째 요소</span>
         </Flex>
       </div>
       <div className="grid gap-2">
         <p className={label}>baseline</p>
-        <Flex align="baseline" gap={8} className="h-32 rounded border border-[#ddd] p-3">
+        <Flex
+          align="baseline"
+          justify={args.justify}
+          gap={args.gap}
+          className="h-32 rounded border border-[#ddd] p-3"
+        >
           <span className={alignItem}>작은 글자</span>
           <span className={`${alignItem} h-20 text-xl`}>큰 글자</span>
         </Flex>
@@ -448,8 +491,10 @@ function FlexAlign() {
 
 export const FlexValue: Story = {
   name: "Flex",
+  args: { gap: 8, align: "center" },
   parameters: {
     ...storyDescription("components-flex--flex"),
+    controls: { disable: false, include: ["교차축 정렬", "간격"] },
     docs: {
       ...storyDescription("components-flex--flex").docs,
       source: {
@@ -473,8 +518,8 @@ function FlexValue() {
       },
     },
   },
-  render: () => (
-    <Flex gap={8}>
+  render: (args) => (
+    <Flex gap={args.gap} align={args.align}>
       <Flex flex={1} align="center" justify="center" className={flexItem}>
         flex=1
       </Flex>
@@ -489,8 +534,10 @@ function FlexValue() {
 };
 
 export const Gap: Story = {
+  args: { align: "center" },
   parameters: {
     ...storyDescription("components-flex--gap"),
+    controls: { disable: false, include: ["교차축 정렬"] },
     docs: {
       ...storyDescription("components-flex--gap").docs,
       source: {
@@ -538,20 +585,22 @@ export const Gap: Story = {
       },
     },
   },
-  render: () => (
+  render: (args) => (
     <div className="grid gap-6">
-      <GapExample value={0} />
-      <GapExample value={8} />
-      <GapExample value={16} />
-      <GapExample value={24} />
+      <GapExample value={0} align={args.align} />
+      <GapExample value={8} align={args.align} />
+      <GapExample value={16} align={args.align} />
+      <GapExample value={24} align={args.align} />
     </div>
   ),
 };
 
 export const Component: Story = {
+  args: { gap: 8, align: "normal" },
   tags: ["!dev"],
   parameters: {
     ...storyDescription("components-flex--component"),
+    controls: { disable: false, include: ["교차축 정렬", "간격"] },
     docs: {
       ...storyDescription("components-flex--component").docs,
       source: {
@@ -566,8 +615,8 @@ export const Component: Story = {
       },
     },
   },
-  render: () => (
-    <Flex component="ul" vertical gap={8}>
+  render: (args) => (
+    <Flex component="ul" vertical gap={args.gap} align={args.align}>
       <li>첫 항목</li>
       <li>두 번째 항목</li>
     </Flex>

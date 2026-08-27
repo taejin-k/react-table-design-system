@@ -13,6 +13,7 @@ import type {
   UploadFile,
   UploadFileStatusType,
   UploadListType,
+  UploadProps,
 } from "./Upload.types";
 
 const uploadListTypes: UploadListType[] = ["text", "picture", "picture-card", "picture-circle"];
@@ -37,8 +38,26 @@ const meta = {
   title: "Components/Upload",
   component: Upload,
   tags: ["autodocs"],
+  argTypes: {
+    accept: { name: "파일 형식", control: "text" },
+    listType: { name: "목록 모양", control: "select", options: uploadListTypes },
+    multiple: { name: "다중 선택", control: "boolean" },
+    maxCount: { name: "최대 개수", control: "number" },
+    disabled: { name: "비활성", control: "boolean" },
+    showUploadList: { name: "파일 목록", control: "boolean" },
+    directory: { name: "폴더 선택", control: "boolean" },
+    pastable: { name: "붙여넣기", control: "boolean" },
+    openFileDialogOnClick: { name: "클릭으로 열기", control: "boolean" },
+    children: { control: false, table: { disable: true } },
+    beforeUpload: { control: false, table: { disable: true } },
+    customRequest: { control: false, table: { disable: true } },
+    defaultFileList: { control: false, table: { disable: true } },
+    fileList: { control: false, table: { disable: true } },
+    className: { control: false, table: { disable: true } },
+    onChange: { control: false, table: { disable: true } },
+  },
   parameters: {
-    controls: { disable: true },
+    controls: { disable: false },
     docs: {
       description: {
         component:
@@ -271,6 +290,7 @@ export const PictureCard: Story = {
 };
 
 export const ListTypes: Story = {
+  args: { multiple: false, disabled: false, showUploadList: true },
   parameters: {
     ...storyDescription("components-upload--list-types"),
     docs: {
@@ -321,11 +341,11 @@ function UploadListTypes() {
       },
     },
   },
-  render: () => (
+  render: (args) => (
     <div className="grid gap-8 lg:grid-cols-2">
       <div className="flex flex-col gap-3">
         <strong>Text</strong>
-        <Upload listType="text" defaultFileList={listFiles}>
+        <Upload {...args} listType="text" defaultFileList={listFiles}>
           <Button variant="secondary" prefixIcon={<Icon icon="upload" />}>
             파일 선택
           </Button>
@@ -333,7 +353,7 @@ function UploadListTypes() {
       </div>
       <div className="flex flex-col gap-3">
         <strong>Picture</strong>
-        <Upload listType="picture" defaultFileList={listFiles}>
+        <Upload {...args} listType="picture" defaultFileList={listFiles}>
           <Button variant="secondary" prefixIcon={<Icon icon="upload" />}>
             파일 선택
           </Button>
@@ -341,7 +361,7 @@ function UploadListTypes() {
       </div>
       <div className="flex flex-col gap-3">
         <strong>Picture Card</strong>
-        <Upload listType="picture-card" defaultFileList={listFiles}>
+        <Upload {...args} listType="picture-card" defaultFileList={listFiles}>
           <span className="flex flex-col items-center gap-2">
             <Icon icon="add" />
             업로드
@@ -350,7 +370,7 @@ function UploadListTypes() {
       </div>
       <div className="flex flex-col gap-3">
         <strong>Picture Circle</strong>
-        <Upload listType="picture-circle" defaultFileList={listFiles}>
+        <Upload {...args} listType="picture-circle" defaultFileList={listFiles}>
           <span className="flex flex-col items-center gap-2">
             <Icon icon="add" />
             업로드
@@ -377,6 +397,7 @@ export const DragAndDrop: Story = {
 };
 
 export const UploadProgress: Story = {
+  args: { multiple: false, disabled: false, showUploadList: true },
   parameters: {
     ...storyDescription("components-upload--upload-progress"),
     docs: {
@@ -410,14 +431,15 @@ export const UploadProgress: Story = {
       },
     },
   },
-  render: () => <UploadProgressExample />,
+  render: (args) => <UploadProgressExample {...args} />,
 };
 
-function UploadProgressExample() {
+function UploadProgressExample(args: Partial<UploadProps>) {
   const timerRef = useRef<number | undefined>(undefined);
   useEffect(() => () => window.clearInterval(timerRef.current), []);
   return (
     <Upload
+      {...args}
       customRequest={({ onProgress, onSuccess }) => {
         let percent = 0;
         timerRef.current = window.setInterval(() => {
@@ -437,6 +459,7 @@ function UploadProgressExample() {
 }
 
 export const FileStates: Story = {
+  args: { multiple: false, disabled: false, showUploadList: true },
   parameters: {
     ...storyDescription("components-upload--file-states"),
     docs: {
@@ -455,8 +478,9 @@ export const FileStates: Story = {
       },
     },
   },
-  render: () => (
+  render: (args) => (
     <Upload
+      {...args}
       defaultFileList={[
         { uid: "1", name: "완료된 파일.pdf", status: "done", url: "/sample.pdf" },
         { uid: "2", name: "업로드 중.png", status: "uploading", percent: 60 },
@@ -471,6 +495,7 @@ export const FileStates: Story = {
 };
 
 export const SelectionRules: Story = {
+  args: { disabled: false, showUploadList: true, openFileDialogOnClick: true },
   parameters: {
     ...storyDescription("components-upload--selection-rules"),
     docs: {
@@ -490,8 +515,8 @@ export const SelectionRules: Story = {
       },
     },
   },
-  render: () => (
-    <Upload accept="image/png" multiple maxCount={2} beforeUpload={() => false}>
+  render: (args) => (
+    <Upload {...args} accept="image/png" multiple maxCount={2} beforeUpload={() => false}>
       <Button variant="secondary" prefixIcon={<Icon icon="upload" />}>
         PNG 파일 선택
       </Button>
@@ -500,6 +525,7 @@ export const SelectionRules: Story = {
 };
 
 export const DirectoryAndPaste: Story = {
+  args: { disabled: false, showUploadList: true, openFileDialogOnClick: true },
   parameters: {
     ...storyDescription("components-upload--directory-and-paste"),
     docs: {
@@ -521,14 +547,14 @@ export const DirectoryAndPaste: Story = {
       },
     },
   },
-  render: () => (
+  render: (args) => (
     <div className="flex flex-wrap gap-3">
-      <Upload directory multiple beforeUpload={() => false}>
+      <Upload {...args} directory multiple beforeUpload={() => false}>
         <Button variant="secondary" prefixIcon={<Icon icon="folder-outlined" />}>
           폴더 선택
         </Button>
       </Upload>
-      <Upload pastable multiple beforeUpload={() => false}>
+      <Upload {...args} pastable multiple beforeUpload={() => false}>
         <Button variant="secondary" prefixIcon={<Icon icon="copy-outlined" />}>
           파일 붙여넣기
         </Button>
@@ -538,6 +564,7 @@ export const DirectoryAndPaste: Story = {
 };
 
 export const ControlledFileList: Story = {
+  args: { multiple: false, disabled: false, openFileDialogOnClick: true },
   parameters: {
     ...storyDescription("components-upload--controlled-file-list"),
     docs: {
@@ -567,16 +594,17 @@ export const ControlledFileList: Story = {
       },
     },
   },
-  render: () => <ControlledUploadExample />,
+  render: (args) => <ControlledUploadExample {...args} />,
 };
 
-function ControlledUploadExample() {
+function ControlledUploadExample(args: Partial<UploadProps>) {
   const [files, setFiles] = useState<UploadFile[]>([
     { uid: "guide", name: "upload-guide.pdf", status: "done", url: "/guide.pdf" },
   ]);
 
   return (
     <Upload
+      {...args}
       fileList={files}
       beforeUpload={() => false}
       showUploadList={{

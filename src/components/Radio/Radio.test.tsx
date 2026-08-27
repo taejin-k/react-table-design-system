@@ -31,4 +31,10 @@ describe("Radio", () => {
     await user.click(screen.getByText("비활성 옵션"));
     expect(radio).toBeChecked();
   });
+
+  it("preserves newlines in its label", () => {
+    render(<Radio label={"첫 줄\n둘째 줄"} />);
+
+    expect(screen.getByText(/첫 줄\s+둘째 줄/)).toHaveClass("whitespace-pre-line");
+  });
 });
