@@ -205,13 +205,10 @@ describe("Collapse", () => {
     expect(screen.getByText("제목").closest("[tabindex]")?.querySelector("svg")).toBeNull();
   });
 
-  it("applies ghost and item root classes", () => {
-    const { container } = render(
-      <Collapse ghost items={[{ key: "one", label: "제목", className: "item-root" }]} />,
-    );
+  it("applies ghost styles", () => {
+    const { container } = render(<Collapse ghost items={[{ key: "one", label: "제목" }]} />);
 
     expect(container.firstElementChild).toHaveClass("bg-transparent");
     expect(container.firstElementChild).not.toHaveClass("rounded-lg", "border", "bg-[#fafafa]");
-    expect(container.querySelector("section")).toHaveClass("item-root");
   });
 });

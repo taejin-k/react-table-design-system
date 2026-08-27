@@ -116,7 +116,6 @@ const meta = {
 | \`extra\` | 헤더 반대편에 추가 콘텐츠를 배치해요. | \`ReactNode\` | - |
 | \`collapsible\` | 패널별 클릭 영역이나 비활성 상태를 정해요. | [\`CollapseCollapsibleType\`](#collapse-collapsible-type) | \`header\` |
 | \`showArrow\` | 펼침 아이콘 표시 여부를 정해요. | \`boolean\` | \`true\` |
-| \`className\` | 패널 최상위 요소에 클래스를 추가해요. | \`string\` | - |
           `}</Markdown>
           <h2 className="component-docs-types-heading">Types</h2>
           <h3 id="collapse-size-type">CollapseSizeType</h3>

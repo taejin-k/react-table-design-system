@@ -68,10 +68,7 @@ export function Collapse({
         return (
           <section
             key={item.key}
-            className={twMerge(
-              index > 0 && bordered && !ghost && "border-t border-[#ddd]",
-              item.className,
-            )}
+            className={index > 0 && bordered && !ghost ? "border-t border-[#ddd]" : undefined}
           >
             <div
               tabIndex={disabled ? -1 : 0}

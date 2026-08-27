@@ -12,7 +12,6 @@ export interface CollapseItem {
   extra?: ReactNode;
   collapsible?: CollapseCollapsibleType;
   showArrow?: boolean;
-  className?: string;
 }
 
 export interface CollapseProps {
