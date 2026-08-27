@@ -56,12 +56,12 @@ const meta = {
 
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
-| \`open\` | 설정한 내용으로 메시지를 표시해요. | ([\`Config\`](#config)) => MessageType | - |
-| \`success\` | 성공 메시지를 표시해요. | ([\`Config\`](#config)) => MessageType | - |
-| \`error\` | 오류 메시지를 표시해요. | ([\`Config\`](#config)) => MessageType | - |
-| \`info\` | 정보 메시지를 표시해요. | ([\`Config\`](#config)) => MessageType | - |
-| \`warning\` | 경고 메시지를 표시해요. | ([\`Config\`](#config)) => MessageType | - |
-| \`loading\` | 유지되는 로딩 메시지를 표시해요. | ([\`Config\`](#config)) => MessageType | - |
+| \`open\` | 설정한 내용으로 메시지를 표시해요. | (config: [\`Config\`](#config)) => MessageType | - |
+| \`success\` | 성공 메시지를 표시해요. | (config: [\`Config\`](#config)) => MessageType | - |
+| \`error\` | 오류 메시지를 표시해요. | (config: [\`Config\`](#config)) => MessageType | - |
+| \`info\` | 정보 메시지를 표시해요. | (config: [\`Config\`](#config)) => MessageType | - |
+| \`warning\` | 경고 메시지를 표시해요. | (config: [\`Config\`](#config)) => MessageType | - |
+| \`loading\` | 유지되는 로딩 메시지를 표시해요. | (config: [\`Config\`](#config)) => MessageType | - |
 | \`destroy\` | key의 메시지 또는 모든 메시지를 닫아요. | \`(key?) => void\` | - |
 
 ### Config
@@ -119,10 +119,10 @@ export const Basic: Story = {
 };
 
 export const Types: Story = {
-  args: { content: "상태 메시지예요.", duration: 3, pauseOnHover: true },
+  args: { duration: 3, pauseOnHover: true },
   parameters: {
     ...storyDescription("components-message--types"),
-    controls: { disable: false, include: ["content", "duration", "pauseOnHover"] },
+    controls: { disable: false, include: ["duration", "pauseOnHover"] },
     docs: {
       ...storyDescription("components-message--types").docs,
       source: {
@@ -154,11 +154,60 @@ export const Types: Story = {
   },
   render: (args) => (
     <div className="flex flex-wrap gap-2">
-      <Button onClick={() => message.success(args)}>Success</Button>
-      <Button onClick={() => message.error(args)}>Error</Button>
-      <Button onClick={() => message.info(args)}>Info</Button>
-      <Button onClick={() => message.warning(args)}>Warning</Button>
-      <Button onClick={() => message.loading(args)}>Loading</Button>
+      <Button
+        onClick={() =>
+          message.success({
+            content: "저장했어요.",
+            duration: args.duration,
+            pauseOnHover: args.pauseOnHover,
+          })
+        }
+      >
+        Success
+      </Button>
+      <Button
+        onClick={() =>
+          message.error({
+            content: "저장하지 못했어요.",
+            duration: args.duration,
+            pauseOnHover: args.pauseOnHover,
+          })
+        }
+      >
+        Error
+      </Button>
+      <Button
+        onClick={() =>
+          message.info({
+            content: "새 소식이 있어요.",
+            duration: args.duration,
+            pauseOnHover: args.pauseOnHover,
+          })
+        }
+      >
+        Info
+      </Button>
+      <Button
+        onClick={() =>
+          message.warning({
+            content: "변경사항을 확인해 주세요.",
+            duration: args.duration,
+            pauseOnHover: args.pauseOnHover,
+          })
+        }
+      >
+        Warning
+      </Button>
+      <Button
+        onClick={() =>
+          message.loading({
+            content: "불러오는 중이에요.",
+            duration: 0,
+          })
+        }
+      >
+        Loading
+      </Button>
     </div>
   ),
 };
@@ -193,12 +242,12 @@ export const MultilineIconAlignment: Story = {
 };
 
 export const Duration: Story = {
-  args: { content: "표시 시간을 확인해요.", duration: 1, secondaryDuration: 5, pauseOnHover: true },
+  args: { duration: 1, secondaryDuration: 5, pauseOnHover: true },
   parameters: {
     ...storyDescription("components-message--duration"),
     controls: {
       disable: false,
-      include: ["content", "duration", "secondaryDuration", "pauseOnHover"],
+      include: ["duration", "secondaryDuration", "pauseOnHover"],
     },
     docs: {
       ...storyDescription("components-message--duration").docs,
@@ -223,7 +272,7 @@ export const Duration: Story = {
       <Button
         onClick={() =>
           message.info({
-            content: args.content,
+            content: `${args.duration}초 동안 표시해요.`,
             duration: args.duration,
             pauseOnHover: args.pauseOnHover,
           })
@@ -234,7 +283,7 @@ export const Duration: Story = {
       <Button
         onClick={() =>
           message.info({
-            content: args.content,
+            content: `${args.secondaryDuration}초 동안 표시해요.`,
             duration: args.secondaryDuration,
             pauseOnHover: args.pauseOnHover,
           })

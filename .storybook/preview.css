@@ -450,6 +450,14 @@ body.sb-show-main {
   width: 14%;
 }
 
+.message-docs table :is(th, td):nth-child(3) {
+  width: 28%;
+}
+
+.message-docs table :is(th, td):nth-child(4) {
+  width: 16%;
+}
+
 .icon-docs table :is(th, td):nth-child(1) {
   width: 12%;
 }
