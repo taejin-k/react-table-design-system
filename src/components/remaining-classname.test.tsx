@@ -10,7 +10,6 @@ import { Description } from "./Description";
 import { Drawer } from "./Drawer";
 import { Image } from "./Image";
 import { Menu } from "./Menu";
-import { message } from "./Message";
 import { Modal } from "./Modal";
 import { notification } from "./Notification";
 import { Skeleton } from "./Skeleton";
@@ -71,16 +70,13 @@ describe("remaining component className convention", () => {
     expect(document.querySelector("[data-modal-root]")).toHaveClass("modal-root");
     expect(document.querySelector("[data-drawer-root]")).toHaveClass("drawer-root");
 
-    message.success({ content: "메시지", className: "message-root", duration: 0 });
     notification.success({
       description: "알림",
       className: "notification-root",
       duration: 0,
     });
-    await waitFor(() => expect(document.querySelector(".message-root")).toBeInTheDocument());
     await waitFor(() => expect(document.querySelector(".notification-root")).toBeInTheDocument());
 
-    message.destroy();
     notification.destroy();
     rerender(
       <>

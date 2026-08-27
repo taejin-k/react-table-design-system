@@ -10,7 +10,6 @@ export interface MessageArgsProps {
   icon?: ReactNode;
   key?: MessageKeyType;
   pauseOnHover?: boolean;
-  className?: string;
   style?: CSSProperties;
   onClick?: () => void;
   onClose?: () => void;

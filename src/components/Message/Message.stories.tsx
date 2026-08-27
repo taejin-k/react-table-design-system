@@ -74,7 +74,6 @@ const meta = {
 | \`icon\` | 상태 아이콘을 변경해요. | \`ReactNode\` | - |
 | \`key\` | 같은 메시지를 갱신하거나 제거할 key예요. | \`string \\| number\` | - |
 | \`pauseOnHover\` | 마우스를 올리면 닫힘 시간을 멈춰요. | \`boolean\` | \`true\` |
-| \`className\` | 메시지에 Tailwind 클래스를 추가해요. | \`string\` | - |
 | \`onClick\` | 메시지를 누르면 실행해요. | \`() => void\` | - |
 | \`onClose\` | 메시지가 닫히면 실행해요. | \`() => void\` | - |
       `}</Markdown>
