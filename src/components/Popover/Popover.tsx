@@ -23,8 +23,7 @@ export function Popover({
   className,
   onOpenChange,
 }: PopoverProps) {
-  const resolvedContent = typeof content === "function" ? content() : content;
-  const enabled = resolvedContent !== null && resolvedContent !== undefined;
+  const enabled = content !== null && content !== undefined;
   const floating = useFloatingLayer({
     enabled,
     placement,
@@ -118,7 +117,7 @@ export function Popover({
                   {title !== null && title !== undefined && title !== "" ? (
                     <div className="mb-1 font-semibold whitespace-pre-line">{title}</div>
                   ) : null}
-                  <div className="whitespace-pre-line">{resolvedContent}</div>
+                  <div className="whitespace-pre-line">{content}</div>
                 </div>
                 {arrow ? (
                   <span

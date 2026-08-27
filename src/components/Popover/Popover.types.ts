@@ -11,7 +11,7 @@ export interface PopoverProps {
   /** 카드의 제목이에요. */
   title?: ReactNode;
   /** 카드에 표시할 내용이에요. */
-  content: ReactNode | (() => ReactNode);
+  content: ReactNode;
   placement?: PopoverPlacementType;
   trigger?: PopoverTriggerType | PopoverTriggerType[];
   arrow?: boolean;

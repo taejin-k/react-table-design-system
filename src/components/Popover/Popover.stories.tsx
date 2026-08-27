@@ -68,7 +68,7 @@ const meta = {
 | --- | --- | --- | --- |
 | \`children\` | Popover를 연결할 하나의 요소예요. | \`ReactElement\` | - |
 | \`title\` | 카드의 제목을 설정해요. | \`ReactNode\` | - |
-| \`content\` | 카드에 표시할 내용을 설정해요. | \`ReactNode \\| () => ReactNode\` | - |
+| \`content\` | 카드에 표시할 내용을 설정해요. | \`ReactNode\` | - |
 | \`placement\` | 카드가 표시될 위치를 설정해요. | [\`PopoverPlacementType\`](#popover-placement-type) | \`top\` |
 | \`trigger\` | hover, focus, click, contextMenu로 표시해요. | [\`PopoverTriggerType\`](#popover-trigger-type) \\| [\`PopoverTriggerType[]\`](#popover-trigger-type) | \`hover\` |
 | \`arrow\` | 대상을 가리키는 화살표를 표시해요. | \`boolean\` | \`true\` |
