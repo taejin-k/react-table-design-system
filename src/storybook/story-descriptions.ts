@@ -259,9 +259,12 @@ export const storyDescriptions: Record<string, string> = {
   "components-drawer--nested":
     "Drawer 안에서 하위 Drawer를 열면 부모 패널을 밀어내며 계층을 구분해요.",
 
+  "components-message--basic":
+    "내용, 상태, 표시 시간과 Hover 동작을 설정해 기본 Message를 열어보세요.",
   "components-message--types":
     "정보, 성공, 경고, 오류와 로딩 상태에 맞는 전역 메시지를 화면에 표시해요.",
-  "components-message--duration-update": "지속 시간을 설정하고 같은 key의 내용을 갱신해요.",
+  "components-message--duration": "메시지가 자동으로 닫히기까지의 시간을 비교해요.",
+  "components-message--update": "같은 key의 로딩 메시지를 완료 메시지로 갱신해요.",
   "components-message--promise": "메시지가 닫힌 뒤 다음 메시지를 표시해요.",
 
   "components-notification--types": "성공, 오류, 정보와 경고 상태의 알림을 비교해요.",

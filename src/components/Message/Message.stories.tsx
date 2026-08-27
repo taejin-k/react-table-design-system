@@ -10,6 +10,13 @@ import type { MessageStatusType } from "./Message.types";
 
 const messageStatuses: MessageStatusType[] = ["success", "error", "info", "warning", "loading"];
 
+interface MessageStoryArgs {
+  content: string;
+  type: MessageStatusType;
+  duration: number;
+  pauseOnHover: boolean;
+}
+
 const storyDescription = (id: string) => ({
   docs: { description: { story: storyDescriptions[id] } },
 });
@@ -17,6 +24,12 @@ const storyDescription = (id: string) => ({
 const meta = {
   title: "Components/Message",
   tags: ["autodocs"],
+  argTypes: {
+    content: { name: "내용", control: "text" },
+    type: { name: "상태", control: "select", options: messageStatuses },
+    duration: { name: "표시 시간", control: { type: "number", min: 0, step: 0.5 } },
+    pauseOnHover: { name: "Hover 중 정지", control: "boolean" },
+  },
   parameters: {
     controls: { disable: true },
     docs: {
@@ -39,7 +52,7 @@ const meta = {
 | \`error\` | 오류 메시지를 표시해요. | \`(content, duration?, onClose?) => MessageType\` | - |
 | \`info\` | 정보 메시지를 표시해요. | \`(content, duration?, onClose?) => MessageType\` | - |
 | \`warning\` | 경고 메시지를 표시해요. | \`(content, duration?, onClose?) => MessageType\` | - |
-| \`loading\` | 로딩 메시지를 표시해요. | \`(content, duration?, onClose?) => MessageType\` | - |
+| \`loading\` | 기본적으로 유지되는 로딩 메시지를 표시해요. | \`(content, duration?, onClose?) => MessageType\` | \`duration: 0\` |
 | \`destroy\` | key의 메시지 또는 모든 메시지를 닫아요. | \`(key?) => void\` | - |
 | \`config\` | 전역 메시지 설정을 변경해요. | \`(config) => void\` | - |
 
@@ -77,10 +90,41 @@ const meta = {
       ),
     },
   },
-} satisfies Meta;
+} satisfies Meta<MessageStoryArgs>;
 
 export default meta;
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj<MessageStoryArgs>;
+
+export const Basic: Story = {
+  args: {
+    content: "새 소식이 있어요.",
+    type: "info",
+    duration: 3,
+    pauseOnHover: true,
+  },
+  parameters: {
+    ...storyDescription("components-message--basic"),
+    controls: { disable: false },
+    docs: {
+      ...storyDescription("components-message--basic").docs,
+      source: {
+        code: withStoryImports(`<Button
+  onClick={() =>
+    message.open({
+      content: '새 소식이 있어요.',
+      type: 'info',
+      duration: 3,
+      pauseOnHover: true,
+    })
+  }
+>
+  Message 열기
+</Button>`),
+      },
+    },
+  },
+  render: (args) => <Button onClick={() => message.open(args)}>Message 열기</Button>,
+};
 
 export const Types: Story = {
   parameters: {
@@ -113,19 +157,58 @@ export const Types: Story = {
   ),
 };
 
-export const DurationAndUpdate: Story = {
+export const Duration: Story = {
   parameters: {
-    ...storyDescription("components-message--duration-update"),
+    ...storyDescription("components-message--duration"),
     docs: {
-      ...storyDescription("components-message--duration-update").docs,
+      ...storyDescription("components-message--duration").docs,
+      source: {
+        code: withStoryImports(`<div className="flex gap-2">
+  <Button
+    onClick={() => message.info({ content: '1초 동안 표시해요.', duration: 1 })}
+  >
+    1초
+  </Button>
+  <Button
+    onClick={() => message.info({ content: '5초 동안 표시해요.', duration: 5 })}
+  >
+    5초
+  </Button>
+</div>`),
+      },
+    },
+  },
+  render: () => (
+    <div className="flex gap-2">
+      <Button onClick={() => message.info({ content: "1초 동안 표시해요.", duration: 1 })}>
+        1초
+      </Button>
+      <Button onClick={() => message.info({ content: "5초 동안 표시해요.", duration: 5 })}>
+        5초
+      </Button>
+    </div>
+  ),
+};
+
+export const Update: Story = {
+  parameters: {
+    ...storyDescription("components-message--update"),
+    docs: {
+      ...storyDescription("components-message--update").docs,
       source: {
         code: withStoryImports(`function MessageUpdate() {
   const timerRef = useRef<number | undefined>(undefined);
 
-  useEffect(() => () => window.clearTimeout(timerRef.current), []);
+  useEffect(
+    () => () => {
+      window.clearTimeout(timerRef.current);
+      message.destroy('save');
+    },
+    [],
+  );
 
   const update = () => {
-    message.loading({ key: 'save', content: '저장 중이에요.', duration: 0 });
+    message.loading({ key: 'save', content: '저장 중이에요.' });
     window.clearTimeout(timerRef.current);
     timerRef.current = window.setTimeout(
       () => message.success({ key: 'save', content: '저장했어요.' }),
@@ -144,10 +227,16 @@ export const DurationAndUpdate: Story = {
 function MessageUpdateExample() {
   const timerRef = useRef<number | undefined>(undefined);
 
-  useEffect(() => () => window.clearTimeout(timerRef.current), []);
+  useEffect(
+    () => () => {
+      window.clearTimeout(timerRef.current);
+      message.destroy("save");
+    },
+    [],
+  );
 
   const update = () => {
-    message.loading({ key: "save", content: "저장 중이에요.", duration: 0 });
+    message.loading({ key: "save", content: "저장 중이에요." });
     window.clearTimeout(timerRef.current);
     timerRef.current = window.setTimeout(
       () => message.success({ key: "save", content: "저장했어요." }),
