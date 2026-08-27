@@ -69,8 +69,7 @@ const meta = {
 | \`label\` | 항목에 표시할 내용을 설정해요. | \`ReactNode\` | - |
 | \`icon\` | 항목 앞에 아이콘을 표시해요. | \`ReactNode\` | - |
 | \`disabled\` | 항목을 비활성화해요. | \`boolean\` | \`false\` |
-| \`className\` | 항목에 Tailwind 클래스를 추가해요. | \`string\` | - |
-| \`tooltip\` | 항목에 Tooltip을 연결해요. | \`string \\| Omit<TooltipProps, 'children'>\` | - |
+| \`tooltip\` | 항목에 Tooltip을 연결해요. | \`string\` | - |
       `}</Markdown>
           <h2 className="component-docs-types-heading">Types</h2>
           <h3 id="segmented-size-type">SegmentedSizeType</h3>

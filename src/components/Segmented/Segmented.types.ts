@@ -1,5 +1,4 @@
 import type { HTMLAttributes, ReactNode } from "react";
-import type { TooltipProps } from "../Tooltip";
 
 export type SegmentedSizeType = "lg" | "md" | "sm";
 
@@ -8,8 +7,7 @@ export interface SegmentedItem {
   label?: ReactNode;
   icon?: ReactNode;
   disabled?: boolean;
-  className?: string;
-  tooltip?: string | Omit<TooltipProps, "children">;
+  tooltip?: string;
 }
 
 export interface SegmentedProps extends Omit<

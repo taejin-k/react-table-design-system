@@ -118,7 +118,6 @@ export function Segmented({
                 : selected
                   ? "cursor-pointer font-medium text-[#111]"
                   : "cursor-pointer text-[#666] hover:text-[#111]",
-              option.className,
             )}
           >
             <input
@@ -141,10 +140,7 @@ export function Segmented({
 
         if (!option.tooltip) return item;
         return (
-          <Tooltip
-            key={option.value}
-            {...(typeof option.tooltip === "string" ? { title: option.tooltip } : option.tooltip)}
-          >
+          <Tooltip key={option.value} title={option.tooltip}>
             {item}
           </Tooltip>
         );
