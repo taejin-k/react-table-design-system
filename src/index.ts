@@ -86,7 +86,6 @@ export type {
   ModalFuncResult,
   ModalMaskType,
   ModalProps,
-  ModalSemanticNameType,
   ModalStaticFunctions,
   ModalStatusType,
   ModalWidthType,

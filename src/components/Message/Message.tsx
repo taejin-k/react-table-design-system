@@ -292,7 +292,9 @@ function MessageCard({
       onMouseLeave={() => item.pauseOnHover !== false && resumeTimer()}
     >
       <span className="inline-flex shrink-0">{icon}</span>
-      <span className="min-w-0 leading-5 whitespace-pre-line">{item.content}</span>
+      <span className="min-w-0 leading-5 [overflow-wrap:anywhere] break-words whitespace-pre-wrap">
+        {item.content}
+      </span>
     </div>
   );
 }

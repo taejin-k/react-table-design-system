@@ -33,7 +33,7 @@ const meta = {
     children: { control: false, table: { disable: true } },
     className: { control: false, table: { disable: true } },
     footer: { control: false, table: { disable: true } },
-    onOk: { control: false, table: { disable: true } },
+    onConfirm: { control: false, table: { disable: true } },
     onCancel: { control: false, table: { disable: true } },
   },
   parameters: {
@@ -58,7 +58,7 @@ const meta = {
 | \`footer\` | footer를 교체하거나 렌더 함수로 구성해요. | \`ReactNode \\| FooterRender\` | 확인·취소 버튼 |
 | \`closable\` | 닫기 버튼 표시와 아이콘·비활성 상태를 설정해요. | \`ModalClosableType\` | \`true\` |
 | \`centered\` | 화면 가운데에 배치해요. | \`boolean\` | \`false\` |
-| \`width\` | 너비 또는 반응형 너비를 설정해요. | [\`ModalWidthType\`](#modal-width-type) | \`520\` |
+| \`width\` | 너비 또는 반응형 너비를 설정해요. | [\`ModalWidthType\`](#modal-width-type) | \`420\` |
 | \`confirmLoading\` | 확인 버튼의 로딩 상태를 표시해요. | \`boolean\` | \`false\` |
 | \`okText\` | 확인 버튼 내용을 설정해요. | \`ReactNode\` | \`확인\` |
 | \`cancelText\` | 취소 버튼 내용을 설정해요. | \`ReactNode\` | \`취소\` |
@@ -73,13 +73,11 @@ const meta = {
 | \`focusable\` | 포커스 순환과 원래 요소 복귀를 설정해요. | \`object\` | - |
 | \`getContainer\` | Modal을 렌더링할 컨테이너를 설정해요. | \`HTMLElement \\| () => HTMLElement \\| string \\| false\` | \`document.body\` |
 | \`zIndex\` | 겹치는 순서를 설정해요. | \`number\` | \`1000\` |
-| \`classNames\` | 각 영역의 클래스를 설정해요. | \`Record<SemanticName, string>\` | - |
-| \`styles\` | 각 영역의 스타일을 설정해요. | \`Record<SemanticName, CSSProperties>\` | - |
 | \`className\` | 최상위 요소에 Tailwind 클래스를 추가해요. | \`string\` | - |
 | \`modalRender\` | 전체 패널을 감싸서 렌더링해요. | \`(node) => ReactNode\` | - |
 | \`afterClose\` | 닫힘 애니메이션 뒤 실행해요. | \`() => void\` | - |
 | \`afterOpenChange\` | 열림 상태 전환이 끝나면 실행해요. | \`(open) => void\` | - |
-| \`onOk\` | 확인 버튼을 누르면 실행해요. | \`(event) => void\` | - |
+| \`onConfirm\` | 확인 버튼을 누르면 실행해요. | \`(event) => void\` | - |
 | \`onCancel\` | 취소·닫기·마스크를 누르면 실행해요. | \`(event) => void\` | - |
 
 ### Static methods
@@ -113,7 +111,7 @@ export const Basic: Story = {
   args: {
     title: "구성원 추가",
     centered: false,
-    width: 520,
+    width: 420,
     closable: true,
     keyboard: true,
     mask: true,
@@ -131,7 +129,12 @@ export const Basic: Story = {
   return (
     <>
       <Button onClick={() => setOpen(true)}>Modal 열기</Button>
-      <Modal open={open} title="구성원 추가" onCancel={() => setOpen(false)} onOk={() => setOpen(false)}>
+      <Modal
+        open={open}
+        title="구성원 추가"
+        onCancel={() => setOpen(false)}
+        onConfirm={() => setOpen(false)}
+      >
         새 구성원을 프로젝트에 추가할까요?
       </Modal>
     </>
@@ -148,7 +151,7 @@ function BasicModalExample(args: Partial<ModalProps>) {
   return (
     <>
       <Button onClick={() => setOpen(true)}>Modal 열기</Button>
-      <Modal {...args} open={open} onCancel={() => setOpen(false)} onOk={() => setOpen(false)}>
+      <Modal {...args} open={open} onCancel={() => setOpen(false)} onConfirm={() => setOpen(false)}>
         새 구성원을 프로젝트에 추가할까요?
       </Modal>
     </>
@@ -159,7 +162,7 @@ export const Async: Story = {
   args: {
     title: "변경사항 저장",
     centered: false,
-    width: 520,
+    width: 420,
     closable: true,
     keyboard: true,
     mask: true,
@@ -196,7 +199,7 @@ export const Async: Story = {
         title="변경사항 저장"
         confirmLoading={loading}
         onCancel={() => setOpen(false)}
-        onOk={save}
+        onConfirm={save}
       >
         변경사항을 저장할까요?
       </Modal>
@@ -232,7 +235,7 @@ function AsyncModalExample(args: Partial<ModalProps>) {
         open={open}
         confirmLoading={loading}
         onCancel={() => setOpen(false)}
-        onOk={save}
+        onConfirm={save}
       >
         변경사항을 저장할까요?
       </Modal>
@@ -244,7 +247,7 @@ export const Footer: Story = {
   args: {
     title: "Footer 구성",
     centered: false,
-    width: 520,
+    width: 420,
     closable: true,
     keyboard: true,
     mask: true,
@@ -273,7 +276,7 @@ export const Footer: Story = {
           </div>
         )}
         onCancel={() => setOpen(false)}
-        onOk={() => setOpen(false)}
+        onConfirm={() => setOpen(false)}
       >
         Footer의 콘텐츠와 기본 버튼을 함께 구성해요.
       </Modal>
@@ -302,7 +305,7 @@ function FooterExample(args: Partial<ModalProps>) {
           </div>
         )}
         onCancel={() => setOpen(false)}
-        onOk={() => setOpen(false)}
+        onConfirm={() => setOpen(false)}
       >
         Footer의 콘텐츠와 기본 버튼을 함께 구성해요.
       </Modal>
@@ -313,7 +316,7 @@ function FooterExample(args: Partial<ModalProps>) {
 export const StaticMethods: Story = {
   args: {
     centered: false,
-    width: 520,
+    width: 420,
     closable: true,
     keyboard: true,
     mask: true,

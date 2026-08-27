@@ -228,19 +228,23 @@ export const Triggers: Story = {
         code: withStoryImports(`function PopoverTriggers() {
   return (
     <div className="flex min-h-32 flex-wrap items-center justify-center gap-3">
-      <Popover content="hover로 열었어요.">
+      <Popover content="hover로 열었어요." title="Popover">
         <Button>hover</Button>
       </Popover>
-      <Popover content="focus로 열었어요." trigger="focus">
+      <Popover content="focus로 열었어요." title="Popover" trigger="focus">
         <Button>focus</Button>
       </Popover>
-      <Popover content="click으로 열었어요." trigger="click">
+      <Popover content="click으로 열었어요." title="Popover" trigger="click">
         <Button>click</Button>
       </Popover>
-      <Popover content="contextMenu로 열었어요." trigger="contextMenu">
+      <Popover content="contextMenu로 열었어요." title="Popover" trigger="contextMenu">
         <Button>contextMenu (우클릭)</Button>
       </Popover>
-      <Popover content="hover + focus로 열었어요." trigger={['hover', 'focus']}>
+      <Popover
+        content="hover + focus로 열었어요."
+        title="Popover"
+        trigger={['hover', 'focus']}
+      >
         <Button>hover + focus</Button>
       </Popover>
     </div>

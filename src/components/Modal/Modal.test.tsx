@@ -107,14 +107,14 @@ describe("Modal", () => {
 
   it("preserves the confirm button while its loading state changes", () => {
     const { rerender } = render(
-      <Modal open confirmLoading={false} onCancel={() => undefined} onOk={() => undefined}>
+      <Modal open confirmLoading={false} onCancel={() => undefined} onConfirm={() => undefined}>
         내용
       </Modal>,
     );
     const button = screen.getByText("확인").closest("button");
 
     rerender(
-      <Modal open confirmLoading onCancel={() => undefined} onOk={() => undefined}>
+      <Modal open confirmLoading onCancel={() => undefined} onConfirm={() => undefined}>
         내용
       </Modal>,
     );
@@ -143,8 +143,11 @@ describe("Modal", () => {
       </Modal>,
     );
 
-    expect(screen.getByText(/제목 첫 줄\s+제목 둘째 줄/)).toHaveClass("whitespace-pre-line");
-    expect(screen.getByText(/내용 첫 줄\s+내용 둘째 줄/)).toHaveClass("whitespace-pre-line");
+    expect(screen.getByText(/제목 첫 줄\s+제목 둘째 줄/)).toHaveClass(
+      "whitespace-pre-wrap",
+      "[overflow-wrap:anywhere]",
+    );
+    expect(screen.getByText(/내용 첫 줄\s+내용 둘째 줄/)).toHaveClass("whitespace-pre-wrap");
   });
 
   it("aligns a static status icon with the first title line", async () => {
@@ -165,7 +168,43 @@ describe("Modal", () => {
 
     const title = await screen.findByText(/제목 첫 줄\s+제목 둘째 줄/);
     expect(title.parentElement?.parentElement?.firstElementChild).toHaveClass("-mt-0.5");
-    expect(title).toHaveClass("whitespace-pre-line");
-    expect(screen.getByText(/내용 첫 줄\s+내용 둘째 줄/)).toHaveClass("whitespace-pre-line");
+    expect(title).toHaveClass("whitespace-pre-wrap");
+    expect(title.parentElement).toHaveClass("[overflow-wrap:anywhere]");
+    expect(screen.getByText(/내용 첫 줄\s+내용 둘째 줄/)).toHaveClass("whitespace-pre-wrap");
+  });
+
+  it("uses a 420px default width", () => {
+    render(
+      <Modal open onCancel={() => undefined}>
+        내용
+      </Modal>,
+    );
+
+    expect(document.querySelector("[data-modal-panel]")).toHaveStyle({ width: "420px" });
+  });
+
+  it("updates a responsive width on resize before the modal closes", async () => {
+    const originalWidth = window.innerWidth;
+    Object.defineProperty(window, "innerWidth", { configurable: true, value: 500 });
+    const { rerender } = render(
+      <Modal open width={{ xs: 320, md: 720 }} onCancel={() => undefined}>
+        내용
+      </Modal>,
+    );
+    expect(document.querySelector("[data-modal-panel]")).toHaveStyle({ width: "320px" });
+
+    Object.defineProperty(window, "innerWidth", { configurable: true, value: 800 });
+    fireEvent(window, new Event("resize"));
+    await waitFor(() =>
+      expect(document.querySelector("[data-modal-panel]")).toHaveStyle({ width: "720px" }),
+    );
+
+    rerender(
+      <Modal open={false} width={{ xs: 320, md: 720 }} onCancel={() => undefined}>
+        내용
+      </Modal>,
+    );
+    expect(document.querySelector("[data-modal-panel]")).toHaveStyle({ width: "720px" });
+    Object.defineProperty(window, "innerWidth", { configurable: true, value: originalWidth });
   });
 });

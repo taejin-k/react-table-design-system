@@ -267,7 +267,9 @@ export function Tooltip({
                   className="relative rounded px-2 py-1 shadow-[0_2px_8px_rgba(0,0,0,0.18)]"
                   style={{ backgroundColor: color, color: getTextColor(color) }}
                 >
-                  <span className="block min-h-5 whitespace-pre-line">{title}</span>
+                  <span className="block min-h-5 [overflow-wrap:anywhere] break-words whitespace-pre-wrap">
+                    {title}
+                  </span>
                 </div>
                 {arrow ? (
                   <span

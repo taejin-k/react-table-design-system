@@ -45,13 +45,27 @@ function ensurePointerListener() {
 
 ensurePointerListener();
 
-function resolveWidth(width: ModalWidthType | undefined) {
-  if (!width || typeof width !== "object") return width ?? 520;
-  if (typeof window === "undefined") return width.xs ?? 520;
+function resolveWidth(width: ModalWidthType | undefined, viewportWidth: number) {
+  if (!width || typeof width !== "object") return width ?? 420;
   return Object.entries(breakpointWidth).reduce<number | string>((current, [key, minWidth]) => {
     const next = width[key as keyof typeof width];
-    return window.innerWidth >= minWidth && next !== undefined ? next : current;
-  }, width.xs ?? 520);
+    return viewportWidth >= minWidth && next !== undefined ? next : current;
+  }, width.xs ?? 420);
+}
+
+function useResolvedWidth(width: ModalWidthType | undefined) {
+  const [viewportWidth, setViewportWidth] = useState(() =>
+    typeof window === "undefined" ? 0 : window.innerWidth,
+  );
+
+  useEffect(() => {
+    const updateViewportWidth = () => setViewportWidth(window.innerWidth);
+    updateViewportWidth();
+    window.addEventListener("resize", updateViewportWidth);
+    return () => window.removeEventListener("resize", updateViewportWidth);
+  }, []);
+
+  return resolveWidth(width, viewportWidth);
 }
 
 function resolveContainer(getContainer: ModalProps["getContainer"]) {
@@ -68,7 +82,7 @@ function ModalBase({
   footer,
   closable = true,
   centered = false,
-  width = 520,
+  width = 420,
   confirmLoading = false,
   okText = "확인",
   cancelText = "취소",
@@ -85,12 +99,10 @@ function ModalBase({
   zIndex = 1000,
   style,
   className,
-  classNames,
-  styles,
   modalRender,
   afterClose,
   afterOpenChange,
-  onOk,
+  onConfirm,
   onCancel,
 }: ModalProps) {
   const [rootVisible, setRootVisible] = useState(open);
@@ -103,6 +115,7 @@ function ModalBase({
   const maskEnabled = typeof mask === "object" ? mask.enabled !== false : mask;
   const canCloseMask = typeof mask === "object" ? mask.closable !== false : true;
   const blurMask = typeof mask === "object" && mask.blur;
+  const resolvedWidth = useResolvedWidth(width);
 
   useEffect(() => {
     if (open) setRootVisible(true);
@@ -171,7 +184,7 @@ function ModalBase({
       {...okButtonProps}
       loading={confirmLoading}
       disabled={okButtonProps?.disabled}
-      onClick={onOk}
+      onClick={onConfirm}
     >
       {okText}
     </Button>
@@ -194,24 +207,16 @@ function ModalBase({
       data-modal-panel
       className={twMerge(
         "wizard-modal-panel relative max-h-[calc(100vh-48px)] overflow-hidden rounded-lg bg-white px-6 py-5 font-pretendard text-sm leading-[22px] text-[#111] shadow-[0_6px_16px_rgba(0,0,0,0.08),0_3px_6px_-4px_rgba(0,0,0,0.12),0_9px_28px_8px_rgba(0,0,0,0.05)]",
-        "pointer-events-auto",
-        classNames?.panel,
+        "pointer-events-auto min-w-0",
       )}
       style={{
-        width: resolveWidth(width),
+        width: resolvedWidth,
         maxWidth: "calc(100vw - 32px)",
         transformOrigin: transformOriginRef.current,
-        ...styles?.panel,
       }}
     >
       {title !== undefined ? (
-        <div
-          className={twMerge(
-            "mb-2 text-base leading-6 font-semibold whitespace-pre-line",
-            classNames?.header,
-          )}
-          style={styles?.header}
-        >
+        <div className="mb-2 min-w-0 text-base leading-6 font-semibold [overflow-wrap:anywhere] break-words whitespace-pre-wrap">
           {title}
         </div>
       ) : null}
@@ -223,35 +228,23 @@ function ModalBase({
           onClick={close}
         />
       ) : null}
-      <div
-        className={twMerge("max-h-[calc(100vh-152px)] overflow-auto", classNames?.body)}
-        style={styles?.body}
-      >
+      <div className="max-h-[calc(100vh-152px)] min-w-0 overflow-x-hidden overflow-y-auto [overflow-wrap:anywhere] break-words">
         {typeof children === "string" || typeof children === "number" ? (
-          <span className="whitespace-pre-line">{children}</span>
+          <span className="whitespace-pre-wrap">{children}</span>
         ) : (
           children
         )}
       </div>
-      {footerNode !== null ? (
-        <div className={twMerge("mt-3", classNames?.footer)} style={styles?.footer}>
-          {footerNode}
-        </div>
-      ) : null}
+      {footerNode !== null ? <div className="mt-3">{footerNode}</div> : null}
     </div>
   );
   const content = (
     <div
       data-modal-root
-      className={twMerge(
-        "pointer-events-none fixed inset-0 font-pretendard",
-        className,
-        classNames?.root,
-      )}
+      className={twMerge("pointer-events-none fixed inset-0 font-pretendard", className)}
       style={{
         zIndex,
         ...style,
-        ...styles?.root,
         display: open || rootVisible ? undefined : "none",
       }}
     >
@@ -271,9 +264,8 @@ function ModalBase({
                 canCloseMask && "cursor-pointer",
                 blurMask && "backdrop-blur-sm",
                 maskMotionClassName,
-                classNames?.mask,
               )}
-              style={{ ...styles?.mask, ...maskMotionStyle }}
+              style={maskMotionStyle}
               onClick={canCloseMask ? close : undefined}
             />
           )}
@@ -300,12 +292,11 @@ function ModalBase({
             ref={motionRef}
             data-modal-motion
             className={twMerge(
-              "pointer-events-none absolute inset-0 flex overflow-auto px-4 py-6",
+              "pointer-events-none absolute inset-0 flex overflow-x-hidden overflow-y-auto px-4 py-6",
               centered ? "items-center justify-center" : "items-start justify-center pt-[100px]",
               motionClassName,
-              classNames?.wrapper,
             )}
-            style={{ ...styles?.wrapper, ...motionStyle }}
+            style={motionStyle}
           >
             {modalRender ? modalRender(panel) : panel}
           </div>
@@ -427,7 +418,7 @@ function ConfirmModal({
           ? "#faad14"
           : "#0062df";
   const run = async (
-    action: ModalFuncConfig["onOk"] | ModalFuncConfig["onCancel"],
+    action: ModalFuncConfig["onConfirm"] | ModalFuncConfig["onCancel"],
     value: boolean,
   ) => {
     setLoading(true);
@@ -458,7 +449,7 @@ function ConfirmModal({
       variant={config.okType ?? "primary"}
       {...config.okButtonProps}
       loading={loading}
-      onClick={() => void run(config.onOk, true)}
+      onClick={() => void run(config.onConfirm, true)}
     >
       {config.okText ?? "확인"}
     </Button>
@@ -482,14 +473,14 @@ function ConfirmModal({
     <ModalBase
       {...config}
       open={open}
-      width={config.width ?? 416}
+      width={config.width ?? 420}
       title={undefined}
       footer={footerNode}
       closable={config.closable ?? false}
       mask={config.mask ?? true}
       afterClose={onAfterClose}
       onCancel={() => void run(config.onCancel, false)}
-      onOk={undefined}
+      onConfirm={undefined}
     >
       <div className="flex items-start">
         {config.icon === null ? null : (
@@ -502,16 +493,16 @@ function ConfirmModal({
             {config.icon ?? <Icon icon={iconName} color={iconColor} size={28} />}
           </span>
         )}
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0 flex-1 [overflow-wrap:anywhere] break-words">
           {config.title !== undefined ? (
-            <div className="text-base leading-6 font-semibold whitespace-pre-line">
+            <div className="text-base leading-6 font-semibold whitespace-pre-wrap">
               {config.title}
             </div>
           ) : null}
           {config.content !== undefined ? (
             <div
               className={twMerge(
-                "text-sm leading-[22px] whitespace-pre-line",
+                "text-sm leading-[22px] whitespace-pre-wrap",
                 config.title !== undefined && "mt-2",
               )}
             >

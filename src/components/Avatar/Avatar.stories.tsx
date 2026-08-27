@@ -377,12 +377,12 @@ export const Image: Story = {
 };
 
 export const ImagePreview: Story = {
-  args: { shape: "circle", preview: true, labelWidth: 160 },
+  args: { shape: "circle", preview: true },
   parameters: {
     ...storyDescription("components-avatar--image-preview"),
     controls: {
       disable: false,
-      include: ["모양", "라벨 너비", "이미지 미리보기"],
+      include: ["모양", "이미지 미리보기"],
     },
     docs: {
       ...storyDescription("components-avatar--image-preview").docs,

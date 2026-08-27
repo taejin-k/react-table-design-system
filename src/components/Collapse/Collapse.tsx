@@ -48,7 +48,7 @@ export function Collapse({
   return (
     <div
       className={twMerge(
-        "overflow-hidden font-pretendard text-sm leading-[22px] text-[#111]",
+        "min-w-0 overflow-hidden font-pretendard text-sm leading-[22px] text-[#111]",
         !ghost && "rounded-lg",
         bordered && !ghost && "border border-[#ddd]",
         ghost && "bg-transparent",
@@ -108,7 +108,9 @@ export function Collapse({
                   {arrow}
                 </span>
               ) : null}
-              <span className="min-w-0 flex-1 whitespace-pre-line">{item.label}</span>
+              <span className="min-w-0 flex-1 [overflow-wrap:anywhere] break-words whitespace-pre-wrap">
+                {item.label}
+              </span>
               {item.extra ? (
                 <span onClick={(event) => event.stopPropagation()}>{item.extra}</span>
               ) : null}
@@ -135,7 +137,7 @@ export function Collapse({
                 {open || visitedKeys.current.has(item.key) ? (
                   <div
                     className={twMerge(
-                      "bg-white whitespace-pre-line",
+                      "min-w-0 bg-white [overflow-wrap:anywhere] break-words whitespace-pre-wrap",
                       ghost && "bg-transparent",
                       bodyPadding,
                     )}

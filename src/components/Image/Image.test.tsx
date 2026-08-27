@@ -70,6 +70,13 @@ describe("Image", () => {
     expect(
       customImage.parentElement?.querySelector("[data-image-preview-cover]"),
     ).toHaveTextContent("원본 보기");
+    expect(customImage.parentElement?.querySelector("[data-image-preview-cover]")).toHaveClass(
+      "min-w-0",
+      "overflow-hidden",
+    );
+    expect(
+      customImage.parentElement?.querySelector("[data-image-preview-cover] > span"),
+    ).toHaveClass("[overflow-wrap:anywhere]", "whitespace-pre-wrap");
   });
 
   it("opens and closes the preview", async () => {

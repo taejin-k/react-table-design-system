@@ -1,8 +1,6 @@
 import type { CSSProperties, MouseEvent, ReactNode } from "react";
 import type { ButtonProps, ButtonVariantType } from "../Button";
 
-export type ModalSemanticNameType =
-  "root" | "mask" | "wrapper" | "panel" | "header" | "body" | "footer";
 export type ModalWidthType =
   number | string | Partial<Record<"xs" | "sm" | "md" | "lg" | "xl" | "xxl", number | string>>;
 export type ModalClosableType = boolean | { closeIcon?: ReactNode; disabled?: boolean };
@@ -38,23 +36,21 @@ export interface ModalProps {
   zIndex?: number;
   style?: CSSProperties;
   className?: string;
-  classNames?: Partial<Record<ModalSemanticNameType, string>>;
-  styles?: Partial<Record<ModalSemanticNameType, CSSProperties>>;
   modalRender?: (node: ReactNode) => ReactNode;
   afterClose?: () => void;
   afterOpenChange?: (open: boolean) => void;
-  onOk?: (event: MouseEvent<HTMLButtonElement>) => void | Promise<void>;
+  onConfirm?: (event: MouseEvent<HTMLButtonElement>) => void | Promise<void>;
   onCancel?: (event: MouseEvent<HTMLButtonElement | HTMLDivElement>) => void;
 }
 
 export interface ModalFuncConfig extends Omit<
   ModalProps,
-  "open" | "children" | "onOk" | "onCancel"
+  "open" | "children" | "onConfirm" | "onCancel"
 > {
   content?: ReactNode;
   icon?: ReactNode;
   type?: ModalStatusType;
-  onOk?: (close: () => void) => void | Promise<void>;
+  onConfirm?: (close: () => void) => void | Promise<void>;
   onCancel?: (close: () => void) => void | Promise<void>;
 }
 

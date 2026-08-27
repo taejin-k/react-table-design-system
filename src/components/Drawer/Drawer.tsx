@@ -201,7 +201,9 @@ export function Drawer({
           style={styles?.header}
         >
           {closePlacement === "start" ? closeButton : null}
-          <div className="min-w-0 flex-1 text-base font-semibold whitespace-pre-line">{title}</div>
+          <div className="min-w-0 flex-1 text-base font-semibold [overflow-wrap:anywhere] break-words whitespace-pre-wrap">
+            {title}
+          </div>
           {extra ? <div className="shrink-0">{extra}</div> : null}
           {closePlacement === "end" ? closeButton : null}
         </div>
@@ -213,7 +215,9 @@ export function Drawer({
         {loading ? (
           <Skeleton active />
         ) : typeof children === "string" || typeof children === "number" ? (
-          <span className="whitespace-pre-line">{children}</span>
+          <span className="[overflow-wrap:anywhere] break-words whitespace-pre-wrap">
+            {children}
+          </span>
         ) : (
           children
         )}

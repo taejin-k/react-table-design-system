@@ -87,7 +87,7 @@ export function Popover({
               ref={floating.popupRef}
               data-popover
               data-placement={renderPosition?.placement ?? placement}
-              className="fixed max-w-80 min-w-[177px] font-pretendard text-sm leading-[22px] text-[#111]"
+              className="fixed w-max max-w-[min(320px,calc(100vw-16px))] min-w-[min(177px,calc(100vw-16px))] font-pretendard text-sm leading-[22px] text-[#111]"
               style={{
                 left: renderPosition?.left ?? 0,
                 top: renderPosition?.top ?? 0,
@@ -111,13 +111,17 @@ export function Popover({
                 }}
               >
                 <div
-                  className="relative rounded-lg px-3 py-2.5 shadow-[0_6px_16px_rgba(0,0,0,0.08),0_3px_6px_-4px_rgba(0,0,0,0.12),0_9px_28px_8px_rgba(0,0,0,0.05)]"
+                  className="relative max-w-full min-w-0 rounded-lg px-3 py-2.5 shadow-[0_6px_16px_rgba(0,0,0,0.08),0_3px_6px_-4px_rgba(0,0,0,0.12),0_9px_28px_8px_rgba(0,0,0,0.05)]"
                   style={{ backgroundColor: color, color: getTextColor(color) }}
                 >
                   {title !== null && title !== undefined && title !== "" ? (
-                    <div className="mb-1 font-semibold whitespace-pre-line">{title}</div>
+                    <div className="mb-1 min-w-0 font-semibold [overflow-wrap:anywhere] break-words whitespace-pre-wrap">
+                      {title}
+                    </div>
                   ) : null}
-                  <div className="whitespace-pre-line">{content}</div>
+                  <div className="min-w-0 [overflow-wrap:anywhere] break-words whitespace-pre-wrap">
+                    {content}
+                  </div>
                 </div>
                 {arrow ? (
                   <span

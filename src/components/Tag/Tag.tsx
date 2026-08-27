@@ -10,7 +10,9 @@ function hasContent(node: ReactNode): boolean {
 
 /** 아이콘을 Tag의 텍스트와 같은 간격으로 배치하는 16x16 소켓. */
 const IconSocket = ({ children }: { children: ReactNode }) => (
-  <span className="inline-flex size-4 shrink-0 items-center justify-center">{children}</span>
+  <span data-tag-icon className="inline-flex size-4 shrink-0 items-center justify-center">
+    {children}
+  </span>
 );
 
 export const Tag = forwardRef<HTMLSpanElement, TagProps>(

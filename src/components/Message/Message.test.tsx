@@ -23,7 +23,7 @@ describe("message", () => {
     });
 
     const content = await screen.findByText(/첫 줄\s+둘째 줄/);
-    expect(content).toHaveClass("leading-5", "whitespace-pre-line");
+    expect(content).toHaveClass("leading-5", "whitespace-pre-wrap", "[overflow-wrap:anywhere]");
     expect(content.parentElement).toHaveClass("items-start");
   });
 

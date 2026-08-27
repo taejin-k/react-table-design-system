@@ -29,7 +29,7 @@ const ITEM_HEIGHT = OPTION_HEIGHT + OPTION_GAP;
 const selectTagSizeClasses = {
   lg: "h-8 text-xs",
   md: "h-[22px]",
-  sm: "h-4 px-1 py-0 text-[10px] leading-none [&>span]:size-3",
+  sm: "h-4 min-h-0 gap-0.5 px-1 py-0 text-[10px] leading-4 [&>[data-tag-icon]]:size-3 [&>span:not([data-tag-icon])]:whitespace-nowrap",
 } as const;
 type SelectLayoutPosition = { left: number; top: number };
 type SelectValue = string | number;

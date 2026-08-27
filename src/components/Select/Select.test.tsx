@@ -230,6 +230,20 @@ describe("Select", () => {
     expect(search).not.toHaveClass("h-0", "opacity-0");
   });
 
+  it("shrinks only the close icon socket in an sm selected tag", () => {
+    render(<Select mode="multiple" size="sm" options={options} defaultValue={["design"]} />);
+
+    const selectedTag = document.querySelector<HTMLElement>("[data-select-tag]")!;
+    const label = selectedTag.querySelector("span:not([data-tag-icon])");
+    const icon = selectedTag.querySelector("[data-tag-icon]");
+
+    expect(selectedTag).toHaveClass("min-h-0", "gap-0.5");
+    expect(selectedTag.className).toContain("[&>[data-tag-icon]]:size-3");
+    expect(label).toHaveTextContent("Design");
+    expect(label).not.toHaveAttribute("data-tag-icon");
+    expect(icon).toHaveAttribute("data-tag-icon");
+  });
+
   it("selects the active matching option with Enter in tags mode", async () => {
     const user = userEvent.setup();
     render(<Select mode="tags" options={[{ label: "김민준", value: "kim" }]} />);

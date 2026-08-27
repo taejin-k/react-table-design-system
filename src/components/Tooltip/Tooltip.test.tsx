@@ -121,7 +121,7 @@ describe("Tooltip", () => {
 
     const content = document.querySelector("[data-tooltip] span");
     expect(content).toHaveTextContent("첫 번째 줄 두 번째 줄");
-    expect(content).toHaveClass("whitespace-pre-line");
+    expect(content).toHaveClass("whitespace-pre-wrap", "[overflow-wrap:anywhere]");
     expect(content?.textContent).toBe("첫 번째 줄\n두 번째 줄");
   });
 

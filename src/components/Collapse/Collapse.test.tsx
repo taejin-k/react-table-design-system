@@ -55,8 +55,14 @@ describe("Collapse", () => {
       />,
     );
 
-    expect(screen.getByText(/제목 첫 줄\s+제목 둘째 줄/)).toHaveClass("whitespace-pre-line");
-    expect(screen.getByText(/내용 첫 줄\s+내용 둘째 줄/)).toHaveClass("whitespace-pre-line");
+    expect(screen.getByText(/제목 첫 줄\s+제목 둘째 줄/)).toHaveClass(
+      "whitespace-pre-wrap",
+      "[overflow-wrap:anywhere]",
+    );
+    expect(screen.getByText(/내용 첫 줄\s+내용 둘째 줄/)).toHaveClass(
+      "whitespace-pre-wrap",
+      "[overflow-wrap:anywhere]",
+    );
   });
 
   it("uses the minimum header height for each size", () => {

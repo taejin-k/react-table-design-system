@@ -470,7 +470,7 @@ function NotificationCard({
       ref={combinedRef}
       data-notification-index={notificationIndex}
       className={twMerge(
-        "wizard-notification-card wizard-notification-motion pointer-events-auto absolute w-full overflow-visible rounded-lg bg-white px-6 py-4 text-sm leading-[1.5715] text-[#111] shadow-[0_6px_16px_rgba(0,0,0,0.08),0_3px_6px_-4px_rgba(0,0,0,0.12),0_9px_28px_8px_rgba(0,0,0,0.05)]",
+        "wizard-notification-card wizard-notification-motion pointer-events-auto absolute w-full min-w-0 overflow-visible rounded-lg bg-white px-6 py-4 text-sm leading-[1.5715] text-[#111] shadow-[0_6px_16px_rgba(0,0,0,0.08),0_3px_6px_-4px_rgba(0,0,0,0.12),0_9px_28px_8px_rgba(0,0,0,0.05)]",
         motionClassName,
         visible === false && "pointer-events-none",
         hiddenInStack && "wizard-notification-stack-hidden",
@@ -517,14 +517,14 @@ function NotificationCard({
         </span>
         <div
           className={twMerge(
-            "min-w-0 flex-1",
+            "min-w-0 flex-1 [overflow-wrap:anywhere] break-words",
             title != null && description != null && "flex flex-col gap-2",
           )}
         >
           {title != null ? (
             <div
               className={twMerge(
-                "text-base leading-6 font-normal whitespace-pre-line",
+                "text-base leading-6 font-normal whitespace-pre-wrap",
                 closable && "pr-6",
               )}
             >
@@ -534,7 +534,7 @@ function NotificationCard({
           {description != null ? (
             <div
               className={twMerge(
-                "text-sm whitespace-pre-line text-[#111]",
+                "text-sm whitespace-pre-wrap text-[#111]",
                 closable && title == null && "pr-6",
               )}
             >
