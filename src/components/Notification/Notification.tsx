@@ -556,7 +556,7 @@ function NotificationCard({
         }
       }}
     >
-      <div className="flex items-start gap-3">
+      <div className="flex items-start gap-[10px]">
         <span
           className={twMerge(
             "inline-flex shrink-0 leading-none",

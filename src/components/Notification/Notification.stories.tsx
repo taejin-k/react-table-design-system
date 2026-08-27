@@ -175,8 +175,6 @@ export const Basic: Story = {
 
 export const Types: Story = {
   args: {
-    title: "상태 알림",
-    description: "상태별 알림을 확인해요.",
     duration: 4.5,
     placement: "topRight",
     closable: true,
@@ -185,7 +183,7 @@ export const Types: Story = {
     ...storyDescription("components-notification--types"),
     controls: {
       disable: false,
-      include: ["제목", "설명", "표시 시간", "위치", "닫기 버튼"],
+      include: ["표시 시간", "위치", "닫기 버튼"],
     },
     docs: {
       ...storyDescription("components-notification--types").docs,
@@ -250,7 +248,11 @@ export const Types: Story = {
           size="md"
           onClick={() =>
             notification.success({
-              ...args,
+              title: "저장 완료",
+              description: "변경사항을 저장했어요.",
+              duration: args.duration,
+              placement: args.placement,
+              closable: args.closable,
             })
           }
         >
@@ -260,7 +262,11 @@ export const Types: Story = {
           size="md"
           onClick={() =>
             notification.error({
-              ...args,
+              title: "저장 실패",
+              description: "잠시 뒤 다시 시도해 주세요.",
+              duration: args.duration,
+              placement: args.placement,
+              closable: args.closable,
             })
           }
         >
@@ -270,7 +276,11 @@ export const Types: Story = {
           size="md"
           onClick={() =>
             notification.info({
-              ...args,
+              title: "새 소식",
+              description: "업데이트 내용을 확인해 주세요.",
+              duration: args.duration,
+              placement: args.placement,
+              closable: args.closable,
             })
           }
         >
@@ -280,7 +290,11 @@ export const Types: Story = {
           size="md"
           onClick={() =>
             notification.warning({
-              ...args,
+              title: "확인 필요",
+              description: "입력값을 확인해 주세요.",
+              duration: args.duration,
+              placement: args.placement,
+              closable: args.closable,
             })
           }
         >
@@ -307,8 +321,7 @@ export const MultilineIconAlignment: Story = {
   onClick={() =>
     notification.info({
       title: '첫 번째 제목 줄\\n두 번째 제목 줄',
-      description:
-        '첫 번째 설명 줄의 중앙에 아이콘을 맞춰요.\\n두 번째 설명 줄도 이어져요.',
+      description: '첫 번째 설명 줄의 중앙에 아이콘을 맞춰요.\\n두 번째 설명 줄도 이어져요.',
       duration: 0,
     })
   }
@@ -420,10 +433,10 @@ function NotificationActionsExample(args: NotificationStoryArgs) {
 }
 
 export const Placements: Story = {
-  args: { title: "선택한 위치", description: "선택한 위치에 표시돼요.", duration: 4.5 },
+  args: { description: "선택한 위치에 표시돼요.", duration: 4.5 },
   parameters: {
     ...storyDescription("components-notification--placements"),
-    controls: { disable: false, include: ["제목", "설명", "표시 시간"] },
+    controls: { disable: false, include: ["설명", "표시 시간"] },
     docs: {
       ...storyDescription("components-notification--placements").docs,
       source: {
@@ -477,7 +490,7 @@ function NotificationPlacements() {
           variant="secondary"
           onClick={() =>
             notification.info({
-              title: `${args.title} · ${placement}`,
+              title: placement,
               description: args.description,
               duration: args.duration,
               placement,

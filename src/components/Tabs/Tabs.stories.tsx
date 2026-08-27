@@ -148,9 +148,9 @@ export const Basic: Story = {
         code: withStoryImports(`${itemsSource}
 
 <div className="grid gap-3">
-  <Tabs size="small" defaultActiveKey="overview" items={items} />
-  <Tabs size="medium" defaultActiveKey="overview" items={items} />
-  <Tabs size="large" defaultActiveKey="overview" items={items} />
+  <Tabs animated size="small" defaultActiveKey="overview" items={items} />
+  <Tabs animated size="medium" defaultActiveKey="overview" items={items} />
+  <Tabs animated size="large" defaultActiveKey="overview" items={items} />
 </div>`),
       },
     },
@@ -204,7 +204,15 @@ function EditableTabsExample({ size }) {
     setEditableItems((current) => current.filter((item) => item.key !== targetKey));
   };
 
-  return <Tabs type="editable-card" size={size} items={editableItems} onEdit={handleEdit} />;
+  return (
+    <Tabs
+      animated
+      type="editable-card"
+      size={size}
+      items={editableItems}
+      onEdit={handleEdit}
+    />
+  );
 }
 
 <div className="grid gap-3">

@@ -312,7 +312,6 @@ function FooterExample(args: Partial<ModalProps>) {
 
 export const StaticMethods: Story = {
   args: {
-    title: "상태",
     centered: false,
     width: 520,
     closable: true,
