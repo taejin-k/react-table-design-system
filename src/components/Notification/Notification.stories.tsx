@@ -8,7 +8,13 @@ import { Button } from "../Button";
 import { notification } from "./Notification";
 import type { NotificationPlacementType, NotificationStatusType } from "./Notification.types";
 
-const notificationStatuses: NotificationStatusType[] = ["success", "error", "info", "warning"];
+const notificationStatuses: NotificationStatusType[] = [
+  "success",
+  "error",
+  "info",
+  "warning",
+  "loading",
+];
 const notificationPlacements: NotificationPlacementType[] = [
   "top",
   "topLeft",
@@ -74,6 +80,7 @@ const meta = {
 | \`error\` | 오류 알림을 표시해요. | (config: [\`Config\`](#config)) => void | - |
 | \`info\` | 정보 알림을 표시해요. | (config: [\`Config\`](#config)) => void | - |
 | \`warning\` | 경고 알림을 표시해요. | (config: [\`Config\`](#config)) => void | - |
+| \`loading\` | 유지되는 로딩 알림을 표시해요. | (config: [\`Config\`](#config)) => void | - |
 | \`destroy\` | key의 알림 또는 모든 알림을 닫아요. | \`(key?) => void\` | - |
 
 ### Config
@@ -85,7 +92,7 @@ const meta = {
 | \`type\` | 알림 상태를 설정해요. | [\`NotificationStatusType\`](#notification-status-type) | - |
 | \`actions\` | 알림 아래 작업을 추가해요. | \`ReactNode\` | - |
 | \`closable\` | 닫기 버튼을 표시해요. | \`boolean\` | \`true\` |
-| \`duration\` | 자동으로 닫히기까지의 초를 설정해요. 0이면 유지해요. | \`number\` | \`4.5\` |
+| \`duration\` | 자동으로 닫히기까지의 초를 설정해요. 0이면 유지해요. | \`number\` | \`4.5\` (loading: \`0\`) |
 | \`showProgress\` | 남은 시간을 하단 막대로 표시해요. | \`boolean\` | \`false\` |
 | \`pauseOnHover\` | 마우스를 올리면 닫힘 시간을 멈춰요. | \`boolean\` | \`true\` |
 | \`icon\` | 상태 아이콘을 변경해요. | \`ReactNode\` | - |
@@ -214,6 +221,16 @@ export const Types: Story = {
       >
         Warning
       </Button>
+      <Button
+        onClick={() =>
+          notification.loading({
+            title: '불러오는 중',
+            description: '데이터를 불러오고 있어요.',
+          })
+        }
+      >
+        Loading
+      </Button>
     </div>
   );
 }`),
@@ -274,6 +291,18 @@ export const Types: Story = {
           }
         >
           Warning
+        </Button>
+        <Button
+          onClick={() =>
+            notification.loading({
+              title: "불러오는 중",
+              description: "데이터를 불러오고 있어요.",
+              placement: args.placement,
+              closable: args.closable,
+            })
+          }
+        >
+          Loading
         </Button>
       </div>
     );
@@ -542,7 +571,7 @@ export const Update: Story = {
   useEffect(() => () => window.clearTimeout(timerRef.current), []);
 
   const update = () => {
-    notification.open({
+    notification.loading({
       key: 'upload',
       title: '업로드 중',
       description: '파일을 전송하고 있어요.',
@@ -574,7 +603,7 @@ function NotificationUpdateExample(args: NotificationStoryArgs) {
   useEffect(() => () => window.clearTimeout(timerRef.current), []);
 
   const update = () => {
-    notification.open({
+    notification.loading({
       key: "upload",
       title: args.title,
       description: args.description,

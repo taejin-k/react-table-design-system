@@ -1,6 +1,6 @@
 import type { CSSProperties, ReactNode } from "react";
 
-export type NotificationStatusType = "success" | "error" | "info" | "warning";
+export type NotificationStatusType = "success" | "error" | "info" | "warning" | "loading";
 export type NotificationPlacementType =
   "top" | "topLeft" | "topRight" | "bottom" | "bottomLeft" | "bottomRight";
 
@@ -27,6 +27,7 @@ export interface NotificationInstance {
   error: (config: NotificationArgsProps) => void;
   info: (config: NotificationArgsProps) => void;
   warning: (config: NotificationArgsProps) => void;
+  loading: (config: NotificationArgsProps) => void;
   destroy: (key?: string) => void;
 }
 

@@ -46,7 +46,7 @@ function useNotificationHolder(): [NotificationInstance, ReactNode] {
       const item = {
         ...input,
         key,
-        duration: input.duration ?? 4.5,
+        duration: input.duration ?? (input.type === "loading" ? 0 : 4.5),
         pauseOnHover: input.pauseOnHover ?? true,
         placement: input.placement ?? "topRight",
         showProgress: input.showProgress ?? false,
@@ -64,6 +64,7 @@ function useNotificationHolder(): [NotificationInstance, ReactNode] {
       error: (config) => open({ ...config, type: "error" }),
       info: (config) => open({ ...config, type: "info" }),
       warning: (config) => open({ ...config, type: "warning" }),
+      loading: (config) => open({ ...config, type: "loading" }),
       destroy: close,
     }),
     [close, open],
@@ -566,6 +567,9 @@ function NotificationCard({
 }
 
 function NotificationIcon({ type }: { type: NotificationStatusType }) {
+  if (type === "loading") {
+    return <Icon icon="loading" color="#0062df" size={28} data-icon="loading" />;
+  }
   if (type === "success") {
     return (
       <Icon icon="check-circle-filled" color="#52c41a" size={28} data-icon="check-circle-filled" />
@@ -643,5 +647,6 @@ export const notification: NotificationApi = {
   error: (config) => invoke("error", config),
   info: (config) => invoke("info", config),
   warning: (config) => invoke("warning", config),
+  loading: (config) => invoke("loading", config),
   destroy: (key) => staticInstance?.destroy(key),
 };

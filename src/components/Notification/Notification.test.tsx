@@ -151,6 +151,27 @@ describe("notification", () => {
     expect(icon).toHaveAttribute("height", "28");
   });
 
+  it("shows a persistent animated loading notification", async () => {
+    act(() =>
+      notification.loading({
+        title: "불러오는 중",
+        description: "데이터를 불러오고 있어요.",
+      }),
+    );
+
+    const icon = await waitFor(() => {
+      const element = document.querySelector('[data-icon="loading"]');
+      expect(element).toBeInTheDocument();
+      return element;
+    });
+    expect(icon).toHaveAttribute("width", "28");
+    expect(icon).toHaveAttribute("height", "28");
+    expect(icon).toHaveClass("animate-spin");
+
+    await new Promise((resolve) => window.setTimeout(resolve, 100));
+    expect(screen.getByText("데이터를 불러오고 있어요.")).toBeInTheDocument();
+  });
+
   it("anchors top and bottom placements to the viewport", async () => {
     act(() => {
       notification.info({
