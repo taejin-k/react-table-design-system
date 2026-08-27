@@ -1,7 +1,6 @@
 import { Description, Markdown, Stories, Title } from "@storybook/addon-docs/blocks";
 import type { Meta, StoryObj } from "@storybook/react";
 import { useEffect, useRef } from "react";
-import { useArgs } from "storybook/preview-api";
 import { storyDescriptions } from "../../storybook/story-descriptions";
 import { withStoryImports } from "../../storybook/story-source";
 import { TypeTokens } from "../../storybook/type-tokens";
@@ -12,9 +11,6 @@ import type { MessageStatusType } from "./Message.types";
 const messageStatuses: MessageStatusType[] = ["success", "error", "info", "warning", "loading"];
 
 interface MessageStoryArgs {
-  controlsSync?: number;
-  content: string;
-  successContent: string;
   type: MessageStatusType;
   duration: number;
   secondaryDuration: number;
@@ -29,33 +25,7 @@ const storyDescription = (id: string) => ({
 const meta = {
   title: "Components/Message",
   tags: ["autodocs"],
-  decorators: [
-    function SyncControlsBeforeAction(Story, context) {
-      const [args, updateArgs] = useArgs<MessageStoryArgs>();
-      const syncRef = useRef(0);
-      const hasChangedControls = Object.entries(args).some(
-        ([key, value]) =>
-          key !== "controlsSync" && value !== context.initialArgs[key as keyof MessageStoryArgs],
-      );
-
-      return (
-        <div
-          className="contents"
-          onPointerDownCapture={() => {
-            if (hasChangedControls) {
-              updateArgs({ ...args, controlsSync: (syncRef.current += 1) });
-            }
-          }}
-        >
-          <Story />
-        </div>
-      );
-    },
-  ],
   argTypes: {
-    controlsSync: { control: false, table: { disable: true } },
-    content: { name: "내용", control: "text" },
-    successContent: { name: "완료 내용", control: "text" },
     type: { name: "상태", control: "select", options: messageStatuses },
     duration: { name: "표시 시간", control: { type: "number", min: 0, step: 0.5 } },
     secondaryDuration: {
@@ -118,7 +88,6 @@ type Story = StoryObj<MessageStoryArgs>;
 
 export const Basic: Story = {
   args: {
-    content: "새 소식이 있어요.",
     type: "info",
     duration: 3,
     pauseOnHover: true,
@@ -127,7 +96,7 @@ export const Basic: Story = {
     ...storyDescription("components-message--basic"),
     controls: {
       disable: false,
-      include: ["내용", "상태", "표시 시간", "Hover 중 정지"],
+      include: ["상태", "표시 시간", "Hover 중 정지"],
     },
     docs: {
       ...storyDescription("components-message--basic").docs,
@@ -140,8 +109,10 @@ export const Basic: Story = {
       },
     },
   },
-  render: ({ content, type, duration, pauseOnHover }) => (
-    <Button onClick={() => message.open({ content, type, duration, pauseOnHover })}>
+  render: ({ type, duration, pauseOnHover }) => (
+    <Button
+      onClick={() => message.open({ content: "새 소식이 있어요.", type, duration, pauseOnHover })}
+    >
       Message 열기
     </Button>
   ),
@@ -242,13 +213,9 @@ export const Types: Story = {
 };
 
 export const MultilineIconAlignment: Story = {
-  args: {
-    content: "첫 번째 줄의 중앙에 아이콘을 맞춰요.\n두 번째 줄도 자연스럽게 이어져요.",
-    duration: 0,
-  },
   parameters: {
     ...storyDescription("components-message--multiline"),
-    controls: { disable: false, include: ["내용"] },
+    controls: { disable: true },
     docs: {
       ...storyDescription("components-message--multiline").docs,
       source: {
@@ -265,8 +232,17 @@ export const MultilineIconAlignment: Story = {
       },
     },
   },
-  render: ({ content }) => (
-    <Button onClick={() => message.info({ content, duration: 0 })}>여러 줄 Message</Button>
+  render: () => (
+    <Button
+      onClick={() =>
+        message.info({
+          content: "첫 번째 줄의 중앙에 아이콘을 맞춰요.\n두 번째 줄도 자연스럽게 이어져요.",
+          duration: 0,
+        })
+      }
+    >
+      여러 줄 Message
+    </Button>
   ),
 };
 
@@ -325,10 +301,10 @@ export const Duration: Story = {
 };
 
 export const Update: Story = {
-  args: { content: "저장 중이에요.", successContent: "저장했어요.", updateDelay: 1200 },
+  args: { updateDelay: 1200 },
   parameters: {
     ...storyDescription("components-message--update"),
-    controls: { disable: false, include: ["내용", "완료 내용", "갱신 지연"] },
+    controls: { disable: false, include: ["갱신 지연"] },
     docs: {
       ...storyDescription("components-message--update").docs,
       source: {
@@ -360,7 +336,7 @@ export const Update: Story = {
   render: (args) => <MessageUpdateExample {...args} />,
 };
 
-function MessageUpdateExample({ content, successContent, updateDelay }: MessageStoryArgs) {
+function MessageUpdateExample({ updateDelay }: Pick<MessageStoryArgs, "updateDelay">) {
   const timerRef = useRef<number | undefined>(undefined);
 
   useEffect(
@@ -372,10 +348,10 @@ function MessageUpdateExample({ content, successContent, updateDelay }: MessageS
   );
 
   const update = () => {
-    message.loading({ key: "save", content });
+    message.loading({ key: "save", content: "저장 중이에요." });
     window.clearTimeout(timerRef.current);
     timerRef.current = window.setTimeout(
-      () => message.success({ key: "save", content: successContent }),
+      () => message.success({ key: "save", content: "저장했어요." }),
       updateDelay,
     );
   };
@@ -384,14 +360,10 @@ function MessageUpdateExample({ content, successContent, updateDelay }: MessageS
 }
 
 export const Promise: Story = {
-  args: {
-    content: "첫 메시지",
-    successContent: "첫 메시지가 닫혔어요.",
-    duration: 1,
-  },
+  args: { duration: 1 },
   parameters: {
     ...storyDescription("components-message--promise"),
-    controls: { disable: false, include: ["내용", "완료 내용", "표시 시간"] },
+    controls: { disable: false, include: ["표시 시간"] },
     docs: {
       ...storyDescription("components-message--promise").docs,
       source: {
@@ -409,10 +381,10 @@ export const Promise: Story = {
   render: (args) => <MessagePromiseExample {...args} />,
 };
 
-function MessagePromiseExample({ content, successContent, duration }: MessageStoryArgs) {
+function MessagePromiseExample({ duration }: Pick<MessageStoryArgs, "duration">) {
   const sequence = async () => {
-    await message.success({ content, duration });
-    message.info({ content: successContent });
+    await message.success({ content: "첫 메시지", duration });
+    message.info({ content: "첫 메시지가 닫혔어요." });
   };
 
   return <Button onClick={sequence}>순서대로</Button>;
