@@ -15,6 +15,16 @@ const flexItem = "h-12 min-w-20 rounded bg-[#e6f4ff] px-4 text-center text-sm te
 const alignItem =
   "flex h-12 w-20 min-w-0 items-center justify-center rounded bg-[#e6f4ff] px-2 text-center text-sm text-[#0062df]";
 const label = "m-0 text-sm font-medium text-[#555]";
+const flexWrapOptions = [false, true, "nowrap", "wrap", "wrap-reverse"];
+const flexJustifyOptions = [
+  "flex-start",
+  "center",
+  "flex-end",
+  "space-between",
+  "space-around",
+  "space-evenly",
+];
+const flexAlignOptions = ["flex-start", "center", "flex-end", "stretch", "baseline"];
 
 function JustifyExample({ value }: { value: FlexProps["justify"] }) {
   return (
@@ -46,6 +56,17 @@ const meta = {
   title: "Components/Flex",
   component: Flex,
   tags: ["autodocs"],
+  argTypes: {
+    vertical: { name: "세로 배치", control: "boolean" },
+    wrap: { name: "줄바꿈", control: "select", options: flexWrapOptions },
+    justify: { name: "주축 정렬", control: "select", options: flexJustifyOptions },
+    align: { name: "교차축 정렬", control: "select", options: flexAlignOptions },
+    gap: { name: "간격", control: { type: "number", min: 0, step: 1 } },
+    children: { control: false, table: { disable: true } },
+    flex: { control: false, table: { disable: true } },
+    component: { control: false, table: { disable: true } },
+    className: { control: false, table: { disable: true } },
+  },
   parameters: {
     controls: { disable: true },
     docs: {
@@ -81,6 +102,44 @@ const meta = {
 
 export default meta;
 type Story = StoryObj<typeof meta>;
+
+export const Basic: Story = {
+  args: {
+    vertical: false,
+    wrap: false,
+    justify: "flex-start",
+    align: "center",
+    gap: 8,
+  },
+  parameters: {
+    ...storyDescription("components-flex--basic"),
+    controls: {
+      disable: false,
+      include: ["세로 배치", "줄바꿈", "주축 정렬", "교차축 정렬", "간격"],
+    },
+    docs: {
+      ...storyDescription("components-flex--basic").docs,
+      source: {
+        code: withStoryImports(`<Flex
+  gap={8}
+  align="center"
+  className="min-h-20 rounded border border-[#ddd] p-3"
+>
+  <Button>첫 번째</Button>
+  <Button>두 번째</Button>
+  <Button>세 번째</Button>
+</Flex>`),
+      },
+    },
+  },
+  render: (args) => (
+    <Flex {...args} className="min-h-20 rounded border border-[#ddd] p-3">
+      <Button>첫 번째</Button>
+      <Button>두 번째</Button>
+      <Button>세 번째</Button>
+    </Flex>
+  ),
+};
 
 export const Vertical: Story = {
   parameters: {

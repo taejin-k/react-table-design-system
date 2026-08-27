@@ -104,7 +104,10 @@ export const Basic: Story = {
   },
   parameters: {
     ...storyDescription("components-message--basic"),
-    controls: { disable: false },
+    controls: {
+      disable: false,
+      include: ["내용", "상태", "표시 시간", "Hover 중 정지"],
+    },
     docs: {
       ...storyDescription("components-message--basic").docs,
       source: {

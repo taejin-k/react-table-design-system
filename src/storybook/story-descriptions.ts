@@ -218,6 +218,7 @@ export const storyDescriptions: Record<string, string> = {
   "components-popover--actions": "카드 안에 설명과 실행 버튼을 함께 배치할 수 있어요.",
   "components-popover--controlled": "open과 onOpenChange로 카드 표시 상태를 직접 관리할 수 있어요.",
 
+  "components-flex--basic": "방향, 정렬, 줄바꿈과 간격을 Controls에서 조절해보세요.",
   "components-flex--vertical":
     "vertical 설정에 따라 요소를 가로 또는 세로 방향으로 배치할 수 있어요.",
   "components-flex--wrap": "공간이 부족할 때 요소를 한 줄로 유지하거나 다음 줄로 배치할 수 있어요.",
@@ -410,6 +411,7 @@ export const storyDescriptions: Record<string, string> = {
   "components-avatar--group":
     "여러 아바타를 겹쳐 표시하고 최대 개수를 넘는 사용자를 숫자로 요약해요.",
 
+  "components-badge--basic": "상태, 텍스트와 애니메이션을 Controls에서 조절해보세요.",
   "components-badge--statuses": "성공, 처리 중, 기본, 오류와 경고 상태를 구분해요.",
   "components-badge--process": "상태 점이 퍼지는 애니메이션으로 진행 중인 상태를 강조해요.",
 

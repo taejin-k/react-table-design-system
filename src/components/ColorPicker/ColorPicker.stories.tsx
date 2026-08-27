@@ -66,6 +66,27 @@ const meta = {
   title: "Components/ColorPicker",
   component: ColorPicker,
   tags: ["autodocs"],
+  argTypes: {
+    defaultValue: { name: "기본 색상", control: "color" },
+    defaultFormat: { name: "입력 형식", control: "select", options: colorFormats },
+    size: { name: "크기", control: "select", options: colorPickerSizes },
+    disabled: { name: "비활성", control: "boolean" },
+    allowClear: { name: "초기화", control: "boolean" },
+    trigger: { name: "표시 동작", control: "select", options: colorPickerTriggers },
+    placement: { name: "패널 위치", control: "select", options: colorPickerPlacements },
+    showLabel: { name: "색상값 표시", control: "boolean" },
+    value: { control: false, table: { disable: true } },
+    format: { control: false, table: { disable: true } },
+    open: { control: false, table: { disable: true } },
+    defaultOpen: { control: false, table: { disable: true } },
+    presets: { control: false, table: { disable: true } },
+    className: { control: false, table: { disable: true } },
+    onChange: { control: false, table: { disable: true } },
+    onChangeComplete: { control: false, table: { disable: true } },
+    onFormatChange: { control: false, table: { disable: true } },
+    onOpenChange: { control: false, table: { disable: true } },
+    onClear: { control: false, table: { disable: true } },
+  },
   parameters: {
     controls: { disable: true },
     docs: {
@@ -134,8 +155,31 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Basic: Story = {
+  args: {
+    defaultValue: "#0062df",
+    defaultFormat: "hex",
+    size: "md",
+    disabled: false,
+    allowClear: false,
+    trigger: "click",
+    placement: "bottomLeft",
+    showLabel: true,
+  },
   parameters: {
     ...storyDescription("components-colorpicker--basic"),
+    controls: {
+      disable: false,
+      include: [
+        "기본 색상",
+        "입력 형식",
+        "크기",
+        "비활성",
+        "초기화",
+        "표시 동작",
+        "패널 위치",
+        "색상값 표시",
+      ],
+    },
     docs: {
       ...storyDescription("components-colorpicker--basic").docs,
       source: {
@@ -144,7 +188,7 @@ export const Basic: Story = {
       },
     },
   },
-  render: () => <ColorPicker defaultValue="#0062df" showLabel />,
+  render: (args) => <ColorPicker {...args} key={args.defaultValue} />,
 };
 
 export const AllowClear: Story = {

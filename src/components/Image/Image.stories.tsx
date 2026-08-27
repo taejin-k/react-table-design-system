@@ -17,6 +17,16 @@ const meta = {
   title: "Components/Image",
   component: Image,
   tags: ["autodocs"],
+  argTypes: {
+    width: { name: "가로 길이", control: { type: "number", min: 0, step: 1 } },
+    height: { name: "세로 길이", control: { type: "number", min: 0, step: 1 } },
+    alt: { name: "대체 텍스트", control: "text" },
+    placeholder: { name: "로딩 Skeleton", control: "boolean" },
+    preview: { name: "미리보기", control: "boolean" },
+    src: { control: false, table: { disable: true } },
+    fallback: { control: false, table: { disable: true } },
+    className: { control: false, table: { disable: true } },
+  },
   parameters: {
     controls: { disable: true },
     docs: {
@@ -68,8 +78,20 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Basic: Story = {
+  args: {
+    src: picture,
+    alt: "예시 풍경",
+    width: 320,
+    height: 200,
+    placeholder: false,
+    preview: true,
+  },
   parameters: {
     ...storyDescription("components-image--basic"),
+    controls: {
+      disable: false,
+      include: ["가로 길이", "세로 길이", "대체 텍스트", "로딩 Skeleton", "미리보기"],
+    },
     docs: {
       ...storyDescription("components-image--basic").docs,
       source: {
@@ -82,7 +104,6 @@ export const Basic: Story = {
       },
     },
   },
-  render: () => <Image src={picture} alt="예시 풍경" width={320} height={200} />,
 };
 
 export const Cover: Story = {

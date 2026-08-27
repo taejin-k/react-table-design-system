@@ -69,8 +69,11 @@ const meta = {
   argTypes: {
     menu: { control: false, table: { disable: true } },
     children: { control: false, table: { disable: true } },
-    placement: { control: false, table: { disable: true } },
-    trigger: { control: false, table: { disable: true } },
+    placement: { name: "위치", control: "select", options: placements },
+    trigger: { name: "표시 동작", control: "select", options: triggers },
+    arrow: { name: "화살표", control: "boolean" },
+    disabled: { name: "비활성", control: "boolean" },
+    autoAdjustOverflow: { name: "화면 이탈 보정", control: "boolean" },
     open: { control: false, table: { disable: true } },
     defaultOpen: { control: false, table: { disable: true } },
     mouseEnterDelay: { control: false, table: { disable: true } },
@@ -179,10 +182,20 @@ function DropdownTypeCode({
 }
 
 export const Basic: Story = {
-  args: { menu: { items: basicItems } },
+  args: {
+    menu: { items: basicItems },
+    placement: "bottomLeft",
+    trigger: "hover",
+    arrow: false,
+    disabled: false,
+    autoAdjustOverflow: true,
+  },
   parameters: {
     ...storyDescription("components-dropdown--basic"),
-    controls: { disable: true },
+    controls: {
+      disable: false,
+      include: ["위치", "표시 동작", "화살표", "비활성", "화면 이탈 보정"],
+    },
     docs: {
       ...storyDescription("components-dropdown--basic").docs,
       source: {

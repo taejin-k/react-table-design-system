@@ -61,6 +61,22 @@ const meta = {
   title: "Components/Collapse",
   component: Collapse,
   tags: ["autodocs"],
+  argTypes: {
+    accordion: { name: "아코디언", control: "boolean" },
+    bordered: { name: "테두리", control: "boolean" },
+    ghost: { name: "배경 제거", control: "boolean" },
+    size: { name: "크기", control: "select", options: collapseSizes },
+    expandIconPlacement: {
+      name: "아이콘 위치",
+      control: "select",
+      options: collapseIconPlacements,
+    },
+    items: { control: false, table: { disable: true } },
+    activeKey: { control: false, table: { disable: true } },
+    defaultActiveKey: { control: false, table: { disable: true } },
+    className: { control: false, table: { disable: true } },
+    onChange: { control: false, table: { disable: true } },
+  },
   parameters: {
     controls: { disable: true },
     docs: {
@@ -124,9 +140,21 @@ const basicSource = `${itemsSource}
 
 <Collapse defaultActiveKey={['one']} items={items} />`;
 export const Basic: Story = {
-  args: { items, defaultActiveKey: ["one"] },
+  args: {
+    items,
+    defaultActiveKey: ["one"],
+    accordion: false,
+    bordered: true,
+    ghost: false,
+    size: "md",
+    expandIconPlacement: "start",
+  },
   parameters: {
     ...storyDescription("components-collapse--basic"),
+    controls: {
+      disable: false,
+      include: ["아코디언", "테두리", "배경 제거", "크기", "아이콘 위치"],
+    },
     docs: {
       ...storyDescription("components-collapse--basic").docs,
       source: { type: "code", code: withStoryImports(basicSource) },

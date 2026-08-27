@@ -15,6 +15,14 @@ const meta = {
   title: "Components/Badge",
   component: Badge,
   tags: ["autodocs"],
+  argTypes: {
+    status: { name: "상태", control: "select", options: badgeStatuses },
+    process: { name: "퍼짐 애니메이션", control: "boolean" },
+    text: { name: "텍스트", control: "text" },
+    color: { name: "사용자 색상", control: "color" },
+    className: { control: false, table: { disable: true } },
+    style: { control: false, table: { disable: true } },
+  },
   parameters: {
     controls: { disable: true },
     docs: {
@@ -49,6 +57,28 @@ const meta = {
 } satisfies Meta<typeof Badge>;
 export default meta;
 type Story = StoryObj<typeof meta>;
+
+export const Basic: Story = {
+  args: {
+    status: "processing",
+    process: false,
+    text: "처리 중",
+  },
+  parameters: {
+    ...storyDescription("components-badge--basic"),
+    controls: {
+      disable: false,
+      include: ["상태", "퍼짐 애니메이션", "텍스트", "사용자 색상"],
+    },
+    docs: {
+      ...storyDescription("components-badge--basic").docs,
+      source: {
+        type: "code",
+        code: withStoryImports(`<Badge status="processing" text="처리 중" />`),
+      },
+    },
+  },
+};
 
 export const Statuses: Story = {
   args: { status: "success" },

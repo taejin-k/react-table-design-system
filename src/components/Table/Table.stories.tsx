@@ -11,6 +11,20 @@ const meta: Meta<TableProps<Member>> = {
   title: "Components/Table",
   component: Table as ComponentType<TableProps<Member>>,
   tags: ["!autodocs"],
+  argTypes: {
+    size: { name: "크기", control: "select", options: ["lg", "md", "sm"] },
+    bordered: { name: "테두리", control: "boolean" },
+    loading: { name: "로딩", control: "boolean" },
+    showHeader: { name: "헤더 표시", control: "boolean" },
+    rowHoverable: { name: "행 Hover", control: "boolean" },
+    dataSource: { control: false, table: { disable: true } },
+    columns: { control: false, table: { disable: true } },
+    pagination: { control: false, table: { disable: true } },
+    rowSelection: { control: false, table: { disable: true } },
+    expandable: { control: false, table: { disable: true } },
+    scroll: { control: false, table: { disable: true } },
+    className: { control: false, table: { disable: true } },
+  },
   parameters: {
     controls: { disable: true },
     docs: {
@@ -213,7 +227,20 @@ export default meta;
 type Story = StoryObj<TableProps<Member>>;
 
 export const Basic: Story = {
-  parameters: storyDescription("components-table--basic"),
+  args: {
+    size: "md",
+    bordered: false,
+    loading: false,
+    showHeader: true,
+    rowHoverable: true,
+  },
+  parameters: {
+    ...storyDescription("components-table--basic"),
+    controls: {
+      disable: false,
+      include: ["크기", "테두리", "로딩", "헤더 표시", "행 Hover"],
+    },
+  },
 };
 
 export const Size: Story = {

@@ -21,6 +21,18 @@ const meta = {
   title: "Components/Avatar",
   component: Avatar,
   tags: ["autodocs"],
+  argTypes: {
+    children: { name: "텍스트", control: "text" },
+    size: { name: "크기", control: "select", options: avatarSizes },
+    shape: { name: "모양", control: "select", options: avatarShapes },
+    color: { name: "배경색", control: "color" },
+    label: { name: "라벨", control: "boolean" },
+    labelWidth: { name: "라벨 너비", control: { type: "number", min: 0, step: 1 } },
+    preview: { name: "이미지 미리보기", control: "boolean" },
+    src: { control: false, table: { disable: true } },
+    icon: { control: false, table: { disable: true } },
+    className: { control: false, table: { disable: true } },
+  },
   parameters: {
     controls: { disable: true },
     docs: {
@@ -74,8 +86,20 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Basic: Story = {
+  args: {
+    children: "MD",
+    size: "md",
+    shape: "circle",
+    color: "#bfbfbf",
+    label: false,
+    preview: false,
+  },
   parameters: {
     ...storyDescription("components-avatar--basic"),
+    controls: {
+      disable: false,
+      include: ["텍스트", "크기", "모양", "배경색", "라벨", "라벨 너비", "이미지 미리보기"],
+    },
     docs: {
       ...storyDescription("components-avatar--basic").docs,
       source: {
@@ -84,7 +108,6 @@ export const Basic: Story = {
       },
     },
   },
-  render: () => <Avatar>MD</Avatar>,
 };
 
 export const Sizes: Story = {
