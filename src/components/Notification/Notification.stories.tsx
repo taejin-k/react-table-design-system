@@ -192,7 +192,6 @@ export const Types: Story = {
   return (
     <div className="flex flex-wrap gap-2">
       <Button
-        size="md"
         onClick={() =>
           notification.success({
             title: '저장 완료',
@@ -203,7 +202,6 @@ export const Types: Story = {
         Success
       </Button>
       <Button
-        size="md"
         onClick={() =>
           notification.error({
             title: '저장 실패',
@@ -214,7 +212,6 @@ export const Types: Story = {
         Error
       </Button>
       <Button
-        size="md"
         onClick={() =>
           notification.info({
             title: '새 소식',
@@ -225,7 +222,6 @@ export const Types: Story = {
         Info
       </Button>
       <Button
-        size="md"
         onClick={() =>
           notification.warning({
             title: '확인 필요',
@@ -245,7 +241,6 @@ export const Types: Story = {
     return (
       <div className="flex flex-wrap gap-2">
         <Button
-          size="md"
           onClick={() =>
             notification.success({
               title: "저장 완료",
@@ -259,7 +254,6 @@ export const Types: Story = {
           Success
         </Button>
         <Button
-          size="md"
           onClick={() =>
             notification.error({
               title: "저장 실패",
@@ -273,7 +267,6 @@ export const Types: Story = {
           Error
         </Button>
         <Button
-          size="md"
           onClick={() =>
             notification.info({
               title: "새 소식",
@@ -287,7 +280,6 @@ export const Types: Story = {
           Info
         </Button>
         <Button
-          size="md"
           onClick={() =>
             notification.warning({
               title: "확인 필요",
@@ -365,14 +357,12 @@ export const Actions: Story = {
       actions: (
         <div className="flex gap-2">
           <Button
-            size="md"
             variant="secondary"
             onClick={() => notification.destroy('notification-actions')}
           >
             닫기
           </Button>
           <Button
-            size="md"
             onClick={() => {
               alert('저장된 내용을 확인해요.');
               notification.destroy('notification-actions');
@@ -385,7 +375,7 @@ export const Actions: Story = {
     });
   };
 
-  return <Button size="md" onClick={open}>Actions 열기</Button>;
+  return <Button onClick={open}>Actions 열기</Button>;
 }`),
       },
     },
@@ -404,15 +394,10 @@ function NotificationActionsExample(args: NotificationStoryArgs) {
       closable: args.closable,
       actions: (
         <div className="flex gap-2">
-          <Button
-            size="md"
-            variant="secondary"
-            onClick={() => notification.destroy("notification-actions")}
-          >
+          <Button variant="secondary" onClick={() => notification.destroy("notification-actions")}>
             닫기
           </Button>
           <Button
-            size="md"
             onClick={() => {
               alert("저장된 내용을 확인해요.");
               notification.destroy("notification-actions");
@@ -425,11 +410,7 @@ function NotificationActionsExample(args: NotificationStoryArgs) {
     });
   };
 
-  return (
-    <Button size="md" onClick={open}>
-      Actions 열기
-    </Button>
-  );
+  return <Button onClick={open}>Actions 열기</Button>;
 }
 
 export const Placements: Story = {
