@@ -436,7 +436,6 @@ function NotificationPlacements() {
       {placements.map((placement) => (
         <Button
           key={placement}
-          variant="secondary"
           onClick={() =>
             notification.info({
               title: placement,
@@ -468,7 +467,6 @@ function NotificationPlacements() {
       ).map((placement) => (
         <Button
           key={placement}
-          variant="secondary"
           onClick={() =>
             notification.info({
               title: placement,
