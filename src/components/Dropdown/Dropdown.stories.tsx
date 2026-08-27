@@ -121,8 +121,8 @@ const meta = {
 | \`multiple\` | 여러 메뉴 항목을 함께 선택해요. | \`boolean\` | \`false\` |
 | \`selectedValues\` | 선택된 항목 value를 외부에서 관리해요. | \`string[]\` | - |
 | \`defaultSelectedValues\` | 처음 선택할 항목 value를 설정해요. | \`string[]\` | \`[]\` |
-| \`onClick\` | 메뉴 항목을 클릭할 때 실행할 함수예요. | \`(info) => void\` | - |
-| \`onSelect\` | 선택 상태가 바뀔 때 실행할 함수예요. | \`(info) => void\` | - |
+| \`onClick\` | 메뉴 항목을 클릭할 때 실행할 함수예요. | (info: [\`DropdownClickInfo\`](#dropdownclickinfo)) => void | - |
+| \`onSelect\` | 선택 상태가 바뀔 때 실행할 함수예요. | (info: [\`DropdownSelectInfo\`](#dropdownselectinfo)) => void | - |
 
 ### DropdownItem
 
@@ -136,7 +136,22 @@ const meta = {
 | \`danger\` | 위험 작업의 색상을 적용해요. | \`boolean\` | \`false\` |
 | \`type\` | 일반 항목, 구분선, 그룹을 설정해요. | [\`DropdownItemType\`](#dropdown-item-type) | \`item\` |
 | \`children\` | 오른쪽에 열리는 하위 메뉴를 설정해요. | [\`DropdownItem[]\`](#dropdownitem) | - |
-| \`onClick\` | 해당 항목을 클릭할 때 실행할 함수예요. | \`(info) => void\` | - |
+| \`onClick\` | 해당 항목을 클릭할 때 실행할 함수예요. | (info: [\`DropdownClickInfo\`](#dropdownclickinfo)) => void | - |
+
+### DropdownClickInfo
+
+| Name | Description | Type | Default |
+| --- | --- | --- | --- |
+| \`value\` | 클릭한 항목의 값이에요. | \`string\` | - |
+| \`valuePath\` | 상위 항목부터 클릭한 항목까지의 값이에요. | \`string[]\` | - |
+| \`domEvent\` | 클릭할 때 발생한 이벤트예요. | \`React.MouseEvent<HTMLElement>\` | - |
+
+### DropdownSelectInfo
+
+| Name | Description | Type | Default |
+| --- | --- | --- | --- |
+| \`value\` | 선택 상태가 바뀐 항목의 값이에요. | \`string\` | - |
+| \`selectedValues\` | 현재 선택된 항목 값들이에요. | \`string[]\` | - |
           `}</Markdown>
           <h2 className="component-docs-types-heading">Types</h2>
           <h3 id="dropdown-placement-type">DropdownPlacementType</h3>

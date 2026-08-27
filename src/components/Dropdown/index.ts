@@ -6,5 +6,6 @@ export type {
   DropdownMenu,
   DropdownPlacementType,
   DropdownProps,
+  DropdownSelectInfo,
   DropdownTriggerType,
 } from "./Dropdown.types";

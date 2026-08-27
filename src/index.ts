@@ -69,6 +69,7 @@ export type {
   DropdownMenu,
   DropdownPlacementType,
   DropdownProps,
+  DropdownSelectInfo,
   DropdownTriggerType,
 } from "./components/Dropdown";
 export { Popover } from "./components/Popover";

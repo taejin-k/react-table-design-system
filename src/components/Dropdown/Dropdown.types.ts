@@ -12,6 +12,11 @@ export interface DropdownClickInfo {
   domEvent: React.MouseEvent<HTMLElement>;
 }
 
+export interface DropdownSelectInfo {
+  value: string;
+  selectedValues: string[];
+}
+
 export interface DropdownItem {
   value: string;
   label?: ReactNode;
@@ -31,7 +36,7 @@ export interface DropdownMenu {
   selectedValues?: string[];
   defaultSelectedValues?: string[];
   onClick?: (info: DropdownClickInfo) => void;
-  onSelect?: (info: { value: string; selectedValues: string[] }) => void;
+  onSelect?: (info: DropdownSelectInfo) => void;
 }
 
 export interface DropdownProps {
