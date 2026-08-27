@@ -46,8 +46,6 @@ const meta = {
   title: "Components/Notification",
   tags: ["autodocs"],
   argTypes: {
-    title: { name: "제목", control: "text" },
-    description: { name: "설명", control: "text" },
     successTitle: { name: "완료 제목", control: "text" },
     successDescription: { name: "완료 설명", control: "text" },
     type: { name: "상태", control: "select", options: notificationStatuses },
@@ -133,16 +131,7 @@ export const Basic: Story = {
     ...storyDescription("components-notification--basic"),
     controls: {
       disable: false,
-      include: [
-        "제목",
-        "설명",
-        "상태",
-        "표시 시간",
-        "위치",
-        "닫기 버튼",
-        "진행 표시",
-        "Hover 중 정지",
-      ],
+      include: ["상태", "표시 시간", "위치", "닫기 버튼", "진행 표시", "Hover 중 정지"],
     },
     docs: {
       ...storyDescription("components-notification--basic").docs,
@@ -317,7 +306,7 @@ export const MultilineIconAlignment: Story = {
   },
   parameters: {
     ...storyDescription("components-notification--multiline"),
-    controls: { disable: false, include: ["제목", "설명"] },
+    controls: { disable: true },
     docs: {
       ...storyDescription("components-notification--multiline").docs,
       source: {
@@ -354,7 +343,7 @@ export const Actions: Story = {
     ...storyDescription("components-notification--actions"),
     controls: {
       disable: false,
-      include: ["제목", "설명", "표시 시간", "위치", "닫기 버튼"],
+      include: ["표시 시간", "위치", "닫기 버튼"],
     },
     docs: {
       ...storyDescription("components-notification--actions").docs,
@@ -429,7 +418,7 @@ export const Placements: Story = {
   args: { description: "선택한 위치에 표시돼요.", duration: 4.5 },
   parameters: {
     ...storyDescription("components-notification--placements"),
-    controls: { disable: false, include: ["설명", "표시 시간"] },
+    controls: { disable: false, include: ["표시 시간"] },
     docs: {
       ...storyDescription("components-notification--placements").docs,
       source: {
@@ -507,7 +496,7 @@ export const Progress: Story = {
     ...storyDescription("components-notification--progress"),
     controls: {
       disable: false,
-      include: ["제목", "설명", "표시 시간", "진행 표시", "Hover 중 정지"],
+      include: ["표시 시간", "진행 표시", "Hover 중 정지"],
     },
     docs: {
       ...storyDescription("components-notification--progress").docs,
@@ -560,7 +549,7 @@ export const Update: Story = {
     ...storyDescription("components-notification--update"),
     controls: {
       disable: false,
-      include: ["제목", "설명", "완료 제목", "완료 설명", "갱신 지연"],
+      include: ["완료 제목", "완료 설명", "갱신 지연"],
     },
     docs: {
       ...storyDescription("components-notification--update").docs,
