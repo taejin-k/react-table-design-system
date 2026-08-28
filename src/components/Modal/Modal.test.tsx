@@ -133,6 +133,16 @@ describe("Modal", () => {
     expect(button?.querySelector("svg")).toBeInTheDocument();
   });
 
+  it("uses confirmText for the confirm button", () => {
+    render(
+      <Modal open confirmText="저장" onCancel={() => undefined}>
+        내용
+      </Modal>,
+    );
+
+    expect(screen.getByRole("button", { name: "저장" })).toBeInTheDocument();
+  });
+
   it("uses the shared overlay close button", () => {
     render(
       <Modal open title="제목" onCancel={() => undefined}>

@@ -67,13 +67,6 @@ function useResolvedWidth(width: ModalProps["width"]) {
   return resolveWidth(width, viewportWidth);
 }
 
-function resolveContainer(getContainer: ModalProps["getContainer"]) {
-  if (getContainer === false || typeof document === "undefined") return null;
-  if (typeof getContainer === "string") return document.querySelector<HTMLElement>(getContainer);
-  if (typeof getContainer === "function") return getContainer();
-  return getContainer ?? document.body;
-}
-
 function ModalBase({
   open = false,
   title,
@@ -83,24 +76,19 @@ function ModalBase({
   centered = false,
   width = 420,
   confirmLoading = false,
-  okText = "확인",
+  confirmText = "확인",
   cancelText = "취소",
-  okType = "primary",
-  okButtonProps,
-  cancelButtonProps,
   keyboard = true,
   mask = true,
   scrollLock = true,
   forceRender = false,
   destroyOnHidden = false,
   focusable,
-  getContainer,
   zIndex = 1000,
   style,
   className,
-  modalRender,
-  afterClose,
-  afterOpenChange,
+  onAfterClose,
+  onAfterOpen,
   onConfirm,
   onCancel,
 }: ModalProps) {
@@ -177,25 +165,19 @@ function ModalBase({
 
   const close = (event: MouseEvent<HTMLButtonElement | HTMLDivElement>) => onCancel?.(event);
   const renderCancelButton = () => (
-    <Button variant="secondary" {...cancelButtonProps} onClick={(event) => close(event)}>
+    <Button variant="secondary" onClick={(event) => close(event)}>
       {cancelText}
     </Button>
   );
-  const renderOkButton = () => (
-    <Button
-      variant={okType}
-      {...okButtonProps}
-      loading={confirmLoading}
-      disabled={okButtonProps?.disabled}
-      onClick={onConfirm}
-    >
-      {okText}
+  const renderConfirmButton = () => (
+    <Button loading={confirmLoading} onClick={onConfirm}>
+      {confirmText}
     </Button>
   );
   const defaultFooter = (
     <div className="flex justify-end gap-2">
       {renderCancelButton()}
-      {renderOkButton()}
+      {renderConfirmButton()}
     </div>
   );
   const footerNode = footer === undefined ? defaultFooter : footer(defaultFooter);
@@ -272,9 +254,11 @@ function ModalBase({
         onEnterPrepare={prepareTransformOrigin}
         onVisibleChanged={(visible) => {
           setRootVisible(visible);
-          afterOpenChange?.(visible);
-          if (visible) return;
-          afterClose?.();
+          if (visible) {
+            onAfterOpen?.();
+            return;
+          }
+          onAfterClose?.();
           if (focusable?.focusTriggerAfterClose !== false) triggerRef.current?.focus();
         }}
       >
@@ -289,14 +273,13 @@ function ModalBase({
             )}
             style={motionStyle}
           >
-            {modalRender ? modalRender(panel) : panel}
+            {panel}
           </div>
         )}
       </CSSMotion>
     </div>
   );
-  const container = resolveContainer(getContainer);
-  return container ? createPortal(content, container) : content;
+  return typeof document === "undefined" ? content : createPortal(content, document.body);
 }
 
 type ManagedModal = {
@@ -427,28 +410,19 @@ function ConfirmModal({
     }
   };
   const renderCancelButton = () => (
-    <Button
-      variant="secondary"
-      {...config.cancelButtonProps}
-      onClick={() => void run(config.onCancel, false)}
-    >
+    <Button variant="secondary" onClick={() => void run(config.onCancel, false)}>
       {config.cancelText ?? "취소"}
     </Button>
   );
-  const renderOkButton = () => (
-    <Button
-      variant={config.okType ?? "primary"}
-      {...config.okButtonProps}
-      loading={loading}
-      onClick={() => void run(config.onConfirm, true)}
-    >
-      {config.okText ?? "확인"}
+  const renderConfirmButton = () => (
+    <Button loading={loading} onClick={() => void run(config.onConfirm, true)}>
+      {config.confirmText ?? "확인"}
     </Button>
   );
   const defaultFooter = (
     <div className="flex justify-end gap-2">
       {config.type === "confirm" ? renderCancelButton() : null}
-      {renderOkButton()}
+      {renderConfirmButton()}
     </div>
   );
   const footerNode = config.footer === undefined ? defaultFooter : config.footer(defaultFooter);
@@ -461,7 +435,10 @@ function ConfirmModal({
       footer={() => footerNode}
       closable={config.closable ?? false}
       mask={config.mask ?? true}
-      afterClose={onAfterClose}
+      onAfterClose={() => {
+        config.onAfterClose?.();
+        onAfterClose();
+      }}
       onCancel={() => void run(config.onCancel, false)}
       onConfirm={undefined}
     >

@@ -8,11 +8,7 @@ import { Button } from "../Button";
 import { Modal } from "./Modal";
 import type { ModalFuncConfig, ModalProps, ModalStatusType } from "./Modal.types";
 
-const modalMaskTypes = ["boolean", "ModalMaskConfig"];
-const modalContainerTypes = ["HTMLElement", "() => HTMLElement", "string", "false"];
 const modalStatuses: ModalStatusType[] = ["info", "success", "error", "warning", "confirm"];
-const buttonVariantTypeHref = `${typeof window === "undefined" ? "" : window.location.origin}/iframe.html?id=components-button--documentation&viewMode=docs#button-variant`;
-const buttonPropsHref = `${typeof window === "undefined" ? "" : window.location.origin}/iframe.html?id=components-button--documentation&viewMode=docs#button`;
 
 const storyDescription = (id: string) => ({
   docs: { description: { story: storyDescriptions[id] } },
@@ -30,7 +26,7 @@ const meta = {
     keyboard: { name: "Escape 닫기", control: "boolean" },
     mask: { name: "배경 마스크", control: "boolean" },
     scrollLock: { name: "스크롤 잠금", control: "boolean" },
-    okText: { name: "확인 버튼", control: "text" },
+    confirmText: { name: "확인 버튼", control: "text" },
     cancelText: { name: "취소 버튼", control: "text" },
     open: { control: false, table: { disable: true } },
     children: { control: false, table: { disable: true } },
@@ -61,27 +57,33 @@ const meta = {
 | \`footer\` | 기본 footer를 받아 새 footer를 반환해요. | \`(originNode) => ReactNode\` | 확인·취소 버튼 |
 | \`closable\` | 닫기 버튼을 표시해요. | \`boolean\` | \`true\` |
 | \`centered\` | 화면 가운데에 배치해요. | \`boolean\` | \`false\` |
-| \`width\` | 너비 또는 반응형 너비를 설정해요. | \`number \\| string \\| { xs?, sm?, md?, lg?, xl?, xxl? }\` | \`420\` |
+| \`width\` | 너비 또는 반응형 너비를 설정해요. | \`number \\| string \\|\` [\`ModalBreakpointMap\`](#modal-breakpoint-map) | \`420\` |
 | \`confirmLoading\` | 확인 버튼의 로딩 상태를 표시해요. | \`boolean\` | \`false\` |
-| \`okText\` | 확인 버튼 내용을 설정해요. | \`ReactNode\` | \`확인\` |
+| \`confirmText\` | 확인 버튼 내용을 설정해요. | \`ReactNode\` | \`확인\` |
 | \`cancelText\` | 취소 버튼 내용을 설정해요. | \`ReactNode\` | \`취소\` |
-| \`okType\` | 확인 버튼 종류를 설정해요. | [\`ButtonVariantType\`](${buttonVariantTypeHref}) | \`primary\` |
-| \`okButtonProps\` | 확인 Button의 속성을 설정해요. | [\`ButtonProps\`](${buttonPropsHref}) | - |
-| \`cancelButtonProps\` | 취소 Button의 속성을 설정해요. | [\`ButtonProps\`](${buttonPropsHref}) | - |
 | \`keyboard\` | Escape로 닫을 수 있게 해요. | \`boolean\` | \`true\` |
-| \`mask\` | 배경 마스크·블러·닫기 동작을 설정해요. | [\`ModalMaskType\`](#modal-mask-type) | \`true\` |
+| \`mask\` | 배경 마스크·블러·닫기 동작을 설정해요. | \`boolean \\|\` [\`ModalMaskConfig\`](#modal-mask-config) | \`true\` |
 | \`scrollLock\` | 열려 있는 동안 문서 스크롤을 잠가요. | \`boolean\` | \`true\` |
 | \`forceRender\` | 닫힌 상태에서도 내용을 미리 렌더링해요. | \`boolean\` | \`false\` |
 | \`destroyOnHidden\` | 닫힌 뒤 내용을 제거해요. | \`boolean\` | \`false\` |
 | \`focusable\` | 포커스 순환과 원래 요소 복귀를 설정해요. | [\`ModalFocusableConfig\`](#modal-focusable-config) | - |
-| \`getContainer\` | Modal을 렌더링할 컨테이너를 설정해요. | [\`ModalContainerType\`](#modal-container-type) | \`document.body\` |
 | \`zIndex\` | 겹치는 순서를 설정해요. | \`number\` | \`1000\` |
 | \`className\` | 최상위 요소에 Tailwind 클래스를 추가해요. | \`string\` | - |
-| \`modalRender\` | 전체 패널을 감싸서 렌더링해요. | \`(node) => ReactNode\` | - |
-| \`afterClose\` | 닫힘 애니메이션 뒤 실행해요. | \`() => void\` | - |
-| \`afterOpenChange\` | 열림 상태 전환이 끝나면 실행해요. | \`(open) => void\` | - |
+| \`onAfterClose\` | 닫힘 애니메이션 뒤 실행해요. | \`() => void\` | - |
+| \`onAfterOpen\` | 열림 애니메이션 뒤 실행해요. | \`() => void\` | - |
 | \`onConfirm\` | 확인 버튼을 누르면 실행해요. | \`(event) => void\` | - |
 | \`onCancel\` | 취소·닫기·마스크를 누르면 실행해요. | \`(event) => void\` | - |
+
+### <span id="modal-breakpoint-map">ModalBreakpointMap</span>
+
+| Name | Description | Type | Default |
+| --- | --- | --- | --- |
+| \`xs\` | 가장 작은 화면에 적용할 너비예요. | \`number \\| string\` | - |
+| \`sm\` | 576px 이상에서 적용할 너비예요. | \`number \\| string\` | - |
+| \`md\` | 768px 이상에서 적용할 너비예요. | \`number \\| string\` | - |
+| \`lg\` | 992px 이상에서 적용할 너비예요. | \`number \\| string\` | - |
+| \`xl\` | 1200px 이상에서 적용할 너비예요. | \`number \\| string\` | - |
+| \`xxl\` | 1600px 이상에서 적용할 너비예요. | \`number \\| string\` | - |
 
 ### Static methods
 
@@ -132,14 +134,6 @@ Modal의 공통 속성과 아래 설정을 함께 사용해요.
 
       `}</Markdown>
           <h2 className="component-docs-types-heading">Types</h2>
-          <h3 id="modal-mask-type">ModalMaskType</h3>
-          <p>
-            마스크 표시 여부 또는 <a href="#modal-mask-config">ModalMaskConfig</a>를 사용해요.
-          </p>
-          <TypeTokens values={modalMaskTypes} />
-          <h3 id="modal-container-type">ModalContainerType</h3>
-          <p>Modal이 렌더링될 컨테이너 형식을 선택해요.</p>
-          <TypeTokens values={modalContainerTypes} />
           <h3 id="modal-status-type">ModalStatusType</h3>
           <p>정적 Modal의 상태를 선택해요.</p>
           <TypeTokens values={modalStatuses} />
@@ -161,7 +155,7 @@ export const Basic: Story = {
     keyboard: true,
     mask: true,
     scrollLock: true,
-    okText: "확인",
+    confirmText: "확인",
     cancelText: "취소",
   },
   parameters: {
@@ -212,7 +206,7 @@ export const Async: Story = {
     keyboard: true,
     mask: true,
     scrollLock: true,
-    okText: "확인",
+    confirmText: "확인",
     cancelText: "취소",
   },
   parameters: {
@@ -297,7 +291,7 @@ export const Footer: Story = {
     keyboard: true,
     mask: true,
     scrollLock: true,
-    okText: "확인",
+    confirmText: "확인",
     cancelText: "취소",
   },
   parameters: {
@@ -366,7 +360,7 @@ export const StaticMethods: Story = {
     keyboard: true,
     mask: true,
     scrollLock: true,
-    okText: "확인",
+    confirmText: "확인",
     cancelText: "취소",
   },
   parameters: {
@@ -427,7 +421,7 @@ function createStaticConfig(
     keyboard: args.keyboard,
     mask: args.mask,
     scrollLock: args.scrollLock,
-    okText: args.okText,
+    confirmText: args.confirmText,
     cancelText: args.cancelText,
   };
 }
@@ -476,7 +470,7 @@ export const PositionAndWidth: Story = {
     keyboard: true,
     mask: true,
     scrollLock: true,
-    okText: "확인",
+    confirmText: "확인",
     cancelText: "취소",
   },
   parameters: {

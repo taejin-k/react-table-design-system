@@ -1,17 +1,22 @@
 import type { CSSProperties, MouseEvent, ReactNode } from "react";
-import type { ButtonProps, ButtonVariantType } from "../Button";
 
 export interface ModalMaskConfig {
   enabled?: boolean;
   blur?: boolean;
   closable?: boolean;
 }
-export type ModalMaskType = boolean | ModalMaskConfig;
 export interface ModalFocusableConfig {
   trap?: boolean;
   focusTriggerAfterClose?: boolean;
 }
-export type ModalContainerType = HTMLElement | (() => HTMLElement) | string | false;
+export interface ModalBreakpointMap {
+  xs?: number | string;
+  sm?: number | string;
+  md?: number | string;
+  lg?: number | string;
+  xl?: number | string;
+  xxl?: number | string;
+}
 export type ModalStatusType = "info" | "success" | "error" | "warning" | "confirm";
 
 export interface ModalProps {
@@ -21,36 +26,21 @@ export interface ModalProps {
   footer?: (originNode: ReactNode) => ReactNode;
   closable?: boolean;
   centered?: boolean;
-  width?:
-    | number
-    | string
-    | {
-        xs?: number | string;
-        sm?: number | string;
-        md?: number | string;
-        lg?: number | string;
-        xl?: number | string;
-        xxl?: number | string;
-      };
+  width?: number | string | ModalBreakpointMap;
   confirmLoading?: boolean;
-  okText?: ReactNode;
+  confirmText?: ReactNode;
   cancelText?: ReactNode;
-  okType?: ButtonVariantType;
-  okButtonProps?: ButtonProps;
-  cancelButtonProps?: ButtonProps;
   keyboard?: boolean;
-  mask?: ModalMaskType;
+  mask?: boolean | ModalMaskConfig;
   scrollLock?: boolean;
   forceRender?: boolean;
   destroyOnHidden?: boolean;
   focusable?: ModalFocusableConfig;
-  getContainer?: ModalContainerType;
   zIndex?: number;
   style?: CSSProperties;
   className?: string;
-  modalRender?: (node: ReactNode) => ReactNode;
-  afterClose?: () => void;
-  afterOpenChange?: (open: boolean) => void;
+  onAfterClose?: () => void;
+  onAfterOpen?: () => void;
   onConfirm?: (event: MouseEvent<HTMLButtonElement>) => void | Promise<void>;
   onCancel?: (event: MouseEvent<HTMLButtonElement | HTMLDivElement>) => void;
 }

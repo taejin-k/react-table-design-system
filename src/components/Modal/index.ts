@@ -1,12 +1,11 @@
 export { Modal } from "./Modal";
 export type {
+  ModalBreakpointMap,
   ModalComponent,
-  ModalContainerType,
   ModalFocusableConfig,
   ModalFuncConfig,
   ModalFuncResult,
   ModalMaskConfig,
-  ModalMaskType,
   ModalProps,
   ModalStaticFunctions,
   ModalStatusType,
