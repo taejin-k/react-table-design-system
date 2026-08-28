@@ -8,8 +8,6 @@ import { Button } from "../Button";
 import { Modal } from "./Modal";
 import type { ModalFuncConfig, ModalProps, ModalStatusType } from "./Modal.types";
 
-const modalWidths = ["number", "string", "ModalBreakpointMap"];
-const modalClosableTypes = ["boolean", "ModalClosableConfig"];
 const modalMaskTypes = ["boolean", "ModalMaskConfig"];
 const modalContainerTypes = ["HTMLElement", "() => HTMLElement", "string", "false"];
 const modalStatuses: ModalStatusType[] = ["info", "success", "error", "warning", "confirm"];
@@ -60,10 +58,10 @@ const meta = {
 | --- | --- | --- | --- |
 | \`open\` | Modal 표시 상태를 설정해요. | \`boolean\` | \`false\` |
 | \`title\` | 제목을 설정해요. | \`ReactNode\` | - |
-| \`footer\` | footer를 교체하거나 렌더 함수로 구성해요. | \`ReactNode \\| (originNode, extra) => ReactNode\` | 확인·취소 버튼 |
-| \`closable\` | 닫기 버튼 표시와 아이콘·비활성 상태를 설정해요. | [\`ModalClosableType\`](#modal-closable-type) | \`true\` |
+| \`footer\` | 기본 footer를 받아 새 footer를 반환해요. | \`(originNode) => ReactNode\` | 확인·취소 버튼 |
+| \`closable\` | 닫기 버튼을 표시해요. | \`boolean\` | \`true\` |
 | \`centered\` | 화면 가운데에 배치해요. | \`boolean\` | \`false\` |
-| \`width\` | 너비 또는 반응형 너비를 설정해요. | [\`ModalWidthType\`](#modal-width-type) | \`420\` |
+| \`width\` | 너비 또는 반응형 너비를 설정해요. | \`number \\| string \\| { xs?, sm?, md?, lg?, xl?, xxl? }\` | \`420\` |
 | \`confirmLoading\` | 확인 버튼의 로딩 상태를 표시해요. | \`boolean\` | \`false\` |
 | \`okText\` | 확인 버튼 내용을 설정해요. | \`ReactNode\` | \`확인\` |
 | \`cancelText\` | 취소 버튼 내용을 설정해요. | \`ReactNode\` | \`취소\` |
@@ -117,13 +115,6 @@ Modal의 공통 속성과 아래 설정을 함께 사용해요.
 | \`destroy\` | 해당 정적 Modal을 닫아요. | \`() => void\` | - |
 | \`update\` | 열린 Modal의 설정을 변경해요. | (config: [\`ModalFuncConfig\`](#modal-func-config) \\| updater) => void | - |
 
-### <span id="modal-closable-config">ModalClosableConfig</span>
-
-| Name | Description | Type | Default |
-| --- | --- | --- | --- |
-| \`closeIcon\` | 닫기 아이콘을 변경해요. | \`ReactNode\` | close Icon |
-| \`disabled\` | 닫기 버튼을 비활성화해요. | \`boolean\` | \`false\` |
-
 ### <span id="modal-mask-config">ModalMaskConfig</span>
 
 | Name | Description | Type | Default |
@@ -139,30 +130,8 @@ Modal의 공통 속성과 아래 설정을 함께 사용해요.
 | \`trap\` | 열린 Modal 안에서 포커스를 순환해요. | \`boolean\` | \`true\` |
 | \`focusTriggerAfterClose\` | 닫힌 뒤 열기 전 요소로 포커스를 돌려요. | \`boolean\` | \`true\` |
 
-### <span id="modal-breakpoint-map">ModalBreakpointMap</span>
-
-| Name | Description | Type | Default |
-| --- | --- | --- | --- |
-| \`xs\` | xs 이상에서 사용할 너비예요. | \`number \\| string\` | - |
-| \`sm\` | sm 이상에서 사용할 너비예요. | \`number \\| string\` | - |
-| \`md\` | md 이상에서 사용할 너비예요. | \`number \\| string\` | - |
-| \`lg\` | lg 이상에서 사용할 너비예요. | \`number \\| string\` | - |
-| \`xl\` | xl 이상에서 사용할 너비예요. | \`number \\| string\` | - |
-| \`xxl\` | xxl 이상에서 사용할 너비예요. | \`number \\| string\` | - |
       `}</Markdown>
           <h2 className="component-docs-types-heading">Types</h2>
-          <h3 id="modal-width-type">ModalWidthType</h3>
-          <p>
-            px 숫자, CSS 길이 또는 <a href="#modal-breakpoint-map">ModalBreakpointMap</a>을
-            사용해요.
-          </p>
-          <TypeTokens values={modalWidths} />
-          <h3 id="modal-closable-type">ModalClosableType</h3>
-          <p>
-            닫기 버튼 표시 여부 또는 <a href="#modal-closable-config">ModalClosableConfig</a>를
-            사용해요.
-          </p>
-          <TypeTokens values={modalClosableTypes} />
           <h3 id="modal-mask-type">ModalMaskType</h3>
           <p>
             마스크 표시 여부 또는 <a href="#modal-mask-config">ModalMaskConfig</a>를 사용해요.

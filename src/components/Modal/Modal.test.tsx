@@ -146,6 +146,35 @@ describe("Modal", () => {
     );
   });
 
+  it("passes the default footer to the footer renderer", () => {
+    render(
+      <Modal
+        open
+        footer={(originNode) => <div data-modal-custom-footer>{originNode}</div>}
+        onCancel={() => undefined}
+      >
+        내용
+      </Modal>,
+    );
+
+    expect(document.querySelector("[data-modal-custom-footer]")).toContainElement(
+      screen.getByText("취소"),
+    );
+    expect(document.querySelector("[data-modal-custom-footer]")).toContainElement(
+      screen.getByText("확인"),
+    );
+  });
+
+  it("hides the close button when closable is false", () => {
+    render(
+      <Modal open closable={false} onCancel={() => undefined}>
+        내용
+      </Modal>,
+    );
+
+    expect(document.querySelector("[data-overlay-close-button]")).not.toBeInTheDocument();
+  });
+
   it("preserves newlines in its title and text content", () => {
     render(
       <Modal open title={"제목 첫 줄\n제목 둘째 줄"} onCancel={() => undefined}>

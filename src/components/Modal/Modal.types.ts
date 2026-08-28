@@ -1,20 +1,6 @@
 import type { CSSProperties, MouseEvent, ReactNode } from "react";
 import type { ButtonProps, ButtonVariantType } from "../Button";
 
-export interface ModalBreakpointMap {
-  xs?: number | string;
-  sm?: number | string;
-  md?: number | string;
-  lg?: number | string;
-  xl?: number | string;
-  xxl?: number | string;
-}
-export type ModalWidthType = number | string | ModalBreakpointMap;
-export interface ModalClosableConfig {
-  closeIcon?: ReactNode;
-  disabled?: boolean;
-}
-export type ModalClosableType = boolean | ModalClosableConfig;
 export interface ModalMaskConfig {
   enabled?: boolean;
   blur?: boolean;
@@ -32,15 +18,20 @@ export interface ModalProps {
   open?: boolean;
   title?: ReactNode;
   children?: ReactNode;
-  footer?:
-    | ReactNode
-    | ((
-        originNode: ReactNode,
-        extra: { OkBtn: () => ReactNode; CancelBtn: () => ReactNode },
-      ) => ReactNode);
-  closable?: ModalClosableType;
+  footer?: (originNode: ReactNode) => ReactNode;
+  closable?: boolean;
   centered?: boolean;
-  width?: ModalWidthType;
+  width?:
+    | number
+    | string
+    | {
+        xs?: number | string;
+        sm?: number | string;
+        md?: number | string;
+        lg?: number | string;
+        xl?: number | string;
+        xxl?: number | string;
+      };
   confirmLoading?: boolean;
   okText?: ReactNode;
   cancelText?: ReactNode;

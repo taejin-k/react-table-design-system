@@ -1,8 +1,5 @@
 export { Modal } from "./Modal";
 export type {
-  ModalBreakpointMap,
-  ModalClosableType,
-  ModalClosableConfig,
   ModalComponent,
   ModalContainerType,
   ModalFocusableConfig,
@@ -13,5 +10,4 @@ export type {
   ModalProps,
   ModalStaticFunctions,
   ModalStatusType,
-  ModalWidthType,
 } from "./Modal.types";

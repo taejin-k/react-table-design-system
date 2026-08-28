@@ -23,7 +23,6 @@ import type {
   ModalFuncResult,
   ModalProps,
   ModalStaticFunctions,
-  ModalWidthType,
 } from "./Modal.types";
 
 const breakpointWidth = { xs: 480, sm: 576, md: 768, lg: 992, xl: 1200, xxl: 1600 };
@@ -45,7 +44,7 @@ function ensurePointerListener() {
 
 ensurePointerListener();
 
-function resolveWidth(width: ModalWidthType | undefined, viewportWidth: number) {
+function resolveWidth(width: ModalProps["width"], viewportWidth: number) {
   if (!width || typeof width !== "object") return width ?? 420;
   return Object.entries(breakpointWidth).reduce<number | string>((current, [key, minWidth]) => {
     const next = width[key as keyof typeof width];
@@ -53,7 +52,7 @@ function resolveWidth(width: ModalWidthType | undefined, viewportWidth: number) 
   }, width.xs ?? 420);
 }
 
-function useResolvedWidth(width: ModalWidthType | undefined) {
+function useResolvedWidth(width: ModalProps["width"]) {
   const [viewportWidth, setViewportWidth] = useState(() =>
     typeof window === "undefined" ? 0 : window.innerWidth,
   );
@@ -109,9 +108,7 @@ function ModalBase({
   const panelRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLElement | null>(null);
   const transformOriginRef = useRef("center center");
-  const resolvedCloseIcon = typeof closable === "object" ? closable.closeIcon : undefined;
-  const closeDisabled = typeof closable === "object" && closable.disabled;
-  const showClose = closable !== false;
+  const showClose = closable;
   const maskEnabled = typeof mask === "object" ? mask.enabled !== false : mask;
   const canCloseMask = typeof mask === "object" ? mask.closable !== false : true;
   const blurMask = typeof mask === "object" && mask.blur;
@@ -201,12 +198,7 @@ function ModalBase({
       {renderOkButton()}
     </div>
   );
-  const footerNode =
-    typeof footer === "function"
-      ? footer(defaultFooter, { OkBtn: renderOkButton, CancelBtn: renderCancelButton })
-      : footer === undefined
-        ? defaultFooter
-        : footer;
+  const footerNode = footer === undefined ? defaultFooter : footer(defaultFooter);
   const panel = (
     <div
       ref={panelRef}
@@ -226,14 +218,7 @@ function ModalBase({
           {title}
         </div>
       ) : null}
-      {showClose ? (
-        <OverlayCloseButton
-          icon={resolvedCloseIcon}
-          disabled={closeDisabled}
-          className="absolute top-3 right-3"
-          onClick={close}
-        />
-      ) : null}
+      {showClose ? <OverlayCloseButton className="absolute top-3 right-3" onClick={close} /> : null}
       <div className="max-h-[calc(100vh-152px)] min-w-0 overflow-x-hidden overflow-y-auto [overflow-wrap:anywhere] break-words">
         {typeof children === "string" || typeof children === "number" ? (
           <span className="whitespace-pre-wrap">{children}</span>
@@ -466,22 +451,14 @@ function ConfirmModal({
       {renderOkButton()}
     </div>
   );
-  const footerNode =
-    typeof config.footer === "function"
-      ? config.footer(defaultFooter, {
-          OkBtn: renderOkButton,
-          CancelBtn: renderCancelButton,
-        })
-      : config.footer === undefined
-        ? defaultFooter
-        : config.footer;
+  const footerNode = config.footer === undefined ? defaultFooter : config.footer(defaultFooter);
   return (
     <ModalBase
       {...config}
       open={open}
       width={config.width ?? 420}
       title={undefined}
-      footer={footerNode}
+      footer={() => footerNode}
       closable={config.closable ?? false}
       mask={config.mask ?? true}
       afterClose={onAfterClose}
