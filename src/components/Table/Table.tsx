@@ -214,6 +214,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
     showHeader = true,
     showSorterTooltip = true,
     rowHoverable = true,
+    textSelectable = true,
     stickyHeader = false,
     stickyHeaderOffset = 0,
     virtual = false,
@@ -1997,6 +1998,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
       className={twMerge(
         "relative w-full min-w-0 font-pretendard text-[14px] leading-[1.5715] text-[#111] [overflow-anchor:none]",
         className,
+        !textSelectable && "select-none",
       )}
       style={rootStyle}
     >

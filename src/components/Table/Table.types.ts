@@ -183,6 +183,7 @@ export type TableProps<T extends object> = Omit<
   showHeader?: boolean;
   showSorterTooltip?: boolean;
   rowHoverable?: boolean;
+  textSelectable?: boolean;
   stickyHeader?: boolean;
   stickyHeaderOffset?: number;
   virtual?: boolean;

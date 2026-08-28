@@ -287,6 +287,8 @@ export const storyDescriptions: Record<string, string> = {
     "표시할 영역과 정보의 중요도에 맞게 세 가지 이미지 크기를 선택할 수 있어요.",
 
   "components-table--basic": "dataSource와 columns를 전달하는 가장 기본적인 사용법이에요.",
+  "components-table--text-selection":
+    "textSelectable=false로 셀 텍스트를 드래그해서 선택하거나 복사하지 못하게 해요.",
   "components-table--size":
     "화면에 표시할 데이터 밀도에 맞게 size로 행 높이와 셀 여백을 조절할 수 있어요.",
   "components-table--bordered": "모든 셀 경계를 표시하는 bordered 테이블이에요.",

@@ -1,29 +1,27 @@
 let lockCount = 0;
 let previousOverflow = "";
-let previousWidth = "";
-let removeResizeListener: (() => void) | undefined;
+let previousPaddingRight = "";
+let previousDocumentScrollbarGutter = "";
+let previousBodyScrollbarGutter = "";
 
 export function lockBodyScroll() {
   if (typeof document === "undefined") return () => undefined;
 
   if (lockCount === 0) {
     previousOverflow = document.body.style.overflow;
-    previousWidth = document.body.style.width;
+    previousPaddingRight = document.body.style.paddingRight;
+    previousDocumentScrollbarGutter = document.documentElement.style.scrollbarGutter;
+    previousBodyScrollbarGutter = document.body.style.scrollbarGutter;
     const scrollbarWidth = Math.max(0, window.innerWidth - document.documentElement.clientWidth);
 
-    // Keep the body's measured pre-lock width instead of adding padding. Using `calc(100% - x)`
-    // double-subtracts the gutter when the document already uses `scrollbar-gutter: stable`.
+    // Keep the content width without narrowing the body itself. A narrowed body also limits fixed
+    // overlay roots and exposes the removed scrollbar area as a white strip.
     if (scrollbarWidth > 0) {
-      const layoutWidth = document.documentElement.clientWidth;
-      const bodyWidth = document.body.getBoundingClientRect().width;
-      const bodyWidthRatio = layoutWidth > 0 ? bodyWidth / layoutWidth : 1;
-      const preserveBodyWidth = () => {
-        document.body.style.width = `${Math.max(0, window.innerWidth - scrollbarWidth) * bodyWidthRatio}px`;
-      };
-
-      preserveBodyWidth();
-      window.addEventListener("resize", preserveBodyWidth);
-      removeResizeListener = () => window.removeEventListener("resize", preserveBodyWidth);
+      const currentPaddingRight =
+        Number.parseFloat(getComputedStyle(document.body).paddingRight) || 0;
+      document.documentElement.style.scrollbarGutter = "auto";
+      document.body.style.scrollbarGutter = "auto";
+      document.body.style.paddingRight = `${currentPaddingRight + scrollbarWidth}px`;
     }
     document.body.style.overflow = "hidden";
   }
@@ -35,10 +33,10 @@ export function lockBodyScroll() {
     released = true;
     lockCount = Math.max(0, lockCount - 1);
     if (lockCount === 0) {
-      removeResizeListener?.();
-      removeResizeListener = undefined;
       document.body.style.overflow = previousOverflow;
-      document.body.style.width = previousWidth;
+      document.body.style.paddingRight = previousPaddingRight;
+      document.documentElement.style.scrollbarGutter = previousDocumentScrollbarGutter;
+      document.body.style.scrollbarGutter = previousBodyScrollbarGutter;
     }
   };
 }

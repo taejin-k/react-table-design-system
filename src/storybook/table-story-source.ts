@@ -28,6 +28,7 @@ const tablePropOrder = [
   "showHeader",
   "showSorterTooltip",
   "rowHoverable",
+  "textSelectable",
   "stickyHeader",
   "stickyHeaderOffset",
   "virtual",

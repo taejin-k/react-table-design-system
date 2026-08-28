@@ -35,6 +35,29 @@ describe("Table regressions", () => {
     expect(container.querySelector("table")).not.toHaveClass("max-w-[720px]", "bg-red-500");
   });
 
+  it("prevents text selection from the top-level element when textSelectable is false", () => {
+    const { container, rerender } = render(
+      <Table
+        columns={[{ title: "이름", dataIndex: "name" }]}
+        dataSource={data}
+        pagination={false}
+        textSelectable={false}
+      />,
+    );
+
+    expect(container.firstElementChild).toHaveClass("select-none");
+
+    rerender(
+      <Table
+        columns={[{ title: "이름", dataIndex: "name" }]}
+        dataSource={data}
+        pagination={false}
+      />,
+    );
+
+    expect(container.firstElementChild).not.toHaveClass("select-none");
+  });
+
   it("데이터가 없으면 기본 일러스트레이션과 안내 문구를 표시한다", () => {
     const { container } = render(
       <Table columns={[{ title: "이름", dataIndex: "name" }]} dataSource={[]} pagination={false} />,

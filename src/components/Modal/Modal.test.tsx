@@ -35,6 +35,13 @@ describe("Modal", () => {
     render(<button onClick={() => Modal.confirm({ title: "확인", content: "내용" })}>열기</button>);
     await userEvent.click(screen.getByText("열기"));
     await waitFor(() => expect(screen.getAllByText("확인")).toHaveLength(2));
+
+    const icon = document.querySelector("[data-modal-panel] svg");
+    expect(icon?.querySelector("path")).toHaveAttribute("fill", "#0062df");
+    expect(icon?.querySelector("path")).toHaveAttribute(
+      "d",
+      "M8 1.333a6.667 6.667 0 1 1 0 13.334A6.667 6.667 0 0 1 8 1.333ZM7.333 6.667h1.334v4H7.333v-4Zm0-2.667h1.334v1.333H7.333V4Z",
+    );
   });
 
   it("closes a static modal when its default mask is clicked", async () => {

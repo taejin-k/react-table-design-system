@@ -406,7 +406,7 @@ function ConfirmModal({
       ? "check-circle-filled"
       : config.type === "error"
         ? "close-circle-filled"
-        : config.type === "warning" || config.type === "confirm"
+        : config.type === "warning"
           ? "warning-circle-filled"
           : "info-circle-filled";
   const iconColor =
@@ -414,7 +414,7 @@ function ConfirmModal({
       ? "#52c41a"
       : config.type === "error"
         ? "#ff4d4f"
-        : config.type === "warning" || config.type === "confirm"
+        : config.type === "warning"
           ? "#faad14"
           : "#0062df";
   const run = async (

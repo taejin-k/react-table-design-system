@@ -6,10 +6,15 @@ import { withStoryImports } from "../../storybook/story-source";
 import { TypeTokens } from "../../storybook/type-tokens";
 import { Button } from "../Button";
 import { Modal } from "./Modal";
-import type { ModalFuncConfig, ModalProps, ModalStatusType, ModalWidthType } from "./Modal.types";
+import type { ModalFuncConfig, ModalProps, ModalStatusType } from "./Modal.types";
 
-const modalWidths = ["number", "string", "BreakpointMap"] satisfies readonly ModalWidthType[];
+const modalWidths = ["number", "string", "ModalBreakpointMap"];
+const modalClosableTypes = ["boolean", "ModalClosableConfig"];
+const modalMaskTypes = ["boolean", "ModalMaskConfig"];
+const modalContainerTypes = ["HTMLElement", "() => HTMLElement", "string", "false"];
 const modalStatuses: ModalStatusType[] = ["info", "success", "error", "warning", "confirm"];
+const buttonVariantTypeHref = `${typeof window === "undefined" ? "" : window.location.origin}/iframe.html?id=components-button--documentation&viewMode=docs#button-variant`;
+const buttonPropsHref = `${typeof window === "undefined" ? "" : window.location.origin}/iframe.html?id=components-button--documentation&viewMode=docs#button`;
 
 const storyDescription = (id: string) => ({
   docs: { description: { story: storyDescriptions[id] } },
@@ -55,23 +60,23 @@ const meta = {
 | --- | --- | --- | --- |
 | \`open\` | Modal 표시 상태를 설정해요. | \`boolean\` | \`false\` |
 | \`title\` | 제목을 설정해요. | \`ReactNode\` | - |
-| \`footer\` | footer를 교체하거나 렌더 함수로 구성해요. | \`ReactNode \\| FooterRender\` | 확인·취소 버튼 |
-| \`closable\` | 닫기 버튼 표시와 아이콘·비활성 상태를 설정해요. | \`ModalClosableType\` | \`true\` |
+| \`footer\` | footer를 교체하거나 렌더 함수로 구성해요. | \`ReactNode\` \\| [\`ModalFooterRenderType\`](#modal-footer-render-type) | 확인·취소 버튼 |
+| \`closable\` | 닫기 버튼 표시와 아이콘·비활성 상태를 설정해요. | [\`ModalClosableType\`](#modal-closable-type) | \`true\` |
 | \`centered\` | 화면 가운데에 배치해요. | \`boolean\` | \`false\` |
 | \`width\` | 너비 또는 반응형 너비를 설정해요. | [\`ModalWidthType\`](#modal-width-type) | \`420\` |
 | \`confirmLoading\` | 확인 버튼의 로딩 상태를 표시해요. | \`boolean\` | \`false\` |
 | \`okText\` | 확인 버튼 내용을 설정해요. | \`ReactNode\` | \`확인\` |
 | \`cancelText\` | 취소 버튼 내용을 설정해요. | \`ReactNode\` | \`취소\` |
-| \`okType\` | 확인 버튼 종류를 설정해요. | \`ButtonVariantType\` | \`primary\` |
-| \`okButtonProps\` | 확인 Button의 속성을 설정해요. | \`ButtonProps\` | - |
-| \`cancelButtonProps\` | 취소 Button의 속성을 설정해요. | \`ButtonProps\` | - |
+| \`okType\` | 확인 버튼 종류를 설정해요. | [\`ButtonVariantType\`](${buttonVariantTypeHref}) | \`primary\` |
+| \`okButtonProps\` | 확인 Button의 속성을 설정해요. | [\`ButtonProps\`](${buttonPropsHref}) | - |
+| \`cancelButtonProps\` | 취소 Button의 속성을 설정해요. | [\`ButtonProps\`](${buttonPropsHref}) | - |
 | \`keyboard\` | Escape로 닫을 수 있게 해요. | \`boolean\` | \`true\` |
-| \`mask\` | 배경 마스크·블러·닫기 동작을 설정해요. | \`ModalMaskType\` | \`true\` |
+| \`mask\` | 배경 마스크·블러·닫기 동작을 설정해요. | [\`ModalMaskType\`](#modal-mask-type) | \`true\` |
 | \`scrollLock\` | 열려 있는 동안 문서 스크롤을 잠가요. | \`boolean\` | \`true\` |
 | \`forceRender\` | 닫힌 상태에서도 내용을 미리 렌더링해요. | \`boolean\` | \`false\` |
 | \`destroyOnHidden\` | 닫힌 뒤 내용을 제거해요. | \`boolean\` | \`false\` |
-| \`focusable\` | 포커스 순환과 원래 요소 복귀를 설정해요. | \`object\` | - |
-| \`getContainer\` | Modal을 렌더링할 컨테이너를 설정해요. | \`HTMLElement \\| () => HTMLElement \\| string \\| false\` | \`document.body\` |
+| \`focusable\` | 포커스 순환과 원래 요소 복귀를 설정해요. | [\`ModalFocusableConfig\`](#modal-focusable-config) | - |
+| \`getContainer\` | Modal을 렌더링할 컨테이너를 설정해요. | [\`ModalContainerType\`](#modal-container-type) | \`document.body\` |
 | \`zIndex\` | 겹치는 순서를 설정해요. | \`number\` | \`1000\` |
 | \`className\` | 최상위 요소에 Tailwind 클래스를 추가해요. | \`string\` | - |
 | \`modalRender\` | 전체 패널을 감싸서 렌더링해요. | \`(node) => ReactNode\` | - |
@@ -84,17 +89,101 @@ const meta = {
 
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
-| \`info\` | 정보 Modal을 표시해요. | \`(config) => ModalFuncResult\` | - |
-| \`success\` | 성공 Modal을 표시해요. | \`(config) => ModalFuncResult\` | - |
-| \`error\` | 오류 Modal을 표시해요. | \`(config) => ModalFuncResult\` | - |
-| \`warning\` | 경고 Modal을 표시해요. | \`(config) => ModalFuncResult\` | - |
-| \`confirm\` | 확인 Modal을 표시해요. | \`(config) => ModalFuncResult\` | - |
+| \`info\` | 정보 Modal을 표시해요. | (config: [\`ModalFuncConfig\`](#modal-func-config)) => [\`ModalFuncResult\`](#modal-func-result) | - |
+| \`success\` | 성공 Modal을 표시해요. | (config: [\`ModalFuncConfig\`](#modal-func-config)) => [\`ModalFuncResult\`](#modal-func-result) | - |
+| \`error\` | 오류 Modal을 표시해요. | (config: [\`ModalFuncConfig\`](#modal-func-config)) => [\`ModalFuncResult\`](#modal-func-result) | - |
+| \`warning\` | 경고 Modal을 표시해요. | (config: [\`ModalFuncConfig\`](#modal-func-config)) => [\`ModalFuncResult\`](#modal-func-result) | - |
+| \`confirm\` | 확인 Modal을 표시해요. | (config: [\`ModalFuncConfig\`](#modal-func-config)) => [\`ModalFuncResult\`](#modal-func-result) | - |
 | \`destroyAll\` | 열린 정적 Modal을 모두 닫아요. | \`() => void\` | - |
+
+### <span id="modal-func-config">ModalFuncConfig</span>
+
+Modal의 공통 속성과 아래 설정을 함께 사용해요.
+
+| Name | Description | Type | Default |
+| --- | --- | --- | --- |
+| \`content\` | 본문에 표시할 내용을 설정해요. | \`ReactNode\` | - |
+| \`icon\` | 상태 아이콘을 변경해요. | \`ReactNode\` | 상태별 아이콘 |
+| \`type\` | 정적 Modal의 상태를 설정해요. | [\`ModalStatusType\`](#modal-status-type) | 메서드 상태 |
+| \`onConfirm\` | 확인할 때 실행하고 close 함수를 전달해요. | \`(close) => void \\| Promise<void>\` | - |
+| \`onCancel\` | 취소할 때 실행하고 close 함수를 전달해요. | \`(close) => void \\| Promise<void>\` | - |
+
+### <span id="modal-func-result">ModalFuncResult</span>
+
+확인하면 true, 취소하거나 닫으면 false로 완료되며 await할 수 있어요.
+
+| Name | Description | Type | Default |
+| --- | --- | --- | --- |
+| \`destroy\` | 해당 정적 Modal을 닫아요. | \`() => void\` | - |
+| \`update\` | 열린 Modal의 설정을 변경해요. | (config: [\`ModalFuncConfig\`](#modal-func-config) \\| updater) => void | - |
+
+### <span id="modal-closable-config">ModalClosableConfig</span>
+
+| Name | Description | Type | Default |
+| --- | --- | --- | --- |
+| \`closeIcon\` | 닫기 아이콘을 변경해요. | \`ReactNode\` | close Icon |
+| \`disabled\` | 닫기 버튼을 비활성화해요. | \`boolean\` | \`false\` |
+
+### <span id="modal-mask-config">ModalMaskConfig</span>
+
+| Name | Description | Type | Default |
+| --- | --- | --- | --- |
+| \`enabled\` | 배경 마스크를 표시해요. | \`boolean\` | \`true\` |
+| \`blur\` | 마스크 뒤 화면을 흐리게 해요. | \`boolean\` | \`false\` |
+| \`closable\` | 마스크를 눌러 닫을 수 있게 해요. | \`boolean\` | \`true\` |
+
+### <span id="modal-focusable-config">ModalFocusableConfig</span>
+
+| Name | Description | Type | Default |
+| --- | --- | --- | --- |
+| \`trap\` | 열린 Modal 안에서 포커스를 순환해요. | \`boolean\` | \`true\` |
+| \`focusTriggerAfterClose\` | 닫힌 뒤 열기 전 요소로 포커스를 돌려요. | \`boolean\` | \`true\` |
+
+### <span id="modal-footer-render-extra">ModalFooterRenderExtra</span>
+
+| Name | Description | Type | Default |
+| --- | --- | --- | --- |
+| \`OkBtn\` | 기본 확인 Button을 반환해요. | \`() => ReactNode\` | - |
+| \`CancelBtn\` | 기본 취소 Button을 반환해요. | \`() => ReactNode\` | - |
+
+### <span id="modal-breakpoint-map">ModalBreakpointMap</span>
+
+| Name | Description | Type | Default |
+| --- | --- | --- | --- |
+| \`xs\` | xs 이상에서 사용할 너비예요. | \`number \\| string\` | - |
+| \`sm\` | sm 이상에서 사용할 너비예요. | \`number \\| string\` | - |
+| \`md\` | md 이상에서 사용할 너비예요. | \`number \\| string\` | - |
+| \`lg\` | lg 이상에서 사용할 너비예요. | \`number \\| string\` | - |
+| \`xl\` | xl 이상에서 사용할 너비예요. | \`number \\| string\` | - |
+| \`xxl\` | xxl 이상에서 사용할 너비예요. | \`number \\| string\` | - |
       `}</Markdown>
           <h2 className="component-docs-types-heading">Types</h2>
           <h3 id="modal-width-type">ModalWidthType</h3>
-          <p>px 숫자, CSS 길이 또는 반응형 너비 맵을 사용해요.</p>
+          <p>
+            px 숫자, CSS 길이 또는 <a href="#modal-breakpoint-map">ModalBreakpointMap</a>을
+            사용해요.
+          </p>
           <TypeTokens values={modalWidths} />
+          <h3 id="modal-closable-type">ModalClosableType</h3>
+          <p>
+            닫기 버튼 표시 여부 또는 <a href="#modal-closable-config">ModalClosableConfig</a>를
+            사용해요.
+          </p>
+          <TypeTokens values={modalClosableTypes} />
+          <h3 id="modal-mask-type">ModalMaskType</h3>
+          <p>
+            마스크 표시 여부 또는 <a href="#modal-mask-config">ModalMaskConfig</a>를 사용해요.
+          </p>
+          <TypeTokens values={modalMaskTypes} />
+          <h3 id="modal-footer-render-type">ModalFooterRenderType</h3>
+          <p>
+            기본 footer와 <a href="#modal-footer-render-extra">ModalFooterRenderExtra</a>를 받아
+            새로운 footer를 반환해요.
+          </p>
+          <TypeTokens values={["(originNode, extra: ModalFooterRenderExtra) => ReactNode"]} />
+          <h3 id="modal-container-type">ModalContainerType</h3>
+          <p>Modal이 렌더링될 컨테이너 형식을 선택해요.</p>
+          <TypeTokens values={modalContainerTypes} />
           <h3 id="modal-status-type">ModalStatusType</h3>
           <p>정적 Modal의 상태를 선택해요.</p>
           <TypeTokens values={modalStatuses} />

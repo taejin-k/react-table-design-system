@@ -38,6 +38,15 @@ describe("formatTableStorySource", () => {
     expect(source).toContain('className="max-w-[720px]"');
   });
 
+  it("includes the disabled text selection setting in copied examples", () => {
+    const source = formatTableStorySource("<Table />", {
+      args: { textSelectable: false },
+      name: "Text Selection",
+    });
+
+    expect(source).toContain("textSelectable={false}");
+  });
+
   it("adds the scroll.y explanation beside the fixed-table-height value", () => {
     const source = formatTableStorySource("<Table />", {
       args: { scroll: { y: 280 } },

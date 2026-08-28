@@ -17,6 +17,7 @@ const meta: Meta<TableProps<Member>> = {
     loading: { name: "로딩", control: "boolean" },
     showHeader: { name: "헤더 표시", control: "boolean" },
     rowHoverable: { name: "행 Hover", control: "boolean" },
+    textSelectable: { name: "텍스트 선택", control: "boolean" },
     dataSource: { control: false, table: { disable: true } },
     columns: { control: false, table: { disable: true } },
     pagination: { control: false, table: { disable: true } },
@@ -233,13 +234,22 @@ export const Basic: Story = {
     loading: false,
     showHeader: true,
     rowHoverable: true,
+    textSelectable: true,
   },
   parameters: {
     ...storyDescription("components-table--basic"),
     controls: {
       disable: false,
-      include: ["크기", "테두리", "로딩", "헤더 표시", "행 Hover"],
+      include: ["크기", "테두리", "로딩", "헤더 표시", "행 Hover", "텍스트 선택"],
     },
+  },
+};
+
+export const TextSelection: Story = {
+  args: { textSelectable: false },
+  parameters: {
+    ...storyDescription("components-table--text-selection"),
+    controls: { disable: false, include: ["텍스트 선택"] },
   },
 };
 

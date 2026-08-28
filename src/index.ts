@@ -80,10 +80,17 @@ export { Segmented } from "./components/Segmented";
 export type { SegmentedItem, SegmentedProps, SegmentedSizeType } from "./components/Segmented";
 export { Modal } from "./components/Modal";
 export type {
+  ModalBreakpointMap,
+  ModalClosableConfig,
   ModalClosableType,
   ModalComponent,
+  ModalContainerType,
+  ModalFocusableConfig,
+  ModalFooterRenderExtra,
+  ModalFooterRenderType,
   ModalFuncConfig,
   ModalFuncResult,
+  ModalMaskConfig,
   ModalMaskType,
   ModalProps,
   ModalStaticFunctions,

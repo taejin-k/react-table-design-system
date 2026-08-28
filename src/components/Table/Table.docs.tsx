@@ -58,6 +58,7 @@ const tableApi = `
 | \`showHeader\` | 열 헤더를 표시하거나 숨겨요. | \`boolean\` | \`true\` |
 | \`showSorterTooltip\` | 정렬 아이콘의 Tooltip 표시 여부를 설정해요. | \`boolean\` | \`true\` |
 | \`rowHoverable\` | 행에 마우스를 올렸을 때 배경을 표시해요. | \`boolean\` | \`true\` |
+| \`textSelectable\` | 테이블 텍스트를 드래그해서 선택할 수 있게 해요. | \`boolean\` | \`true\` |
 | \`stickyHeader\` | 테이블 헤더를 화면 상단에 고정해요. | \`boolean\` | \`false\` |
 | \`stickyHeaderOffset\` | 고정 헤더를 화면 상단에서 이동해요. | \`number\` | \`0\` |
 | \`virtual\` | 많은 행을 가상 스크롤로 렌더링해요. | \`boolean\` | \`false\` |
