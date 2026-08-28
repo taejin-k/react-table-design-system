@@ -86,8 +86,6 @@ export type {
   ModalComponent,
   ModalContainerType,
   ModalFocusableConfig,
-  ModalFooterRenderExtra,
-  ModalFooterRenderType,
   ModalFuncConfig,
   ModalFuncResult,
   ModalMaskConfig,

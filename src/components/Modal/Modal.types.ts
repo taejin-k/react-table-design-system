@@ -25,14 +25,6 @@ export interface ModalFocusableConfig {
   trap?: boolean;
   focusTriggerAfterClose?: boolean;
 }
-export interface ModalFooterRenderExtra {
-  OkBtn: () => ReactNode;
-  CancelBtn: () => ReactNode;
-}
-export type ModalFooterRenderType = (
-  originNode: ReactNode,
-  extra: ModalFooterRenderExtra,
-) => ReactNode;
 export type ModalContainerType = HTMLElement | (() => HTMLElement) | string | false;
 export type ModalStatusType = "info" | "success" | "error" | "warning" | "confirm";
 
@@ -40,7 +32,12 @@ export interface ModalProps {
   open?: boolean;
   title?: ReactNode;
   children?: ReactNode;
-  footer?: ReactNode | ModalFooterRenderType;
+  footer?:
+    | ReactNode
+    | ((
+        originNode: ReactNode,
+        extra: { OkBtn: () => ReactNode; CancelBtn: () => ReactNode },
+      ) => ReactNode);
   closable?: ModalClosableType;
   centered?: boolean;
   width?: ModalWidthType;

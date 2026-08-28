@@ -60,7 +60,7 @@ const meta = {
 | --- | --- | --- | --- |
 | \`open\` | Modal 표시 상태를 설정해요. | \`boolean\` | \`false\` |
 | \`title\` | 제목을 설정해요. | \`ReactNode\` | - |
-| \`footer\` | footer를 교체하거나 렌더 함수로 구성해요. | \`ReactNode\` \\| [\`ModalFooterRenderType\`](#modal-footer-render-type) | 확인·취소 버튼 |
+| \`footer\` | footer를 교체하거나 렌더 함수로 구성해요. | \`ReactNode \\| (originNode, extra) => ReactNode\` | 확인·취소 버튼 |
 | \`closable\` | 닫기 버튼 표시와 아이콘·비활성 상태를 설정해요. | [\`ModalClosableType\`](#modal-closable-type) | \`true\` |
 | \`centered\` | 화면 가운데에 배치해요. | \`boolean\` | \`false\` |
 | \`width\` | 너비 또는 반응형 너비를 설정해요. | [\`ModalWidthType\`](#modal-width-type) | \`420\` |
@@ -139,13 +139,6 @@ Modal의 공통 속성과 아래 설정을 함께 사용해요.
 | \`trap\` | 열린 Modal 안에서 포커스를 순환해요. | \`boolean\` | \`true\` |
 | \`focusTriggerAfterClose\` | 닫힌 뒤 열기 전 요소로 포커스를 돌려요. | \`boolean\` | \`true\` |
 
-### <span id="modal-footer-render-extra">ModalFooterRenderExtra</span>
-
-| Name | Description | Type | Default |
-| --- | --- | --- | --- |
-| \`OkBtn\` | 기본 확인 Button을 반환해요. | \`() => ReactNode\` | - |
-| \`CancelBtn\` | 기본 취소 Button을 반환해요. | \`() => ReactNode\` | - |
-
 ### <span id="modal-breakpoint-map">ModalBreakpointMap</span>
 
 | Name | Description | Type | Default |
@@ -175,12 +168,6 @@ Modal의 공통 속성과 아래 설정을 함께 사용해요.
             마스크 표시 여부 또는 <a href="#modal-mask-config">ModalMaskConfig</a>를 사용해요.
           </p>
           <TypeTokens values={modalMaskTypes} />
-          <h3 id="modal-footer-render-type">ModalFooterRenderType</h3>
-          <p>
-            기본 footer와 <a href="#modal-footer-render-extra">ModalFooterRenderExtra</a>를 받아
-            새로운 footer를 반환해요.
-          </p>
-          <TypeTokens values={["(originNode, extra: ModalFooterRenderExtra) => ReactNode"]} />
           <h3 id="modal-container-type">ModalContainerType</h3>
           <p>Modal이 렌더링될 컨테이너 형식을 선택해요.</p>
           <TypeTokens values={modalContainerTypes} />

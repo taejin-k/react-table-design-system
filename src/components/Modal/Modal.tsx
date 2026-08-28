@@ -167,10 +167,16 @@ function ModalBase({
     };
   }, [focusable?.trap, keyboard, onCancel, open]);
 
+  const keepScrollLocked = open || rootVisible;
   useEffect(() => {
-    if (!open || !scrollLock) return;
-    return lockBodyScroll();
-  }, [open, scrollLock]);
+    if (!keepScrollLocked || !scrollLock) return;
+    const releaseScrollLock = lockBodyScroll();
+    return () => {
+      // Let the hidden Modal root reach the next paint before restoring the page scrollbar.
+      // Otherwise the centered panel can be recomposited once at the narrower viewport width.
+      window.requestAnimationFrame(releaseScrollLock);
+    };
+  }, [keepScrollLocked, scrollLock]);
 
   const close = (event: MouseEvent<HTMLButtonElement | HTMLDivElement>) => onCancel?.(event);
   const renderCancelButton = () => (

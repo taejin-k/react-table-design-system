@@ -19,8 +19,11 @@ describe("Modal", () => {
   it("renders in a portal and closes from cancel", async () => {
     render(<ModalExample />);
     expect(screen.getByText("제목")).toBeInTheDocument();
+    expect(document.body.style.overflow).toBe("hidden");
     await userEvent.click(screen.getByText("취소"));
+    expect(document.body.style.overflow).toBe("hidden");
     await waitFor(() => expect(document.querySelector("[data-modal-root]")).not.toBeVisible());
+    await waitFor(() => expect(document.body.style.overflow).toBe(""));
   });
 
   it("closes when the enabled mask is clicked", async () => {
