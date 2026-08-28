@@ -82,7 +82,6 @@ export { Modal } from "./components/Modal";
 export type {
   ModalBreakpointMap,
   ModalComponent,
-  ModalFocusableConfig,
   ModalFuncConfig,
   ModalFuncResult,
   ModalMaskConfig,

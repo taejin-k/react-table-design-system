@@ -454,6 +454,14 @@ body.sb-show-main {
   width: 14%;
 }
 
+.modal-docs table :is(th, td):nth-child(2) {
+  width: 34%;
+}
+
+.modal-docs table :is(th, td):nth-child(3) {
+  width: 34%;
+}
+
 .message-docs table :is(th, td):nth-child(3) {
   width: 28%;
 }

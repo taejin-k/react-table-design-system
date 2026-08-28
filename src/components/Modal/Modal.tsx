@@ -83,7 +83,6 @@ function ModalBase({
   scrollLock = true,
   forceRender = false,
   destroyOnHidden = false,
-  focusable,
   zIndex = 1000,
   style,
   className,
@@ -127,7 +126,7 @@ function ModalBase({
     if (!open || !keyboard) return;
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") onCancel?.(event as unknown as MouseEvent<HTMLDivElement>);
-      if (event.key !== "Tab" || focusable?.trap === false || !panelRef.current) return;
+      if (event.key !== "Tab" || !panelRef.current) return;
       const elements = panelRef.current.querySelectorAll<HTMLElement>(
         'button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex="-1"])',
       );
@@ -150,7 +149,7 @@ function ModalBase({
       document.removeEventListener("keydown", handleKeyDown);
       window.clearTimeout(focusTimer);
     };
-  }, [focusable?.trap, keyboard, onCancel, open]);
+  }, [keyboard, onCancel, open]);
 
   const keepScrollLocked = open || rootVisible;
   useEffect(() => {
@@ -259,7 +258,7 @@ function ModalBase({
             return;
           }
           onAfterClose?.();
-          if (focusable?.focusTriggerAfterClose !== false) triggerRef.current?.focus();
+          triggerRef.current?.focus();
         }}
       >
         {({ className: motionClassName, style: motionStyle }, motionRef) => (

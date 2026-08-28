@@ -160,7 +160,7 @@ describe("Modal", () => {
     render(
       <Modal
         open
-        footer={(originNode) => <div data-modal-custom-footer>{originNode}</div>}
+        footer={(origin) => <div data-modal-custom-footer>{origin}</div>}
         onCancel={() => undefined}
       >
         내용

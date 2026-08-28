@@ -5,10 +5,6 @@ export interface ModalMaskConfig {
   blur?: boolean;
   closable?: boolean;
 }
-export interface ModalFocusableConfig {
-  trap?: boolean;
-  focusTriggerAfterClose?: boolean;
-}
 export interface ModalBreakpointMap {
   xs?: number | string;
   sm?: number | string;
@@ -23,7 +19,7 @@ export interface ModalProps {
   open?: boolean;
   title?: ReactNode;
   children?: ReactNode;
-  footer?: (originNode: ReactNode) => ReactNode;
+  footer?: (origin: ReactNode) => ReactNode;
   closable?: boolean;
   centered?: boolean;
   width?: number | string | ModalBreakpointMap;
@@ -35,7 +31,6 @@ export interface ModalProps {
   scrollLock?: boolean;
   forceRender?: boolean;
   destroyOnHidden?: boolean;
-  focusable?: ModalFocusableConfig;
   zIndex?: number;
   style?: CSSProperties;
   className?: string;

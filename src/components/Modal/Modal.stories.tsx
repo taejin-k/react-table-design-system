@@ -54,7 +54,7 @@ const meta = {
 | --- | --- | --- | --- |
 | \`open\` | Modal 표시 상태를 설정해요. | \`boolean\` | \`false\` |
 | \`title\` | 제목을 설정해요. | \`ReactNode\` | - |
-| \`footer\` | 기본 footer를 받아 새 footer를 반환해요. | \`(originNode) => ReactNode\` | 확인·취소 버튼 |
+| \`footer\` | 기본 footer를 받아 새 footer를 반환해요. | \`(origin) => ReactNode\` | 확인·취소 버튼 |
 | \`closable\` | 닫기 버튼을 표시해요. | \`boolean\` | \`true\` |
 | \`centered\` | 화면 가운데에 배치해요. | \`boolean\` | \`false\` |
 | \`width\` | 너비 또는 반응형 너비를 설정해요. | \`number \\| string \\|\` [\`ModalBreakpointMap\`](#modal-breakpoint-map) | \`420\` |
@@ -66,7 +66,6 @@ const meta = {
 | \`scrollLock\` | 열려 있는 동안 문서 스크롤을 잠가요. | \`boolean\` | \`true\` |
 | \`forceRender\` | 닫힌 상태에서도 내용을 미리 렌더링해요. | \`boolean\` | \`false\` |
 | \`destroyOnHidden\` | 닫힌 뒤 내용을 제거해요. | \`boolean\` | \`false\` |
-| \`focusable\` | 포커스 순환과 원래 요소 복귀를 설정해요. | [\`ModalFocusableConfig\`](#modal-focusable-config) | - |
 | \`zIndex\` | 겹치는 순서를 설정해요. | \`number\` | \`1000\` |
 | \`className\` | 최상위 요소에 Tailwind 클래스를 추가해요. | \`string\` | - |
 | \`onAfterClose\` | 닫힘 애니메이션 뒤 실행해요. | \`() => void\` | - |
@@ -102,6 +101,7 @@ Modal의 공통 속성과 아래 설정을 함께 사용해요.
 
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
+| \`title\` | 제목을 설정해요. | \`ReactNode\` | - |
 | \`content\` | 본문에 표시할 내용을 설정해요. | \`ReactNode\` | - |
 | \`icon\` | 상태 아이콘을 변경해요. | \`ReactNode\` | 상태별 아이콘 |
 | \`type\` | 정적 Modal의 상태를 설정해요. | [\`ModalStatusType\`](#modal-status-type) | 메서드 상태 |
@@ -124,13 +124,6 @@ Modal의 공통 속성과 아래 설정을 함께 사용해요.
 | \`enabled\` | 배경 마스크를 표시해요. | \`boolean\` | \`true\` |
 | \`blur\` | 마스크 뒤 화면을 흐리게 해요. | \`boolean\` | \`false\` |
 | \`closable\` | 마스크를 눌러 닫을 수 있게 해요. | \`boolean\` | \`true\` |
-
-### <span id="modal-focusable-config">ModalFocusableConfig</span>
-
-| Name | Description | Type | Default |
-| --- | --- | --- | --- |
-| \`trap\` | 열린 Modal 안에서 포커스를 순환해요. | \`boolean\` | \`true\` |
-| \`focusTriggerAfterClose\` | 닫힌 뒤 열기 전 요소로 포커스를 돌려요. | \`boolean\` | \`true\` |
 
       `}</Markdown>
           <h2 className="component-docs-types-heading">Types</h2>
