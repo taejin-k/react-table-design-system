@@ -96,9 +96,6 @@ function ModalBase({
   const triggerRef = useRef<HTMLElement | null>(null);
   const transformOriginRef = useRef("center center");
   const showClose = closable;
-  const maskEnabled = typeof mask === "object" ? mask.enabled !== false : mask;
-  const canCloseMask = typeof mask === "object" ? mask.closable !== false : true;
-  const blurMask = typeof mask === "object" && mask.blur;
   const resolvedWidth = useResolvedWidth(width);
 
   useEffect(() => {
@@ -220,7 +217,7 @@ function ModalBase({
         display: open || rootVisible ? undefined : "none",
       }}
     >
-      {maskEnabled ? (
+      {mask ? (
         <CSSMotion
           visible={open}
           motionName="wizard-modal-mask-motion"
@@ -232,13 +229,11 @@ function ModalBase({
               ref={maskRef}
               data-modal-mask
               className={twMerge(
-                "pointer-events-auto absolute inset-0 bg-black/45",
-                canCloseMask && "cursor-pointer",
-                blurMask && "backdrop-blur-sm",
+                "pointer-events-auto absolute inset-0 cursor-pointer bg-black/45",
                 maskMotionClassName,
               )}
               style={maskMotionStyle}
-              onClick={canCloseMask ? close : undefined}
+              onClick={close}
             />
           )}
         </CSSMotion>

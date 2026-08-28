@@ -63,7 +63,7 @@ const meta = {
 | \`footer\` | footer 내용을 설정해요. | \`ReactNode\` | - |
 | \`loading\` | 본문 로딩 상태를 표시해요. | \`boolean\` | \`false\` |
 | \`keyboard\` | Escape로 닫을 수 있게 해요. | \`boolean\` | \`true\` |
-| \`mask\` | 배경 마스크·블러·닫기 동작을 설정해요. | \`boolean \\|\` [\`DrawerMaskConfig\`](#drawer-mask-config) | \`true\` |
+| \`mask\` | 배경 마스크를 표시해요. | \`boolean\` | \`true\` |
 | \`scrollLock\` | 열려 있는 동안 문서 스크롤을 잠가요. | \`boolean\` | \`true\` |
 | \`forceRender\` | 닫힌 상태에서도 내용을 미리 렌더링해요. | \`boolean\` | \`false\` |
 | \`destroyOnHidden\` | 닫힌 뒤 내용을 제거해요. | \`boolean\` | \`false\` |
@@ -75,14 +75,6 @@ const meta = {
 | \`onAfterClose\` | 닫힘 애니메이션 뒤 실행해요. | \`() => void\` | - |
 | \`onAfterOpen\` | 열림 애니메이션 뒤 실행해요. | \`() => void\` | - |
 | \`onClose\` | 닫기 동작이 발생하면 실행해요. | \`(event) => void\` | - |
-
-### <span id="drawer-mask-config">DrawerMaskConfig</span>
-
-| Name | Description | Type | Default |
-| --- | --- | --- | --- |
-| \`enabled\` | 배경 마스크를 표시해요. | \`boolean\` | \`true\` |
-| \`blur\` | 마스크 뒤 화면을 흐리게 해요. | \`boolean\` | \`false\` |
-| \`closable\` | 마스크를 눌러 닫을 수 있게 해요. | \`boolean\` | \`true\` |
 
 ### <span id="drawer-push-config">DrawerPushConfig</span>
 
@@ -156,60 +148,6 @@ function BasicDrawerExample(args: Partial<DrawerProps>) {
       <Button onClick={() => setOpen(true)}>Drawer 열기</Button>
       <Drawer {...args} open={open} onClose={() => setOpen(false)}>
         Drawer 본문이에요.
-      </Drawer>
-    </>
-  );
-}
-
-export const Mask: Story = {
-  args: {
-    title: "마스크 설정",
-    placement: "right",
-    size: "default",
-    closable: true,
-    keyboard: true,
-    scrollLock: true,
-  },
-  parameters: {
-    ...storyDescription("components-drawer--mask"),
-    docs: {
-      ...storyDescription("components-drawer--mask").docs,
-      source: {
-        code: withStoryImports(`function DrawerMask() {
-  const [open, setOpen] = useState(false);
-
-  return (
-    <>
-      <Button onClick={() => setOpen(true)}>흐린 마스크 Drawer</Button>
-      <Drawer
-        open={open}
-        title="마스크 설정"
-        mask={{ blur: true, closable: false }}
-        onClose={() => setOpen(false)}
-      >
-        마스크를 눌러도 닫히지 않아요.
-      </Drawer>
-    </>
-  );
-}`),
-      },
-    },
-  },
-  render: (args) => <MaskExample {...args} />,
-};
-
-function MaskExample(args: Partial<DrawerProps>) {
-  const [open, setOpen] = useState(false);
-  return (
-    <>
-      <Button onClick={() => setOpen(true)}>흐린 마스크 Drawer</Button>
-      <Drawer
-        {...args}
-        open={open}
-        mask={{ blur: true, closable: false }}
-        onClose={() => setOpen(false)}
-      >
-        마스크를 눌러도 닫히지 않아요.
       </Drawer>
     </>
   );

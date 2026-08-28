@@ -3,12 +3,6 @@ import type { CSSProperties, MouseEvent, ReactNode } from "react";
 export type DrawerPlacementType = "top" | "right" | "bottom" | "left";
 export type DrawerSizeType = "default" | "large" | number | string;
 
-export interface DrawerMaskConfig {
-  enabled?: boolean;
-  blur?: boolean;
-  closable?: boolean;
-}
-
 export interface DrawerPushConfig {
   distance?: number | string;
 }
@@ -34,7 +28,7 @@ export interface DrawerProps {
   footer?: ReactNode;
   loading?: boolean;
   keyboard?: boolean;
-  mask?: boolean | DrawerMaskConfig;
+  mask?: boolean;
   scrollLock?: boolean;
   forceRender?: boolean;
   destroyOnHidden?: boolean;

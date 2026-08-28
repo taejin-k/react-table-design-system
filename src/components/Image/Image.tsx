@@ -68,10 +68,7 @@ function Preview({
   const dragFrameRef = useRef<number | undefined>(undefined);
   const pendingDragRef = useRef<{ x: number; y: number } | undefined>(undefined);
   const current = sources[active] ?? src;
-  const maskEnabled =
-    typeof config.mask === "object" ? config.mask.enabled !== false : config.mask !== false;
-  const canCloseMask = typeof config.mask === "object" ? config.mask.closable !== false : true;
-  const blurMask = typeof config.mask === "object" && config.mask.blur;
+  const maskEnabled = config.mask !== false;
   const minScale = 0.25;
   const maxScale = 50;
   const step = 0.5;
@@ -242,11 +239,9 @@ function Preview({
           {maskEnabled ? (
             <div
               className={twMerge(
-                "wizard-image-preview-mask pointer-events-auto absolute inset-0 bg-black/45",
-                canCloseMask && "cursor-pointer",
-                blurMask && "backdrop-blur-sm",
+                "wizard-image-preview-mask pointer-events-auto absolute inset-0 cursor-pointer bg-black/45",
               )}
-              onClick={canCloseMask ? onClose : undefined}
+              onClick={onClose}
             />
           ) : null}
           <button

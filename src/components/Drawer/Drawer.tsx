@@ -77,9 +77,6 @@ export function Drawer({
   const parentPush = useContext(DrawerPushContext);
   if (open) lastOpenPlacementRef.current = placement;
   const motionPlacement = open ? placement : lastOpenPlacementRef.current;
-  const maskEnabled = typeof mask === "object" ? mask.enabled !== false : mask;
-  const canCloseMask = typeof mask === "object" ? mask.closable !== false : true;
-  const blurMask = typeof mask === "object" && mask.blur;
   const drawerSize = resized ?? resolveSize(size, motionPlacement, width, height);
   const pushDistance = typeof push === "object" ? (push.distance ?? 180) : 180;
 
@@ -212,7 +209,7 @@ export function Drawer({
         display: open || rootVisible ? undefined : "none",
       }}
     >
-      {maskEnabled ? (
+      {mask ? (
         <CSSMotion
           visible={open}
           motionName="wizard-drawer-mask-motion"
@@ -224,13 +221,11 @@ export function Drawer({
               ref={maskRef}
               data-drawer-mask
               className={twMerge(
-                "pointer-events-auto absolute inset-0 bg-black/45",
-                canCloseMask && "cursor-pointer",
-                blurMask && "backdrop-blur-sm",
+                "pointer-events-auto absolute inset-0 cursor-pointer bg-black/45",
                 maskMotionClassName,
               )}
               style={maskMotionStyle}
-              onClick={canCloseMask ? close : undefined}
+              onClick={close}
             />
           )}
         </CSSMotion>

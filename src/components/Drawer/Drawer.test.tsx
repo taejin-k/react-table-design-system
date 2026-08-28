@@ -38,20 +38,6 @@ describe("Drawer", () => {
     await waitFor(() => expect(document.querySelector("[data-drawer-root]")).not.toBeVisible());
   });
 
-  it("supports a blurred non-closable mask", async () => {
-    const onClose = vi.fn();
-    render(
-      <Drawer open mask={{ blur: true, closable: false }} onClose={onClose}>
-        내용
-      </Drawer>,
-    );
-    const mask = document.querySelector("[data-drawer-mask]")!;
-
-    expect(mask).toHaveClass("backdrop-blur-sm");
-    await userEvent.click(mask);
-    expect(onClose).not.toHaveBeenCalled();
-  });
-
   it("calls lifecycle callbacks after its motion changes", async () => {
     const onAfterOpen = vi.fn();
     const onAfterClose = vi.fn();

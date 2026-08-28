@@ -1,16 +1,10 @@
 import type { ImgHTMLAttributes, ReactNode } from "react";
 
-export interface ImageMaskConfig {
-  enabled?: boolean;
-  blur?: boolean;
-  closable?: boolean;
-}
-
 export interface ImagePreviewConfig {
   open?: boolean;
   src?: string;
   cover?: boolean;
-  mask?: boolean | ImageMaskConfig;
+  mask?: boolean;
   zIndex?: number;
   onOpenChange?: (open: boolean, previousOpen: boolean) => void;
 }

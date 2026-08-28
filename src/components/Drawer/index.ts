@@ -1,6 +1,5 @@
 export { Drawer } from "./Drawer";
 export type {
-  DrawerMaskConfig,
   DrawerPlacementType,
   DrawerProps,
   DrawerPushConfig,

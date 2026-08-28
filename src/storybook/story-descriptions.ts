@@ -253,7 +253,6 @@ export const storyDescriptions: Record<string, string> = {
 
   "components-drawer--basic":
     "버튼을 눌러 화면 가장자리에서 Drawer를 열고 내부 작업 후 닫을 수 있어요.",
-  "components-drawer--mask": "배경 흐림과 마스크 클릭 닫기 여부를 함께 설정할 수 있어요.",
   "components-drawer--placements":
     "화면의 위, 오른쪽, 아래와 왼쪽 중 원하는 방향에서 Drawer를 열 수 있어요.",
   "components-drawer--size-resizable":
@@ -459,7 +458,7 @@ export const storyDescriptions: Record<string, string> = {
   "components-image--placeholder": "이미지를 불러오는 동안 같은 크기의 Image Skeleton을 보여줘요.",
   "components-image--group": "여러 이미지를 묶어 개수를 확인하고 이전·다음 이미지로 이동해요.",
   "components-image--preview-options": "미리보기를 끄거나 썸네일과 상세 이미지를 다르게 지정해요.",
-  "components-image--preview-mask": "기본·흐림·숨김 마스크와 배경 클릭 닫기 동작을 비교해요.",
+  "components-image--preview-mask": "미리보기 배경 마스크를 표시하거나 숨긴 상태를 비교해요.",
   "components-image--controlled-preview":
     "버튼과 open 상태로 이미지 미리보기를 외부에서 열고 닫아요.",
   "components-image--fallback":

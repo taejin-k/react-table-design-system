@@ -4,7 +4,6 @@ export type {
   ModalComponent,
   ModalFuncConfig,
   ModalFuncResult,
-  ModalMaskConfig,
   ModalProps,
   ModalStaticFunctions,
 } from "./Modal.types";

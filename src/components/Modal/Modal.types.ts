@@ -1,10 +1,5 @@
 import type { CSSProperties, MouseEvent, ReactNode } from "react";
 
-export interface ModalMaskConfig {
-  enabled?: boolean;
-  blur?: boolean;
-  closable?: boolean;
-}
 export interface ModalBreakpointMap {
   xs?: number | string;
   sm?: number | string;
@@ -26,7 +21,7 @@ export interface ModalProps {
   confirmText?: ReactNode;
   cancelText?: ReactNode;
   keyboard?: boolean;
-  mask?: boolean | ModalMaskConfig;
+  mask?: boolean;
   scrollLock?: boolean;
   forceRender?: boolean;
   destroyOnHidden?: boolean;

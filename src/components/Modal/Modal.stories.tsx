@@ -60,7 +60,7 @@ const meta = {
 | \`confirmText\` | 확인 버튼 내용을 설정해요. | \`ReactNode\` | \`확인\` |
 | \`cancelText\` | 취소 버튼 내용을 설정해요. | \`ReactNode\` | \`취소\` |
 | \`keyboard\` | Escape로 닫을 수 있게 해요. | \`boolean\` | \`true\` |
-| \`mask\` | 배경 마스크·블러·닫기 동작을 설정해요. | \`boolean \\|\` [\`ModalMaskConfig\`](#modal-mask-config) | \`true\` |
+| \`mask\` | 배경 마스크를 표시해요. | \`boolean\` | \`true\` |
 | \`scrollLock\` | 열려 있는 동안 문서 스크롤을 잠가요. | \`boolean\` | \`true\` |
 | \`forceRender\` | 닫힌 상태에서도 내용을 미리 렌더링해요. | \`boolean\` | \`false\` |
 | \`destroyOnHidden\` | 닫힌 뒤 내용을 제거해요. | \`boolean\` | \`false\` |
@@ -114,14 +114,6 @@ Modal의 공통 속성과 아래 설정을 함께 사용해요.
 | --- | --- | --- | --- |
 | \`destroy\` | 해당 정적 Modal을 닫아요. | \`() => void\` | - |
 | \`update\` | 열린 Modal의 설정을 변경해요. | (config: [\`ModalFuncConfig\`](#modal-func-config) \\| updater) => void | - |
-
-### <span id="modal-mask-config">ModalMaskConfig</span>
-
-| Name | Description | Type | Default |
-| --- | --- | --- | --- |
-| \`enabled\` | 배경 마스크를 표시해요. | \`boolean\` | \`true\` |
-| \`blur\` | 마스크 뒤 화면을 흐리게 해요. | \`boolean\` | \`false\` |
-| \`closable\` | 마스크를 눌러 닫을 수 있게 해요. | \`boolean\` | \`true\` |
 
       `}</Markdown>
         </div>

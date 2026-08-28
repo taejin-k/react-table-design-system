@@ -34,20 +34,6 @@ describe("Modal", () => {
     await waitFor(() => expect(document.querySelector("[data-modal-root]")).not.toBeVisible());
   });
 
-  it("supports a blurred non-closable mask", async () => {
-    const onCancel = vi.fn();
-    render(
-      <Modal open mask={{ blur: true, closable: false }} onCancel={onCancel}>
-        내용
-      </Modal>,
-    );
-    const mask = document.querySelector("[data-modal-mask]")!;
-
-    expect(mask).toHaveClass("backdrop-blur-sm");
-    await userEvent.click(mask);
-    expect(onCancel).not.toHaveBeenCalled();
-  });
-
   it("applies className and style to the top-level root", () => {
     render(
       <Modal open className="custom-modal" style={{ color: "rgb(1, 2, 3)" }}>

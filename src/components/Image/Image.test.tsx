@@ -94,10 +94,8 @@ describe("Image", () => {
     expect(document.querySelector("[data-image-preview-root]")).toBeInTheDocument();
   });
 
-  it("supports hidden and non-closable blurred preview masks", async () => {
-    const { rerender } = render(
-      <Image src="photo.png" alt="마스크 없음" preview={{ mask: false }} />,
-    );
+  it("hides the preview mask when mask is false", async () => {
+    render(<Image src="photo.png" alt="마스크 없음" preview={{ mask: false }} />);
     fireEvent.load(screen.getByRole("img", { name: "마스크 없음" }));
     await userEvent.click(screen.getByRole("img", { name: "마스크 없음" }));
     expect(document.querySelector(".wizard-image-preview-mask")).not.toBeInTheDocument();
@@ -107,20 +105,6 @@ describe("Image", () => {
     await waitFor(() =>
       expect(document.querySelector("[data-image-preview-root]")).not.toBeInTheDocument(),
     );
-
-    rerender(
-      <Image
-        src="photo.png"
-        alt="흐린 고정 마스크"
-        preview={{ mask: { blur: true, closable: false } }}
-      />,
-    );
-    fireEvent.load(screen.getByRole("img", { name: "흐린 고정 마스크" }));
-    await userEvent.click(screen.getByRole("img", { name: "흐린 고정 마스크" }));
-    const mask = document.querySelector(".wizard-image-preview-mask")!;
-    expect(mask).toHaveClass("backdrop-blur-sm");
-    await userEvent.click(mask);
-    expect(document.querySelector("[data-image-preview-root]")).toBeInTheDocument();
   });
 
   it("reports preview open state changes", async () => {

@@ -60,17 +60,9 @@ const meta = {
 | \`open\` | 미리보기 표시 상태를 제어해요. | \`boolean\` | - |
 | \`src\` | 미리보기에서 사용할 이미지 주소를 변경해요. | \`string\` | Image의 src |
 | \`cover\` | hover 미리보기 안내를 표시해요. | \`boolean\` | \`true\` |
-| \`mask\` | 배경 마스크·블러·닫기 동작을 설정해요. | \`boolean \\|\` [\`ImageMaskConfig\`](#image-mask-config) | \`true\` |
+| \`mask\` | 배경 마스크를 표시해요. | \`boolean\` | \`true\` |
 | \`zIndex\` | 미리보기의 겹침 순서를 설정해요. | \`number\` | \`1080\` |
 | \`onOpenChange\` | 미리보기 표시 상태가 바뀔 때 실행해요. | \`(open, previousOpen) => void\` | - |
-
-### <span id="image-mask-config">ImageMaskConfig</span>
-
-| Name | Description | Type | Default |
-| --- | --- | --- | --- |
-| \`enabled\` | 배경 마스크를 표시해요. | \`boolean\` | \`true\` |
-| \`blur\` | 마스크 뒤 화면을 흐리게 해요. | \`boolean\` | \`false\` |
-| \`closable\` | 마스크를 눌러 닫을 수 있게 해요. | \`boolean\` | \`true\` |
 
 ### Image.PreviewGroup
 
@@ -348,16 +340,6 @@ export const PreviewMask: Story = {
     <Image src={picture} alt="기본 마스크" width={200} height={125} />
   </div>
   <div>
-    <p className="mb-2 text-sm text-[#666]">Blur · Fixed</p>
-    <Image
-      src={picture}
-      alt="흐린 고정 마스크"
-      width={200}
-      height={125}
-      preview={{ mask: { blur: true, closable: false } }}
-    />
-  </div>
-  <div>
     <p className="mb-2 text-sm text-[#666]">Hidden</p>
     <Image
       src={picture}
@@ -377,15 +359,6 @@ export const PreviewMask: Story = {
       <div>
         <p className="mb-2 text-sm text-[#666]">Default</p>
         <Image {...args} src={picture} alt="기본 마스크" />
-      </div>
-      <div>
-        <p className="mb-2 text-sm text-[#666]">Blur · Fixed</p>
-        <Image
-          {...args}
-          src={picture}
-          alt="흐린 고정 마스크"
-          preview={{ mask: { blur: true, closable: false } }}
-        />
       </div>
       <div>
         <p className="mb-2 text-sm text-[#666]">Hidden</p>
