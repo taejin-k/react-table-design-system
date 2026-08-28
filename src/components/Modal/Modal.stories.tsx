@@ -3,12 +3,9 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { useEffect, useRef, useState } from "react";
 import { storyDescriptions } from "../../storybook/story-descriptions";
 import { withStoryImports } from "../../storybook/story-source";
-import { TypeTokens } from "../../storybook/type-tokens";
 import { Button } from "../Button";
 import { Modal } from "./Modal";
-import type { ModalFuncConfig, ModalProps, ModalStatusType } from "./Modal.types";
-
-const modalStatuses: ModalStatusType[] = ["info", "success", "error", "warning", "confirm"];
+import type { ModalFuncConfig, ModalProps } from "./Modal.types";
 
 const storyDescription = (id: string) => ({
   docs: { description: { story: storyDescriptions[id] } },
@@ -54,6 +51,7 @@ const meta = {
 | --- | --- | --- | --- |
 | \`open\` | Modal 표시 상태를 설정해요. | \`boolean\` | \`false\` |
 | \`title\` | 제목을 설정해요. | \`ReactNode\` | - |
+| \`children\` | 본문 내용을 설정해요. | \`ReactNode\` | - |
 | \`footer\` | 기본 footer를 받아 새 footer를 반환해요. | \`(origin) => ReactNode\` | 확인·취소 버튼 |
 | \`closable\` | 닫기 버튼을 표시해요. | \`boolean\` | \`true\` |
 | \`centered\` | 화면 가운데에 배치해요. | \`boolean\` | \`false\` |
@@ -68,6 +66,7 @@ const meta = {
 | \`destroyOnHidden\` | 닫힌 뒤 내용을 제거해요. | \`boolean\` | \`false\` |
 | \`zIndex\` | 겹치는 순서를 설정해요. | \`number\` | \`1000\` |
 | \`className\` | 최상위 요소에 Tailwind 클래스를 추가해요. | \`string\` | - |
+| \`style\` | 최상위 요소에 인라인 스타일을 추가해요. | \`CSSProperties\` | - |
 | \`onAfterClose\` | 닫힘 애니메이션 뒤 실행해요. | \`() => void\` | - |
 | \`onAfterOpen\` | 열림 애니메이션 뒤 실행해요. | \`() => void\` | - |
 | \`onConfirm\` | 확인 버튼을 누르면 실행해요. | \`(event) => void\` | - |
@@ -104,7 +103,6 @@ Modal의 공통 속성과 아래 설정을 함께 사용해요.
 | \`title\` | 제목을 설정해요. | \`ReactNode\` | - |
 | \`content\` | 본문에 표시할 내용을 설정해요. | \`ReactNode\` | - |
 | \`icon\` | 상태 아이콘을 변경해요. | \`ReactNode\` | 상태별 아이콘 |
-| \`type\` | 정적 Modal의 상태를 설정해요. | [\`ModalStatusType\`](#modal-status-type) | 메서드 상태 |
 | \`onConfirm\` | 확인할 때 실행하고 close 함수를 전달해요. | \`(close) => void \\| Promise<void>\` | - |
 | \`onCancel\` | 취소할 때 실행하고 close 함수를 전달해요. | \`(close) => void \\| Promise<void>\` | - |
 
@@ -126,10 +124,6 @@ Modal의 공통 속성과 아래 설정을 함께 사용해요.
 | \`closable\` | 마스크를 눌러 닫을 수 있게 해요. | \`boolean\` | \`true\` |
 
       `}</Markdown>
-          <h2 className="component-docs-types-heading">Types</h2>
-          <h3 id="modal-status-type">ModalStatusType</h3>
-          <p>정적 Modal의 상태를 선택해요.</p>
-          <TypeTokens values={modalStatuses} />
         </div>
       ),
     },
@@ -476,7 +470,13 @@ export const PositionAndWidth: Story = {
   return (
     <>
       <Button onClick={() => setOpen(true)}>넓은 중앙 Modal</Button>
-      <Modal centered open={open} title="반응형 너비" width={{ xs: 320, md: 720 }} onCancel={() => setOpen(false)}>
+      <Modal
+        centered
+        open={open}
+        title="반응형 너비"
+        width={{ xs: 320, md: 720 }}
+        onCancel={() => setOpen(false)}
+      >
         화면 너비에 따라 크기가 달라져요.
       </Modal>
     </>

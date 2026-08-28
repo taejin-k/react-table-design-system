@@ -7,5 +7,4 @@ export type {
   ModalMaskConfig,
   ModalProps,
   ModalStaticFunctions,
-  ModalStatusType,
 } from "./Modal.types";

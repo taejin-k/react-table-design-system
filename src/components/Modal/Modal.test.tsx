@@ -34,6 +34,33 @@ describe("Modal", () => {
     await waitFor(() => expect(document.querySelector("[data-modal-root]")).not.toBeVisible());
   });
 
+  it("supports a blurred non-closable mask", async () => {
+    const onCancel = vi.fn();
+    render(
+      <Modal open mask={{ blur: true, closable: false }} onCancel={onCancel}>
+        내용
+      </Modal>,
+    );
+    const mask = document.querySelector("[data-modal-mask]")!;
+
+    expect(mask).toHaveClass("backdrop-blur-sm");
+    await userEvent.click(mask);
+    expect(onCancel).not.toHaveBeenCalled();
+  });
+
+  it("applies className and style to the top-level root", () => {
+    render(
+      <Modal open className="custom-modal" style={{ color: "rgb(1, 2, 3)" }}>
+        내용
+      </Modal>,
+    );
+
+    expect(document.querySelector("[data-modal-root]")).toHaveClass("custom-modal");
+    expect(document.querySelector("[data-modal-root]")).toHaveStyle({
+      color: "rgb(1, 2, 3)",
+    });
+  });
+
   it("opens from a static method without a context holder", async () => {
     render(<button onClick={() => Modal.confirm({ title: "확인", content: "내용" })}>열기</button>);
     await userEvent.click(screen.getByText("열기"));

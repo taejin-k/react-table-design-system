@@ -87,16 +87,14 @@ export type {
   ModalMaskConfig,
   ModalProps,
   ModalStaticFunctions,
-  ModalStatusType,
 } from "./components/Modal";
 export { Drawer } from "./components/Drawer";
 export type {
-  DrawerClosableType,
-  DrawerMaskType,
+  DrawerMaskConfig,
   DrawerPlacementType,
   DrawerProps,
+  DrawerPushConfig,
   DrawerResizableConfig,
-  DrawerSemanticNameType,
   DrawerSizeType,
 } from "./components/Drawer";
 export { message } from "./components/Message";
@@ -243,6 +241,7 @@ export { Image } from "./components/Image";
 export type {
   ImageActions,
   ImageComponent,
+  ImageMaskConfig,
   ImagePreviewConfig,
   ImagePreviewGroupProps,
   ImageProps,

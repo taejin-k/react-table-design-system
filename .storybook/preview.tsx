@@ -77,7 +77,8 @@ const preview: Preview = {
           if (title === "Components/Message") return 24;
           if (title === "Components/Notification") return 25;
           if (title === "Components/Modal") return 26;
-          return 27;
+          if (title === "Components/Drawer") return 27;
+          return 28;
         };
         const rankDifference = componentRank(a.title) - componentRank(b.title);
 

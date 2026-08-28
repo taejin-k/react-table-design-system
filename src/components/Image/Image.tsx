@@ -27,7 +27,7 @@ import type {
 interface GroupContextValue {
   sources: string[];
   register: (src: string) => () => void;
-  open: (src: string, origin: PreviewOrigin) => void;
+  open: (src: string, origin: PreviewOrigin, config: ImagePreviewConfig) => void;
 }
 interface PreviewOrigin {
   x: number;
@@ -68,6 +68,10 @@ function Preview({
   const dragFrameRef = useRef<number | undefined>(undefined);
   const pendingDragRef = useRef<{ x: number; y: number } | undefined>(undefined);
   const current = sources[active] ?? src;
+  const maskEnabled =
+    typeof config.mask === "object" ? config.mask.enabled !== false : config.mask !== false;
+  const canCloseMask = typeof config.mask === "object" ? config.mask.closable !== false : true;
+  const blurMask = typeof config.mask === "object" && config.mask.blur;
   const minScale = 0.25;
   const maxScale = 50;
   const step = 0.5;
@@ -157,7 +161,7 @@ function Preview({
   });
   if (typeof document === "undefined") return null;
   const actionClassName =
-    "inline-flex size-[42px] cursor-pointer items-center justify-center border-0 bg-transparent p-3 text-[rgba(255,255,255,0.65)] transition-colors hover:text-[rgba(255,255,255,0.85)] disabled:cursor-not-allowed disabled:text-[rgba(255,255,255,0.25)] motion-reduce:transition-none";
+    "pointer-events-auto inline-flex size-[42px] cursor-pointer items-center justify-center border-0 bg-transparent p-3 text-[rgba(255,255,255,0.65)] transition-colors hover:text-[rgba(255,255,255,0.85)] disabled:cursor-not-allowed disabled:text-[rgba(255,255,255,0.25)] motion-reduce:transition-none";
   const toolbar = (
     <div
       data-image-preview-actions
@@ -230,19 +234,25 @@ function Preview({
           ref={motionRef}
           data-image-preview-root
           className={twMerge(
-            "fixed inset-0 flex items-center justify-center font-pretendard",
+            "pointer-events-none fixed inset-0 flex items-center justify-center font-pretendard",
             className,
           )}
           style={{ zIndex: config.zIndex ?? 1080, ...style }}
         >
-          <div
-            className="wizard-image-preview-mask absolute inset-0 bg-black/45"
-            onClick={onClose}
-          />
+          {maskEnabled ? (
+            <div
+              className={twMerge(
+                "wizard-image-preview-mask pointer-events-auto absolute inset-0 bg-black/45",
+                canCloseMask && "cursor-pointer",
+                blurMask && "backdrop-blur-sm",
+              )}
+              onClick={canCloseMask ? onClose : undefined}
+            />
+          ) : null}
           <button
             type="button"
             data-image-preview-close
-            className="absolute top-3 right-3 z-[2] inline-flex size-[42px] cursor-pointer items-center justify-center rounded-full border-0 bg-black/10 p-3 text-white transition-colors hover:bg-black/20 motion-reduce:transition-none"
+            className="pointer-events-auto absolute top-3 right-3 z-[2] inline-flex size-[42px] cursor-pointer items-center justify-center rounded-full border-0 bg-black/10 p-3 text-white transition-colors hover:bg-black/20 motion-reduce:transition-none"
             onClick={onClose}
           >
             <Icon icon="close" size={18} />
@@ -253,7 +263,7 @@ function Preview({
                 type="button"
                 data-image-preview-previous
                 disabled={active === 0}
-                className="absolute left-3 z-[2] inline-flex size-[42px] cursor-pointer items-center justify-center rounded-full border-0 bg-black/10 p-3 text-white transition-colors hover:bg-black/20 disabled:cursor-not-allowed disabled:bg-transparent disabled:text-[rgba(255,255,255,0.25)] motion-reduce:transition-none"
+                className="pointer-events-auto absolute left-3 z-[2] inline-flex size-[42px] cursor-pointer items-center justify-center rounded-full border-0 bg-black/10 p-3 text-white transition-colors hover:bg-black/20 disabled:cursor-not-allowed disabled:bg-transparent disabled:text-[rgba(255,255,255,0.25)] motion-reduce:transition-none"
                 onClick={() => actions.onActive(active - 1)}
               >
                 <Icon icon="chevron-left" size={18} />
@@ -262,7 +272,7 @@ function Preview({
                 type="button"
                 data-image-preview-next
                 disabled={active === sources.length - 1}
-                className="absolute right-3 z-[2] inline-flex size-[42px] cursor-pointer items-center justify-center rounded-full border-0 bg-black/10 p-3 text-white transition-colors hover:bg-black/20 disabled:cursor-not-allowed disabled:bg-transparent disabled:text-[rgba(255,255,255,0.25)] motion-reduce:transition-none"
+                className="pointer-events-auto absolute right-3 z-[2] inline-flex size-[42px] cursor-pointer items-center justify-center rounded-full border-0 bg-black/10 p-3 text-white transition-colors hover:bg-black/20 disabled:cursor-not-allowed disabled:bg-transparent disabled:text-[rgba(255,255,255,0.25)] motion-reduce:transition-none"
                 onClick={() => actions.onActive(active + 1)}
               >
                 <Icon icon="chevron-right" size={18} />
@@ -412,7 +422,7 @@ function ImageBase({
       y: rect.top + rect.height / 2,
     };
     setPreviewOrigin(origin);
-    if (group) group.open(actualSrc, origin);
+    if (group) group.open(actualSrc, origin, config);
     else changeOpen(true);
   };
   return (
@@ -484,15 +494,21 @@ function PreviewGroup({ children }: ImagePreviewGroupProps) {
   const [current, setCurrent] = useState<string>();
   const [open, setOpen] = useState(false);
   const [previewOrigin, setPreviewOrigin] = useState<PreviewOrigin>();
+  const [previewConfig, setPreviewConfig] = useState<ImagePreviewConfig>({});
   const register = useCallback((src: string) => {
     setSources((items) => (items.includes(src) ? items : [...items, src]));
     return () => setSources((items) => items.filter((item) => item !== src));
   }, []);
-  const openGroup = useCallback((src: string, origin: PreviewOrigin) => {
-    setCurrent(src);
-    setPreviewOrigin(origin);
-    setOpen(true);
-  }, []);
+  const openGroup = useCallback(
+    (src: string, origin: PreviewOrigin, config: ImagePreviewConfig) => {
+      setCurrent(src);
+      setPreviewOrigin(origin);
+      setPreviewConfig(config);
+      setOpen(true);
+      config.onOpenChange?.(true, false);
+    },
+    [],
+  );
   const context = useMemo<GroupContextValue>(
     () => ({
       sources,
@@ -508,9 +524,13 @@ function PreviewGroup({ children }: ImagePreviewGroupProps) {
         <Preview
           src={current}
           sources={sources}
+          config={previewConfig}
           open={open}
           origin={previewOrigin}
-          onClose={() => setOpen(false)}
+          onClose={() => {
+            setOpen(false);
+            previewConfig.onOpenChange?.(false, true);
+          }}
         />
       ) : null}
     </GroupContext.Provider>

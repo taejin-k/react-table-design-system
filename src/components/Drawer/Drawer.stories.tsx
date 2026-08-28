@@ -53,30 +53,52 @@ const meta = {
 | --- | --- | --- | --- |
 | \`open\` | Drawer 표시 상태를 설정해요. | \`boolean\` | \`false\` |
 | \`title\` | header 제목을 설정해요. | \`ReactNode\` | - |
+| \`children\` | 본문 내용을 설정해요. | \`ReactNode\` | - |
 | \`placement\` | 열리는 방향을 설정해요. | [\`DrawerPlacementType\`](#drawer-placement-type) | \`right\` |
 | \`size\` | 기본·큰 크기 또는 직접 크기를 설정해요. | [\`DrawerSizeType\`](#drawer-size-type) | \`default\` |
 | \`width\` | 좌우 Drawer 너비를 설정해요. | \`number \\| string\` | - |
 | \`height\` | 상하 Drawer 높이를 설정해요. | \`number \\| string\` | - |
-| \`closable\` | 닫기 버튼의 표시·위치·비활성을 설정해요. | \`DrawerClosableType\` | \`true\` |
+| \`closable\` | 닫기 버튼을 표시해요. | \`boolean\` | \`true\` |
 | \`extra\` | header 오른쪽에 작업을 추가해요. | \`ReactNode\` | - |
 | \`footer\` | footer 내용을 설정해요. | \`ReactNode\` | - |
 | \`loading\` | 본문 로딩 상태를 표시해요. | \`boolean\` | \`false\` |
 | \`keyboard\` | Escape로 닫을 수 있게 해요. | \`boolean\` | \`true\` |
-| \`mask\` | 배경 마스크·블러·닫기 동작을 설정해요. | \`DrawerMaskType\` | \`true\` |
+| \`mask\` | 배경 마스크·블러·닫기 동작을 설정해요. | \`boolean \\|\` [\`DrawerMaskConfig\`](#drawer-mask-config) | \`true\` |
 | \`scrollLock\` | 열려 있는 동안 문서 스크롤을 잠가요. | \`boolean\` | \`true\` |
 | \`forceRender\` | 닫힌 상태에서도 내용을 미리 렌더링해요. | \`boolean\` | \`false\` |
 | \`destroyOnHidden\` | 닫힌 뒤 내용을 제거해요. | \`boolean\` | \`false\` |
-| \`push\` | 중첩 Drawer가 열릴 때 이동 거리를 설정해요. | \`boolean \\| { distance }\` | \`{ distance: 180 }\` |
-| \`resizable\` | 가장자리 드래그와 크기 제한을 설정해요. | \`boolean \\| DrawerResizableConfig\` | \`false\` |
-| \`focusable\` | 포커스 순환과 원래 요소 복귀를 설정해요. | \`object\` | - |
-| \`getContainer\` | Drawer를 렌더링할 컨테이너를 설정해요. | \`HTMLElement \\| () => HTMLElement \\| string \\| false\` | \`document.body\` |
+| \`push\` | 중첩 Drawer의 이동 거리를 설정해요. | \`boolean \\|\` [\`DrawerPushConfig\`](#drawer-push-config) | \`{ distance: 180 }\` |
+| \`resizable\` | 드래그 크기 조절을 설정해요. | \`boolean \\|\` [\`DrawerResizableConfig\`](#drawer-resizable-config) | \`false\` |
 | \`zIndex\` | 겹치는 순서를 설정해요. | \`number\` | \`1000\` |
-| \`classNames\` | 각 영역의 클래스를 설정해요. | \`Record<SemanticName, string>\` | - |
-| \`styles\` | 각 영역의 스타일을 설정해요. | \`Record<SemanticName, CSSProperties>\` | - |
 | \`className\` | 최상위 요소에 Tailwind 클래스를 추가해요. | \`string\` | - |
-| \`drawerRender\` | 전체 패널을 감싸서 렌더링해요. | \`(node) => ReactNode\` | - |
-| \`afterOpenChange\` | 열림 상태 전환이 끝나면 실행해요. | \`(open) => void\` | - |
+| \`style\` | 최상위 요소에 인라인 스타일을 추가해요. | \`CSSProperties\` | - |
+| \`onAfterClose\` | 닫힘 애니메이션 뒤 실행해요. | \`() => void\` | - |
+| \`onAfterOpen\` | 열림 애니메이션 뒤 실행해요. | \`() => void\` | - |
 | \`onClose\` | 닫기 동작이 발생하면 실행해요. | \`(event) => void\` | - |
+
+### <span id="drawer-mask-config">DrawerMaskConfig</span>
+
+| Name | Description | Type | Default |
+| --- | --- | --- | --- |
+| \`enabled\` | 배경 마스크를 표시해요. | \`boolean\` | \`true\` |
+| \`blur\` | 마스크 뒤 화면을 흐리게 해요. | \`boolean\` | \`false\` |
+| \`closable\` | 마스크를 눌러 닫을 수 있게 해요. | \`boolean\` | \`true\` |
+
+### <span id="drawer-push-config">DrawerPushConfig</span>
+
+| Name | Description | Type | Default |
+| --- | --- | --- | --- |
+| \`distance\` | 부모 Drawer가 이동할 거리를 정해요. | \`number \\| string\` | \`180\` |
+
+### <span id="drawer-resizable-config">DrawerResizableConfig</span>
+
+| Name | Description | Type | Default |
+| --- | --- | --- | --- |
+| \`min\` | 줄일 수 있는 최소 크기예요. | \`number\` | \`180\` |
+| \`max\` | 늘릴 수 있는 최대 크기예요. | \`number\` | - |
+| \`onResizeStart\` | 크기 조절을 시작할 때 실행해요. | \`(size) => void\` | - |
+| \`onResize\` | 크기를 조절할 때 실행해요. | \`(size) => void\` | - |
+| \`onResizeEnd\` | 크기 조절을 마칠 때 실행해요. | \`(size) => void\` | - |
       `}</Markdown>
           <h2 className="component-docs-types-heading">Types</h2>
           <h3 id="drawer-placement-type">DrawerPlacementType</h3>
@@ -134,6 +156,60 @@ function BasicDrawerExample(args: Partial<DrawerProps>) {
       <Button onClick={() => setOpen(true)}>Drawer 열기</Button>
       <Drawer {...args} open={open} onClose={() => setOpen(false)}>
         Drawer 본문이에요.
+      </Drawer>
+    </>
+  );
+}
+
+export const Mask: Story = {
+  args: {
+    title: "마스크 설정",
+    placement: "right",
+    size: "default",
+    closable: true,
+    keyboard: true,
+    scrollLock: true,
+  },
+  parameters: {
+    ...storyDescription("components-drawer--mask"),
+    docs: {
+      ...storyDescription("components-drawer--mask").docs,
+      source: {
+        code: withStoryImports(`function DrawerMask() {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <>
+      <Button onClick={() => setOpen(true)}>흐린 마스크 Drawer</Button>
+      <Drawer
+        open={open}
+        title="마스크 설정"
+        mask={{ blur: true, closable: false }}
+        onClose={() => setOpen(false)}
+      >
+        마스크를 눌러도 닫히지 않아요.
+      </Drawer>
+    </>
+  );
+}`),
+      },
+    },
+  },
+  render: (args) => <MaskExample {...args} />,
+};
+
+function MaskExample(args: Partial<DrawerProps>) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <Button onClick={() => setOpen(true)}>흐린 마스크 Drawer</Button>
+      <Drawer
+        {...args}
+        open={open}
+        mask={{ blur: true, closable: false }}
+        onClose={() => setOpen(false)}
+      >
+        마스크를 눌러도 닫히지 않아요.
       </Drawer>
     </>
   );

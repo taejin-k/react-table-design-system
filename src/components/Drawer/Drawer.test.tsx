@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { Drawer } from "./Drawer";
 
 function DrawerExample() {
@@ -36,6 +36,51 @@ describe("Drawer", () => {
     await userEvent.click(document.querySelector("[data-drawer-mask]")!);
 
     await waitFor(() => expect(document.querySelector("[data-drawer-root]")).not.toBeVisible());
+  });
+
+  it("supports a blurred non-closable mask", async () => {
+    const onClose = vi.fn();
+    render(
+      <Drawer open mask={{ blur: true, closable: false }} onClose={onClose}>
+        내용
+      </Drawer>,
+    );
+    const mask = document.querySelector("[data-drawer-mask]")!;
+
+    expect(mask).toHaveClass("backdrop-blur-sm");
+    await userEvent.click(mask);
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it("calls lifecycle callbacks after its motion changes", async () => {
+    const onAfterOpen = vi.fn();
+    const onAfterClose = vi.fn();
+    const { rerender } = render(
+      <Drawer open onAfterOpen={onAfterOpen} onAfterClose={onAfterClose}>
+        내용
+      </Drawer>,
+    );
+
+    await waitFor(() => expect(onAfterOpen).toHaveBeenCalledTimes(1));
+    rerender(
+      <Drawer open={false} onAfterOpen={onAfterOpen} onAfterClose={onAfterClose}>
+        내용
+      </Drawer>,
+    );
+    await waitFor(() => expect(onAfterClose).toHaveBeenCalledTimes(1));
+  });
+
+  it("applies className and style to the top-level root", () => {
+    render(
+      <Drawer open className="custom-drawer" style={{ color: "rgb(1, 2, 3)" }}>
+        내용
+      </Drawer>,
+    );
+
+    expect(document.querySelector("[data-drawer-root]")).toHaveClass("custom-drawer");
+    expect(document.querySelector("[data-drawer-root]")).toHaveStyle({
+      color: "rgb(1, 2, 3)",
+    });
   });
 
   it("keeps the opened placement while leaving", () => {

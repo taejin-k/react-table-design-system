@@ -13,7 +13,6 @@ export interface ModalBreakpointMap {
   xl?: number | string;
   xxl?: number | string;
 }
-export type ModalStatusType = "info" | "success" | "error" | "warning" | "confirm";
 
 export interface ModalProps {
   open?: boolean;
@@ -37,7 +36,7 @@ export interface ModalProps {
   onAfterClose?: () => void;
   onAfterOpen?: () => void;
   onConfirm?: (event: MouseEvent<HTMLButtonElement>) => void | Promise<void>;
-  onCancel?: (event: MouseEvent<HTMLButtonElement | HTMLDivElement>) => void;
+  onCancel?: (event: MouseEvent<HTMLButtonElement | HTMLDivElement> | KeyboardEvent) => void;
 }
 
 export interface ModalFuncConfig extends Omit<
@@ -46,7 +45,6 @@ export interface ModalFuncConfig extends Omit<
 > {
   content?: ReactNode;
   icon?: ReactNode;
-  type?: ModalStatusType;
   onConfirm?: (close: () => void) => void | Promise<void>;
   onCancel?: (close: () => void) => void | Promise<void>;
 }

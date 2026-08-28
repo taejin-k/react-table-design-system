@@ -125,7 +125,7 @@ function ModalBase({
   useEffect(() => {
     if (!open || !keyboard) return;
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onCancel?.(event as unknown as MouseEvent<HTMLDivElement>);
+      if (event.key === "Escape") onCancel?.(event);
       if (event.key !== "Tab" || !panelRef.current) return;
       const elements = panelRef.current.querySelectorAll<HTMLElement>(
         'button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex="-1"])',
@@ -283,11 +283,14 @@ function ModalBase({
 
 type ManagedModal = {
   key: string;
-  config: ModalFuncConfig;
+  config: ManagedModalConfig;
   open: boolean;
   result?: boolean;
   resolve: (value: boolean) => void;
 };
+
+type ModalStatus = "info" | "success" | "error" | "warning" | "confirm";
+type ManagedModalConfig = ModalFuncConfig & { type: ModalStatus };
 
 function useModalHolder(): [Omit<ModalStaticFunctions, "destroyAll">, ReactNode] {
   const [items, setItems] = useState<ManagedModal[]>([]);
@@ -306,7 +309,7 @@ function useModalHolder(): [Omit<ModalStaticFunctions, "destroyAll">, ReactNode]
     });
   }, []);
   const open = useCallback(
-    (type: ModalFuncConfig["type"], initial: ModalFuncConfig) => {
+    (type: ModalStatus, initial: ModalFuncConfig) => {
       const key = `modal-${Date.now()}-${Math.random()}`;
       let resolvePromise: (value: boolean) => void = () => undefined;
       const promise = new Promise<boolean>((resolve) => {
@@ -329,7 +332,7 @@ function useModalHolder(): [Omit<ModalStaticFunctions, "destroyAll">, ReactNode]
                     ...item,
                     config:
                       typeof config === "function"
-                        ? config(item.config)
+                        ? { ...config(item.config), type: item.config.type }
                         : { ...item.config, ...config },
                   }
                 : item,
@@ -368,7 +371,7 @@ function ConfirmModal({
   onClose,
   onAfterClose,
 }: {
-  config: ModalFuncConfig;
+  config: ManagedModalConfig;
   open: boolean;
   onClose: (value: boolean) => void;
   onAfterClose: () => void;

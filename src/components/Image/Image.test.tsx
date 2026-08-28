@@ -94,6 +94,35 @@ describe("Image", () => {
     expect(document.querySelector("[data-image-preview-root]")).toBeInTheDocument();
   });
 
+  it("supports hidden and non-closable blurred preview masks", async () => {
+    const { rerender } = render(
+      <Image src="photo.png" alt="마스크 없음" preview={{ mask: false }} />,
+    );
+    fireEvent.load(screen.getByRole("img", { name: "마스크 없음" }));
+    await userEvent.click(screen.getByRole("img", { name: "마스크 없음" }));
+    expect(document.querySelector(".wizard-image-preview-mask")).not.toBeInTheDocument();
+    expect(document.querySelector("[data-image-preview-root]")).toHaveClass("pointer-events-none");
+    expect(document.querySelector("[data-image-preview-close]")).toHaveClass("pointer-events-auto");
+    await userEvent.click(document.querySelector("[data-image-preview-close]")!);
+    await waitFor(() =>
+      expect(document.querySelector("[data-image-preview-root]")).not.toBeInTheDocument(),
+    );
+
+    rerender(
+      <Image
+        src="photo.png"
+        alt="흐린 고정 마스크"
+        preview={{ mask: { blur: true, closable: false } }}
+      />,
+    );
+    fireEvent.load(screen.getByRole("img", { name: "흐린 고정 마스크" }));
+    await userEvent.click(screen.getByRole("img", { name: "흐린 고정 마스크" }));
+    const mask = document.querySelector(".wizard-image-preview-mask")!;
+    expect(mask).toHaveClass("backdrop-blur-sm");
+    await userEvent.click(mask);
+    expect(document.querySelector("[data-image-preview-root]")).toBeInTheDocument();
+  });
+
   it("reports preview open state changes", async () => {
     const onOpenChange = vi.fn();
     render(<Image src="photo.png" alt="상태 변경 사진" preview={{ onOpenChange }} />);
@@ -259,5 +288,19 @@ describe("Image", () => {
       "disabled:cursor-not-allowed",
     );
     expect(document.querySelector("[data-image-preview-count]")).toHaveTextContent("1 / 2");
+  });
+
+  it("uses an image mask configuration inside PreviewGroup", async () => {
+    render(
+      <Image.PreviewGroup>
+        <Image src="one.png" alt="그룹 마스크" preview={{ mask: false }} />
+      </Image.PreviewGroup>,
+    );
+    const image = screen.getByRole("img", { name: "그룹 마스크" });
+    fireEvent.load(image);
+    await userEvent.click(image);
+
+    expect(document.querySelector("[data-image-preview-root]")).toBeInTheDocument();
+    expect(document.querySelector(".wizard-image-preview-mask")).not.toBeInTheDocument();
   });
 });

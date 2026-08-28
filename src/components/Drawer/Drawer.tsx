@@ -23,13 +23,6 @@ import type {
 
 const DrawerPushContext = createContext<(open: boolean) => void>(() => undefined);
 
-function resolveContainer(getContainer: DrawerProps["getContainer"]) {
-  if (getContainer === false || typeof document === "undefined") return null;
-  if (typeof getContainer === "string") return document.querySelector<HTMLElement>(getContainer);
-  if (typeof getContainer === "function") return getContainer();
-  return getContainer ?? document.body;
-}
-
 function resolveSize(
   size: DrawerSizeType,
   placement: DrawerPlacementType,
@@ -68,15 +61,11 @@ export function Drawer({
   destroyOnHidden = false,
   push = { distance: 180 },
   resizable = false,
-  focusable,
-  getContainer,
   zIndex = 1000,
   className,
   style,
-  classNames,
-  styles,
-  drawerRender,
-  afterOpenChange,
+  onAfterClose,
+  onAfterOpen,
   onClose,
 }: DrawerProps) {
   const [rootVisible, setRootVisible] = useState(open);
@@ -88,9 +77,6 @@ export function Drawer({
   const parentPush = useContext(DrawerPushContext);
   if (open) lastOpenPlacementRef.current = placement;
   const motionPlacement = open ? placement : lastOpenPlacementRef.current;
-  const resolvedCloseIcon = typeof closable === "object" ? closable.closeIcon : undefined;
-  const closePlacement = typeof closable === "object" ? (closable.placement ?? "end") : "end";
-  const closeDisabled = typeof closable === "object" && closable.disabled;
   const maskEnabled = typeof mask === "object" ? mask.enabled !== false : mask;
   const canCloseMask = typeof mask === "object" ? mask.closable !== false : true;
   const blurMask = typeof mask === "object" && mask.blur;
@@ -114,7 +100,7 @@ export function Drawer({
     if (!open || !keyboard) return;
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") onClose?.(event);
-      if (event.key !== "Tab" || focusable?.trap === false || !panelRef.current) return;
+      if (event.key !== "Tab" || !panelRef.current) return;
       const elements = panelRef.current.querySelectorAll<HTMLElement>(
         'button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex="-1"])',
       );
@@ -137,12 +123,16 @@ export function Drawer({
       document.removeEventListener("keydown", handleKeyDown);
       window.clearTimeout(focusTimer);
     };
-  }, [focusable?.trap, keyboard, onClose, open]);
+  }, [keyboard, onClose, open]);
 
+  const keepScrollLocked = open || rootVisible;
   useEffect(() => {
-    if (!open || !scrollLock) return;
-    return lockBodyScroll();
-  }, [open, scrollLock]);
+    if (!keepScrollLocked || !scrollLock) return;
+    const releaseScrollLock = lockBodyScroll();
+    return () => {
+      window.requestAnimationFrame(releaseScrollLock);
+    };
+  }, [keepScrollLocked, scrollLock]);
 
   const panelStyle = useMemo(() => {
     const horizontal = motionPlacement === "left" || motionPlacement === "right";
@@ -153,9 +143,8 @@ export function Drawer({
       ...base,
       transform:
         childOpen && push !== false ? pushTransform(motionPlacement, pushDistance) : "translate(0)",
-      ...styles?.panel,
     };
-  }, [childOpen, drawerSize, motionPlacement, push, pushDistance, styles?.panel]);
+  }, [childOpen, drawerSize, motionPlacement, push, pushDistance]);
   const motionWrapperStyle = useMemo<React.CSSProperties>(
     () =>
       motionPlacement === "left" || motionPlacement === "right"
@@ -165,10 +154,7 @@ export function Drawer({
   );
 
   const close = (event: MouseEvent<HTMLButtonElement | HTMLDivElement>) => onClose?.(event);
-  const closeButton =
-    closable === false ? null : (
-      <OverlayCloseButton icon={resolvedCloseIcon} disabled={closeDisabled} onClick={close} />
-    );
+  const closeButton = closable ? <OverlayCloseButton onClick={close} /> : null;
   const panel = (
     <div
       ref={panelRef}
@@ -180,7 +166,6 @@ export function Drawer({
         motionPlacement === "right" && "inset-y-0 right-0",
         motionPlacement === "top" && "inset-x-0 top-0",
         motionPlacement === "bottom" && "inset-x-0 bottom-0",
-        classNames?.panel,
       )}
       style={panelStyle}
     >
@@ -193,25 +178,15 @@ export function Drawer({
         />
       ) : null}
       {title !== undefined || extra || closeButton ? (
-        <div
-          className={twMerge(
-            "flex min-h-14 items-center gap-3 border-b border-[#f0f0f0] px-5",
-            classNames?.header,
-          )}
-          style={styles?.header}
-        >
-          {closePlacement === "start" ? closeButton : null}
+        <div className="flex min-h-14 items-center gap-3 border-b border-[#f0f0f0] px-5">
           <div className="min-w-0 flex-1 text-base font-semibold [overflow-wrap:anywhere] break-words whitespace-pre-wrap">
             {title}
           </div>
           {extra ? <div className="shrink-0">{extra}</div> : null}
-          {closePlacement === "end" ? closeButton : null}
+          {closeButton}
         </div>
       ) : null}
-      <div
-        className={twMerge("min-h-0 flex-1 overflow-auto p-5", classNames?.body)}
-        style={styles?.body}
-      >
+      <div className="min-h-0 flex-1 overflow-auto p-5">
         {loading ? (
           <Skeleton active />
         ) : typeof children === "string" || typeof children === "number" ? (
@@ -223,23 +198,17 @@ export function Drawer({
         )}
       </div>
       {footer !== undefined ? (
-        <div
-          className={twMerge("border-t border-[#f0f0f0] px-5 py-4", classNames?.footer)}
-          style={styles?.footer}
-        >
-          {footer}
-        </div>
+        <div className="border-t border-[#f0f0f0] px-5 py-4">{footer}</div>
       ) : null}
     </div>
   );
   const content = (
     <div
       data-drawer-root
-      className={twMerge("pointer-events-none fixed inset-0", className, classNames?.root)}
+      className={twMerge("pointer-events-none fixed inset-0", className)}
       style={{
         zIndex,
         ...style,
-        ...styles?.root,
         display: open || rootVisible ? undefined : "none",
       }}
     >
@@ -259,9 +228,8 @@ export function Drawer({
                 canCloseMask && "cursor-pointer",
                 blurMask && "backdrop-blur-sm",
                 maskMotionClassName,
-                classNames?.mask,
               )}
-              style={{ ...styles?.mask, ...maskMotionStyle }}
+              style={maskMotionStyle}
               onClick={canCloseMask ? close : undefined}
             />
           )}
@@ -275,8 +243,12 @@ export function Drawer({
         removeOnLeave={destroyOnHidden}
         onVisibleChanged={(visible) => {
           setRootVisible(visible);
-          afterOpenChange?.(visible);
-          if (!visible && focusable?.focusTriggerAfterClose !== false) triggerRef.current?.focus();
+          if (visible) {
+            onAfterOpen?.();
+            return;
+          }
+          onAfterClose?.();
+          triggerRef.current?.focus();
         }}
       >
         {({ className: motionClassName, style: motionStyle }, motionRef) => (
@@ -291,20 +263,16 @@ export function Drawer({
               motionPlacement === "top" && "inset-x-0 top-0",
               motionPlacement === "bottom" && "inset-x-0 bottom-0",
               motionClassName,
-              classNames?.wrapper,
             )}
-            style={{ ...motionWrapperStyle, ...styles?.wrapper, ...motionStyle }}
+            style={{ ...motionWrapperStyle, ...motionStyle }}
           >
-            <DrawerPushContext.Provider value={setChildOpen}>
-              {drawerRender ? drawerRender(panel) : panel}
-            </DrawerPushContext.Provider>
+            <DrawerPushContext.Provider value={setChildOpen}>{panel}</DrawerPushContext.Provider>
           </div>
         )}
       </CSSMotion>
     </div>
   );
-  const container = resolveContainer(getContainer);
-  return container ? createPortal(content, container) : content;
+  return typeof document === "undefined" ? content : createPortal(content, document.body);
 }
 
 function ResizeHandle({
