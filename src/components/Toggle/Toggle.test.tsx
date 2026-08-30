@@ -46,4 +46,20 @@ describe("Toggle", () => {
     expect(onClick).not.toHaveBeenCalled();
     expect(onChange).not.toHaveBeenCalled();
   });
+
+  it("changes thumb size immediately while keeping checked transitions", () => {
+    const { rerender } = render(<Toggle checked size="sm" />);
+
+    const toggle = screen.getByRole("button");
+    const smallThumb = toggle.firstElementChild;
+    expect(smallThumb).toHaveClass("size-[14px]", "transition-[left]");
+
+    rerender(<Toggle checked={false} size="sm" />);
+    expect(toggle.firstElementChild).toBe(smallThumb);
+    expect(toggle.firstElementChild).toHaveClass("left-[3px]", "transition-[left]");
+
+    rerender(<Toggle checked={false} size="lg" />);
+    expect(toggle.firstElementChild).not.toBe(smallThumb);
+    expect(toggle.firstElementChild).toHaveClass("size-[24px]", "left-[3px]");
+  });
 });

@@ -110,8 +110,8 @@ function MessageHolder({
   });
   const content = (
     <div
-      className="pointer-events-none fixed inset-x-0 px-4 font-pretendard"
-      style={{ top: MESSAGE_TOP, zIndex: 2010 }}
+      className="pointer-events-none fixed left-0 px-4 font-pretendard"
+      style={{ top: MESSAGE_TOP, right: "var(--wizard-scrollbar-compensation, 0px)", zIndex: 2010 }}
     >
       <div
         className={twMerge(
@@ -276,7 +276,6 @@ function MessageCard({
           "--wizard-message-visible-transform": "translate3d(-50%, 0, 0)",
           top: offset,
           transformOrigin: "center top",
-          ...item.style,
           ...motionStyle,
         } as CSSProperties
       }

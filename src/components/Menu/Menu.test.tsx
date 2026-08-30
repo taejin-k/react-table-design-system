@@ -54,4 +54,23 @@ describe("Menu", () => {
     await waitFor(() => expect(popup).toHaveStyle({ visibility: "visible" }));
     expect(screen.getByRole("button", { name: "문서" })).toBeVisible();
   });
+
+  it("keeps horizontal items inside the menu viewport", () => {
+    const { container } = render(
+      <Menu
+        mode="horizontal"
+        items={[
+          { key: "home", label: "홈" },
+          { key: "workspace", label: "워크스페이스" },
+          { key: "settings", label: "설정" },
+        ]}
+      />,
+    );
+
+    expect(container.querySelector("ul")).toHaveClass(
+      "max-w-full",
+      "overflow-x-auto",
+      "wizard-scrollbar-hidden",
+    );
+  });
 });

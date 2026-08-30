@@ -1,4 +1,4 @@
-import type { CSSProperties, MouseEvent, ReactNode } from "react";
+import type { MouseEvent, ReactNode } from "react";
 
 export interface ModalBreakpointMap {
   xs?: number | string;
@@ -26,8 +26,6 @@ export interface ModalProps {
   forceRender?: boolean;
   destroyOnHidden?: boolean;
   zIndex?: number;
-  style?: CSSProperties;
-  className?: string;
   onAfterClose?: () => void;
   onAfterOpen?: () => void;
   onConfirm?: (event: MouseEvent<HTMLButtonElement>) => void | Promise<void>;

@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from "react";
+import type { ReactNode } from "react";
 
 export type NotificationStatusType = "success" | "error" | "info" | "warning" | "loading";
 export type NotificationPlacementType =
@@ -16,7 +16,6 @@ export interface NotificationArgsProps {
   icon?: ReactNode;
   key?: string;
   placement?: NotificationPlacementType;
-  style?: CSSProperties;
   onClick?: () => void;
   onClose?: () => void;
 }

@@ -49,7 +49,10 @@ const meta = {
     onClick: { control: false, table: { disable: true } },
   },
   parameters: {
-    controls: { disable: false },
+    controls: {
+      disable: false,
+      include: ["크기", "비활성", "그림자", "둥근 모양", "로딩"],
+    },
     docs: {
       description: {
         component:
@@ -120,16 +123,19 @@ function ButtonSizeCode({ size }: { size: ButtonSizeType }) {
 }
 
 export const Variants: Story = {
+  args: { size: "md", disabled: false, loading: false, rounded: false, shadow: false },
   argTypes: {
     iconMode: { control: false, table: { disable: true } },
     variant: { control: false, table: { disable: true } },
     children: { control: false, table: { disable: true } },
-    shadow: { control: false, table: { disable: true } },
     fullWidth: { control: false, table: { disable: true } },
   },
   parameters: {
     ...storyDescription("components-button--variants"),
-    controls: { disable: false },
+    controls: {
+      disable: false,
+      include: ["크기", "비활성", "그림자", "둥근 모양", "로딩"],
+    },
     docs: {
       ...storyDescription("components-button--variants").docs,
       source: {
@@ -156,16 +162,25 @@ export const Variants: Story = {
 };
 
 export const Sizes: Story = {
+  args: {
+    variant: "primary",
+    disabled: false,
+    loading: false,
+    rounded: false,
+    shadow: false,
+  },
   argTypes: {
     iconMode: { control: false, table: { disable: true } },
     size: { control: false, table: { disable: true } },
     children: { control: false, table: { disable: true } },
-    shadow: { control: false, table: { disable: true } },
     fullWidth: { control: false, table: { disable: true } },
   },
   parameters: {
     ...storyDescription("components-button--sizes"),
-    controls: { disable: false },
+    controls: {
+      disable: false,
+      include: ["종류", "비활성", "그림자", "둥근 모양", "로딩"],
+    },
     docs: {
       ...storyDescription("components-button--sizes").docs,
       source: {
@@ -189,16 +204,25 @@ export const Sizes: Story = {
 };
 
 export const States: Story = {
+  args: {
+    variant: "primary",
+    size: "md",
+    loading: false,
+    rounded: false,
+    shadow: false,
+  },
   argTypes: {
     iconMode: { control: false, table: { disable: true } },
     children: { control: false, table: { disable: true } },
     disabled: { control: false, table: { disable: true } },
-    shadow: { control: false, table: { disable: true } },
     fullWidth: { control: false, table: { disable: true } },
   },
   parameters: {
     ...storyDescription("components-button--states"),
-    controls: { disable: false },
+    controls: {
+      disable: false,
+      include: ["종류", "크기", "그림자", "둥근 모양", "로딩"],
+    },
   },
   render: ({ iconMode: _iconMode, ...args }) => (
     <div className="grid gap-3">
@@ -221,17 +245,22 @@ export const States: Story = {
 };
 
 export const Rounded: Story = {
+  args: {
+    variant: "primary",
+    disabled: false,
+    loading: false,
+    shadow: false,
+  },
   argTypes: {
     iconMode: { control: false, table: { disable: true } },
     size: { control: false, table: { disable: true } },
     children: { control: false, table: { disable: true } },
     rounded: { control: false, table: { disable: true } },
-    shadow: { control: false, table: { disable: true } },
     fullWidth: { control: false, table: { disable: true } },
   },
   parameters: {
     ...storyDescription("components-button--rounded"),
-    controls: { disable: false },
+    controls: { disable: false, include: ["종류", "비활성", "그림자", "로딩"] },
     docs: {
       ...storyDescription("components-button--rounded").docs,
       source: {
@@ -280,18 +309,21 @@ export const Rounded: Story = {
 };
 
 export const Icons: Story = {
+  args: { disabled: false, rounded: false, shadow: false },
   argTypes: {
     variant: { control: false, table: { disable: true } },
     size: { control: false, table: { disable: true } },
     children: { control: false, table: { disable: true } },
-    shadow: { control: false, table: { disable: true } },
     fullWidth: { control: false, table: { disable: true } },
     loading: { control: false, table: { disable: true } },
     iconMode: { control: false, table: { disable: true } },
   },
   parameters: {
     ...storyDescription("components-button--icons"),
-    controls: { disable: true },
+    controls: {
+      disable: false,
+      include: ["비활성", "그림자", "둥근 모양"],
+    },
     docs: {
       ...storyDescription("components-button--icons").docs,
       source: {
@@ -324,6 +356,7 @@ export const Loading: Story = {
     variant: "primary",
     size: "md",
     disabled: false,
+    rounded: false,
     shadow: false,
   },
   argTypes: {
@@ -334,7 +367,10 @@ export const Loading: Story = {
   },
   parameters: {
     ...storyDescription("components-button--loading"),
-    controls: { disable: false },
+    controls: {
+      disable: false,
+      include: ["종류", "크기", "비활성", "그림자", "둥근 모양"],
+    },
     docs: {
       ...storyDescription("components-button--loading").docs,
       source: {

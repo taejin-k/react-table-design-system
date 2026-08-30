@@ -78,7 +78,9 @@ const preview: Preview = {
           if (title === "Components/Notification") return 25;
           if (title === "Components/Modal") return 26;
           if (title === "Components/Drawer") return 27;
-          return 28;
+          if (title === "Components/DatePicker") return 28;
+          if (title === "Components/TimePicker") return 29;
+          return 30;
         };
         const rankDifference = componentRank(a.title) - componentRank(b.title);
 
@@ -103,6 +105,35 @@ const preview: Preview = {
           };
 
           return groupRank(a.id) - groupRank(b.id);
+        }
+
+        if (a.title === "Components/DatePicker" && b.title === "Components/DatePicker") {
+          const storyOrder = [
+            "components-datepicker--documentation",
+            "components-datepicker--basic",
+            "components-datepicker--sizes",
+            "components-datepicker--widths",
+            "components-datepicker--variants",
+            "components-datepicker--states",
+            "components-datepicker--label-and-error",
+            "components-datepicker--picker-types",
+            "components-datepicker--multiple",
+            "components-datepicker--range",
+            "components-datepicker--presets",
+            "components-datepicker--range-presets",
+            "components-datepicker--show-time-and-confirm",
+            "components-datepicker--date-limits",
+            "components-datepicker--format",
+            "components-datepicker--custom-cell",
+            "components-datepicker--controlled-panel",
+            "components-datepicker--placements",
+          ];
+          const storyRank = (id) => {
+            const index = storyOrder.indexOf(id);
+            return index === -1 ? storyOrder.length : index;
+          };
+
+          return storyRank(a.id) - storyRank(b.id);
         }
 
         if (a.title !== b.title) return 0;

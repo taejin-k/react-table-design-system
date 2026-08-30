@@ -135,7 +135,6 @@ function getMenuPopupHiddenTransform(placement: FloatingPlacement) {
 export function Menu({
   items = [],
   mode = "vertical",
-  theme = "light",
   selectable = true,
   multiple = false,
   selectedKeys,
@@ -150,9 +149,6 @@ export function Menu({
   subMenuCloseDelay = 0.1,
   expandIcon,
   className,
-  style,
-  classNames,
-  styles,
   onClick,
   onSelect,
   onDeselect,
@@ -228,11 +224,10 @@ export function Menu({
         "m-0 list-none space-y-1 p-1",
         level === 0 &&
           mode === "horizontal" &&
-          "flex items-center gap-2 space-y-0 border-b border-[#f0f0f0] p-0",
+          "wizard-scrollbar-hidden flex max-w-full items-center gap-2 space-y-0 overflow-x-auto border-b border-[#f0f0f0] p-0",
         level === 0 && mode !== "horizontal" && (inlineCollapsed ? "w-16" : "w-64"),
         popup &&
           "min-w-40 rounded-lg bg-white shadow-[0_6px_16px_rgba(0,0,0,0.08),0_3px_6px_-4px_rgba(0,0,0,0.12),0_9px_28px_8px_rgba(0,0,0,0.05)]",
-        popup && theme === "dark" && "bg-[#001529]",
       )}
     >
       {data.map((item, index) => {
@@ -242,25 +237,14 @@ export function Menu({
           return (
             <li
               key={key || `divider-${index}`}
-              className={twMerge(
-                "my-1 border-t border-[#f0f0f0]",
-                item.dashed && "border-dashed",
-                theme === "dark" && "border-white/20",
-              )}
+              className={twMerge("my-1 border-t border-[#f0f0f0]", item.dashed && "border-dashed")}
             />
           );
         if (item.type === "group")
           return (
             <li key={key} className="py-1">
               {item.label ? (
-                <div
-                  className={twMerge(
-                    "px-3 py-1 text-xs text-[#999]",
-                    theme === "dark" && "text-white/45",
-                  )}
-                >
-                  {item.label}
-                </div>
+                <div className="px-3 py-1 text-xs text-[#999]">{item.label}</div>
               ) : null}
               {renderItems(item.children ?? [], path, level + 1, popup)}
             </li>
@@ -279,12 +263,8 @@ export function Menu({
             }
             disabled={item.disabled}
             className={twMerge(
-              "relative flex h-10 w-full cursor-pointer items-center gap-2 rounded-md px-3 text-left text-sm transition-colors duration-200 motion-reduce:transition-none",
-              theme === "dark"
-                ? "text-white/65 hover:bg-white/10 hover:text-white"
-                : "text-[#111] hover:bg-[#f5f5f5]",
-              active &&
-                (theme === "dark" ? "bg-[#0062df] text-white" : "bg-[#e6f4ff] text-[#0062df]"),
+              "relative flex h-10 w-full cursor-pointer items-center gap-2 rounded-md px-3 text-left text-sm text-[#111] transition-colors duration-200 outline-none hover:bg-[#f5f5f5] motion-reduce:transition-none",
+              active && "bg-[#e6f4ff] text-[#0062df]",
               item.danger && "text-[#ff4d4f] hover:bg-[#fff2f0]",
               item.disabled && "cursor-not-allowed opacity-40 hover:bg-transparent",
               mode === "horizontal" &&
@@ -292,12 +272,10 @@ export function Menu({
                 "h-12 rounded-none px-5 after:absolute after:right-4 after:bottom-0 after:left-4 after:h-0.5 after:origin-center after:scale-x-0 after:bg-[#0062df] after:transition-transform hover:text-[#0062df]",
               mode === "horizontal" && level === 0 && active && "bg-transparent after:scale-x-100",
               collapsed && "justify-center px-0",
-              classNames?.item,
             )}
             style={{
               paddingInlineStart:
                 mode === "inline" && !collapsed ? 12 + level * inlineIndent : undefined,
-              ...styles?.item,
             }}
             onClick={(event) => {
               if (hasChildren) {
@@ -306,22 +284,8 @@ export function Menu({
               } else selectItem(item, path, event);
             }}
           >
-            {item.icon ? (
-              <span
-                className={twMerge("inline-flex shrink-0", classNames?.itemIcon)}
-                style={styles?.itemIcon}
-              >
-                {item.icon}
-              </span>
-            ) : null}
-            {!collapsed ? (
-              <span
-                className={twMerge("min-w-0 flex-1 truncate", classNames?.itemContent)}
-                style={styles?.itemContent}
-              >
-                {item.label}
-              </span>
-            ) : null}
+            {item.icon ? <span className="inline-flex shrink-0">{item.icon}</span> : null}
+            {!collapsed ? <span className="min-w-0 flex-1 truncate">{item.label}</span> : null}
             {!collapsed && item.extra ? (
               <span className="shrink-0 text-xs text-[#999]">{item.extra}</span>
             ) : null}
@@ -387,8 +351,7 @@ export function Menu({
                 open={open}
                 placement={mode === "horizontal" && level === 0 ? "bottomLeft" : "rightTop"}
                 offset={item.popupOffset}
-                className={twMerge(item.popupClassName, classNames?.popup)}
-                style={styles?.popup}
+                className={item.popupClassName}
                 onMouseEnter={() => {
                   if (triggerSubMenuAction === "hover") delayOpen(key, true);
                 }}
@@ -405,17 +368,5 @@ export function Menu({
     </ul>
   );
 
-  return (
-    <nav
-      className={twMerge(
-        "font-pretendard",
-        theme === "dark" && "bg-[#001529]",
-        className,
-        classNames?.root,
-      )}
-      style={{ ...style, ...styles?.root }}
-    >
-      {renderItems(items)}
-    </nav>
-  );
+  return <nav className={twMerge("font-pretendard", className)}>{renderItems(items)}</nav>;
 }

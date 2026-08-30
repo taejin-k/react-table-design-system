@@ -91,6 +91,47 @@ describe("Segmented", () => {
     expect(container.firstElementChild).toHaveClass("w-full");
   });
 
+  it("shares the full width between options with tooltips", () => {
+    const { container } = render(
+      <Segmented
+        fullWidth
+        options={[
+          { label: "목록", tooltip: "목록으로 표시해요.", value: "list" },
+          { label: "달력", tooltip: "달력으로 표시해요.", value: "calendar" },
+          { disabled: true, label: "잠김", tooltip: "사용할 수 없어요.", value: "locked" },
+        ]}
+      />,
+    );
+
+    const root = container.firstElementChild;
+    const tooltipTriggers = root?.querySelectorAll(":scope > span:not([data-segmented-thumb])");
+
+    expect(tooltipTriggers).toHaveLength(3);
+    tooltipTriggers?.forEach((trigger) => expect(trigger).toHaveClass("flex-1"));
+  });
+
+  it("fills every vertical row when fullWidth is enabled", () => {
+    const { container } = render(
+      <Segmented
+        fullWidth
+        vertical
+        options={[
+          { label: "목록", tooltip: "목록으로 표시해요.", value: "list" },
+          { label: "달력", tooltip: "달력으로 표시해요.", value: "calendar" },
+          { disabled: true, label: "잠김", value: "locked" },
+        ]}
+      />,
+    );
+
+    const root = container.firstElementChild;
+    const tooltipTriggers = root?.querySelectorAll(":scope > span:not([data-segmented-thumb])");
+    const directItem = root?.querySelector(":scope > label");
+
+    expect(tooltipTriggers).toHaveLength(2);
+    tooltipTriggers?.forEach((trigger) => expect(trigger).toHaveClass("w-full"));
+    expect(directItem).toHaveClass("w-full");
+  });
+
   it("lays out its options vertically when vertical is enabled", () => {
     const { container } = render(<Segmented vertical options={[{ label: "일", value: "day" }]} />);
 

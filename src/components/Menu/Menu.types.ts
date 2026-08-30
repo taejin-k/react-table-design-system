@@ -1,7 +1,6 @@
-import type { CSSProperties, Key, MouseEvent, ReactNode } from "react";
+import type { Key, MouseEvent, ReactNode } from "react";
 
 export type MenuModeType = "vertical" | "horizontal" | "inline";
-export type MenuThemeType = "light" | "dark";
 export type MenuTriggerType = "hover" | "click";
 export type MenuItemKindType = "item" | "group" | "divider";
 
@@ -35,7 +34,6 @@ export interface MenuItemType {
 export interface MenuProps {
   items?: MenuItemType[];
   mode?: MenuModeType;
-  theme?: MenuThemeType;
   selectable?: boolean;
   multiple?: boolean;
   selectedKeys?: string[];
@@ -50,9 +48,6 @@ export interface MenuProps {
   subMenuCloseDelay?: number;
   expandIcon?: ReactNode | ((props: { isOpen: boolean; item: MenuItemType }) => ReactNode);
   className?: string;
-  style?: CSSProperties;
-  classNames?: Partial<Record<"root" | "item" | "itemIcon" | "itemContent" | "popup", string>>;
-  styles?: Partial<Record<"root" | "item" | "itemIcon" | "itemContent" | "popup", CSSProperties>>;
   onClick?: (info: MenuClickInfo) => void;
   onSelect?: (info: MenuSelectInfo) => void;
   onDeselect?: (info: MenuSelectInfo) => void;

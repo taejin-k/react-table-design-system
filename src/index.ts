@@ -33,6 +33,7 @@ export type {
 } from "./components/Select";
 export { DatePicker } from "./components/DatePicker";
 export type {
+  DatePickerPreset,
   DatePickerShowTime,
   DatePickerModeType,
   DatePickerPlacementType,
@@ -40,7 +41,9 @@ export type {
   DatePickerSizeType,
   DatePickerValueType,
   DatePickerVariantType,
+  DateRangePreset,
   DateRangePickerProps,
+  DateRangeValueType,
 } from "./components/DatePicker";
 export { TimePicker } from "./components/TimePicker";
 export type {
@@ -51,7 +54,6 @@ export type {
   TimePickerSizeType,
   TimePickerValueType,
   TimePickerVariantType,
-  TimeRangePickerProps,
 } from "./components/TimePicker";
 export { Checkbox } from "./components/Checkbox";
 export type { CheckboxProps } from "./components/Checkbox";
@@ -91,7 +93,6 @@ export { Drawer } from "./components/Drawer";
 export type {
   DrawerPlacementType,
   DrawerProps,
-  DrawerPushConfig,
   DrawerResizableConfig,
   DrawerSizeType,
 } from "./components/Drawer";
@@ -160,7 +161,6 @@ export type {
   MenuModeType,
   MenuProps,
   MenuSelectInfo,
-  MenuThemeType,
   MenuTriggerType,
 } from "./components/Menu";
 export { Tabs } from "./components/Tabs";
@@ -182,19 +182,11 @@ export type {
 } from "./components/ColorPicker";
 export { Upload } from "./components/Upload";
 export type {
-  UploadAcceptConfig,
   UploadChangeParam,
-  UploadCaptureType,
   UploadComponent,
-  UploadCustomRequestInfo,
   UploadFile,
-  UploadFileStatusType,
   UploadListType,
-  UploadMethodType,
-  UploadProgressType,
   UploadProps,
-  UploadRequestOption,
-  UploadShowListType,
 } from "./components/Upload";
 export { Avatar } from "./components/Avatar";
 export type {
@@ -209,7 +201,6 @@ export type { BadgeProps, BadgeStatusType } from "./components/Badge";
 export { Calendar } from "./components/Calendar";
 export type {
   CalendarCellInfo,
-  CalendarModeType,
   CalendarProps,
   CalendarSelectSourceType,
 } from "./components/Calendar";
@@ -246,6 +237,8 @@ export type {
 } from "./components/Image";
 export { Tree } from "./components/Tree";
 export type {
+  TreeAllowDropInfo,
+  TreeCheckedKeys,
   TreeDataNode,
   TreeDragEnterInfo,
   TreeDraggableConfig,
@@ -254,7 +247,10 @@ export type {
   TreeDropInfo,
   TreeDropPositionType,
   TreeEventInfo,
+  TreeFieldNames,
+  TreeLoadInfo,
   TreeProps,
+  TreeSwitcherIconInfo,
 } from "./components/Tree";
 export { Skeleton } from "./components/Skeleton";
 export type {

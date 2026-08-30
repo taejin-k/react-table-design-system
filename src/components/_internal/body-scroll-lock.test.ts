@@ -18,6 +18,7 @@ afterEach(() => {
   document.body.style.paddingRight = "";
   document.documentElement.style.scrollbarGutter = "";
   document.body.style.scrollbarGutter = "";
+  document.documentElement.style.removeProperty("--wizard-scrollbar-compensation");
   setViewportWidths(originalInnerWidth, originalClientWidth);
 });
 
@@ -29,6 +30,9 @@ describe("lockBodyScroll", () => {
     expect(document.body.style.overflow).toBe("hidden");
     expect(document.body.style.width).toBe("");
     expect(document.body.style.paddingRight).toBe("15px");
+    expect(document.documentElement.style.getPropertyValue("--wizard-scrollbar-compensation")).toBe(
+      "15px",
+    );
     expect(document.documentElement.style.scrollbarGutter).toBe("auto");
     expect(document.body.style.scrollbarGutter).toBe("auto");
 
@@ -39,6 +43,9 @@ describe("lockBodyScroll", () => {
     expect(document.body.style.paddingRight).toBe("");
     expect(document.documentElement.style.scrollbarGutter).toBe("");
     expect(document.body.style.scrollbarGutter).toBe("");
+    expect(document.documentElement.style.getPropertyValue("--wizard-scrollbar-compensation")).toBe(
+      "",
+    );
   });
 
   it("restores existing inline styles after the final nested lock is released", () => {
@@ -48,6 +55,7 @@ describe("lockBodyScroll", () => {
     document.body.style.paddingRight = "5px";
     document.documentElement.style.scrollbarGutter = "stable";
     document.body.style.scrollbarGutter = "stable";
+    document.documentElement.style.setProperty("--wizard-scrollbar-compensation", "7px");
 
     const releaseFirst = lockBodyScroll();
     const releaseSecond = lockBodyScroll();
@@ -58,6 +66,9 @@ describe("lockBodyScroll", () => {
     expect(document.body.style.paddingRight).toBe("20px");
     expect(document.documentElement.style.scrollbarGutter).toBe("auto");
     expect(document.body.style.scrollbarGutter).toBe("auto");
+    expect(document.documentElement.style.getPropertyValue("--wizard-scrollbar-compensation")).toBe(
+      "15px",
+    );
 
     releaseSecond();
     expect(document.body.style.overflow).toBe("auto");
@@ -65,6 +76,9 @@ describe("lockBodyScroll", () => {
     expect(document.body.style.paddingRight).toBe("5px");
     expect(document.documentElement.style.scrollbarGutter).toBe("stable");
     expect(document.body.style.scrollbarGutter).toBe("stable");
+    expect(document.documentElement.style.getPropertyValue("--wizard-scrollbar-compensation")).toBe(
+      "7px",
+    );
   });
 
   it("does not add width compensation when there is no layout scrollbar", () => {
@@ -74,6 +88,9 @@ describe("lockBodyScroll", () => {
 
     expect(document.body.style.width).toBe("");
     expect(document.body.style.paddingRight).toBe("");
+    expect(document.documentElement.style.getPropertyValue("--wizard-scrollbar-compensation")).toBe(
+      "0px",
+    );
     release();
   });
 });

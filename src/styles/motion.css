@@ -57,36 +57,61 @@
   will-change: transform;
 }
 
-.wizard-upload-motion-enter,
-.wizard-upload-motion-appear,
-.wizard-upload-motion-leave-active {
-  opacity: 0;
-  grid-template-rows: 0fr;
-}
-
 .wizard-upload-motion-item {
-  display: grid;
-  grid-template-rows: 1fr;
   min-width: 0;
+  overflow: visible;
+  will-change: height;
 }
 
-.wizard-upload-motion-item > div {
-  min-height: 0;
+.wizard-upload-motion-content {
+  min-width: 0;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.wizard-upload-motion-enter-start,
+.wizard-upload-motion-appear-start {
   overflow: hidden;
 }
 
 .wizard-upload-motion-enter-active,
-.wizard-upload-motion-appear-active,
-.wizard-upload-motion-leave-active {
-  transition:
-    opacity 200ms cubic-bezier(0.08, 0.82, 0.17, 1),
-    grid-template-rows 200ms cubic-bezier(0.645, 0.045, 0.355, 1);
+.wizard-upload-motion-appear-active {
+  overflow: hidden;
+  transition: height 280ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.wizard-upload-motion-enter-active,
-.wizard-upload-motion-appear-active {
+.wizard-upload-motion-leave-active {
+  overflow: hidden;
+  transition: height 280ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.wizard-upload-motion-enter-start .wizard-upload-motion-content,
+.wizard-upload-motion-appear-start .wizard-upload-motion-content {
+  opacity: 0;
+  transform: translateY(-5px);
+}
+
+.wizard-upload-motion-enter-active .wizard-upload-motion-content,
+.wizard-upload-motion-appear-active .wizard-upload-motion-content {
   opacity: 1;
-  grid-template-rows: 1fr;
+  transform: translateY(0);
+  transition:
+    opacity 280ms cubic-bezier(0.4, 0, 0.2, 1),
+    transform 280ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.wizard-upload-motion-leave-active .wizard-upload-motion-content {
+  opacity: 0;
+  transform: translateY(-5px);
+  transition:
+    opacity 280ms cubic-bezier(0.4, 0, 0.2, 1),
+    transform 280ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Each motion item creates a stacking context through transform, so raise the outer item too. */
+.wizard-upload-motion-item-picture:has([data-upload-dragging="true"]) {
+  position: relative;
+  z-index: 1000;
 }
 
 @keyframes wizard-zoom-big-fast-out {
@@ -212,7 +237,10 @@
   .wizard-image-preview-motion-leave-active .wizard-image-preview-body,
   .wizard-upload-motion-enter-active,
   .wizard-upload-motion-appear-active,
-  .wizard-upload-motion-leave-active {
+  .wizard-upload-motion-leave-active,
+  .wizard-upload-motion-enter-active .wizard-upload-motion-content,
+  .wizard-upload-motion-appear-active .wizard-upload-motion-content,
+  .wizard-upload-motion-leave-active .wizard-upload-motion-content {
     transition-duration: 0s;
   }
 

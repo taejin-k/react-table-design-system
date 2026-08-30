@@ -10,7 +10,7 @@ import { Icon } from "../Icon";
 import { Skeleton } from "./Skeleton";
 import type { SkeletonShapeType, SkeletonSizeType } from "./Skeleton.types";
 
-const skeletonSizes = ["large", "medium", "small", "number"] satisfies readonly (
+const skeletonSizes = ["lg", "md", "sm", "number"] satisfies readonly (
   SkeletonSizeType | "number"
 )[];
 const skeletonShapes: SkeletonShapeType[] = ["circle", "round", "square", "default"];
@@ -56,6 +56,7 @@ const meta = {
 | \`title\` | 제목 자리 표시자를 표시하고 너비를 정해요. | \`boolean \\| { width?: string \\| number }\` | \`true\` |
 | \`paragraph\` | 문단의 행 수와 각 행 너비를 정해요. | \`boolean \\| { rows?: number; width?: string \\| number \\| Array }\` | \`true\` |
 | \`round\` | 제목과 문단 모서리를 더 둥글게 표시해요. | \`boolean\` | \`false\` |
+| \`children\` | 로딩이 끝난 뒤 표시할 콘텐츠예요. | \`ReactNode\` | - |
 | \`className\` | 최상위 요소에 Tailwind 클래스를 추가해요. | \`string\` | - |
 
 ### Skeleton Elements
@@ -76,7 +77,7 @@ const meta = {
 | \`fullWidth\` | 부모 너비를 모두 채워요. | \`boolean\` | \`false\` |
 | \`width\` | 요소 너비를 정해요. | \`CSSProperties['width']\` | 요소별 기본값 |
 | \`height\` | 요소 높이를 정해요. | \`CSSProperties['height']\` | 요소별 기본값 |
-| \`size\` | 요소 크기를 정해요. | [\`SkeletonSizeType\`](#skeleton-size-type) | \`medium\` |
+| \`size\` | 요소 크기를 정해요. | [\`SkeletonSizeType\`](#skeleton-size-type) | \`md\` |
 | \`shape\` | 요소 모양을 정해요. | [\`SkeletonShapeType\`](#skeleton-shape-type) | 요소별 기본값 |
 | \`className\` | 최상위 요소에 Tailwind 클래스를 추가해요. | \`string\` | - |
           `}</Markdown>
@@ -96,9 +97,10 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Basic: Story = {
-  args: { active: true, avatar: true, paragraph: { rows: 3 } },
+  args: { active: true, avatar: true, title: true, paragraph: { rows: 3 }, round: false },
   parameters: {
     ...storyDescription("components-skeleton--basic"),
+    controls: { include: ["애니메이션", "아바타", "제목", "문단", "둥근 모양"] },
     docs: {
       ...storyDescription("components-skeleton--basic").docs,
       source: {
@@ -112,6 +114,7 @@ export const Elements: Story = {
   args: { active: true },
   parameters: {
     ...storyDescription("components-skeleton--elements"),
+    controls: { disable: false, include: ["애니메이션"] },
     docs: {
       ...storyDescription("components-skeleton--elements").docs,
       source: {
@@ -143,9 +146,10 @@ export const Elements: Story = {
   ),
 };
 export const Loaded: Story = {
-  args: { active: true, avatar: true, round: false },
+  args: { active: true, avatar: true, title: true, round: false },
   parameters: {
     ...storyDescription("components-skeleton--loaded"),
+    controls: { include: ["애니메이션", "아바타", "제목", "둥근 모양"] },
     docs: {
       ...storyDescription("components-skeleton--loaded").docs,
       source: {
@@ -173,6 +177,86 @@ export const Loaded: Story = {
     },
   },
   render: (args) => <LoadingContent {...args} />,
+};
+
+export const CardGrid: Story = {
+  args: { active: true, round: true },
+  parameters: {
+    ...storyDescription("components-skeleton--card-grid"),
+    controls: { include: ["애니메이션", "둥근 모양"] },
+    docs: {
+      ...storyDescription("components-skeleton--card-grid").docs,
+      source: {
+        type: "code",
+        code: withStoryImports(`<div className="grid gap-4 md:grid-cols-3">
+  {[1, 2, 3].map((item) => (
+    <article key={item} className="grid gap-4 rounded-lg border border-[#eee] p-4">
+      <Skeleton.Image active fullWidth height={128} />
+      <Skeleton active round title={{ width: '55%' }} paragraph={{ rows: 2 }} />
+      <Skeleton.Button active fullWidth />
+    </article>
+  ))}
+</div>`),
+      },
+    },
+  },
+  render: (args) => (
+    <div className="grid gap-4 md:grid-cols-3">
+      {[1, 2, 3].map((item) => (
+        <article key={item} className="grid gap-4 rounded-lg border border-[#eee] p-4">
+          <Skeleton.Image active={args.active} fullWidth height={128} />
+          <Skeleton
+            active={args.active}
+            round={args.round}
+            title={{ width: "55%" }}
+            paragraph={{ rows: 2 }}
+          />
+          <Skeleton.Button active={args.active} fullWidth />
+        </article>
+      ))}
+    </div>
+  ),
+};
+
+export const List: Story = {
+  args: { active: true, round: false },
+  parameters: {
+    ...storyDescription("components-skeleton--list"),
+    controls: { include: ["애니메이션", "둥근 모양"] },
+    docs: {
+      ...storyDescription("components-skeleton--list").docs,
+      source: {
+        type: "code",
+        code: withStoryImports(`<div className="divide-y divide-[#eee] rounded-lg border border-[#eee] px-4">
+  {[1, 2, 3, 4].map((item) => (
+    <div key={item} className="py-4">
+      <Skeleton
+        active
+        avatar={{ size: 'lg' }}
+        title={{ width: item % 2 ? '32%' : '44%' }}
+        paragraph={{ rows: 1, width: item % 2 ? '72%' : '58%' }}
+      />
+    </div>
+  ))}
+</div>`),
+      },
+    },
+  },
+  render: (args) => (
+    <div className="divide-y divide-[#eee] rounded-lg border border-[#eee] px-4">
+      {[1, 2, 3, 4].map((item) => (
+        <div key={item} className="py-4">
+          <Skeleton
+            active={args.active}
+            round={args.round}
+            avatar={{ size: "lg" }}
+            title={{ width: item % 2 ? "32%" : "44%" }}
+            paragraph={{ rows: 1, width: item % 2 ? "72%" : "58%" }}
+          />
+        </div>
+      ))}
+    </div>
+  ),
 };
 
 function LoadingContent(args: ComponentProps<typeof Skeleton>) {

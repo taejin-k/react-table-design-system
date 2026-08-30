@@ -91,7 +91,7 @@ export const Basic: Story = {
     ...storyDescription("components-image--basic"),
     controls: {
       disable: false,
-      include: ["가로 길이", "세로 길이", "대체 텍스트", "로딩 Skeleton", "미리보기"],
+      include: ["가로 길이", "세로 길이", "미리보기"],
     },
     docs: {
       ...storyDescription("components-image--basic").docs,
@@ -113,7 +113,7 @@ export const Cover: Story = {
     ...storyDescription("components-image--cover"),
     controls: {
       disable: false,
-      include: ["가로 길이", "세로 길이", "대체 텍스트", "로딩 Skeleton"],
+      include: ["가로 길이", "세로 길이"],
     },
     docs: {
       ...storyDescription("components-image--cover").docs,
@@ -166,7 +166,7 @@ export const Dimensions: Story = {
   args: { alt: "크기 비교 풍경", placeholder: false, preview: true },
   parameters: {
     ...storyDescription("components-image--dimensions"),
-    controls: { disable: false, include: ["대체 텍스트", "로딩 Skeleton", "미리보기"] },
+    controls: { disable: false, include: ["미리보기"] },
     docs: {
       ...storyDescription("components-image--dimensions").docs,
       source: {
@@ -210,7 +210,7 @@ export const Placeholder: Story = {
     ...storyDescription("components-image--placeholder"),
     controls: {
       disable: false,
-      include: ["가로 길이", "세로 길이", "대체 텍스트", "미리보기"],
+      include: ["가로 길이", "세로 길이", "미리보기"],
     },
     docs: {
       ...storyDescription("components-image--placeholder").docs,
@@ -246,7 +246,7 @@ export const Group: Story = {
   args: { width: 180, height: 120, placeholder: false },
   parameters: {
     ...storyDescription("components-image--group"),
-    controls: { disable: false, include: ["가로 길이", "세로 길이", "로딩 Skeleton"] },
+    controls: { disable: false, include: ["가로 길이", "세로 길이"] },
     docs: {
       ...storyDescription("components-image--group").docs,
       source: {
@@ -281,7 +281,7 @@ export const PreviewOptions: Story = {
     ...storyDescription("components-image--preview-options"),
     controls: {
       disable: false,
-      include: ["가로 길이", "세로 길이", "대체 텍스트", "로딩 Skeleton"],
+      include: ["가로 길이", "세로 길이"],
     },
     docs: {
       ...storyDescription("components-image--preview-options").docs,
@@ -325,7 +325,7 @@ export const PreviewMask: Story = {
     ...storyDescription("components-image--preview-mask"),
     controls: {
       disable: false,
-      include: ["가로 길이", "세로 길이", "대체 텍스트", "로딩 Skeleton"],
+      include: ["가로 길이", "세로 길이"],
     },
     docs: {
       ...storyDescription("components-image--preview-mask").docs,
@@ -391,7 +391,7 @@ export const ControlledPreview: Story = {
   args: { alt: "제어형 미리보기" },
   parameters: {
     ...storyDescription("components-image--controlled-preview"),
-    controls: { disable: false, include: ["대체 텍스트"] },
+    controls: { disable: true },
     docs: {
       ...storyDescription("components-image--controlled-preview").docs,
       source: {
@@ -429,7 +429,7 @@ export const Fallback: Story = {
     ...storyDescription("components-image--fallback"),
     controls: {
       disable: false,
-      include: ["가로 길이", "세로 길이", "로딩 Skeleton", "미리보기"],
+      include: ["가로 길이", "세로 길이"],
     },
     docs: {
       ...storyDescription("components-image--fallback").docs,

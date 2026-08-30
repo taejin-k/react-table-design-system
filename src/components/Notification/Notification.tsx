@@ -85,6 +85,23 @@ const placementClasses: Record<NotificationPlacementType, string> = {
   bottomRight: "right-0",
 };
 
+function placementStyle(placement: NotificationPlacementType, isBottom: boolean) {
+  const verticalStyle = isBottom ? { bottom: 0 } : { top: 0 };
+  if (placement.endsWith("Right")) {
+    return {
+      ...verticalStyle,
+      right: "var(--wizard-scrollbar-compensation, 0px)",
+    };
+  }
+  if (placement === "top" || placement === "bottom") {
+    return {
+      ...verticalStyle,
+      left: "calc((100% - var(--wizard-scrollbar-compensation, 0px)) / 2)",
+    };
+  }
+  return verticalStyle;
+}
+
 function NotificationHolder({
   items,
   onClose,
@@ -218,7 +235,7 @@ function NotificationPlacementList({
         isBottom ? "flex-col-reverse" : "flex-col",
         placementClasses[placement],
       )}
-      style={isBottom ? { bottom: 0 } : { top: 0 }}
+      style={placementStyle(placement, isBottom)}
       onMouseEnter={() => {
         window.clearTimeout(collapseTimerRef.current);
         if (stackEnabled && items.length > threshold) onExpandedChange(true);
@@ -488,7 +505,6 @@ function NotificationCard({
           clipPath: stackClipPath,
           transformOrigin: isBottom ? "center top" : "center bottom",
           zIndex: notificationIndex === 0 ? 1000 : 1000 - notificationIndex,
-          ...item.style,
           ...motionStyle,
         } as CSSProperties
       }

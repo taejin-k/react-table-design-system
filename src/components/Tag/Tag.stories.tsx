@@ -27,7 +27,7 @@ const meta = {
     className: { control: false, table: { disable: true } },
   },
   parameters: {
-    controls: { disable: false },
+    controls: { disable: false, include: ["표현 방식"] },
     docs: {
       description: {
         component:
@@ -174,13 +174,14 @@ export const Variants: Story = {
 };
 
 export const Colors: Story = {
+  args: { variant: "filled" },
   argTypes: {
     children: { control: false, table: { disable: true } },
     color: { control: false, table: { disable: true } },
   },
   parameters: {
     ...storyDescription("components-tag--colors"),
-    controls: { disable: false },
+    controls: { disable: false, include: ["표현 방식"] },
     docs: {
       ...storyDescription("components-tag--colors").docs,
       description: { story: storyDescriptions["components-tag--colors"] },
@@ -209,9 +210,10 @@ export const Colors: Story = {
 };
 
 export const Icons: Story = {
+  args: { children: "텍스트", color: "black", variant: "filled" },
   parameters: {
     ...storyDescription("components-tag--icons"),
-    controls: { disable: false },
+    controls: { disable: false, include: ["텍스트", "색상", "표현 방식"] },
     docs: {
       ...storyDescription("components-tag--icons").docs,
       description: { story: storyDescriptions["components-tag--icons"] },
@@ -253,6 +255,7 @@ export const Icons: Story = {
 
 function TagIcons({ args }: { args: ComponentProps<typeof Tag> }) {
   const [loading, setLoading] = useState(false);
+  const { children = "텍스트", ...tagProps } = args;
 
   useEffect(() => {
     if (!loading) return;
@@ -262,22 +265,22 @@ function TagIcons({ args }: { args: ComponentProps<typeof Tag> }) {
 
   return (
     <div className="flex flex-wrap items-center gap-3">
-      <Tag {...args}>텍스트</Tag>
-      <Tag {...args} prefixIcon={<Icon icon="edit" />}>
-        텍스트
+      <Tag {...tagProps}>{children}</Tag>
+      <Tag {...tagProps} prefixIcon={<Icon icon="edit" />}>
+        {children}
       </Tag>
       <Tag
-        {...args}
+        {...tagProps}
         suffixIcon={<Icon icon="close" loading={loading} onClick={() => setLoading(true)} />}
       >
-        텍스트
+        {children}
       </Tag>
       <Tag
-        {...args}
+        {...tagProps}
         prefixIcon={<Icon icon="edit" />}
         suffixIcon={<Icon icon="close" onClick={() => alert("닫기 아이콘을 클릭했어요.")} />}
       >
-        텍스트
+        {children}
       </Tag>
     </div>
   );

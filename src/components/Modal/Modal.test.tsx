@@ -16,6 +16,42 @@ function ModalExample() {
 describe("Modal", () => {
   afterEach(() => act(() => Modal.destroyAll()));
 
+  it("does not render its panel before the first open unless forceRender is true", () => {
+    const { rerender } = render(<Modal open={false}>내용</Modal>);
+
+    expect(document.querySelector("[data-modal-panel]")).not.toBeInTheDocument();
+
+    rerender(
+      <Modal open={false} forceRender>
+        내용
+      </Modal>,
+    );
+
+    expect(document.querySelector("[data-modal-panel]")).toBeInTheDocument();
+  });
+
+  it("keeps hidden content by default and removes it when destroyOnHidden is true", async () => {
+    const { rerender } = render(<Modal open>내용</Modal>);
+
+    rerender(<Modal open={false}>내용</Modal>);
+    await waitFor(() => expect(document.querySelector("[data-modal-root]")).not.toBeVisible());
+    expect(document.querySelector("[data-modal-panel]")).toBeInTheDocument();
+
+    rerender(
+      <Modal open destroyOnHidden>
+        내용
+      </Modal>,
+    );
+    rerender(
+      <Modal open={false} destroyOnHidden>
+        내용
+      </Modal>,
+    );
+    await waitFor(() =>
+      expect(document.querySelector("[data-modal-panel]")).not.toBeInTheDocument(),
+    );
+  });
+
   it("renders in a portal and closes from cancel", async () => {
     render(<ModalExample />);
     expect(screen.getByText("제목")).toBeInTheDocument();
@@ -32,19 +68,6 @@ describe("Modal", () => {
     await userEvent.click(document.querySelector("[data-modal-mask]")!);
 
     await waitFor(() => expect(document.querySelector("[data-modal-root]")).not.toBeVisible());
-  });
-
-  it("applies className and style to the top-level root", () => {
-    render(
-      <Modal open className="custom-modal" style={{ color: "rgb(1, 2, 3)" }}>
-        내용
-      </Modal>,
-    );
-
-    expect(document.querySelector("[data-modal-root]")).toHaveClass("custom-modal");
-    expect(document.querySelector("[data-modal-root]")).toHaveStyle({
-      color: "rgb(1, 2, 3)",
-    });
   });
 
   it("opens from a static method without a context holder", async () => {
@@ -167,6 +190,27 @@ describe("Modal", () => {
       "size-7",
       "text-[#666]",
     );
+  });
+
+  it("keeps focus off the close button when Escape closes it", async () => {
+    const onCancel = vi.fn();
+    render(
+      <Modal open title="제목" onCancel={onCancel}>
+        내용
+      </Modal>,
+    );
+
+    const panel = document.querySelector<HTMLElement>("[data-modal-panel]")!;
+    const closeButton = document.querySelector<HTMLElement>("[data-overlay-close-button]")!;
+
+    await waitFor(() => expect(document.activeElement).toBe(panel));
+    expect(document.activeElement).not.toBe(closeButton);
+
+    closeButton.focus();
+    fireEvent.keyDown(document, { key: "Escape" });
+
+    expect(onCancel).toHaveBeenCalledTimes(1);
+    expect(document.activeElement).toBe(panel);
   });
 
   it("passes the default footer to the footer renderer", () => {

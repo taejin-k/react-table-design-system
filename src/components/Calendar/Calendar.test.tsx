@@ -32,40 +32,28 @@ describe("Calendar", () => {
     ).toBe(true);
   });
 
-  it("fills the year cell instead of stretching a narrow selected month", () => {
-    render(<Calendar defaultValue={new Date(2026, 7, 20)} mode="year" />);
+  it("matches compact date cells to the DatePicker hover and selection style", () => {
+    render(<Calendar defaultValue={new Date(2026, 7, 20)} fullscreen={false} />);
 
-    const selectedMonth = screen.getByRole("button", { name: "8월" });
-    expect(selectedMonth).toHaveClass(
-      "w-[calc(100%-8px)]",
-      "h-[90px]",
+    const selectedDate = screen
+      .getAllByRole("button", { name: "20" })
+      .find((button) => !button.hasAttribute("disabled"));
+
+    expect(selectedDate).toHaveClass(
+      "size-8",
+      "rounded",
       "bg-[#e6f4ff]",
       "text-[#0062df]",
+      "hover:bg-[#e6f4ff]",
     );
-    expect(selectedMonth).not.toHaveClass("bg-[#0062df]");
+    expect(screen.getByRole("button", { name: "21" })).toHaveClass("hover:bg-[#f5f5f5]");
   });
 
-  it("keeps the compact year cell selected in the primary color", () => {
-    render(<Calendar defaultValue={new Date(2026, 7, 20)} mode="year" fullscreen={false} />);
+  it("renders the monthly calendar without a year mode switch", () => {
+    render(<Calendar defaultValue={new Date(2026, 7, 20)} />);
 
-    expect(screen.getByRole("button", { name: "8월" })).toHaveClass(
-      "w-full",
-      "h-9",
-      "bg-[#0062df]",
-      "text-white",
-    );
-  });
-
-  it("keeps both mode buttons at the same bordered size", () => {
-    render(<Calendar defaultValue={new Date(2026, 7, 20)} mode="year" />);
-
-    const monthButton = screen.getByRole("button", { name: "월" });
-    const yearButton = screen.getByRole("button", { name: "년" });
-
-    expect(monthButton).toHaveClass("h-8", "min-w-[42px]", "border");
-    expect(yearButton).toHaveClass("h-8", "min-w-[42px]", "border", "border-[#0062df]");
-    expect(monthButton.parentElement?.parentElement?.nextElementSibling).not.toHaveClass(
-      "border-t",
-    );
+    expect(screen.queryByRole("button", { name: "년" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "월" })).not.toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: "20" }).length).toBeGreaterThan(0);
   });
 });

@@ -7,10 +7,8 @@ import { Collapse } from "./Collapse";
 import { ColorPicker } from "./ColorPicker";
 import { DatePicker } from "./DatePicker";
 import { Description } from "./Description";
-import { Drawer } from "./Drawer";
 import { Image } from "./Image";
 import { Menu } from "./Menu";
-import { Modal } from "./Modal";
 import { Skeleton } from "./Skeleton";
 import { Tabs } from "./Tabs";
 import { TimePicker } from "./TimePicker";
@@ -56,24 +54,5 @@ describe("remaining component className convention", () => {
     ]) {
       expect(container.querySelector(`.${className}`)).toBeInTheDocument();
     }
-  });
-
-  it("applies className to portal roots", () => {
-    const { rerender } = render(
-      <>
-        <Modal open className="modal-root" />
-        <Drawer open className="drawer-root" />
-      </>,
-    );
-
-    expect(document.querySelector("[data-modal-root]")).toHaveClass("modal-root");
-    expect(document.querySelector("[data-drawer-root]")).toHaveClass("drawer-root");
-
-    rerender(
-      <>
-        <Modal className="modal-root" />
-        <Drawer className="drawer-root" />
-      </>,
-    );
   });
 });

@@ -11,6 +11,8 @@ export const iconGalleryNames = [
   "chevron-down",
   "chevron-left",
   "chevron-right",
+  "double-left",
+  "double-right",
   "chevron-up",
   "menu",
   "more-horizontal",

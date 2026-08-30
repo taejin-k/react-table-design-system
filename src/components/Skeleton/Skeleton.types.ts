@@ -1,6 +1,6 @@
 import type { CSSProperties, ReactNode } from "react";
 
-export type SkeletonSizeType = number | "large" | "medium" | "small";
+export type SkeletonSizeType = number | "lg" | "md" | "sm";
 export type SkeletonShapeType = "circle" | "round" | "square" | "default";
 export interface SkeletonElementProps {
   active?: boolean;
@@ -20,7 +20,6 @@ export interface SkeletonProps {
   title?: boolean | { width?: string | number };
   children?: ReactNode;
   className?: string;
-  style?: CSSProperties;
 }
 export interface SkeletonComponent {
   (props: SkeletonProps): ReactNode;

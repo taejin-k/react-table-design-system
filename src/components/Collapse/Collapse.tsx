@@ -52,9 +52,9 @@ export function Collapse({
   return (
     <div
       className={twMerge(
-        "min-w-0 overflow-hidden font-pretendard text-sm leading-[22px] text-[#111]",
+        "min-w-0 overflow-hidden border border-transparent font-pretendard text-sm leading-[22px] text-[#111]",
         !ghost && "rounded-lg",
-        bordered && !ghost && "border border-[#ddd]",
+        bordered && !ghost && "border-[#ddd]",
         ghost && "bg-transparent",
         !ghost && "bg-[#fafafa]",
         className,
@@ -72,7 +72,10 @@ export function Collapse({
         return (
           <section
             key={item.key}
-            className={index > 0 && bordered && !ghost ? "border-t border-[#ddd]" : undefined}
+            className={twMerge(
+              index > 0 && "border-t border-transparent",
+              index > 0 && bordered && !ghost && "border-[#ddd]",
+            )}
           >
             <div
               tabIndex={disabled ? -1 : 0}

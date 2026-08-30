@@ -2,7 +2,15 @@ import type { IconNameType, IconProps } from "./Icon.types";
 import { twMerge } from "tailwind-merge";
 import { iconGalleryNames } from "./Icon.names";
 
-type IconPath = string | { d: string; fillRule: "evenodd" };
+type IconPath =
+  | string
+  | {
+      d: string;
+      fillRule?: "evenodd";
+      strokeWidth?: number;
+      strokeLinecap?: "round";
+      strokeLinejoin?: "round";
+    };
 type IconPaths = IconPath | readonly IconPath[];
 
 /** Figma Icon 라이브러리(901:2, 기본 16x16)의 path 데이터. */
@@ -25,6 +33,14 @@ const legacyPaths = {
   "chevron-down": "M2 5.41 3.41 4 8 8.58 12.59 4 14 5.41l-6 6-6-6Z",
   "chevron-left": "M10.59 12.59 6 8l4.59-4.59L9.17 2l-6 6 6 6 1.42-1.41Z",
   "chevron-right": "M5.41 2 4 3.41 8.58 8 4 12.59 5.41 14l6-6-6-6Z",
+  "double-left": [
+    "M7.59 3.41 6.18 2l-6 6 6 6 1.41-1.41L3 8l4.59-4.59Z",
+    "M14.59 3.41 13.18 2l-6 6 6 6 1.41-1.41L10 8l4.59-4.59Z",
+  ],
+  "double-right": [
+    "M1.82 2 .41 3.41 5 8 .41 12.59 1.82 14l6-6-6-6Z",
+    "M8.82 2 7.41 3.41 12 8l-4.59 4.59L8.82 14l6-6-6-6Z",
+  ],
   "chevron-up": "M2 10.59 3.41 12 8 7.42 12.59 12 14 10.59l-6-6-6 6Z",
   close:
     "M3.19828 14.0021L1.99784 12.8017L6.79956 8.00002L1.99784 3.19831L3.19828 1.99788L7.99999 6.79959L12.8016 1.99788L14.0022 3.19831L9.20041 8.00002L14.0022 12.8017L12.8016 14.0021L7.99999 9.20046L3.19828 14.0021Z",
@@ -83,8 +99,12 @@ const legacyPaths = {
   user: "M8 1.333a3.333 3.333 0 1 1 0 6.667 3.333 3.333 0 0 1 0-6.667Zm0 1.334a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm0 6c3.333 0 6 1.666 6 3.666V14H2v-1.667c0-2 2.667-3.666 6-3.666Zm0 1.333c-2.947 0-4.667 1.407-4.667 2.333v.334h9.334v-.334C12.667 11.407 10.947 10 8 10Z",
   users:
     "M5.333 2a3 3 0 1 1 0 6 3 3 0 0 1 0-6Zm0 1.333a1.667 1.667 0 1 0 0 3.334 1.667 1.667 0 0 0 0-3.334ZM11 3.333a2.667 2.667 0 0 1 0 5.334V7.333a1.333 1.333 0 1 0 0-2.666V3.333ZM5.333 9c2.947 0 5.334 1.493 5.334 3.333V14H0v-1.667C0 10.493 2.387 9 5.333 9Zm0 1.333c-2.52 0-4 1.2-4 2V12.667h8v-.334c0-.8-1.48-2-4-2ZM12 9c2.2.333 4 1.667 4 3.333V14h-4v-1.333h2.667v-.334c0-.666-1.027-1.586-2.667-1.92V9Z",
-  paperclip:
-    "M10.667 4a3.333 3.333 0 0 1 0 4.714L6.38 13A3 3 0 1 1 2.14 8.76l4.76-4.76.943.943-4.76 4.76a1.667 1.667 0 1 0 2.357 2.357l4.286-4.286a2 2 0 1 0-2.829-2.828L2.61 9.233l-.943-.943 4.286-4.286A3.333 3.333 0 0 1 10.667 4Z",
+  paperclip: {
+    d: "M13.4 6.2 6.3 13.3a3 3 0 0 1-4.243-4.243l7.1-7.1a2 2 0 0 1 2.829 2.829l-7.1 7.1a1 1 0 0 1-1.414-1.414l6.129-6.129",
+    strokeWidth: 1.6,
+    strokeLinecap: "round",
+    strokeLinejoin: "round",
+  },
   warning: "M7.2 2h1.6l-.2 8H7.4l-.2-8Zm.133 9.333h1.334V14H7.333v-2.667Z",
 } as const;
 
@@ -263,6 +283,8 @@ const opticalScaleByIcon = {
   "chevron-down": 1,
   "chevron-left": 1,
   "chevron-right": 1,
+  "double-left": 1,
+  "double-right": 1,
   "chevron-up": 1,
   close: 0.88,
   "close-circle": 0.96,
@@ -278,7 +300,7 @@ const opticalScaleByIcon = {
   "eye-off": 0.95,
   file: 0.95,
   filter: 1.05,
-  folder: [1, 0.88],
+  folder: [1.05, 1.05],
   "help-circle": 0.96,
   home: 1,
   info: 0.96,
@@ -390,11 +412,18 @@ export function Icon({
         transform={`${resolvedIcon === "flip-vertical" ? `rotate(90 ${viewBoxCenter} ${viewBoxCenter}) ` : ""}translate(${viewBoxCenter} ${viewBoxCenter}) scale(${opticalScaleTransform}) translate(-${viewBoxCenter} -${viewBoxCenter})`}
       >
         {pathList.map((path, index) => {
-          const pathProps: { d: string; fillRule?: "evenodd" } =
+          const pathProps: Exclude<IconPath, string> =
             typeof path === "string" ? { d: path } : path;
+          const stroked = pathProps.strokeWidth !== undefined;
 
           return (
-            <path key={index} {...pathProps} clipRule={pathProps.fillRule} fill={effectiveColor} />
+            <path
+              key={index}
+              {...pathProps}
+              clipRule={pathProps.fillRule}
+              fill={stroked ? "none" : effectiveColor}
+              stroke={stroked ? effectiveColor : undefined}
+            />
           );
         })}
       </g>

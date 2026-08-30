@@ -71,8 +71,11 @@ describe("Tabs", () => {
   });
 
   it("anchors the line indicator to the tab header origin", () => {
-    render(<Tabs items={[{ key: "one", label: "문서", children: "내용" }]} />);
+    render(<Tabs animated={false} items={[{ key: "one", label: "문서", children: "내용" }]} />);
     expect(document.querySelector("[data-tabs-indicator]")).toHaveClass("top-0", "left-0");
+    expect(document.querySelector("[data-tabs-indicator]")).toHaveStyle({
+      transition: "width 300ms, height 300ms, transform 300ms",
+    });
   });
 
   it("keeps the same indicator element while the active tab changes", () => {

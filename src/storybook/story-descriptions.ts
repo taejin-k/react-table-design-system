@@ -32,7 +32,7 @@ export const storyDescriptions: Record<string, string> = {
   "components-input--password":
     "입력값을 비밀번호로 가리고 눈 아이콘을 눌러 표시 상태를 전환할 수 있어요.",
   "components-input--icons-and-count":
-    "기본·filled 입력창에 아이콘과 지우기 버튼을 추가하고 글자 수를 현재 값 또는 현재/최대 값으로 표시할 수 있어요.",
+    "모든 표현 방식에 아이콘과 지우기 버튼을 추가하고 글자 수를 현재 값 또는 현재/최대 값으로 표시할 수 있어요.",
   "components-input--static-error":
     "errorMessage를 전달해 입력창 아래에 고정 오류 문구와 오류 상태를 표시해요.",
   "components-input--client-error":
@@ -96,39 +96,40 @@ export const storyDescriptions: Record<string, string> = {
   "components-select--virtual-list":
     "많은 항목 중 화면에 보이는 영역만 가상 렌더링해 목록을 부드럽게 탐색할 수 있어요.",
   "components-datepicker--sizes":
-    "화면과 날짜 선택 환경에 맞게 세 가지 DatePicker 크기를 선택할 수 있어요.",
+    "화면과 날짜 선택 환경에 맞게 두 가지 DatePicker 크기를 선택할 수 있어요.",
   "components-datepicker--widths": "기본 전체 너비와 px 단위 가로 길이를 설정할 수 있어요.",
   "components-datepicker--states":
     "기본, 읽기 전용과 비활성 상태의 모양과 선택 가능 여부를 비교할 수 있어요.",
   "components-datepicker--variants":
     "DatePicker의 배경과 테두리 표현 방식을 나란히 비교할 수 있어요.",
-  "components-datepicker--static-error":
+  "components-datepicker--label-and-error":
     "DatePicker 위에 레이블과 필수 표시를 추가하고 아래에 고정 오류 문구를 표시해요.",
   "components-datepicker--basic": "달력에서 날짜를 선택하고 선택값을 확인하거나 지울 수 있어요.",
-  "components-datepicker--picker-types":
-    "날짜, 주, 월, 분기와 연도 중 필요한 선택 단위를 사용할 수 있어요.",
+  "components-datepicker--picker-types": "날짜, 월과 연도 중 필요한 선택 단위를 사용할 수 있어요.",
   "components-datepicker--range": "이어진 두 달력에서 시작일과 종료일을 순서대로 선택할 수 있어요.",
-  "components-datepicker--disabled-date":
-    "disabledDate 조건에 맞는 날짜를 비활성화해 선택할 수 없게 해요.",
+  "components-datepicker--date-limits":
+    "고정된 날짜 범위와 조건을 이용해 선택할 수 없는 날짜를 설정해요.",
   "components-datepicker--format": "선택한 날짜를 원하는 문자열 형식으로 변환해 표시할 수 있어요.",
-  "components-datepicker--min-max-date":
-    "선택 가능한 최소 날짜와 최대 날짜를 지정해 달력의 범위를 제한할 수 있어요.",
   "components-datepicker--presets":
     "자주 사용하는 날짜를 미리 등록해 달력에서 빠르게 선택할 수 있어요.",
   "components-datepicker--multiple":
     "하나의 달력에서 여러 날짜를 선택하고 선택한 날짜를 입력 영역에서 확인할 수 있어요.",
+  "components-datepicker--controlled-multiple":
+    "여러 날짜의 선택값을 문자열 배열로 외부에서 관리해요.",
   "components-datepicker--show-time-and-confirm":
     "날짜와 시간을 한 패널에서 선택하고 확인 버튼을 눌러 값을 반영할 수 있어요.",
-  "components-datepicker--week-number":
-    "달력 왼쪽에 각 주를 구분하는 주차 번호를 함께 표시할 수 있어요.",
+  "components-datepicker--multiple-show-time":
+    "여러 날짜와 시간을 함께 선택하고 입력 영역에서 확인해요.",
+  "components-datepicker--time-formats": "시간을 시·분·초 또는 시·분 형식으로 표시해요.",
+  "components-datepicker--use-12-hours":
+    "24시간 형식과 오전·오후를 사용하는 12시간 형식을 비교해요.",
+  "components-datepicker--time-limits": "시간 간격과 선택할 수 있는 업무 시간 범위를 설정해요.",
   "components-datepicker--custom-cell":
     "cellRender로 날짜 셀의 내용과 상태 표현을 목적에 맞게 구성할 수 있어요.",
-  "components-datepicker--extra-footer":
-    "달력 패널 아래에 안내 문구나 추가 작업 영역을 표시할 수 있어요.",
   "components-datepicker--range-presets":
     "자주 사용하는 시작일과 종료일 조합을 미리 등록해 빠르게 선택할 수 있어요.",
   "components-datepicker--controlled-panel":
-    "pickerValue와 onPanelChange로 달력 패널의 기준 날짜를 외부에서 관리해요.",
+    "선택된 날짜와 달력에서 보고 있는 달을 각각 제어해 value와 pickerValue의 차이를 확인해요.",
   "components-datepicker--placements":
     "입력창을 기준으로 달력 패널이 열릴 네 가지 위치를 선택할 수 있어요.",
 
@@ -145,11 +146,9 @@ export const storyDescriptions: Record<string, string> = {
     "목록에서 시·분·초를 선택하고 선택값을 확인하거나 지울 수 있어요.",
   "components-timepicker--format-and-steps":
     "12시간제, 시간 간격과 확인 버튼을 조합해 선택 방식을 설정할 수 있어요.",
-  "components-timepicker--range":
-    "하나의 패널에서 시작 시간과 종료 시간을 순서대로 선택할 수 있어요.",
   "components-timepicker--disabled-time":
     "disabledTime 조건에 맞는 시·분·초를 비활성화해 선택할 수 없게 해요.",
-  "components-timepicker--hide-disabled-options":
+  "components-timepicker--hide-disabled":
     "비활성 시간 항목을 목록에 표시하거나 완전히 숨길 수 있어요.",
   "components-timepicker--show-now-and-footer":
     "현재 시간 선택 버튼과 시간 패널 아래의 추가 콘텐츠를 구성할 수 있어요.",
@@ -159,8 +158,6 @@ export const storyDescriptions: Record<string, string> = {
     "시간 항목에 마우스를 올려 확정 전의 선택값을 입력창에서 미리 확인할 수 있어요.",
   "components-timepicker--change-on-scroll":
     "시간 목록을 스크롤하는 즉시 선택값이 함께 변경되도록 설정할 수 있어요.",
-  "components-timepicker--prefix-and-suffix":
-    "선택 영역 앞뒤에 아이콘이나 추가 콘텐츠를 표시할 수 있어요.",
   "components-timepicker--controlled":
     "value와 onChange로 선택 시간을 외부 상태에서 직접 관리할 수 있어요.",
   "components-timepicker--placements":
@@ -255,9 +252,11 @@ export const storyDescriptions: Record<string, string> = {
     "버튼을 눌러 화면 가장자리에서 Drawer를 열고 내부 작업 후 닫을 수 있어요.",
   "components-drawer--placements":
     "화면의 위, 오른쪽, 아래와 왼쪽 중 원하는 방향에서 Drawer를 열 수 있어요.",
-  "components-drawer--size-resizable":
-    "정해진 크기를 선택하거나 Drawer 가장자리를 드래그해 너비와 높이를 조절할 수 있어요.",
-  "components-drawer--extra-footer-loading": "제목 옆 작업, footer와 로딩 상태를 구성해요.",
+  "components-drawer--sizes": "기본, 큰 크기와 직접 지정한 Drawer 크기를 비교해요.",
+  "components-drawer--resizable":
+    "가로·세로 Drawer의 가장자리를 드래그하고 최소·최대 크기 제한을 확인해요.",
+  "components-drawer--header-footer": "제목 옆 작업과 footer를 본문과 함께 구성해요.",
+  "components-drawer--scrollable": "긴 본문만 스크롤하고 header와 footer는 고정된 상태로 유지해요.",
   "components-drawer--nested":
     "Drawer 안에서 하위 Drawer를 열면 부모 패널을 밀어내며 계층을 구분해요.",
 
@@ -367,15 +366,23 @@ export const storyDescriptions: Record<string, string> = {
     "같은 항목을 기본 세로형과 펼침 가능한 인라인형으로 구성해 배치 차이를 비교해요.",
   "components-menu--horizontal":
     "메뉴를 가로로 배치하고 하위 메뉴를 팝업으로 열어 상단 내비게이션에 사용해요.",
-  "components-menu--dark":
-    "어두운 배경에 맞는 색상과 선택 상태를 적용하고 하위 메뉴를 기본으로 펼쳐요.",
+  "components-menu--collapsed":
+    "인라인 메뉴를 접고 펼치며 좁은 사이드바에서 아이콘 중심으로 사용하는 방법을 확인해요.",
+  "components-menu--item-states":
+    "그룹, 추가 정보, 비활성 항목, 점선 구분선과 위험 작업을 한 메뉴에서 구성해요.",
 
   "components-tabs--basic": "탭을 선택해 연결된 콘텐츠를 전환하고 비활성 탭의 동작을 제한해요.",
+  "components-tabs--animate": "표시선과 콘텐츠가 부드럽게 이동하며 전환되는 모습을 확인해요.",
   "components-tabs--card": "탭을 카드 형태로 표시해 영역별 콘텐츠를 명확하게 구분해요.",
   "components-tabs--editable": "탭 추가·삭제 버튼을 표시하고 onEdit으로 편집 동작을 처리해요.",
   "components-tabs--vertical": "탭 목록을 콘텐츠 왼쪽에 세로로 배치해요.",
+  "components-tabs--controlled":
+    "activeKey와 onChange로 활성 탭을 외부 상태 및 별도 버튼과 동기화해요.",
+  "components-tabs--extra-content":
+    "탭 목록 양쪽에 제목과 작업 버튼을 배치해 콘텐츠 도구 모음을 구성해요.",
 
   "components-colorpicker--basic": "색상 패널에서 색조·채도·명도·투명도를 조절해요.",
+  "components-colorpicker--states": "기본·읽기 전용·비활성 상태를 나란히 비교해요.",
   "components-colorpicker--allow-clear": "선택한 색상을 초기화 버튼으로 지울 수 있어요.",
   "components-colorpicker--sizes": "세 가지 트리거 크기를 나란히 비교해요.",
   "components-colorpicker--formats": "HEX·RGB·HSB 형식으로 색상 값을 표시하고 입력해요.",
@@ -388,20 +395,15 @@ export const storyDescriptions: Record<string, string> = {
 
   "components-upload--basic":
     "버튼으로 파일을 선택하고 업로드 전에 파일 목록과 제거 동작을 확인해요.",
-  "components-upload--picture-card":
-    "이미지 파일을 카드 썸네일 목록으로 표시하고 최대 파일 수를 제한해요.",
   "components-upload--list-types":
-    "텍스트·사진·카드·원형 목록에서 같은 파일 상태가 어떻게 보이는지 비교해요.",
-  "components-upload--drag-and-drop": "영역을 클릭하거나 파일을 드래그해 여러 파일을 추가해요.",
-  "components-upload--upload-progress":
-    "사용자 정의 요청에서 전달한 진행률과 완료 상태를 표시해요.",
-  "components-upload--file-states": "완료·업로드 중·오류 파일의 목록 상태와 동작을 비교해요.",
+    "listType의 text와 picture 목록이 파일을 어떻게 표시하는지 비교해요.",
+  "components-upload--sortable-lists": "텍스트와 사진 목록의 핸들을 드래그해 파일 순서를 바꿔요.",
+  "components-upload--drag-and-drop":
+    "파일을 드래그해 추가하고 text와 picture 목록으로 표시되는 결과를 비교해요.",
   "components-upload--selection-rules":
     "PNG 파일만 여러 개 선택하고 최대 두 개까지 등록되는 제한을 확인해요.",
-  "components-upload--directory-and-paste":
-    "폴더 단위 선택과 클립보드 파일 붙여넣기로 파일을 추가해요.",
-  "components-upload--controlled-file-list":
-    "fileList와 onChange로 목록을 제어하고 파일별 추가 상태를 표시해요.",
+  "components-upload--directory": "폴더 단위로 여러 파일을 선택해 추가해요.",
+  "components-upload--controlled-file-list": "fileList와 onChange로 파일 목록을 직접 제어해요.",
 
   "components-avatar--basic": "기본 아바타를 표시해요.",
   "components-avatar--sizes": "md와 lg 크기의 아바타를 비교해요.",
@@ -425,7 +427,6 @@ export const storyDescriptions: Record<string, string> = {
   "components-calendar--fullscreen":
     "월간 달력을 전체 너비로 표시하고 날짜와 이전·다음 달을 탐색해요.",
   "components-calendar--card": "작은 카드형 달력에서 날짜를 확인하고 선택해요.",
-  "components-calendar--year": "한 해의 열두 달을 한 화면에서 선택해요.",
   "components-calendar--selection-rules-and-cell":
     "선택 가능한 기간과 요일을 제한하고 일정이 있는 날짜에 표시를 추가해요.",
 
@@ -464,19 +465,27 @@ export const storyDescriptions: Record<string, string> = {
   "components-image--fallback":
     "정상 원본 이미지와 로드 실패 후 fallback 이미지가 표시된 결과를 비교해요.",
 
-  "components-tree--basic": "계층형 데이터를 펼치고 접으며 폴더와 파일 항목을 선택해요.",
+  "components-tree--basic": "계층형 데이터를 펼치고 접으며 항목을 선택해요.",
+  "components-tree--icons": "폴더와 파일 아이콘을 함께 표시해 항목 종류를 구분해요.",
   "components-tree--checkable": "체크박스로 부모와 자식 노드의 선택 상태를 함께 관리해요.",
-  "components-tree--lines": "부모와 자식 노드 사이의 연결선을 표시해 계층을 강조해요.",
   "components-tree--draggable":
     "노드를 위·아래 또는 다른 노드 안으로 드래그해 계층과 순서를 변경해요.",
   "components-tree--async-loading":
     "노드를 처음 펼칠 때 하위 데이터를 불러오고 완료 후 목록에 표시해요.",
+  "components-tree--controlled-state":
+    "펼침, 선택과 체크 키를 외부 상태에서 제어하고 현재 값을 함께 확인해요.",
+  "components-tree--custom-titles":
+    "titleRender로 노드 제목에 종류를 나타내는 보조 정보를 함께 표시해요.",
 
   "components-skeleton--basic":
     "콘텐츠를 불러오는 동안 아바타, 제목과 문단 형태의 자리 표시자를 표시해요.",
   "components-skeleton--elements":
     "아바타, 버튼, 입력창, 이미지와 사용자 정의 영역에 맞는 단독 Skeleton을 사용해요.",
   "components-skeleton--loaded": "loading이 끝나면 Skeleton을 실제 콘텐츠로 교체해요.",
+  "components-skeleton--card-grid":
+    "이미지, 텍스트와 버튼 Skeleton을 조합해 카드 목록의 로딩 화면을 구성해요.",
+  "components-skeleton--list":
+    "아바타와 서로 다른 텍스트 너비를 조합해 반복 목록의 로딩 화면을 구성해요.",
 
   "components-table-sorting-filtering--server-table":
     "페이지, 페이지당 행 수, 정렬과 필터 조건을 onChange로 받아 서버 API 요청 파라미터로 사용해요.",

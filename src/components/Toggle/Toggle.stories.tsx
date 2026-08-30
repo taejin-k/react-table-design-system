@@ -138,7 +138,7 @@ export const States: Story = {
 };
 
 export const Loading: Story = {
-  args: { checked: false },
+  args: { checked: false, size: "md", loading: false },
   parameters: {
     ...storyDescription("components-toggle--loading"),
     controls: { disable: false, include: ["선택", "크기", "로딩"] },

@@ -161,7 +161,15 @@ export const Basic: Story = {
   },
 };
 export const Accordion: Story = {
-  args: { items, accordion: true, defaultActiveKey: ["one"] },
+  args: {
+    items,
+    accordion: true,
+    bordered: true,
+    ghost: false,
+    size: "md",
+    expandIconPlacement: "start",
+    defaultActiveKey: ["one"],
+  },
   parameters: {
     ...storyDescription("components-collapse--accordion"),
     controls: {
@@ -180,7 +188,15 @@ export const Accordion: Story = {
   },
 };
 export const Ghost: Story = {
-  args: { items, ghost: true, defaultActiveKey: ["one"] },
+  args: {
+    items,
+    accordion: false,
+    bordered: true,
+    ghost: true,
+    size: "md",
+    expandIconPlacement: "start",
+    defaultActiveKey: ["one"],
+  },
   parameters: {
     ...storyDescription("components-collapse--ghost"),
     controls: {

@@ -91,14 +91,14 @@ export const States: Story = {
 };
 
 export const Label: Story = {
-  args: { label: "레이블" },
+  args: { label: "레이블", checked: false, partiallyChecked: false },
   argTypes: {
     disabled: { control: false, table: { disable: true } },
     error: { control: false, table: { disable: true } },
   },
   parameters: {
     ...storyDescription("components-checkbox--label"),
-    controls: { disable: false },
+    controls: { disable: false, include: ["레이블", "선택", "일부 선택"] },
     docs: {
       ...storyDescription("components-checkbox--label").docs,
       source: {

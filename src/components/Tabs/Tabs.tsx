@@ -8,11 +8,11 @@ export function Tabs(props: TabsProps) {
     items = [],
     activeKey,
     defaultActiveKey,
-    animated = { inkBar: true, tabPane: false },
+    animated = false,
     centered = false,
     destroyOnHidden = false,
     type = "line",
-    size = "medium",
+    size = "md",
     tabPlacement: placement = "top",
     tabBarGutter,
     tabBarExtraContent,
@@ -22,9 +22,6 @@ export function Tabs(props: TabsProps) {
     removeIcon,
     indicator,
     className,
-    style,
-    classNames,
-    styles,
     onChange,
     onEdit,
     onTabClick,
@@ -107,15 +104,15 @@ export function Tabs(props: TabsProps) {
       ? (tabBarExtraContent as { left?: React.ReactNode; right?: React.ReactNode })
       : { right: tabBarExtraContent as React.ReactNode };
   const linePadding =
-    size === "large"
+    size === "lg"
       ? "px-4 py-4 text-base"
-      : size === "small"
+      : size === "sm"
         ? "px-2 py-2 text-sm"
         : "px-3 py-3 text-sm";
   const cardSize =
-    size === "large"
+    size === "lg"
       ? "h-12 px-4 text-base"
-      : size === "small"
+      : size === "sm"
         ? "h-8 px-2 text-sm"
         : "h-10 px-4 text-sm";
   const cardEdge = vertical
@@ -125,10 +122,7 @@ export function Tabs(props: TabsProps) {
     : placement === "bottom"
       ? "rounded-b-md border-t-0"
       : "rounded-t-md border-b-0";
-  const inkBarAnimated = typeof animated === "boolean" ? animated : animated.inkBar !== false;
-  const indicatorTransition = inkBarAnimated
-    ? "width 300ms, height 300ms, transform 300ms"
-    : "none";
+  const indicatorTransition = "width 300ms, height 300ms, transform 300ms";
   const DefaultTabBar = () => (
     <div
       ref={headerRef}
@@ -154,9 +148,8 @@ export function Tabs(props: TabsProps) {
             : placement === "bottom"
               ? "border-t border-[#d9d9d9]"
               : "border-b border-[#d9d9d9]"),
-        classNames?.header,
       )}
-      style={{ gap: tabBarGutter, ...tabBarStyle, ...styles?.header }}
+      style={{ gap: tabBarGutter, ...tabBarStyle }}
     >
       {extra.left ? <div className={vertical ? "mb-2" : "mr-auto"}>{extra.left}</div> : null}
       <div
@@ -186,9 +179,7 @@ export function Tabs(props: TabsProps) {
                 : `${cardSize} border border-[#d9d9d9] bg-[#fafafa] ${cardEdge} transition-[background-color,border-color,color] duration-300 ease-[cubic-bezier(0.645,0.045,0.355,1)]`,
               type !== "line" && item.key === selected && "z-[1] bg-white",
               type !== "line" && vertical ? "w-full" : "",
-              classNames?.item,
             )}
-            style={styles?.item}
             onClick={(event) => change(item.key, event)}
           >
             {item.icon}
@@ -216,9 +207,9 @@ export function Tabs(props: TabsProps) {
               cardSize,
               vertical
                 ? "w-full"
-                : size === "small"
+                : size === "sm"
                   ? "w-8 px-0"
-                  : size === "large"
+                  : size === "lg"
                     ? "w-12 px-0"
                     : "w-10 px-0",
               cardEdge,
@@ -234,7 +225,6 @@ export function Tabs(props: TabsProps) {
           data-tabs-indicator=""
           className={twMerge(
             "pointer-events-none absolute top-0 left-0 bg-[#0062df] will-change-transform",
-            classNames?.indicator,
           )}
           style={{
             width: ink.width,
@@ -242,7 +232,6 @@ export function Tabs(props: TabsProps) {
             transform: `translate3d(${ink.left}px, ${ink.top}px, 0)`,
             transition: indicatorTransition,
             transitionTimingFunction: "cubic-bezier(0.645, 0.045, 0.355, 1)",
-            ...styles?.indicator,
           }}
         />
       ) : null}
@@ -277,7 +266,6 @@ export function Tabs(props: TabsProps) {
     </div>
   );
   const tabBar = renderTabBar?.(props, DefaultTabBar) ?? DefaultTabBar();
-  const paneAnimated = typeof animated === "boolean" ? animated : animated.tabPane;
   return (
     <div
       className={twMerge(
@@ -286,14 +274,14 @@ export function Tabs(props: TabsProps) {
         placement === "end" && "flex-row-reverse",
         placement === "bottom" && "flex-col-reverse",
         className,
-        classNames?.root,
       )}
-      style={{ ...style, ...styles?.root }}
     >
       {tabBar}
       <div
-        className={twMerge("min-w-0 flex-1", vertical ? "px-6" : "py-4", classNames?.body)}
-        style={styles?.body}
+        className={twMerge(
+          "min-w-0 flex-1 [overflow-wrap:anywhere] break-words",
+          vertical ? "px-6" : "py-4",
+        )}
       >
         {items.map((item) => {
           const active = item.key === selected;
@@ -306,7 +294,7 @@ export function Tabs(props: TabsProps) {
               data-tab-panel={item.key}
               hidden={!active}
               className={twMerge(
-                paneAnimated &&
+                animated &&
                   active &&
                   "animate-[wizard-tab-pane-in_0.3s_cubic-bezier(0.23,1,0.32,1)] motion-reduce:animate-none",
               )}

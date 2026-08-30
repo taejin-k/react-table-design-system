@@ -112,7 +112,11 @@ export function Segmented({
             }}
             className={twMerge(
               itemVariants({ size }),
-              fullWidth && direction === "horizontal" ? "flex-1" : "flex-none",
+              fullWidth
+                ? direction === "horizontal"
+                  ? "flex-1"
+                  : "w-full flex-none"
+                : "flex-none",
               itemDisabled
                 ? "cursor-not-allowed text-[#bbb]"
                 : selected
@@ -140,7 +144,11 @@ export function Segmented({
 
         if (!option.tooltip) return item;
         return (
-          <Tooltip key={option.value} title={option.tooltip}>
+          <Tooltip
+            key={option.value}
+            className={fullWidth ? (direction === "horizontal" ? "flex-1" : "w-full") : undefined}
+            title={option.tooltip}
+          >
             {item}
           </Tooltip>
         );

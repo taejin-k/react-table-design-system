@@ -562,7 +562,7 @@ export const TagRender: Story = {
 };
 
 export const OptionColors: Story = {
-  args: { size: "md", variant: "default" },
+  args: { closable: true, size: "md", variant: "default" },
   parameters: {
     ...storySource(
       "components-select--option-colors",

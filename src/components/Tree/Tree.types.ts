@@ -15,6 +15,14 @@ export interface TreeDataNode {
   [key: string]: unknown;
 }
 
+export interface TreeFieldNames {
+  title?: string;
+  key?: string;
+  children?: string;
+}
+
+export type TreeCheckedKeys = Key[] | { checked: Key[]; halfChecked: Key[] };
+
 export interface TreeEventInfo {
   event: "select" | "check" | "expand";
   selected?: boolean;
@@ -26,8 +34,22 @@ export interface TreeEventInfo {
 
 export type TreeDropPositionType = -1 | 0 | 1;
 
+export interface TreeAllowDropInfo {
+  dropNode: TreeDataNode;
+  dropPosition: TreeDropPositionType;
+}
+
+export interface TreeSwitcherIconInfo {
+  expanded: boolean;
+  node: TreeDataNode;
+}
+
+export interface TreeLoadInfo {
+  event: "load";
+  node: TreeDataNode;
+}
+
 export interface TreeDraggableConfig {
-  icon?: ReactNode | false;
   nodeDraggable?: (node: TreeDataNode) => boolean;
 }
 
@@ -51,7 +73,7 @@ export interface TreeDropInfo extends TreeDragInfo {
 
 export interface TreeProps {
   treeData?: TreeDataNode[];
-  fieldNames?: { title?: string; key?: string; children?: string };
+  fieldNames?: TreeFieldNames;
   blockNode?: boolean;
   checkable?: boolean;
   checkStrictly?: boolean;
@@ -59,17 +81,15 @@ export interface TreeProps {
   multiple?: boolean;
   disabled?: boolean;
   draggable?: TreeDraggableType;
-  allowDrop?: (info: { dropNode: TreeDataNode; dropPosition: TreeDropPositionType }) => boolean;
-  showIcon?: boolean;
-  showLine?: boolean | { showLeafIcon?: boolean | ReactNode };
-  switcherIcon?: ReactNode | ((props: { expanded: boolean; node: TreeDataNode }) => ReactNode);
+  allowDrop?: (info: TreeAllowDropInfo) => boolean;
+  switcherIcon?: ReactNode | ((info: TreeSwitcherIconInfo) => ReactNode);
   titleRender?: (node: TreeDataNode) => ReactNode;
   expandedKeys?: Key[];
   defaultExpandedKeys?: Key[];
   defaultExpandAll?: boolean;
   selectedKeys?: Key[];
   defaultSelectedKeys?: Key[];
-  checkedKeys?: Key[] | { checked: Key[]; halfChecked: Key[] };
+  checkedKeys?: TreeCheckedKeys;
   defaultCheckedKeys?: Key[];
   height?: number;
   loadData?: (node: TreeDataNode) => Promise<void>;
@@ -79,10 +99,10 @@ export interface TreeProps {
   onExpand?: (expandedKeys: Key[], info: TreeEventInfo) => void;
   onSelect?: (selectedKeys: Key[], info: TreeEventInfo) => void;
   onCheck?: (
-    checkedKeys: Key[] | { checked: Key[]; halfChecked: Key[] },
+    checkedKeys: TreeCheckedKeys,
     info: TreeEventInfo,
   ) => void;
-  onLoad?: (loadedKeys: Key[], info: { event: "load"; node: TreeDataNode }) => void;
+  onLoad?: (loadedKeys: Key[], info: TreeLoadInfo) => void;
   onDragStart?: (info: TreeDragInfo) => void;
   onDragEnter?: (info: TreeDragEnterInfo) => void;
   onDragOver?: (info: TreeDragInfo) => void;

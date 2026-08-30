@@ -1,5 +1,5 @@
 import { createPortal } from "react-dom";
-import { useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { cva } from "class-variance-authority";
 import { twMerge } from "tailwind-merge";
 import { Button } from "../Button";
@@ -9,7 +9,7 @@ import { Label } from "../Label";
 import { ScrollFade } from "../_internal/ScrollFade";
 import { getPopupMotionStyle } from "../_internal/motion";
 import { useFloatingLayer } from "../_internal/use-floating-layer";
-import type { TimePickerProps, TimeRangePickerProps } from "./TimePicker.types";
+import type { TimePickerProps } from "./TimePicker.types";
 
 interface TimeParts {
   hour: number;
@@ -22,12 +22,52 @@ function pad(value: number) {
 }
 
 function parseTime(value?: string | null): TimeParts {
+  if (!value) return { hour: 0, minute: 0, second: 0 };
   const [hour = 0, minute = 0, second = 0] = (value ?? "").split(":").map(Number);
   return { hour, minute, second };
 }
 
 function formatTime(parts: TimeParts, showSecond: boolean) {
   return `${pad(parts.hour)}:${pad(parts.minute)}${showSecond ? `:${pad(parts.second)}` : ""}`;
+}
+
+function resolveInitialTime({
+  use12Hours,
+  showSecond,
+  hourStep,
+  minuteStep,
+  secondStep,
+  disabledTime,
+}: Pick<
+  TimePickerProps,
+  | "use12Hours"
+  | "showSecond"
+  | "hourStep"
+  | "minuteStep"
+  | "secondStep"
+  | "disabledTime"
+>): TimeParts {
+  const disabled = disabledTime?.(new Date()) ?? {};
+  const disabledHours = disabled.disabledHours?.() ?? [];
+  const hourValues = use12Hours
+    ? numberSteps(13, hourStep ?? 1, 1).map((hour) => toTwentyFourHour(hour, false))
+    : numberSteps(24, hourStep ?? 1);
+  const hour = hourValues.find((value) => !disabledHours.includes(value)) ?? hourValues[0] ?? 0;
+  const disabledMinutes = disabled.disabledMinutes?.(hour) ?? [];
+  const minuteValues = numberSteps(60, minuteStep ?? 1);
+  const minute =
+    minuteValues.find((value) => value === 0 && !disabledMinutes.includes(value)) ??
+    minuteValues.find((value) => !disabledMinutes.includes(value)) ??
+    0;
+  const disabledSeconds = disabled.disabledSeconds?.(hour, minute) ?? [];
+  const secondValues = numberSteps(60, secondStep ?? 1);
+  const second = showSecond
+    ? (secondValues.find((value) => value === 0 && !disabledSeconds.includes(value)) ??
+      secondValues.find((value) => !disabledSeconds.includes(value)) ??
+      0)
+    : 0;
+
+  return { hour, minute, second };
 }
 
 function BaseTimePicker({
@@ -51,10 +91,8 @@ function BaseTimePicker({
   needConfirm = false,
   changeOnScroll = false,
   disabledTime,
-  hideDisabledOptions = false,
+  hideDisabled = false,
   showNow = true,
-  prefix,
-  suffixIcon,
   previewValue = false,
   renderExtraFooter,
   cellRender,
@@ -69,9 +107,21 @@ function BaseTimePicker({
 }: TimePickerProps) {
   const [innerValue, setInnerValue] = useState<string | null>(defaultValue ?? null);
   const selectedValue = value === undefined ? innerValue : value;
-  const [pending, setPending] = useState<TimeParts>(() => parseTime(selectedValue));
-  const [preview, setPreview] = useState<TimeParts | null>(null);
   const resolvedShowSecond = showSecond && format !== "HH:mm" && format !== "hh:mm A";
+  const initialPanelTime = () =>
+    selectedValue
+      ? parseTime(selectedValue)
+      : resolveInitialTime({
+          use12Hours,
+          showSecond: resolvedShowSecond,
+          hourStep,
+          minuteStep,
+          secondStep,
+          disabledTime,
+        });
+  const [pending, setPending] = useState<TimeParts>(initialPanelTime);
+  const [preview, setPreview] = useState<TimeParts | null>(null);
+  const [panelResetKey, setPanelResetKey] = useState(0);
   const floating = useFloatingLayer({
     placement,
     trigger: "click",
@@ -80,7 +130,7 @@ function BaseTimePicker({
     open,
     defaultOpen,
     onOpenChange: (nextOpen) => {
-      if (nextOpen) setPending(parseTime(selectedValue));
+      if (nextOpen) setPending(initialPanelTime());
       onOpenChange?.(nextOpen);
     },
   });
@@ -115,9 +165,9 @@ function BaseTimePicker({
             error: Boolean(errorMessage),
             disabled,
             readOnly,
+            interactive: !disabled && !readOnly,
           })}
         >
-          {prefix ? <span className="flex shrink-0 items-center">{prefix}</span> : null}
           <span className={twMerge("min-w-0 flex-1 truncate", !displayedValue && "text-[#999]")}>
             {preview && previewValue === "hover"
               ? use12Hours
@@ -131,6 +181,18 @@ function BaseTimePicker({
               onClick={(event) => {
                 event.stopPropagation();
                 commitTime(null);
+                setPending(
+                  resolveInitialTime({
+                    use12Hours,
+                    showSecond: resolvedShowSecond,
+                    hourStep,
+                    minuteStep,
+                    secondStep,
+                    disabledTime,
+                  }),
+                );
+                setPreview(null);
+                setPanelResetKey((current) => current + 1);
                 onClear?.();
               }}
             >
@@ -141,7 +203,7 @@ function BaseTimePicker({
               )}
             </span>
           ) : (
-            (suffixIcon ?? <Icon icon="clock-outlined" color="#999" />)
+            <Icon icon="clock-outlined" color="#999" />
           )}
         </button>
       </span>
@@ -168,6 +230,7 @@ function BaseTimePicker({
               {...floating.popupProps}
             >
               <TimePanel
+                key={panelResetKey}
                 value={formatTime(pending, true)}
                 use12Hours={use12Hours}
                 showSecond={resolvedShowSecond}
@@ -176,7 +239,7 @@ function BaseTimePicker({
                 secondStep={secondStep}
                 changeOnScroll={changeOnScroll}
                 disabledTime={disabledTime}
-                hideDisabledOptions={hideDisabledOptions}
+                hideDisabled={hideDisabled}
                 cellRender={cellRender}
                 onPreview={setPreview}
                 onChange={selectParts}
@@ -189,8 +252,6 @@ function BaseTimePicker({
                   {showNow ? (
                     <Button
                       variant="ghost"
-                      size="sm"
-                      className="h-auto bg-transparent px-0 text-[#0062df] hover:bg-transparent hover:text-[#227cef]"
                       onClick={() => {
                         const now = new Date();
                         const next = {
@@ -210,7 +271,6 @@ function BaseTimePicker({
                   )}
                   {needConfirm ? (
                     <Button
-                      size="sm"
                       onClick={() => {
                         commitTime(pending);
                         floating.changeOpen(false, "menu");
@@ -239,7 +299,7 @@ interface TimePanelProps {
   secondStep?: number;
   changeOnScroll?: boolean;
   disabledTime?: TimePickerProps["disabledTime"];
-  hideDisabledOptions?: boolean;
+  hideDisabled?: boolean;
   cellRender?: TimePickerProps["cellRender"];
   onPreview?: (value: TimeParts | null) => void;
   onChange: (value: TimeParts) => void;
@@ -255,7 +315,7 @@ export function TimePanel({
   secondStep = 1,
   changeOnScroll = false,
   disabledTime,
-  hideDisabledOptions = false,
+  hideDisabled = false,
   cellRender,
   onPreview,
   onChange,
@@ -277,7 +337,7 @@ export function TimePanel({
               )
             : disabledHours
         }
-        hideDisabledOptions={hideDisabledOptions}
+        hideDisabled={hideDisabled}
         changeOnScroll={changeOnScroll}
         cellRender={cellRender}
         subType="hour"
@@ -302,7 +362,7 @@ export function TimePanel({
         values={numberSteps(60, minuteStep)}
         selected={selected.minute}
         disabledValues={disabledConfig.disabledMinutes?.(selected.hour) ?? []}
-        hideDisabledOptions={hideDisabledOptions}
+        hideDisabled={hideDisabled}
         changeOnScroll={changeOnScroll}
         cellRender={cellRender}
         subType="minute"
@@ -314,7 +374,7 @@ export function TimePanel({
           values={numberSteps(60, secondStep)}
           selected={selected.second}
           disabledValues={disabledConfig.disabledSeconds?.(selected.hour, selected.minute) ?? []}
-          hideDisabledOptions={hideDisabledOptions}
+          hideDisabled={hideDisabled}
           changeOnScroll={changeOnScroll}
           cellRender={cellRender}
           subType="second"
@@ -323,7 +383,7 @@ export function TimePanel({
         />
       ) : null}
       {use12Hours ? (
-        <ScrollFade className="w-16" viewportClassName="p-1" fadeSize={48}>
+        <ScrollFade className="w-16" viewportClassName="flex flex-col gap-1 p-1" fadeSize={48}>
           {["AM", "PM"].map((meridiem) => {
             const isSelected = (selected.hour >= 12 ? "PM" : "AM") === meridiem;
             return (
@@ -331,8 +391,8 @@ export function TimePanel({
                 key={meridiem}
                 type="button"
                 className={twMerge(
-                  "h-8 w-full cursor-pointer rounded hover:bg-[#f5f5f5]",
-                  isSelected && "bg-[#e6f4ff] text-[#0062df]",
+                  "h-8 w-full shrink-0 cursor-pointer rounded hover:bg-[#f5f5f5]",
+                  isSelected && "bg-[#e6f4ff] text-[#0062df] hover:bg-[#e6f4ff]",
                 )}
                 onClick={() =>
                   onChange({
@@ -355,7 +415,7 @@ function TimeColumn({
   values,
   selected,
   disabledValues = [],
-  hideDisabledOptions = false,
+  hideDisabled = false,
   changeOnScroll = false,
   cellRender,
   subType,
@@ -365,25 +425,42 @@ function TimeColumn({
   values: number[];
   selected: number;
   disabledValues?: number[];
-  hideDisabledOptions?: boolean;
+  hideDisabled?: boolean;
   changeOnScroll?: boolean;
   cellRender?: TimePickerProps["cellRender"];
   subType: "hour" | "minute" | "second";
   onPreview?: (value: number | null) => void;
   onSelect: (value: number) => void;
 }) {
-  const visibleValues = hideDisabledOptions
+  const visibleValues = hideDisabled
     ? values.filter((value) => !disabledValues.includes(value))
     : values;
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const selectedIndex = visibleValues.indexOf(selected);
+  const initialSelectedIndex = useRef(selectedIndex).current;
+
+  useLayoutEffect(() => {
+    const viewport = viewportRef.current;
+    if (!viewport || initialSelectedIndex < 0) return;
+    const centeredScrollTop =
+      initialSelectedIndex * 36 - Math.max((viewport.clientHeight - 32) / 2, 0);
+    const maxScrollTop = Math.max(viewport.scrollHeight - viewport.clientHeight, 0);
+    viewport.scrollTop = Math.max(
+      0,
+      maxScrollTop > 0 ? Math.min(centeredScrollTop, maxScrollTop) : centeredScrollTop,
+    );
+  }, [initialSelectedIndex]);
+
   return (
     <ScrollFade
+      ref={viewportRef}
       data-time-column={subType}
       className="w-14"
-      viewportClassName="p-1"
+      viewportClassName="flex flex-col gap-1 p-1"
       fadeSize={48}
       onScroll={(event) => {
         if (!changeOnScroll) return;
-        const index = Math.round(event.currentTarget.scrollTop / 32);
+        const index = Math.round(event.currentTarget.scrollTop / 36);
         const nextValue = visibleValues[index];
         if (nextValue !== undefined && !disabledValues.includes(nextValue)) onSelect(nextValue);
       }}
@@ -398,8 +475,8 @@ function TimeColumn({
             type="button"
             disabled={valueDisabled}
             className={twMerge(
-              "h-8 w-full cursor-pointer rounded hover:bg-[#f5f5f5]",
-              selected === value && "bg-[#e6f4ff] font-medium text-[#0062df]",
+              "h-8 w-full shrink-0 cursor-pointer rounded hover:bg-[#f5f5f5]",
+              selected === value && "bg-[#e6f4ff] font-medium text-[#0062df] hover:bg-[#e6f4ff]",
               valueDisabled && "cursor-not-allowed text-[#ccc] hover:bg-transparent",
             )}
             onMouseEnter={() => onPreview?.(value)}
@@ -433,76 +510,24 @@ function formatTwelveHours(value: string, showSecond: boolean) {
   return `${pad(twelveHour(parts.hour))}:${pad(parts.minute)}${showSecond ? `:${pad(parts.second)}` : ""} ${parts.hour >= 12 ? "PM" : "AM"}`;
 }
 
-function TimeRangePicker({
-  value,
-  defaultValue = [null, null],
-  placeholder = ["시작 시간", "종료 시간"],
-  label,
-  errorMessage,
-  required = false,
-  size = "md",
-  onChange,
-  onCalendarChange,
-  className,
-  width,
-  ...props
-}: TimeRangePickerProps) {
-  const [innerValue, setInnerValue] = useState(defaultValue);
-  const selectedValue = value ?? innerValue;
-  const changeRange = (index: 0 | 1, nextValue: string | null) => {
-    const nextRange: [string | null, string | null] = [...selectedValue];
-    nextRange[index] = nextValue;
-    if (value === undefined) setInnerValue(nextRange);
-    onChange?.(nextRange, [nextRange[0] ?? "", nextRange[1] ?? ""]);
-    onCalendarChange?.(nextRange, [nextRange[0] ?? "", nextRange[1] ?? ""], {
-      range: index === 0 ? "start" : "end",
-    });
-  };
-
-  return (
-    <div className={twMerge("flex w-full flex-col gap-1", className)} style={{ width }}>
-      {label ? <Label label={label} required={required} size={size} /> : null}
-      <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-2">
-        <BaseTimePicker
-          {...props}
-          size={size}
-          value={selectedValue[0]}
-          placeholder={placeholder[0]}
-          onChange={(nextValue) => changeRange(0, nextValue)}
-        />
-        <span className="pt-1.5 text-[#999]">-</span>
-        <BaseTimePicker
-          {...props}
-          size={size}
-          value={selectedValue[1]}
-          placeholder={placeholder[1]}
-          onChange={(nextValue) => changeRange(1, nextValue)}
-        />
-      </div>
-      <ErrorMessage errorMessage={errorMessage} />
-    </div>
-  );
-}
-
-type TimePickerComponent = typeof BaseTimePicker & { RangePicker: typeof TimeRangePicker };
-
-export const TimePicker = Object.assign(BaseTimePicker, {
-  RangePicker: TimeRangePicker,
-}) as TimePickerComponent;
+export const TimePicker = BaseTimePicker;
 
 const timePickerRootVariants = cva(
-  "flex w-full cursor-pointer items-center gap-2 rounded border border-solid px-2.5 text-left font-pretendard font-medium text-[#111] transition-colors hover:border-[#0062df] focus-visible:border-[#0062df] focus-visible:outline-none",
+  "flex w-full items-center gap-2 rounded border border-solid px-2.5 text-left font-pretendard font-medium text-[#111] transition-colors hover:border-[#0062df] focus:border-[#0062df] focus:outline-none",
   {
     variants: {
       size: { lg: "h-10 text-base", md: "h-[30px] text-sm", sm: "h-5 text-xs" },
       variant: {
         default: "border-[#ddd] bg-white",
-        outlined: "border-[#ddd] bg-white",
         filled: "border-[#f5f5f5] bg-[#f5f5f5]",
       },
       error: { true: "border-[#fe5150]", false: "" },
       readOnly: {
-        true: "cursor-default bg-white hover:border-[#ddd]",
+        true: "cursor-default hover:border-[#ddd]",
+        false: "",
+      },
+      interactive: {
+        true: "cursor-pointer",
         false: "",
       },
       disabled: {
@@ -516,6 +541,14 @@ const timePickerRootVariants = cva(
       error: false,
       disabled: false,
       readOnly: false,
+      interactive: true,
     },
+    compoundVariants: [
+      {
+        variant: "filled",
+        readOnly: true,
+        className: "hover:border-[#f5f5f5]",
+      },
+    ],
   },
 );

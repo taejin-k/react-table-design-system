@@ -1,7 +1,7 @@
-import { act, createEvent, fireEvent, render, screen } from "@testing-library/react";
+import { createEvent, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
-import { Tree } from "./Tree";
+import { canDropTreeNode, getTreeDropPosition, Tree } from "./Tree";
 
 const treeData = [{ key: "parent", title: "상위", children: [{ key: "child", title: "하위" }] }];
 
@@ -14,6 +14,19 @@ describe("Tree", () => {
     expect(onSelect).toHaveBeenCalledWith(["child"], expect.objectContaining({ selected: true }));
   });
 
+  it("does not leave child spacing behind when a parent is collapsed", async () => {
+    render(<Tree defaultExpandedKeys={["parent"]} treeData={treeData} />);
+    const children = document.querySelector('[data-tree-children="parent"]')!;
+    const parentItem = document.querySelector('[data-tree-node="parent"]')!.closest("li");
+
+    expect(children.firstElementChild).toHaveClass("pt-1");
+    expect(parentItem).toHaveClass("pb-0");
+    expect(children.querySelector("ul")).not.toHaveClass("overflow-hidden");
+    await userEvent.click(document.querySelector('[data-tree-switcher="parent"]')!);
+    expect(children.firstElementChild).not.toHaveClass("pt-1");
+    expect(parentItem).toHaveClass("pb-1");
+  });
+
   it("checks descendants together", async () => {
     const onCheck = vi.fn();
     render(<Tree checkable defaultExpandAll treeData={treeData} onCheck={onCheck} />);
@@ -24,13 +37,14 @@ describe("Tree", () => {
     );
   });
 
-  it("applies selection styling to the title and only fills the row with blockNode", () => {
+  it("applies selection styling to the icon and title content", () => {
     const { rerender } = render(
       <Tree treeData={treeData} defaultExpandedKeys={["parent"]} defaultSelectedKeys={["child"]} />,
     );
     const title = screen.getByText("하위");
-    expect(title).toHaveClass("bg-[#e6f4ff]");
-    expect(title.parentElement).not.toHaveClass("bg-[#e6f4ff]");
+    expect(title.parentElement).toHaveClass("bg-[#e6f4ff]");
+    expect(title).not.toHaveClass("bg-[#e6f4ff]");
+    expect(title).toHaveClass("relative", "-top-px");
 
     rerender(
       <Tree
@@ -40,7 +54,7 @@ describe("Tree", () => {
         defaultSelectedKeys={["child"]}
       />,
     );
-    expect(screen.getByText("하위")).toHaveClass("flex-1");
+    expect(document.querySelector('[data-tree-selection-content="child"]')).toHaveClass("flex-1");
   });
 
   it("preserves newlines in node titles", () => {
@@ -49,189 +63,211 @@ describe("Tree", () => {
     expect(screen.getByText(/첫 줄\s+둘째 줄/)).toHaveClass("whitespace-pre-line");
   });
 
-  it("reports a node drop with its descendants and inside position", () => {
+  it("automatically renders a node icon with a small label gap", () => {
+    render(
+      <Tree
+        defaultSelectedKeys={["icon-node"]}
+        treeData={[
+          { key: "icon-node", title: "아이콘 항목", icon: <span data-testid="node-icon" /> },
+        ]}
+      />,
+    );
+
+    const icon = document.querySelector('[data-tree-icon="icon-node"]');
+    const selectionContent = document.querySelector('[data-tree-selection-content="icon-node"]');
+    expect(icon).toHaveClass("w-4");
+    expect(icon).not.toHaveClass("mr-1");
+    expect(selectionContent).toHaveClass("bg-[#e6f4ff]");
+    expect(selectionContent).toContainElement(icon as HTMLElement);
+  });
+
+  it("uses simple drop zones based on the target node type", () => {
+    const rect = { top: 100, height: 100 };
+
+    expect(getTreeDropPosition(110, rect, false, false)).toBe(-1);
+    expect(getTreeDropPosition(190, rect, false, false)).toBe(1);
+    expect(getTreeDropPosition(110, rect, true, false)).toBe(-1);
+    expect(getTreeDropPosition(150, rect, true, false)).toBe(0);
+    expect(getTreeDropPosition(190, rect, true, false)).toBe(1);
+    expect(getTreeDropPosition(110, rect, true, true)).toBe(-1);
+    expect(getTreeDropPosition(150, rect, true, true)).toBe(0);
+    expect(getTreeDropPosition(190, rect, true, true)).toBe(0);
+  });
+
+  it("uses native whole-node dragging without handles or overlays", () => {
+    render(<Tree draggable treeData={[{ key: "source", title: "이동" }]} />);
+
+    const source = document.querySelector('[data-tree-node="source"]');
+    expect(source).toHaveAttribute("data-tree-draggable", "true");
+    expect(source).toHaveAttribute("draggable", "true");
+    expect(document.querySelector("[data-tree-drag-handle]")).not.toBeInTheDocument();
+    expect(document.querySelector("[data-tree-drag-overlay]")).not.toBeInTheDocument();
+    expect(source).toHaveClass("cursor-grab", "select-none", "w-full");
+  });
+
+  it("uses vertical movement for order and horizontal movement for depth", () => {
     const onDrop = vi.fn();
     render(
       <Tree
         draggable
-        defaultExpandAll
+        defaultExpandedKeys={["project"]}
         treeData={[
-          { key: "source", title: "이동", children: [{ key: "child", title: "하위" }] },
-          { key: "target", title: "대상" },
+          { key: "source", title: "이동" },
+          {
+            key: "project",
+            title: "프로젝트",
+            children: [
+              { key: "design", title: "디자인" },
+              { key: "development", title: "개발" },
+            ],
+          },
+          { key: "archive", title: "보관함" },
         ]}
         onDrop={onDrop}
       />,
     );
     const source = document.querySelector<HTMLElement>('[data-tree-node="source"]')!;
-    const target = document.querySelector<HTMLElement>('[data-tree-node="target"]')!;
-    vi.spyOn(target, "getBoundingClientRect").mockReturnValue({
+    const development = document.querySelector<HTMLElement>('[data-tree-node="development"]')!;
+    const archive = document.querySelector<HTMLElement>('[data-tree-node="archive"]')!;
+    const rect = (top: number) => ({
       x: 0,
-      y: 100,
-      top: 100,
+      y: top,
+      top,
       left: 0,
       right: 200,
-      bottom: 124,
+      bottom: top + 24,
       width: 200,
       height: 24,
       toJSON: () => ({}),
     });
-    const dataTransfer = { dropEffect: "none", effectAllowed: "none", setData: vi.fn() };
+    vi.spyOn(source, "getBoundingClientRect").mockReturnValue(rect(50));
+    vi.spyOn(development, "getBoundingClientRect").mockReturnValue(rect(150));
+    vi.spyOn(archive, "getBoundingClientRect").mockReturnValue(rect(200));
+    const setDragImage = vi.fn((dragImage: HTMLElement) => {
+      expect(dragImage).toHaveAttribute("data-tree-drag-preview", "true");
+      expect(dragImage).toHaveStyle({ opacity: "0.35" });
+      expect(dragImage).toHaveStyle({ width: "max-content", maxWidth: "none" });
+      expect(dragImage.querySelector('[data-tree-title="source"]')).toHaveStyle({
+        whiteSpace: "pre",
+      });
+    });
+    const dataTransfer = {
+      dropEffect: "none",
+      effectAllowed: "none",
+      setData: vi.fn(),
+      setDragImage,
+    };
+    const dispatchDragEvent = (
+      type: "dragstart" | "dragover" | "drop",
+      element: HTMLElement,
+      clientX: number,
+      clientY: number,
+    ) => {
+      const event =
+        type === "dragstart"
+          ? createEvent.dragStart(element, { dataTransfer })
+          : type === "dragover"
+            ? createEvent.dragOver(element, { dataTransfer })
+            : createEvent.drop(element, { dataTransfer });
+      Object.defineProperty(event, "clientX", { value: clientX });
+      Object.defineProperty(event, "clientY", { value: clientY });
+      fireEvent(element, event);
+    };
 
-    fireEvent.dragStart(source, { dataTransfer });
-    const dragOverEvent = createEvent.dragOver(target, { dataTransfer });
-    Object.defineProperty(dragOverEvent, "clientY", { value: 112 });
-    fireEvent(target, dragOverEvent);
-    const dropEvent = createEvent.drop(target, { dataTransfer });
-    Object.defineProperty(dropEvent, "clientY", { value: 112 });
-    fireEvent(target, dropEvent);
+    dispatchDragEvent("dragstart", source, 100, 62);
+    expect(source).not.toHaveClass("opacity-5");
+    expect(setDragImage).toHaveBeenCalledOnce();
 
-    expect(onDrop).toHaveBeenCalledWith(
+    dispatchDragEvent("dragover", development, 40, 151);
+    const childBoundaryIndicator = document.querySelector<HTMLElement>(
+      '[data-tree-drop-indicator="top"]',
+    );
+    expect(childBoundaryIndicator).toHaveStyle({ left: "24px", top: "-3px" });
+
+    const archiveGap = archive.querySelector<HTMLElement>('[data-tree-drop-hit-area="archive"]')!;
+    dispatchDragEvent("dragover", archiveGap, 100, 226);
+    expect(document.querySelector('[data-tree-drop-indicator="bottom"]')).toHaveStyle({
+      left: "0px",
+    });
+    dispatchDragEvent("drop", archiveGap, 100, 226);
+    expect(onDrop).toHaveBeenLastCalledWith(
       expect.objectContaining({
-        node: expect.objectContaining({ key: "target" }),
-        dragNode: expect.objectContaining({ key: "source" }),
-        dragNodesKeys: ["source", "child"],
+        node: expect.objectContaining({ key: "archive" }),
+        dropPosition: 1,
+        dropToGap: true,
+      }),
+    );
+
+    fireEvent.dragEnd(source, { dataTransfer });
+    dispatchDragEvent("dragstart", source, 100, 62);
+    const nextArchiveGap = archive.querySelector<HTMLElement>(
+      '[data-tree-drop-hit-area="archive"]',
+    )!;
+    dispatchDragEvent("dragover", nextArchiveGap, 124, 226);
+    expect(document.querySelector('[data-tree-drop-indicator="bottom"]')).toHaveStyle({
+      left: "24px",
+    });
+    dispatchDragEvent("drop", nextArchiveGap, 124, 226);
+    expect(onDrop).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        node: expect.objectContaining({ key: "archive" }),
         dropPosition: 0,
         dropToGap: false,
       }),
     );
   });
 
-  it("shows a gap indicator and reports a top drop", () => {
-    const onDrop = vi.fn();
+  it("allows dropping inside an empty node unless it is explicitly a leaf", () => {
     render(
       <Tree
         draggable
         treeData={[
           { key: "source", title: "이동" },
-          { key: "target", title: "대상" },
+          { key: "empty", title: "빈 노드" },
+          { key: "leaf", title: "파일", isLeaf: true },
         ]}
-        onDrop={onDrop}
       />,
     );
-    const source = document.querySelector<HTMLElement>('[data-tree-node="source"]')!;
-    const target = document.querySelector<HTMLElement>('[data-tree-node="target"]')!;
-    vi.spyOn(target, "getBoundingClientRect").mockReturnValue({
-      x: 0,
-      y: 100,
-      top: 100,
-      left: 0,
-      right: 200,
-      bottom: 124,
-      width: 200,
-      height: 24,
-      toJSON: () => ({}),
-    });
-    const dataTransfer = { dropEffect: "none", effectAllowed: "none", setData: vi.fn() };
-
-    fireEvent.dragStart(source, { dataTransfer });
-    const dragOverEvent = createEvent.dragOver(target, { dataTransfer });
-    Object.defineProperty(dragOverEvent, "clientY", { value: 101 });
-    fireEvent(target, dragOverEvent);
-    expect(document.querySelector('[data-tree-drop-indicator="top"]')).toBeInTheDocument();
-    const dropEvent = createEvent.drop(target, { dataTransfer });
-    Object.defineProperty(dropEvent, "clientY", { value: 101 });
-    fireEvent(target, dropEvent);
-
-    expect(onDrop).toHaveBeenCalledWith(
-      expect.objectContaining({ dropPosition: -1, dropToGap: true }),
+    expect(document.querySelector('[data-tree-node="empty"]')).toHaveAttribute(
+      "data-tree-can-drop-inside",
+      "true",
+    );
+    expect(document.querySelector('[data-tree-node="leaf"]')).not.toHaveAttribute(
+      "data-tree-can-drop-inside",
     );
   });
 
-  it("supports node-specific dragging without a handle", () => {
+  it("supports node-specific dragging", () => {
     render(
       <Tree
-        draggable={{ icon: false, nodeDraggable: (node) => node.key === "child" }}
+        draggable={{ nodeDraggable: (node) => node.key === "child" }}
         defaultExpandAll
         treeData={treeData}
       />,
     );
 
+    expect(document.querySelector('[data-tree-node="parent"]')).not.toHaveAttribute(
+      "data-tree-draggable",
+    );
+    expect(document.querySelector('[data-tree-node="child"]')).toHaveAttribute(
+      "data-tree-draggable",
+      "true",
+    );
     expect(document.querySelector('[data-tree-node="parent"]')).toHaveAttribute(
       "draggable",
       "false",
     );
     expect(document.querySelector('[data-tree-node="child"]')).toHaveAttribute("draggable", "true");
-    expect(document.querySelector("[data-tree-drag-handle]")).not.toBeInTheDocument();
   });
 
   it("blocks disallowed drops and dropping a parent into its descendant", () => {
-    const onDrop = vi.fn();
     const allowDrop = vi.fn(() => false);
-    const { rerender } = render(
-      <Tree
-        draggable
-        defaultExpandAll
-        treeData={[
-          { key: "source", title: "이동" },
-          { key: "target", title: "대상" },
-        ]}
-        allowDrop={allowDrop}
-        onDrop={onDrop}
-      />,
-    );
-    let source = document.querySelector<HTMLElement>('[data-tree-node="source"]')!;
-    let target = document.querySelector<HTMLElement>('[data-tree-node="target"]')!;
-    const dataTransfer = { dropEffect: "none", effectAllowed: "none", setData: vi.fn() };
-
-    fireEvent.dragStart(source, { dataTransfer });
-    fireEvent.dragOver(target, { dataTransfer });
-    fireEvent.drop(target, { dataTransfer });
+    const source = { key: "source", title: "이동" };
+    const target = { key: "target", title: "대상" };
+    expect(canDropTreeNode(source, target, 0, { allowDrop })).toBe(false);
     expect(allowDrop).toHaveBeenCalled();
-    expect(onDrop).not.toHaveBeenCalled();
-
-    rerender(<Tree draggable defaultExpandAll treeData={treeData} onDrop={onDrop} />);
-    source = document.querySelector<HTMLElement>('[data-tree-node="parent"]')!;
-    target = document.querySelector<HTMLElement>('[data-tree-node="child"]')!;
-    fireEvent.dragStart(source, { dataTransfer });
-    fireEvent.dragOver(target, { dataTransfer });
-    fireEvent.drop(target, { dataTransfer });
-    expect(onDrop).not.toHaveBeenCalled();
-  });
-
-  it("expands a collapsed parent after hovering over its inside drop area", () => {
-    vi.useFakeTimers();
-    const onExpand = vi.fn();
-    try {
-      render(
-        <Tree
-          draggable
-          treeData={[
-            { key: "source", title: "이동" },
-            { key: "target", title: "대상", children: [{ key: "child", title: "하위" }] },
-          ]}
-          onExpand={onExpand}
-        />,
-      );
-      const source = document.querySelector<HTMLElement>('[data-tree-node="source"]')!;
-      const target = document.querySelector<HTMLElement>('[data-tree-node="target"]')!;
-      vi.spyOn(target, "getBoundingClientRect").mockReturnValue({
-        x: 0,
-        y: 100,
-        top: 100,
-        left: 0,
-        right: 200,
-        bottom: 124,
-        width: 200,
-        height: 24,
-        toJSON: () => ({}),
-      });
-      const dataTransfer = { dropEffect: "none", effectAllowed: "none", setData: vi.fn() };
-
-      fireEvent.dragStart(source, { dataTransfer });
-      const dragOverEvent = createEvent.dragOver(target, { dataTransfer });
-      Object.defineProperty(dragOverEvent, "clientY", { value: 112 });
-      fireEvent(target, dragOverEvent);
-      expect(target.parentElement?.querySelector(".grid")).toHaveStyle({ gridTemplateRows: "0fr" });
-
-      act(() => vi.advanceTimersByTime(400));
-
-      expect(target.parentElement?.querySelector(".grid")).toHaveStyle({ gridTemplateRows: "1fr" });
-      expect(onExpand).toHaveBeenCalledWith(
-        ["target"],
-        expect.objectContaining({ expanded: true }),
-      );
-    } finally {
-      vi.useRealTimers();
-    }
+    expect(
+      canDropTreeNode({ key: "parent", children: [{ key: "child" }] }, { key: "child" }, 0),
+    ).toBe(false);
   });
 });

@@ -70,11 +70,11 @@ function LabelSizeCode({ size }: { size: LabelSizeType }) {
 }
 
 export const Sizes: Story = {
-  args: { label: "레이블" },
+  args: { label: "레이블", required: false },
   argTypes: { size: { control: false, table: { disable: true } } },
   parameters: {
     ...storyDescription("components-label--sizes"),
-    controls: { disable: false },
+    controls: { disable: false, include: ["레이블", "필수 표시"] },
     docs: {
       ...storyDescription("components-label--sizes").docs,
       source: {
@@ -96,6 +96,9 @@ export const Sizes: Story = {
 };
 
 export const Required: Story = {
-  args: { label: "레이블", required: true },
-  parameters: { ...storyDescription("components-label--required"), controls: { disable: false } },
+  args: { label: "레이블", size: "md", required: true },
+  parameters: {
+    ...storyDescription("components-label--required"),
+    controls: { disable: false, include: ["레이블", "크기", "필수 표시"] },
+  },
 };

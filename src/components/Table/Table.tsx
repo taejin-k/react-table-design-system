@@ -124,8 +124,10 @@ const headerCellBaseClass = "bg-[#f5f5f5] text-left text-[14px] font-semibold te
 const nestedHeaderBorderClass = "border-r border-r-[#f0f0f0]";
 const headerCellSortedClass = "bg-[#eee]";
 const cellLastNoRightBorder = "border-r-0";
+const gridBorderLayoutClass =
+  "[&>thead>tr>th:not(:last-child)]:border-r [&>thead>tr>th:not(:last-child)]:border-r-transparent [&>tbody>tr>td:not(:last-child)]:border-r [&>tbody>tr>td:not(:last-child)]:border-r-transparent [&>tfoot>tr>td:not(:last-child)]:border-r [&>tfoot>tr>td:not(:last-child)]:border-r-transparent";
 const borderedGridClass =
-  "[&>thead>tr>th:not(:last-child)]:border-r [&>thead>tr>th:not(:last-child)]:border-[#f0f0f0] [&>tbody>tr>td:not(:last-child)]:border-r [&>tbody>tr>td:not(:last-child)]:border-[#f0f0f0] [&>tfoot>tr>td:not(:last-child)]:border-r [&>tfoot>tr>td:not(:last-child)]:border-[#f0f0f0]";
+  "[&>thead>tr>th:not(:last-child)]:border-r-[#f0f0f0] [&>tbody>tr>td:not(:last-child)]:border-r-[#f0f0f0] [&>tfoot>tr>td:not(:last-child)]:border-r-[#f0f0f0]";
 
 const headerContentClass = "inline-flex min-w-0 items-center gap-0.5";
 const dragCellClass = "!px-2 text-center";
@@ -1718,7 +1720,9 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
         enabled={rowDragEnabled}
         items={allFlatRows.map(({ record }) => `row:${String(keyOf(record))}`)}
       >
-        <tbody className={twMerge(bordered && "[&>tr:last-child>td]:border-b-0")}>
+        <tbody
+          className={twMerge(bordered && "[&>tr:last-child>td]:border-b-transparent")}
+        >
           {topPad > 0 && (
             <tr>
               <td
@@ -1744,7 +1748,8 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
                 className={twMerge(
                   emptyClass,
                   cellLastNoRightBorder,
-                  !bordered && "border-b border-[#f0f0f0]",
+                  "border-b",
+                  bordered ? "border-transparent" : "border-[#f0f0f0]",
                 )}
                 colSpan={fullColSpan}
               >
@@ -1981,6 +1986,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
       <table
         className={twMerge(
           "w-full border-separate border-spacing-0",
+          gridBorderLayoutClass,
           bordered && borderedGridClass,
         )}
         style={verticallyScrolledTableStyle}
@@ -2005,8 +2011,8 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
       {topPagination}
       <div
         className={twMerge(
-          "w-full min-w-0 rounded-lg bg-white",
-          bordered && "border border-[#f0f0f0]",
+          "w-full min-w-0 rounded-lg border border-transparent bg-white",
+          bordered && "border-[#f0f0f0]",
         )}
       >
         <TableDragProvider
@@ -2034,6 +2040,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
                   <table
                     className={twMerge(
                       "w-full border-separate border-spacing-0",
+                      gridBorderLayoutClass,
                       bordered && borderedGridClass,
                     )}
                     style={verticallyScrolledTableStyle}
@@ -2081,6 +2088,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
                 <table
                   className={twMerge(
                     "w-full border-separate border-spacing-0",
+                    gridBorderLayoutClass,
                     bordered && borderedGridClass,
                   )}
                   style={tableStyle}

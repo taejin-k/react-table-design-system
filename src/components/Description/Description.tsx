@@ -94,9 +94,8 @@ function DescriptionBase({
   colon = true,
   column,
   layout = "horizontal",
-  size = "large",
+  size = "lg",
   className,
-  style,
 }: DescriptionProps) {
   const rootRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState(() =>
@@ -135,9 +134,8 @@ function DescriptionBase({
     resolveResponsive(column ?? defaultColumns, containerWidth, containerWidth < 576 ? 1 : 3),
   );
   const rows = createRows(data, columns, containerWidth);
-  const borderedPadding =
-    size === "small" ? "px-4 py-2" : size === "medium" ? "px-6 py-3" : "px-6 py-4";
-  const itemPaddingBottom = size === "small" ? "pb-2" : size === "medium" ? "pb-3" : "pb-4";
+  const borderedPadding = size === "sm" ? "px-4 py-2" : size === "md" ? "px-6 py-3" : "px-6 py-4";
+  const itemPaddingBottom = size === "sm" ? "pb-2" : size === "md" ? "pb-3" : "pb-4";
 
   const borderedCellClass = (hasBottomBorder: boolean) =>
     twMerge(
@@ -152,13 +150,7 @@ function DescriptionBase({
     );
 
   const renderLabel = (item: ResolvedDescriptionItem, showColon: boolean) => (
-    <span
-      className={twMerge(
-        "inline-flex shrink-0 items-baseline whitespace-nowrap text-[#666]",
-        item.classNames?.label,
-      )}
-      style={{ ...item.labelStyle, ...item.styles?.label }}
-    >
+    <span className="inline-flex shrink-0 items-baseline whitespace-nowrap text-[#666]">
       {item.label}
       {showColon && item.label !== undefined && item.label !== null ? (
         <span className="relative -top-px mr-2 ml-0.5">:</span>
@@ -167,27 +159,18 @@ function DescriptionBase({
   );
 
   const renderContent = (item: ResolvedDescriptionItem) => (
-    <span
-      className={twMerge(
-        "inline-flex min-w-[1em] flex-1 items-baseline whitespace-nowrap text-[#111]",
-        item.classNames?.content,
-      )}
-      style={{ ...item.contentStyle, ...item.styles?.content }}
-    >
-      {item.children}
-    </span>
+    <span className="min-w-0 flex-1 [overflow-wrap:anywhere] text-[#111]">{item.children}</span>
   );
 
   return (
     <div
       ref={rootRef}
-      className={twMerge("font-pretendard text-sm leading-[1.5715] text-[#111]", className)}
-      style={style}
+      className={twMerge("min-w-0 font-pretendard text-sm leading-[1.5715] text-[#111]", className)}
     >
       {title || extra ? (
         <div className="mb-5 flex items-center">
           {title ? (
-            <div className="min-w-0 flex-auto truncate text-base leading-6 font-semibold">
+            <div className="min-w-0 flex-auto text-base leading-6 font-semibold [overflow-wrap:anywhere]">
               {title}
             </div>
           ) : null}
@@ -197,11 +180,23 @@ function DescriptionBase({
       <div
         data-description-view
         className={twMerge(
-          "w-full rounded-lg",
-          bordered && "overflow-hidden border border-[#f0f0f0]",
+          "w-full rounded-lg border border-transparent",
+          bordered && "overflow-hidden border-[#f0f0f0]",
         )}
       >
         <table className="w-full table-fixed border-separate border-spacing-0">
+          <colgroup>
+            {layout === "horizontal" && bordered
+              ? Array.from({ length: columns }, (_, index) => (
+                  <Fragment key={`columns-${index}`}>
+                    <col style={{ width: `${40 / columns}%` }} />
+                    <col style={{ width: `${60 / columns}%` }} />
+                  </Fragment>
+                ))
+              : Array.from({ length: columns }, (_, index) => (
+                  <col key={`column-${index}`} style={{ width: `${100 / columns}%` }} />
+                ))}
+          </colgroup>
           <tbody>
             {rows.map((row, rowIndex) => {
               const isLastRow = rowIndex === rows.length - 1;
@@ -216,15 +211,8 @@ function DescriptionBase({
                           colSpan={item.resolvedSpan}
                           className={twMerge(
                             bordered ? borderedCellClass(true) : itemCellClass(true),
-                            bordered && "bg-[#fafafa] whitespace-nowrap text-[#666]",
-                            item.className,
-                            bordered && item.classNames?.label,
+                            bordered && "min-w-0 bg-[#fafafa] [overflow-wrap:anywhere] text-[#666]",
                           )}
-                          style={
-                            bordered
-                              ? { ...item.style, ...item.labelStyle, ...item.styles?.label }
-                              : item.style
-                          }
                         >
                           {bordered ? item.label : renderLabel(item, colon)}
                         </th>
@@ -237,15 +225,8 @@ function DescriptionBase({
                           colSpan={item.resolvedSpan}
                           className={twMerge(
                             bordered ? borderedCellClass(!isLastRow) : itemCellClass(!isLastRow),
-                            bordered && "whitespace-nowrap text-[#111]",
-                            item.className,
-                            bordered && item.classNames?.content,
+                            bordered && "min-w-0 [overflow-wrap:anywhere] text-[#111]",
                           )}
-                          style={
-                            bordered
-                              ? { ...item.style, ...item.contentStyle, ...item.styles?.content }
-                              : item.style
-                          }
                         >
                           {bordered ? item.children : renderContent(item)}
                         </td>
@@ -263,11 +244,8 @@ function DescriptionBase({
                         key={`label-${item.key ?? itemIndex}`}
                         className={twMerge(
                           borderedCellClass(!isLastRow),
-                          "bg-[#fafafa] whitespace-nowrap text-[#666]",
-                          item.className,
-                          item.classNames?.label,
+                          "min-w-0 bg-[#fafafa] [overflow-wrap:anywhere] text-[#666]",
                         )}
-                        style={{ ...item.style, ...item.labelStyle, ...item.styles?.label }}
                       >
                         {item.label}
                       </th>,
@@ -276,11 +254,8 @@ function DescriptionBase({
                         colSpan={item.resolvedSpan * 2 - 1}
                         className={twMerge(
                           borderedCellClass(!isLastRow),
-                          "whitespace-nowrap text-[#111]",
-                          item.className,
-                          item.classNames?.content,
+                          "min-w-0 [overflow-wrap:anywhere] text-[#111]",
                         )}
-                        style={{ ...item.style, ...item.contentStyle, ...item.styles?.content }}
                       >
                         {item.children}
                       </td>,
@@ -295,10 +270,9 @@ function DescriptionBase({
                     <td
                       key={item.key ?? itemIndex}
                       colSpan={item.resolvedSpan}
-                      className={twMerge(itemCellClass(!isLastRow), item.className)}
-                      style={item.style}
+                      className={itemCellClass(!isLastRow)}
                     >
-                      <div className="flex">
+                      <div className="flex min-w-0">
                         {renderLabel(item, colon)}
                         {renderContent(item)}
                       </div>

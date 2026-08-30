@@ -27,6 +27,18 @@ describe("message", () => {
     expect(content.parentElement).toHaveClass("items-start");
   });
 
+  it("keeps the fixed layer aligned while the page scrollbar is locked", async () => {
+    act(() => {
+      message.info({ content: "안내", duration: 0 });
+    });
+
+    await screen.findByText("안내");
+    const fixedLayer = document.querySelector(".wizard-message-list-content")?.parentElement;
+    expect(fixedLayer).toHaveStyle({
+      right: "var(--wizard-scrollbar-compensation, 0px)",
+    });
+  });
+
   it("keeps existing messages above rapidly opened messages", async () => {
     const heightMock = vi.spyOn(HTMLElement.prototype, "offsetHeight", "get").mockReturnValue(40);
 

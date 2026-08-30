@@ -97,7 +97,7 @@ function SegmentedTypeCode({ value }: { value: SegmentedSizeType }) {
 }
 
 export const Basic: Story = {
-  args: { options: periodOptions },
+  args: { options: periodOptions, disabled: false },
   parameters: {
     ...storyDescription("components-segmented--basic"),
     controls: { disable: false, include: ["비활성"] },
@@ -119,6 +119,7 @@ export const Basic: Story = {
 };
 
 export const Sizes: Story = {
+  args: { disabled: false },
   parameters: {
     ...storyDescription("components-segmented--sizes"),
     controls: { disable: false, include: ["비활성"] },
@@ -153,7 +154,7 @@ export const Sizes: Story = {
 };
 
 export const Vertical: Story = {
-  args: { vertical: true },
+  args: { size: "md", disabled: false, vertical: true },
   parameters: {
     ...storyDescription("components-segmented--vertical"),
     controls: { disable: false, include: ["크기", "비활성"] },

@@ -129,7 +129,18 @@ export const Basic: Story = {
   },
   parameters: {
     ...storyDescription("components-tooltip--basic"),
-    controls: { disable: false },
+    controls: {
+      disable: false,
+      include: [
+        "내용",
+        "위치",
+        "표시 동작",
+        "화살표",
+        "배경 색상",
+        "표시 지연(초)",
+        "숨김 지연(초)",
+      ],
+    },
   },
   render: (args) => (
     <div className="flex min-h-28 items-center justify-center">
@@ -141,6 +152,7 @@ export const Basic: Story = {
 };
 
 export const Placements: Story = {
+  args: { arrow: true },
   argTypes: {
     title: { control: false, table: { disable: true } },
     placement: { control: false, table: { disable: true } },
@@ -149,7 +161,7 @@ export const Placements: Story = {
   },
   parameters: {
     ...storyDescription("components-tooltip--placements"),
-    controls: { disable: false },
+    controls: { disable: false, include: ["화살표"] },
     docs: {
       ...storyDescription("components-tooltip--placements").docs,
       source: {
@@ -219,7 +231,7 @@ export const Triggers: Story = {
   },
   parameters: {
     ...storyDescription("components-tooltip--triggers"),
-    controls: { disable: false },
+    controls: { disable: false, include: ["표시 지연(초)", "숨김 지연(초)"] },
     docs: {
       ...storyDescription("components-tooltip--triggers").docs,
       source: {
@@ -267,7 +279,7 @@ export const Appearance: Story = {
   },
   parameters: {
     ...storyDescription("components-tooltip--appearance"),
-    controls: { disable: false },
+    controls: { disable: true },
     docs: {
       ...storyDescription("components-tooltip--appearance").docs,
       source: {

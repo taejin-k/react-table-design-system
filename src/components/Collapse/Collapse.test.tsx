@@ -107,13 +107,30 @@ describe("Collapse", () => {
     expect(screen.getByText("내용")).toHaveClass("px-6", "py-4");
   });
 
-  it("keeps rounded corners without a border", () => {
+  it("keeps rounded corners and reserves a transparent border without a visible border", () => {
     const { container } = render(
       <Collapse bordered={false} items={[{ key: "one", label: "제목" }]} />,
     );
 
-    expect(container.firstChild).toHaveClass("rounded-lg");
-    expect(container.firstChild).not.toHaveClass("border");
+    expect(container.firstChild).toHaveClass("rounded-lg", "border", "border-transparent");
+    expect(container.firstChild).not.toHaveClass("border-[#ddd]");
+  });
+
+  it("reserves transparent panel dividers when bordered is false", () => {
+    const { container } = render(
+      <Collapse
+        bordered={false}
+        items={[
+          { key: "one", label: "첫 번째" },
+          { key: "two", label: "두 번째" },
+        ]}
+      />,
+    );
+
+    expect(container.querySelectorAll("section")[1]).toHaveClass(
+      "border-t",
+      "border-transparent",
+    );
   });
 
   it("applies className to the top-level element and supports Tailwind overrides", () => {

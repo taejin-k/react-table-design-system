@@ -27,7 +27,6 @@ const meta = {
     cancelText: { name: "취소 버튼", control: "text" },
     open: { control: false, table: { disable: true } },
     children: { control: false, table: { disable: true } },
-    className: { control: false, table: { disable: true } },
     footer: { control: false, table: { disable: true } },
     onConfirm: { control: false, table: { disable: true } },
     onCancel: { control: false, table: { disable: true } },
@@ -65,11 +64,9 @@ const meta = {
 | \`forceRender\` | 닫힌 상태에서도 내용을 미리 렌더링해요. | \`boolean\` | \`false\` |
 | \`destroyOnHidden\` | 닫힌 뒤 내용을 제거해요. | \`boolean\` | \`false\` |
 | \`zIndex\` | 겹치는 순서를 설정해요. | \`number\` | \`1000\` |
-| \`className\` | 최상위 요소에 Tailwind 클래스를 추가해요. | \`string\` | - |
-| \`style\` | 최상위 요소에 인라인 스타일을 추가해요. | \`CSSProperties\` | - |
 | \`onAfterClose\` | 닫힘 애니메이션 뒤 실행해요. | \`() => void\` | - |
 | \`onAfterOpen\` | 열림 애니메이션 뒤 실행해요. | \`() => void\` | - |
-| \`onConfirm\` | 확인 버튼을 누르면 실행해요. | \`(event) => void\` | - |
+| \`onConfirm\` | 확인 버튼을 누르면 실행해요. | \`(event) => void \\| Promise<void>\` | - |
 | \`onCancel\` | 취소·닫기·마스크를 누르면 실행해요. | \`(event) => void\` | - |
 
 ### <span id="modal-breakpoint-map">ModalBreakpointMap</span>
@@ -139,6 +136,19 @@ export const Basic: Story = {
   },
   parameters: {
     ...storyDescription("components-modal--basic"),
+    controls: {
+      include: [
+        "제목",
+        "가운데 정렬",
+        "가로 길이",
+        "닫기 버튼",
+        "Escape 닫기",
+        "배경 마스크",
+        "스크롤 잠금",
+        "확인 버튼",
+        "취소 버튼",
+      ],
+    },
     docs: {
       ...storyDescription("components-modal--basic").docs,
       source: {
@@ -190,6 +200,19 @@ export const Async: Story = {
   },
   parameters: {
     ...storyDescription("components-modal--async"),
+    controls: {
+      include: [
+        "제목",
+        "가운데 정렬",
+        "가로 길이",
+        "닫기 버튼",
+        "Escape 닫기",
+        "배경 마스크",
+        "스크롤 잠금",
+        "확인 버튼",
+        "취소 버튼",
+      ],
+    },
     docs: {
       ...storyDescription("components-modal--async").docs,
       source: {
@@ -275,6 +298,19 @@ export const Footer: Story = {
   },
   parameters: {
     ...storyDescription("components-modal--footer"),
+    controls: {
+      include: [
+        "제목",
+        "가운데 정렬",
+        "가로 길이",
+        "닫기 버튼",
+        "Escape 닫기",
+        "배경 마스크",
+        "스크롤 잠금",
+        "확인 버튼",
+        "취소 버튼",
+      ],
+    },
     docs: {
       ...storyDescription("components-modal--footer").docs,
       source: {
@@ -335,7 +371,7 @@ export const StaticMethods: Story = {
   args: {
     centered: false,
     width: 420,
-    closable: true,
+    closable: false,
     keyboard: true,
     mask: true,
     scrollLock: true,
@@ -344,6 +380,18 @@ export const StaticMethods: Story = {
   },
   parameters: {
     ...storyDescription("components-modal--static-methods"),
+    controls: {
+      include: [
+        "가운데 정렬",
+        "가로 길이",
+        "닫기 버튼",
+        "Escape 닫기",
+        "배경 마스크",
+        "스크롤 잠금",
+        "확인 버튼",
+        "취소 버튼",
+      ],
+    },
     docs: {
       ...storyDescription("components-modal--static-methods").docs,
       source: {
@@ -454,6 +502,17 @@ export const PositionAndWidth: Story = {
   },
   parameters: {
     ...storyDescription("components-modal--position-width"),
+    controls: {
+      include: [
+        "제목",
+        "닫기 버튼",
+        "Escape 닫기",
+        "배경 마스크",
+        "스크롤 잠금",
+        "확인 버튼",
+        "취소 버튼",
+      ],
+    },
     docs: {
       ...storyDescription("components-modal--position-width").docs,
       source: {

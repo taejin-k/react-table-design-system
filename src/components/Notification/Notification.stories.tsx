@@ -87,7 +87,7 @@ const meta = {
 | --- | --- | --- | --- |
 | \`title\` | 알림 제목을 설정해요. | \`ReactNode\` | - |
 | \`description\` | 알림 설명을 설정해요. | \`ReactNode\` | - |
-| \`type\` | 알림 상태를 설정해요. | [\`NotificationStatusType\`](#notification-status-type) | - |
+| \`type\` | 알림 상태를 설정해요. | [\`NotificationStatusType\`](#notification-status-type) | \`info\` |
 | \`actions\` | 알림 아래 작업을 추가해요. | \`ReactNode\` | - |
 | \`closable\` | 닫기 버튼을 표시해요. | \`boolean\` | \`true\` |
 | \`duration\` | 자동으로 닫히기까지의 초를 설정해요. 0이면 유지해요. | \`number\` | \`4.5\` (loading: \`0\`) |

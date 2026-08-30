@@ -18,7 +18,7 @@ import type {
 } from "./Description.types";
 
 const descriptionLayouts: DescriptionLayoutType[] = ["horizontal", "vertical"];
-const descriptionSizes: DescriptionSizeType[] = ["large", "medium", "small"];
+const descriptionSizes: DescriptionSizeType[] = ["lg", "md", "sm"];
 const descriptionBreakpoints: DescriptionBreakpointType[] = ["xs", "sm", "md", "lg", "xl", "xxl"];
 const descriptionColumnTypes = ["number", "DescriptionResponsiveType"];
 const descriptionSpanTypes = ["number", "filled", "DescriptionResponsiveType"];
@@ -138,9 +138,8 @@ const meta = {
 | \`colon\` | 레이블 뒤에 콜론을 표시해요. | \`boolean\` | \`true\` |
 | \`column\` | 한 행의 항목 수를 정해요. | [\`DescriptionColumnType\`](#description-column-type) | \`3\` |
 | \`layout\` | 레이블과 값의 배치를 정해요. | [\`DescriptionLayoutType\`](#description-layout-type) | \`horizontal\` |
-| \`size\` | 항목의 여백 크기를 정해요. | [\`DescriptionSizeType\`](#description-size-type) | \`large\` |
+| \`size\` | 항목의 여백 크기를 정해요. | [\`DescriptionSizeType\`](#description-size-type) | \`lg\` |
 | \`className\` | 최상위 요소에 Tailwind 클래스를 추가해요. | \`string\` | - |
-| \`style\` | 최상위 요소에 인라인 스타일을 추가해요. | \`CSSProperties\` | - |
 
 ### DescriptionItemType
 
@@ -150,12 +149,6 @@ const meta = {
 | \`label\` | 항목의 레이블이에요. | \`ReactNode\` | - |
 | \`children\` | 항목의 값이에요. | \`ReactNode\` | - |
 | \`span\` | 항목이 차지할 열 수를 정해요. | [\`DescriptionSpanType\`](#description-span-type) | \`1\` |
-| \`className\` | 항목 셀에 className을 추가해요. | \`string\` | - |
-| \`style\` | 항목 셀에 인라인 스타일을 추가해요. | \`CSSProperties\` | - |
-| \`labelStyle\` | 레이블에 인라인 스타일을 추가해요. | \`CSSProperties\` | - |
-| \`contentStyle\` | 값에 인라인 스타일을 추가해요. | \`CSSProperties\` | - |
-| \`classNames\` | 레이블과 값에 className을 추가해요. | \`{ label?, content? }\` | - |
-| \`styles\` | 레이블과 값에 스타일을 추가해요. | \`{ label?, content? }\` | - |
 
 ### DescriptionResponsiveType
 
@@ -194,9 +187,17 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Basic: Story = {
-  args: { title: "사용자 정보", bordered: false, colon: true, column: 3, size: "large" },
+  args: {
+    title: "사용자 정보",
+    bordered: false,
+    colon: true,
+    column: 3,
+    layout: "horizontal",
+    size: "lg",
+  },
   parameters: {
     ...storyDescription("components-description--basic"),
+    controls: { include: ["제목", "테두리", "콜론", "열 개수", "배치", "크기"] },
     docs: {
       ...storyDescription("components-description--basic").docs,
       source: {
@@ -211,9 +212,17 @@ export const Basic: Story = {
 };
 
 export const Bordered: Story = {
-  args: { title: "상품 정보", bordered: true, colon: true, column: 3, size: "large" },
+  args: {
+    title: "상품 정보",
+    bordered: true,
+    colon: true,
+    column: 3,
+    layout: "horizontal",
+    size: "lg",
+  },
   parameters: {
     ...storyDescription("components-description--bordered"),
+    controls: { include: ["제목", "테두리", "콜론", "열 개수", "배치", "크기"] },
     docs: {
       ...storyDescription("components-description--bordered").docs,
       source: {
@@ -228,9 +237,14 @@ export const Bordered: Story = {
 };
 
 export const Sizes: Story = {
-  args: { bordered: true, colon: true, column: 3 },
+  args: { bordered: true, colon: true, column: 3, layout: "horizontal" },
+  argTypes: {
+    title: { control: false, table: { disable: true } },
+    size: { control: false, table: { disable: true } },
+  },
   parameters: {
     ...storyDescription("components-description--sizes"),
+    controls: { include: ["테두리", "콜론", "열 개수", "배치"] },
     docs: {
       ...storyDescription("components-description--sizes").docs,
       source: {
@@ -243,9 +257,9 @@ export const Sizes: Story = {
 ];
 
 <div className="grid gap-8">
-  <Description bordered size="large" title="Large" items={items} />
-  <Description bordered size="medium" title="Medium" items={items} />
-  <Description bordered size="small" title="Small" items={items} />
+  <Description bordered size="sm" title="SM" items={items} />
+  <Description bordered size="md" title="MD" items={items} />
+  <Description bordered size="lg" title="LG" items={items} />
 </div>`,
         ),
       },
@@ -253,17 +267,28 @@ export const Sizes: Story = {
   },
   render: (args) => (
     <div className="grid gap-8">
-      <Description {...args} size="large" title="Large" items={basicItems.slice(0, 3)} />
-      <Description {...args} size="medium" title="Medium" items={basicItems.slice(0, 3)} />
-      <Description {...args} size="small" title="Small" items={basicItems.slice(0, 3)} />
+      <Description {...args} size="sm" title="SM" items={basicItems.slice(0, 3)} />
+      <Description {...args} size="md" title="MD" items={basicItems.slice(0, 3)} />
+      <Description {...args} size="lg" title="LG" items={basicItems.slice(0, 3)} />
     </div>
   ),
 };
 
 export const Responsive: Story = {
-  args: { title: "반응형 사용자 정보", bordered: true, colon: true, size: "large" },
+  args: {
+    title: "반응형 사용자 정보",
+    bordered: true,
+    colon: true,
+    layout: "horizontal",
+    size: "lg",
+  },
+  argTypes: {
+    bordered: { control: false, table: { disable: true } },
+    column: { control: false, table: { disable: true } },
+  },
   parameters: {
     ...storyDescription("components-description--responsive"),
+    controls: { include: ["제목", "콜론", "배치", "크기"] },
     docs: {
       ...storyDescription("components-description--responsive").docs,
       source: {
@@ -285,9 +310,11 @@ export const Responsive: Story = {
 };
 
 export const Vertical: Story = {
-  args: { title: "사용자 정보", bordered: false, colon: true, column: 3, size: "large" },
+  args: { title: "사용자 정보", bordered: false, colon: true, column: 3, size: "lg" },
+  argTypes: { layout: { control: false, table: { disable: true } } },
   parameters: {
     ...storyDescription("components-description--vertical"),
+    controls: { include: ["제목", "테두리", "콜론", "열 개수", "크기"] },
     docs: {
       ...storyDescription("components-description--vertical").docs,
       source: {
@@ -302,9 +329,11 @@ export const Vertical: Story = {
 };
 
 export const VerticalBordered: Story = {
-  args: { title: "상품 정보", bordered: true, colon: true, column: 3, size: "large" },
+  args: { title: "상품 정보", bordered: true, colon: true, column: 3, size: "lg" },
+  argTypes: { layout: { control: false, table: { disable: true } } },
   parameters: {
     ...storyDescription("components-description--vertical-bordered"),
+    controls: { include: ["제목", "테두리", "콜론", "열 개수", "크기"] },
     docs: {
       ...storyDescription("components-description--vertical-bordered").docs,
       source: {
@@ -319,9 +348,17 @@ export const VerticalBordered: Story = {
 };
 
 export const TitleAndExtra: Story = {
-  args: { title: "사용자 정보", bordered: false, colon: true, column: 3, size: "large" },
+  args: {
+    title: "사용자 정보",
+    bordered: false,
+    colon: true,
+    column: 3,
+    layout: "horizontal",
+    size: "lg",
+  },
   parameters: {
     ...storyDescription("components-description--title-and-extra"),
+    controls: { include: ["제목", "테두리", "콜론", "열 개수", "배치", "크기"] },
     docs: {
       ...storyDescription("components-description--title-and-extra").docs,
       source: {
@@ -340,9 +377,14 @@ export const TitleAndExtra: Story = {
 };
 
 export const SpanAndFilled: Story = {
-  args: { bordered: true, colon: true, size: "large" },
+  args: { bordered: true, colon: true, layout: "horizontal", size: "lg" },
+  argTypes: {
+    bordered: { control: false, table: { disable: true } },
+    column: { control: false, table: { disable: true } },
+  },
   parameters: {
     ...storyDescription("components-description--span-and-filled"),
+    controls: { include: ["콜론", "배치", "크기"] },
     docs: {
       ...storyDescription("components-description--span-and-filled").docs,
       source: {
@@ -386,9 +428,17 @@ export const SpanAndFilled: Story = {
 };
 
 export const ItemComponent: Story = {
-  args: { title: "사용자 정보", bordered: true, colon: true, column: 3, size: "large" },
+  args: {
+    title: "사용자 정보",
+    bordered: true,
+    colon: true,
+    column: 3,
+    layout: "horizontal",
+    size: "lg",
+  },
   parameters: {
     ...storyDescription("components-description--item-component"),
+    controls: { include: ["제목", "테두리", "콜론", "열 개수", "배치", "크기"] },
     docs: {
       ...storyDescription("components-description--item-component").docs,
       source: {

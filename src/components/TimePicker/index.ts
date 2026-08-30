@@ -7,5 +7,4 @@ export type {
   TimePickerSizeType,
   TimePickerValueType,
   TimePickerVariantType,
-  TimeRangePickerProps,
 } from "./TimePicker.types";

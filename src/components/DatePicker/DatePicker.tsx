@@ -1,10 +1,11 @@
 import { createPortal } from "react-dom";
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { cva } from "class-variance-authority";
 import { twMerge } from "tailwind-merge";
 import { Button } from "../Button";
 import { Tag } from "../Tag";
 import { ErrorMessage } from "../ErrorMessage";
+import { Dropdown } from "../Dropdown";
 import { Icon } from "../Icon";
 import { Label } from "../Label";
 import { TimePanel } from "../TimePicker/TimePicker";
@@ -13,15 +14,15 @@ import { useFloatingLayer } from "../_internal/use-floating-layer";
 import type {
   DatePickerModeType,
   DatePickerProps,
-  DatePickerValueType,
+  DatePickerShowTime,
   DateRangePickerProps,
+  DateRangeValueType,
 } from "./DatePicker.types";
 
 const weekdays = ["일", "월", "화", "수", "목", "금", "토"];
 const multipleTagSizeClasses = {
   lg: "h-8 text-xs",
   md: "h-[22px]",
-  sm: "h-4 px-1 py-0 text-[10px] leading-none [&>span]:size-3",
 } as const;
 type DatePickerLayoutPosition = { left: number; top: number };
 
@@ -29,21 +30,46 @@ function pad(value: number) {
   return String(value).padStart(2, "0");
 }
 
-function getWeek(date: Date) {
-  const target = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-  const day = target.getUTCDay() || 7;
-  target.setUTCDate(target.getUTCDate() + 4 - day);
-  const yearStart = new Date(Date.UTC(target.getUTCFullYear(), 0, 1));
-  return Math.ceil(((target.getTime() - yearStart.getTime()) / 86_400_000 + 1) / 7);
+function resolveAvailableTime(value: string, config: DatePickerShowTime, showSecond: boolean) {
+  const [preferredHour = 0, preferredMinute = 0, preferredSecond = 0] = value
+    .split(":")
+    .map(Number);
+  const disabled = config.disabledTime?.() ?? {};
+  const availableValue = (
+    length: number,
+    step: number | undefined,
+    preferred: number,
+    disabledValues: number[],
+  ) => {
+    const values = Array.from(
+      { length: Math.ceil(length / Math.max(step ?? 1, 1)) },
+      (_, index) => index * Math.max(step ?? 1, 1),
+    );
+    if (values.includes(preferred) && !disabledValues.includes(preferred)) return preferred;
+    return values.find((item) => !disabledValues.includes(item)) ?? preferred;
+  };
+  const hour = availableValue(24, config.hourStep, preferredHour, disabled.disabledHours?.() ?? []);
+  const minute = availableValue(
+    60,
+    config.minuteStep,
+    preferredMinute,
+    disabled.disabledMinutes?.(hour) ?? [],
+  );
+  const second = showSecond
+    ? availableValue(
+        60,
+        config.secondStep,
+        preferredSecond,
+        disabled.disabledSeconds?.(hour, minute) ?? [],
+      )
+    : 0;
+  return `${pad(hour)}:${pad(minute)}${showSecond ? `:${pad(second)}` : ""}`;
 }
 
 function formatDate(date: Date, picker: DatePickerModeType, time?: string) {
   let value: string;
   if (picker === "year") value = String(date.getFullYear());
-  else if (picker === "quarter")
-    value = `${date.getFullYear()}-Q${Math.floor(date.getMonth() / 3) + 1}`;
   else if (picker === "month") value = `${date.getFullYear()}-${pad(date.getMonth() + 1)}`;
-  else if (picker === "week") value = `${date.getFullYear()}-W${pad(getWeek(date))}`;
   else value = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
   return time ? `${value} ${time}` : value;
 }
@@ -51,17 +77,6 @@ function formatDate(date: Date, picker: DatePickerModeType, time?: string) {
 function parseDate(value?: string | null) {
   if (!value) return null;
   const datePart = value.split(" ")[0];
-  const quarterMatch = /^(\d{4})-Q([1-4])$/.exec(datePart);
-  if (quarterMatch) return new Date(Number(quarterMatch[1]), (Number(quarterMatch[2]) - 1) * 3, 1);
-  const weekMatch = /^(\d{4})-W(\d{2})$/.exec(datePart);
-  if (weekMatch) {
-    const year = Number(weekMatch[1]);
-    const week = Number(weekMatch[2]);
-    const januaryFourth = new Date(year, 0, 4);
-    const monday = new Date(januaryFourth);
-    monday.setDate(januaryFourth.getDate() - ((januaryFourth.getDay() + 6) % 7) + (week - 1) * 7);
-    return monday;
-  }
   const [year, month = 1, day = 1] = datePart.split("-").map(Number);
   const result = new Date(year, month - 1, day);
   return Number.isNaN(result.getTime()) ? null : result;
@@ -86,9 +101,7 @@ function formatDisplayValue(value: string, format?: DatePickerProps["format"]) {
   return format
     .replace("YYYY", String(date.getFullYear()))
     .replace("MM", pad(date.getMonth() + 1))
-    .replace("DD", pad(date.getDate()))
-    .replace("Q", String(Math.floor(date.getMonth() / 3) + 1))
-    .replace("WW", pad(getWeek(date)));
+    .replace("DD", pad(date.getDate()));
 }
 
 function BaseDatePicker({
@@ -112,7 +125,6 @@ function BaseDatePicker({
   order = true,
   minDate,
   maxDate,
-  showWeek = picker === "week",
   showNow = picker === "date",
   showTime = false,
   needConfirm = Boolean(showTime),
@@ -121,13 +133,12 @@ function BaseDatePicker({
   placement = "bottomLeft",
   disabledDate,
   cellRender,
-  renderExtraFooter,
   presets,
   className,
   onChange,
   onCalendarChange,
   onClear,
-  onOk,
+  onConfirm,
   onPanelChange,
   onOpenChange,
 }: DatePickerProps) {
@@ -136,10 +147,17 @@ function BaseDatePicker({
     : defaultValue
       ? [defaultValue]
       : [];
-  const [innerValues, setInnerValues] = useState<DatePickerValueType[]>(initialValues);
+  const [innerValues, setInnerValues] = useState<string[]>(initialValues);
   const selectedValues =
     value === undefined ? innerValues : Array.isArray(value) ? value : value ? [value] : [];
   const selectedValuesKey = selectedValues.join("\u0000");
+  const isDateDisabled = (date: Date) => {
+    const min = parseDate(minDate);
+    const max = parseDate(maxDate);
+    return (
+      Boolean(min && date < min) || Boolean(max && date > max) || Boolean(disabledDate?.(date))
+    );
+  };
   const multipleTriggerRef = useRef<HTMLButtonElement>(null);
   const multipleTagContainerRef = useRef<HTMLSpanElement>(null);
   const previousMultipleHeightRef = useRef<number | null>(null);
@@ -148,16 +166,29 @@ function BaseDatePicker({
   const multipleLayoutAnimationsRef = useRef(
     new Map<string, { element: HTMLElement; animation: Animation }>(),
   );
-  const [pendingValues, setPendingValues] = useState(selectedValues);
-  const [selectedTime, setSelectedTime] = useState(
-    (typeof showTime === "object" ? showTime.defaultOpenValue : undefined) ?? "00:00:00",
-  );
   const showTimeConfig = typeof showTime === "object" ? showTime : {};
   const showTimeSecond =
     showTimeConfig.showSecond ??
     (showTimeConfig.format !== "HH:mm" && showTimeConfig.format !== "hh:mm A");
+  const defaultSelectedTime = resolveAvailableTime(
+    showTimeConfig.defaultOpenValue ?? (showTimeConfig.use12Hours ? "01:00:00" : "00:00:00"),
+    showTimeConfig,
+    showTimeSecond,
+  );
+  const createDefaultPendingValues = () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return isDateDisabled(today)
+      ? []
+      : [formatDate(today, picker, showTime ? defaultSelectedTime : undefined)];
+  };
+  const createPendingValues = () =>
+    selectedValues.length ? selectedValues : createDefaultPendingValues();
+  const [pendingValues, setPendingValues] = useState<string[]>(createPendingValues);
+  const [selectedTime, setSelectedTime] = useState(defaultSelectedTime);
+  const [timePanelResetKey, setTimePanelResetKey] = useState(0);
   const showTimePopupWidth = showTime
-    ? 308 + 56 * (2 + (showTimeSecond ? 1 : 0)) + (showTimeConfig.use12Hours ? 64 : 0)
+    ? 292 + 56 * (2 + (showTimeSecond ? 1 : 0)) + (showTimeConfig.use12Hours ? 64 : 0)
     : undefined;
   const selectedDate = parseDate(selectedValues[0]);
   const [innerPanelDate, setInnerPanelDate] = useState(
@@ -177,31 +208,21 @@ function BaseDatePicker({
           setInnerPanelDate(
             parseDate(defaultPickerValue) ?? parseDate(selectedValues[0]) ?? new Date(),
           );
-        setPendingValues(selectedValues);
+        setPendingValues(createPendingValues());
         const selectedTimeValue = selectedValues[0]?.split(" ")[1];
-        if (showTime && selectedTimeValue) setSelectedTime(selectedTimeValue);
+        if (showTime && selectedTimeValue)
+          setSelectedTime(resolveAvailableTime(selectedTimeValue, showTimeConfig, showTimeSecond));
+        else if (showTime) setSelectedTime(defaultSelectedTime);
       }
       onOpenChange?.(nextOpen);
     },
   });
-  const isDateDisabled = (date: Date) => {
-    const min = parseDate(minDate);
-    const max = parseDate(maxDate);
-    return (
-      Boolean(min && date < min) || Boolean(max && date > max) || Boolean(disabledDate?.(date))
-    );
-  };
 
   const emitValues = (nextValues: string[], close = false) => {
     const sorted = order ? [...nextValues].sort() : nextValues;
     if (value === undefined) setInnerValues(sorted);
     const outputValue = multiple ? sorted : (sorted[0] ?? null);
-    const outputString = multiple
-      ? sorted.map((item) => formatDisplayValue(item, format))
-      : typeof outputValue === "string"
-        ? formatDisplayValue(outputValue, format)
-        : "";
-    onChange?.(outputValue, outputString);
+    onChange?.(outputValue);
     if (close) floating.changeOpen(false, "menu");
   };
 
@@ -229,13 +250,18 @@ function BaseDatePicker({
 
   const clear = () => {
     emitValues([]);
-    setPendingValues([]);
+    setPendingValues(createDefaultPendingValues());
+    setSelectedTime(defaultSelectedTime);
+    setTimePanelResetKey((current) => current + 1);
+    if (pickerValue === undefined)
+      setInnerPanelDate(parseDate(defaultPickerValue) ?? new Date());
     onClear?.();
   };
 
   const changeSelectedTime = (nextTime: string) => {
-    setSelectedTime(nextTime);
-    setPendingValues((current) => current.map((item) => `${item.split(" ")[0]} ${nextTime}`));
+    const availableTime = resolveAvailableTime(nextTime, showTimeConfig, showTimeSecond);
+    setSelectedTime(availableTime);
+    setPendingValues((current) => current.map((item) => `${item.split(" ")[0]} ${availableTime}`));
   };
 
   useLayoutEffect(() => {
@@ -420,13 +446,9 @@ function BaseDatePicker({
               error: Boolean(errorMessage),
               disabled,
               readOnly,
+              interactive: !disabled && !readOnly,
             }),
-            multiple &&
-              selectedValues.length > 0 && [
-                "items-start",
-                size === "sm" ? "pl-px" : "pl-[3px]",
-                size === "sm" ? "py-px" : "py-[3px]",
-              ],
+            multiple && selectedValues.length > 0 && ["items-start", "py-[3px] pl-[3px]"],
           )}
         >
           {multiple && selectedValues.length ? (
@@ -473,7 +495,12 @@ function BaseDatePicker({
               )}
             >
               {selectedValues.length ? (
-                <Tag className="h-auto bg-transparent p-0 text-sm text-[#111]">
+                <Tag
+                  className={twMerge(
+                    "h-auto bg-transparent p-0 text-sm",
+                    disabled ? "text-[#999]" : "text-[#111]",
+                  )}
+                >
                   {formatDisplayValue(selectedValues[0], format)}
                 </Tag>
               ) : (
@@ -483,20 +510,16 @@ function BaseDatePicker({
           )}
           {allowClear && selectedValues.length && !disabled && !readOnly ? (
             <span
-              className="cursor-pointer"
+              className="cursor-pointer self-center"
               onClick={(event) => {
                 event.stopPropagation();
                 clear();
               }}
             >
-              {typeof allowClear === "object" && allowClear.clearIcon ? (
-                allowClear.clearIcon
-              ) : (
-                <Icon icon="close" color="#999" />
-              )}
+              <Icon icon="close" color="#999" />
             </span>
           ) : (
-            <Icon icon="calendar" color="#999" />
+            <Icon icon="calendar" color="#999" className="self-center" />
           )}
         </button>
       </span>
@@ -509,6 +532,7 @@ function BaseDatePicker({
               className={twMerge(
                 "fixed rounded-lg bg-white p-3 font-pretendard text-sm text-[#111] shadow-[0_6px_16px_rgba(0,0,0,0.06),0_3px_6px_-4px_rgba(0,0,0,0.08),0_9px_28px_8px_rgba(0,0,0,0.03)]",
                 !showTime && "w-[296px]",
+                showTime && "pr-2",
                 !floating.isMotionVisible && "pointer-events-none",
               )}
               style={{
@@ -521,45 +545,25 @@ function BaseDatePicker({
               }}
               {...floating.popupProps}
             >
-              {presets?.length ? (
-                <div className="mb-2 flex flex-wrap gap-1 border-b border-[#f0f0f0] pb-2">
-                  {presets.map((preset) => (
-                    <Button
-                      key={String(preset.label)}
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => {
-                        const presetValue =
-                          typeof preset.value === "function" ? preset.value() : preset.value;
-                        const nextValues = multiple
-                          ? [...selectedValues, presetValue]
-                          : [presetValue];
-                        emitValues(Array.from(new Set(nextValues)), !multiple);
-                      }}
-                    >
-                      {preset.label}
-                    </Button>
-                  ))}
-                </div>
-              ) : null}
               <div className={twMerge(showTime && "flex divide-x divide-[#f0f0f0]")}>
                 <div className={twMerge(showTime && "min-w-[272px] pr-3")}>
                   <PickerPanel
                     picker={picker}
                     panelDate={panelDate}
-                    selectedValues={needConfirm ? pendingValues : selectedValues}
+                    selectedValues={
+                      needConfirm || selectedValues.length === 0 ? pendingValues : selectedValues
+                    }
                     disabledDate={isDateDisabled}
-                    showWeek={showWeek}
-                    showNow={showNow}
                     cellRender={cellRender}
                     onPanelDateChange={changePanelDate}
                     onSelect={selectDate}
                   />
                 </div>
                 {showTime ? (
-                  <div className="pl-3">
-                    <div className="mb-1 text-xs font-medium text-[#777]">시간</div>
+                  <div>
+                    <div className="mb-1 pl-3 text-xs font-medium text-[#777]">시간</div>
                     <TimePanel
+                      key={timePanelResetKey}
                       value={selectedTime}
                       className="h-[250px] overflow-hidden"
                       use12Hours={showTimeConfig.use12Hours}
@@ -568,9 +572,8 @@ function BaseDatePicker({
                       minuteStep={showTimeConfig.minuteStep}
                       secondStep={showTimeConfig.secondStep}
                       disabledTime={showTimeConfig.disabledTime}
-                      hideDisabledOptions={showTimeConfig.hideDisabledOptions}
+                      hideDisabled={showTimeConfig.hideDisabled}
                       changeOnScroll={showTimeConfig.changeOnScroll}
-                      cellRender={showTimeConfig.cellRender}
                       onChange={(nextTime) =>
                         changeSelectedTime(
                           `${pad(nextTime.hour)}:${pad(nextTime.minute)}${
@@ -582,23 +585,30 @@ function BaseDatePicker({
                   </div>
                 ) : null}
               </div>
-              {renderExtraFooter ? (
-                <div className="mt-2 border-t border-[#f0f0f0] pt-2">
-                  {renderExtraFooter(picker)}
-                </div>
-              ) : null}
-              {needConfirm ? (
-                <div className="mt-2 flex justify-end border-t border-[#f0f0f0] pt-2">
-                  <Button
-                    size="sm"
-                    onClick={() => {
-                      emitValues(pendingValues, true);
-                      onOk?.(multiple ? pendingValues : (pendingValues[0] ?? null));
-                    }}
-                  >
-                    확인
-                  </Button>
-                </div>
+              {presets?.length || showNow || needConfirm ? (
+                <PickerFooter
+                  presets={presets}
+                  showNow={showNow}
+                  showConfirm={needConfirm}
+                  onPresetSelect={(index) => {
+                    const preset = presets?.[index];
+                    if (!preset) return;
+                    const presetValue =
+                      typeof preset.value === "function" ? preset.value() : preset.value;
+                    const nextValues = multiple ? [...selectedValues, presetValue] : [presetValue];
+                    const uniqueValues = Array.from(new Set(nextValues));
+                    if (needConfirm) {
+                      setPendingValues(uniqueValues);
+                      return;
+                    }
+                    emitValues(uniqueValues, !multiple);
+                  }}
+                  onNow={() => selectDate(new Date())}
+                  onConfirm={() => {
+                    emitValues(pendingValues, true);
+                    onConfirm?.(multiple ? pendingValues : (pendingValues[0] ?? null));
+                  }}
+                />
               ) : null}
             </div>,
             document.body,
@@ -616,8 +626,6 @@ function PickerPanel({
   previousButton = true,
   nextButton = true,
   disabledDate,
-  showWeek,
-  showNow,
   cellRender,
   onPanelDateChange,
   onSelect,
@@ -625,12 +633,10 @@ function PickerPanel({
   picker: DatePickerModeType;
   panelDate: Date;
   selectedValues: string[];
-  rangeValues?: [string | null, string | null];
+  rangeValues?: DateRangeValueType;
   previousButton?: boolean;
   nextButton?: boolean;
   disabledDate: (date: Date) => boolean;
-  showWeek: boolean;
-  showNow: boolean;
   cellRender?: DatePickerProps["cellRender"];
   onPanelDateChange: (date: Date) => void;
   onSelect: (date: Date) => void;
@@ -638,8 +644,7 @@ function PickerPanel({
   const changePanel = (amount: number) => {
     const next = new Date(panelDate);
     if (picker === "year") next.setFullYear(next.getFullYear() + amount * 12);
-    else if (picker === "month" || picker === "quarter")
-      next.setFullYear(next.getFullYear() + amount);
+    else if (picker === "month") next.setFullYear(next.getFullYear() + amount);
     else next.setMonth(next.getMonth() + amount);
     onPanelDateChange(next);
   };
@@ -650,7 +655,7 @@ function PickerPanel({
     onPanelDateChange(next);
   };
 
-  const showYearNavigation = picker === "date" || picker === "week";
+  const showYearNavigation = picker === "date";
 
   return (
     <>
@@ -668,10 +673,7 @@ function PickerPanel({
               className="inline-flex size-8 cursor-pointer items-center justify-center rounded hover:bg-[#f5f5f5]"
               onClick={() => changeYear(-1)}
             >
-              <span className="flex -space-x-1.5">
-                <Icon icon="chevron-left" size={12} />
-                <Icon icon="chevron-left" size={12} />
-              </span>
+              <Icon icon="double-left" color="#999" />
             </button>
           ) : null}
           {previousButton ? (
@@ -680,7 +682,7 @@ function PickerPanel({
               className="inline-flex size-8 cursor-pointer items-center justify-center rounded hover:bg-[#f5f5f5]"
               onClick={() => changePanel(-1)}
             >
-              <Icon icon="chevron-left" />
+              <Icon icon="chevron-left" color="#999" />
             </button>
           ) : null}
         </div>
@@ -692,7 +694,7 @@ function PickerPanel({
               className="inline-flex size-8 cursor-pointer items-center justify-center rounded hover:bg-[#f5f5f5]"
               onClick={() => changePanel(1)}
             >
-              <Icon icon="chevron-right" />
+              <Icon icon="chevron-right" color="#999" />
             </button>
           ) : null}
           {nextButton && showYearNavigation ? (
@@ -702,35 +704,23 @@ function PickerPanel({
               className="inline-flex size-8 cursor-pointer items-center justify-center rounded hover:bg-[#f5f5f5]"
               onClick={() => changeYear(1)}
             >
-              <span className="flex -space-x-1.5">
-                <Icon icon="chevron-right" size={12} />
-                <Icon icon="chevron-right" size={12} />
-              </span>
+              <Icon icon="double-right" color="#999" />
             </button>
           ) : null}
         </div>
       </div>
-      {picker === "date" || picker === "week" ? (
+      {picker === "date" ? (
         <DateGrid
           picker={picker}
           panelDate={panelDate}
           selectedValues={selectedValues}
           rangeValues={rangeValues}
           disabledDate={disabledDate}
-          showWeek={showWeek}
           cellRender={cellRender}
           onSelect={onSelect}
         />
       ) : picker === "month" ? (
         <MonthGrid
-          panelDate={panelDate}
-          selectedValues={selectedValues}
-          disabledDate={disabledDate}
-          cellRender={cellRender}
-          onSelect={onSelect}
-        />
-      ) : picker === "quarter" ? (
-        <QuarterGrid
           panelDate={panelDate}
           selectedValues={selectedValues}
           disabledDate={disabledDate}
@@ -746,14 +736,52 @@ function PickerPanel({
           onSelect={onSelect}
         />
       )}
-      {showNow ? (
-        <div className="mt-2 border-t border-[#f0f0f0] pt-2 text-right">
-          <Button size="md" onClick={() => onSelect(new Date())}>
-            오늘
-          </Button>
-        </div>
-      ) : null}
     </>
+  );
+}
+
+function PickerFooter({
+  presets,
+  showNow,
+  showConfirm = false,
+  onPresetSelect,
+  onNow,
+  onConfirm,
+}: {
+  presets?: Array<{ label: ReactNode }>;
+  showNow: boolean;
+  showConfirm?: boolean;
+  onPresetSelect: (index: number) => void;
+  onNow: () => void;
+  onConfirm?: () => void;
+}) {
+  const hasPresets = Boolean(presets?.length);
+
+  return (
+    <div className="mt-2 flex items-center justify-between border-t border-[#f0f0f0] pt-2">
+      {hasPresets ? (
+        <Dropdown
+          menu={{
+            items: (presets ?? []).map((preset, index) => ({
+              label: preset.label,
+              value: String(index),
+            })),
+            onClick: ({ value }) => onPresetSelect(Number(value)),
+          }}
+          placement="topLeft"
+          trigger="click"
+        >
+          <Button variant="ghost">빠른 선택</Button>
+        </Dropdown>
+      ) : showNow ? (
+        <Button variant="ghost" onClick={onNow}>
+          오늘
+        </Button>
+      ) : (
+        <span />
+      )}
+      {showConfirm ? <Button onClick={onConfirm}>확인</Button> : null}
+    </div>
   );
 }
 
@@ -763,72 +791,70 @@ function DateGrid({
   selectedValues,
   rangeValues,
   disabledDate,
-  showWeek,
   cellRender,
   onSelect,
 }: {
-  picker: "date" | "week";
+  picker: "date";
   panelDate: Date;
   selectedValues: string[];
-  rangeValues?: [string | null, string | null];
+  rangeValues?: DateRangeValueType;
   disabledDate: (date: Date) => boolean;
-  showWeek: boolean;
   cellRender?: DatePickerProps["cellRender"];
   onSelect: (date: Date) => void;
 }) {
   const days = useMemo(() => calendarDays(panelDate), [panelDate]);
-  const columns = showWeek ? 8 : 7;
   return (
-    <div
-      className="grid text-center"
-      style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
-    >
-      {showWeek ? <span className="py-1 text-xs text-[#999]">주</span> : null}
+    <div className="grid grid-cols-7 text-center">
       {weekdays.map((weekday) => (
         <span key={weekday} className="py-1 text-xs text-[#999]">
           {weekday}
         </span>
       ))}
-      {days.map((date, index) => {
+      {days.map((date) => {
         const dateValue = formatDate(date, picker);
         const muted = date.getMonth() !== panelDate.getMonth();
-        const selected = selectedValues.some((item) => item.startsWith(dateValue));
+        const visibleRangeDate = !rangeValues || !muted;
+        const selected =
+          visibleRangeDate && selectedValues.some((item) => item.startsWith(dateValue));
         const rangeStart = parseDate(rangeValues?.[0]);
         const rangeEnd = parseDate(rangeValues?.[1]);
-        const inRange = Boolean(rangeStart && rangeEnd && date >= rangeStart && date <= rangeEnd);
-        const isRangeStart = Boolean(rangeStart && sameDay(date, rangeStart));
-        const isRangeEnd = Boolean(rangeEnd && sameDay(date, rangeEnd));
+        const inRange = Boolean(
+          visibleRangeDate && rangeStart && rangeEnd && date >= rangeStart && date <= rangeEnd,
+        );
+        const isRangeStart = Boolean(visibleRangeDate && rangeStart && sameDay(date, rangeStart));
+        const isRangeEnd = Boolean(visibleRangeDate && rangeEnd && sameDay(date, rangeEnd));
         const dateDisabled = disabledDate(date);
-        const originNode = <>{date.getDate()}</>;
+        const origin = <>{date.getDate()}</>;
         return (
           <div key={`${formatDate(date, "date")}-${picker}`} className="contents">
-            {showWeek && index % 7 === 0 ? (
-              <span className="flex items-center justify-center text-xs text-[#999]">
-                {getWeek(date)}
-              </span>
-            ) : null}
             <div
               className={twMerge(
                 "relative my-0.5 flex h-8 items-center justify-center",
-                inRange && "bg-[#e6f4ff]",
-                isRangeStart && "rounded-l-md",
-                isRangeEnd && "rounded-r-md",
+                inRange && !isRangeStart && !isRangeEnd && "bg-[#e6f4ff]",
+                inRange &&
+                  isRangeStart &&
+                  !isRangeEnd &&
+                  "after:pointer-events-none after:absolute after:inset-y-0 after:right-0 after:left-1/2 after:bg-[#e6f4ff]",
+                inRange &&
+                  isRangeEnd &&
+                  !isRangeStart &&
+                  "before:pointer-events-none before:absolute before:inset-y-0 before:right-1/2 before:left-0 before:bg-[#e6f4ff]",
+                dateDisabled && "bg-[#f5f5f5]",
               )}
             >
               <button
                 type="button"
                 disabled={dateDisabled}
                 className={twMerge(
-                  "relative z-[1] flex size-8 cursor-pointer items-center justify-center rounded hover:bg-[#e6f4ff]",
-                  muted && "text-[#bbb]",
-                  selected && "bg-[#0062df] text-white hover:bg-[#0062df]",
-                  dateDisabled && "cursor-not-allowed bg-[#fafafa] text-[#ccc] hover:bg-[#fafafa]",
+                  "relative z-[1] flex size-8 cursor-pointer items-center justify-center rounded hover:bg-[#f5f5f5]",
+                  muted && "text-[#bbb] [&_*]:text-[#bbb]!",
+                  selected && "bg-[#e6f4ff] text-[#0062df] hover:bg-[#e6f4ff]",
+                  dateDisabled &&
+                    "cursor-not-allowed bg-transparent text-[#bfbfbf] hover:bg-transparent [&_*]:text-[#bfbfbf]!",
                 )}
                 onClick={() => onSelect(date)}
               >
-                {cellRender
-                  ? cellRender(date, { originNode, today: new Date(), type: picker })
-                  : originNode}
+                {cellRender ? cellRender(date, origin) : origin}
               </button>
             </div>
           </div>
@@ -865,60 +891,23 @@ function MonthGrid({
     <div className="grid grid-cols-3 gap-2">
       {Array.from({ length: 12 }, (_, month) => {
         const date = new Date(panelDate.getFullYear(), month, 1);
-        const selected = selectedValues.includes(formatDate(date, "month"));
+        const monthValue = formatDate(date, "month");
+        const selected = selectedValues.some((item) => item.startsWith(monthValue));
         const disabled = disabledDate(date);
-        const originNode = <>{month + 1}월</>;
+        const origin = <>{month + 1}월</>;
         return (
           <button
             key={month}
             type="button"
             disabled={disabled}
             className={twMerge(
-              "h-10 cursor-pointer rounded hover:bg-[#e6f4ff]",
-              selected && "bg-[#0062df] text-white hover:bg-[#0062df]",
-              disabled && "cursor-not-allowed bg-[#fafafa] text-[#ccc] hover:bg-[#fafafa]",
+              "h-10 cursor-pointer rounded hover:bg-[#f5f5f5]",
+              selected && "bg-[#e6f4ff] text-[#0062df] hover:bg-[#e6f4ff]",
+              disabled && "cursor-not-allowed bg-[#f5f5f5] text-[#bfbfbf] hover:bg-[#f5f5f5]",
             )}
             onClick={() => onSelect(date)}
           >
-            {cellRender
-              ? cellRender(date, { originNode, today: new Date(), type: "month" })
-              : originNode}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
-function QuarterGrid({
-  panelDate,
-  selectedValues,
-  disabledDate,
-  cellRender,
-  onSelect,
-}: PickerGridProps) {
-  return (
-    <div className="grid grid-cols-2 gap-2">
-      {Array.from({ length: 4 }, (_, quarter) => {
-        const date = new Date(panelDate.getFullYear(), quarter * 3, 1);
-        const selected = selectedValues.includes(formatDate(date, "quarter"));
-        const disabled = disabledDate(date);
-        const originNode = <>Q{quarter + 1}</>;
-        return (
-          <button
-            key={quarter}
-            type="button"
-            disabled={disabled}
-            className={twMerge(
-              "h-12 cursor-pointer rounded hover:bg-[#e6f4ff]",
-              selected && "bg-[#0062df] text-white hover:bg-[#0062df]",
-              disabled && "cursor-not-allowed bg-[#fafafa] text-[#ccc] hover:bg-[#fafafa]",
-            )}
-            onClick={() => onSelect(date)}
-          >
-            {cellRender
-              ? cellRender(date, { originNode, today: new Date(), type: "quarter" })
-              : originNode}
+            {cellRender ? cellRender(date, origin) : origin}
           </button>
         );
       })}
@@ -939,24 +928,22 @@ function YearGrid({
       {Array.from({ length: 12 }, (_, index) => {
         const year = startYear + index;
         const date = new Date(year, 0, 1);
-        const selected = selectedValues.includes(String(year));
+        const selected = selectedValues.some((item) => item.startsWith(String(year)));
         const disabled = disabledDate(date);
-        const originNode = <>{year}</>;
+        const origin = <>{year}</>;
         return (
           <button
             key={year}
             type="button"
             disabled={disabled}
             className={twMerge(
-              "h-10 cursor-pointer rounded hover:bg-[#e6f4ff]",
-              selected && "bg-[#0062df] text-white hover:bg-[#0062df]",
-              disabled && "cursor-not-allowed bg-[#fafafa] text-[#ccc] hover:bg-[#fafafa]",
+              "h-10 cursor-pointer rounded hover:bg-[#f5f5f5]",
+              selected && "bg-[#e6f4ff] text-[#0062df] hover:bg-[#e6f4ff]",
+              disabled && "cursor-not-allowed bg-[#f5f5f5] text-[#bfbfbf] hover:bg-[#f5f5f5]",
             )}
             onClick={() => onSelect(date)}
           >
-            {cellRender
-              ? cellRender(date, { originNode, today: new Date(), type: "year" })
-              : originNode}
+            {cellRender ? cellRender(date, origin) : origin}
           </button>
         );
       })}
@@ -966,9 +953,7 @@ function YearGrid({
 
 function pickerPlaceholder(picker: DatePickerModeType) {
   if (picker === "year") return "연도를 선택하세요";
-  if (picker === "quarter") return "분기를 선택하세요";
   if (picker === "month") return "월을 선택하세요";
-  if (picker === "week") return "주를 선택하세요";
   return "날짜를 선택하세요";
 }
 
@@ -977,15 +962,14 @@ function panelTitle(date: Date, picker: DatePickerModeType) {
     const start = Math.floor(date.getFullYear() / 12) * 12;
     return `${start} - ${start + 11}`;
   }
-  if (picker === "month" || picker === "quarter") return `${date.getFullYear()}년`;
+  if (picker === "month") return `${date.getFullYear()}년`;
   return `${date.getFullYear()}년 ${date.getMonth() + 1}월`;
 }
 
 function offsetPanelDate(date: Date, picker: DatePickerModeType, amount: number) {
   const next = new Date(date);
   if (picker === "year") next.setFullYear(next.getFullYear() + amount * 12);
-  else if (picker === "month" || picker === "quarter")
-    next.setFullYear(next.getFullYear() + amount);
+  else if (picker === "month") next.setFullYear(next.getFullYear() + amount);
   else next.setMonth(next.getMonth() + amount);
   return next;
 }
@@ -1012,11 +996,9 @@ function DateRangePicker({
   placement = "bottomLeft",
   minDate,
   maxDate,
-  showWeek = picker === "week",
   showNow = false,
   disabledDate,
   cellRender,
-  renderExtraFooter,
   onChange,
   onCalendarChange,
   onClear,
@@ -1026,7 +1008,8 @@ function DateRangePicker({
   onOpenChange,
 }: DateRangePickerProps) {
   const [innerValue, setInnerValue] = useState(defaultValue);
-  const selectedValue = value ?? innerValue;
+  const [selectionDraft, setSelectionDraft] = useState<DateRangeValueType | null>(null);
+  const selectedValue = selectionDraft ?? value ?? innerValue;
   const initialPanel =
     parseDate(pickerValue) ??
     parseDate(defaultPickerValue) ??
@@ -1059,12 +1042,10 @@ function DateRangePicker({
       onOpenChange?.(nextOpen);
     },
   });
-  const emitRange = (nextRange: [DatePickerValueType | null, DatePickerValueType | null]) => {
+  const emitRange = (nextRange: DateRangeValueType) => {
+    setSelectionDraft(null);
     if (value === undefined) setInnerValue(nextRange);
-    onChange?.(nextRange, [
-      nextRange[0] ? formatDisplayValue(nextRange[0], format) : "",
-      nextRange[1] ? formatDisplayValue(nextRange[1], format) : "",
-    ]);
+    onChange?.(nextRange);
   };
   const selectRangeDate = (date: Date) => {
     const min = parseDate(minDate);
@@ -1074,6 +1055,7 @@ function DateRangePicker({
     if (selecting === "start" || !selectedValue[0] || selectedValue[1]) {
       const next: [string, null] = [nextDate, null];
       if (value === undefined) setInnerValue(next);
+      else setSelectionDraft(next);
       onCalendarChange?.(next, { range: "start" });
       setSelecting("end");
       return;
@@ -1100,12 +1082,15 @@ function DateRangePicker({
             error: Boolean(errorMessage),
             disabled,
             readOnly,
+            interactive: !disabled && !readOnly,
           })}
         >
           <span className={twMerge("min-w-0 flex-1 truncate", !selectedValue[0] && "text-[#999]")}>
             {selectedValue[0] ? formatDisplayValue(selectedValue[0], format) : placeholder[0]}
           </span>
-          <span className="shrink-0 text-[#999]">-</span>
+          <span data-datepicker-range-separator className="shrink-0">
+            <Icon icon="arrow-right" size={12} color="#999" />
+          </span>
           <span className={twMerge("min-w-0 flex-1 truncate", !selectedValue[1] && "text-[#999]")}>
             {selectedValue[1] ? formatDisplayValue(selectedValue[1], format) : placeholder[1]}
           </span>
@@ -1115,14 +1100,15 @@ function DateRangePicker({
               onClick={(event) => {
                 event.stopPropagation();
                 emitRange([null, null]);
+                const initial =
+                  parseDate(pickerValue) ?? parseDate(defaultPickerValue) ?? new Date();
+                setLeftPanel(initial);
+                setRightPanel(offsetPanelDate(initial, picker, 1));
+                setSelecting("start");
                 onClear?.();
               }}
             >
-              {typeof allowClear === "object" && allowClear.clearIcon ? (
-                allowClear.clearIcon
-              ) : (
-                <Icon icon="close" color="#999" />
-              )}
+              <Icon icon="close" color="#999" />
             </span>
           ) : (
             <Icon icon="calendar" color="#999" />
@@ -1136,7 +1122,7 @@ function DateRangePicker({
               ref={floating.popupRef}
               data-datepicker-range-popup
               className={twMerge(
-                "fixed flex overflow-hidden rounded-lg bg-white font-pretendard text-sm text-[#111] shadow-[0_6px_16px_rgba(0,0,0,0.06),0_3px_6px_-4px_rgba(0,0,0,0.08),0_9px_28px_8px_rgba(0,0,0,0.03)]",
+                "fixed overflow-hidden rounded-lg bg-white font-pretendard text-sm text-[#111] shadow-[0_6px_16px_rgba(0,0,0,0.06),0_3px_6px_-4px_rgba(0,0,0,0.08),0_9px_28px_8px_rgba(0,0,0,0.03)]",
                 !floating.isMotionVisible && "pointer-events-none",
               )}
               style={{
@@ -1151,27 +1137,7 @@ function DateRangePicker({
               }}
               {...floating.popupProps}
             >
-              {presets?.length ? (
-                <div className="flex w-28 flex-col gap-1 border-r border-[#f0f0f0] p-2">
-                  {presets.map((preset) => (
-                    <Button
-                      key={String(preset.label)}
-                      size="sm"
-                      variant="ghost"
-                      className="justify-start"
-                      onClick={() => {
-                        const nextRange =
-                          typeof preset.value === "function" ? preset.value() : preset.value;
-                        emitRange(nextRange);
-                        floating.changeOpen(false, "menu");
-                      }}
-                    >
-                      {preset.label}
-                    </Button>
-                  ))}
-                </div>
-              ) : null}
-              <div className="grid grid-cols-2 divide-x divide-[#f0f0f0]">
+              <div className="grid grid-cols-2">
                 <div className="w-[296px] p-3">
                   <PickerPanel
                     picker={picker}
@@ -1188,8 +1154,6 @@ function DateRangePicker({
                         Boolean(disabledDate?.(date))
                       );
                     }}
-                    showWeek={showWeek}
-                    showNow={false}
                     cellRender={cellRender}
                     onPanelDateChange={(next) => {
                       setLeftPanel(next);
@@ -1216,8 +1180,6 @@ function DateRangePicker({
                         Boolean(disabledDate?.(date))
                       );
                     }}
-                    showWeek={showWeek}
-                    showNow={showNow}
                     cellRender={cellRender}
                     onPanelDateChange={(next) => {
                       setRightPanel(next);
@@ -1229,8 +1191,22 @@ function DateRangePicker({
                   />
                 </div>
               </div>
-              {renderExtraFooter ? (
-                <div className="border-t border-[#f0f0f0] p-3">{renderExtraFooter(picker)}</div>
+              {presets?.length || showNow ? (
+                <div className="px-3 pb-3">
+                  <PickerFooter
+                    presets={presets}
+                    showNow={showNow}
+                    onPresetSelect={(index) => {
+                      const preset = presets?.[index];
+                      if (!preset) return;
+                      const nextRange =
+                        typeof preset.value === "function" ? preset.value() : preset.value;
+                      emitRange(nextRange);
+                      floating.changeOpen(false, "menu");
+                    }}
+                    onNow={() => selectRangeDate(new Date())}
+                  />
+                </div>
               ) : null}
             </div>,
             document.body,
@@ -1247,20 +1223,20 @@ export const DatePicker = Object.assign(BaseDatePicker, {
 }) as DatePickerComponent;
 
 const pickerRootVariants = cva(
-  "flex w-full cursor-pointer items-center gap-2 rounded border border-solid px-2.5 text-left font-pretendard font-medium text-[#111] transition-colors hover:border-[#0062df] focus-visible:border-[#0062df] focus-visible:outline-none",
+  "flex w-full cursor-pointer items-center gap-2 rounded border border-solid px-2.5 text-left font-pretendard font-medium text-[#111] transition-colors focus:border-[#0062df] focus:outline-none",
   {
     variants: {
-      size: { lg: "min-h-10 text-base", md: "min-h-[30px] text-sm", sm: "min-h-5 text-xs" },
+      size: { lg: "min-h-10 text-base", md: "min-h-[30px] text-sm" },
       variant: {
         default: "border-[#ddd] bg-white",
-        outlined: "border-[#ddd] bg-white",
         filled: "border-[#f5f5f5] bg-[#f5f5f5]",
       },
       error: { true: "border-[#fe5150]", false: "" },
       readOnly: {
-        true: "cursor-default bg-white hover:border-[#ddd]",
+        true: "cursor-default",
         false: "",
       },
+      interactive: { true: "hover:border-[#0062df]", false: "" },
       disabled: {
         true: "cursor-not-allowed border-[#ddd] bg-[#f8f8f8] text-[#999] hover:border-[#ddd]",
         false: "",
@@ -1272,6 +1248,7 @@ const pickerRootVariants = cva(
       error: false,
       disabled: false,
       readOnly: false,
+      interactive: true,
     },
   },
 );

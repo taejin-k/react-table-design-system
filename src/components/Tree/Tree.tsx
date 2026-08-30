@@ -1,8 +1,18 @@
-import { useEffect, useMemo, useRef, useState, type DragEvent } from "react";
+import { useMemo, useRef, useState, type DragEvent } from "react";
 import { twMerge } from "tailwind-merge";
 import { Checkbox } from "../Checkbox";
 import { Icon } from "../Icon";
 import type { TreeDataNode, TreeDropPositionType, TreeEventInfo, TreeProps } from "./Tree.types";
+
+type TreeDragOverState = {
+  key: string;
+  dropNode: TreeDataNode;
+  position: TreeDropPositionType;
+  indicatorPosition: -1 | 1;
+  level: number;
+};
+
+type VisibleTreeNode = { key: string; node: TreeDataNode; level: number };
 
 function id(value: React.Key) {
   return String(value);
@@ -13,13 +23,58 @@ function descendants(node: TreeDataNode): string[] {
 function descendantKeys(node: TreeDataNode): React.Key[] {
   return [node.key, ...(node.children ?? []).flatMap(descendantKeys)];
 }
-function dropPosition(event: DragEvent<HTMLDivElement>): TreeDropPositionType {
-  const rect = event.currentTarget.getBoundingClientRect();
-  if (!rect.height) return 0;
-  const ratio = (event.clientY - rect.top) / rect.height;
+export function getTreeDropPosition(
+  pointerY: number,
+  rect: Pick<DOMRect, "top" | "height">,
+  canDropInside: boolean,
+  isExpanded: boolean,
+): TreeDropPositionType {
+  if (!rect.height) return canDropInside ? 0 : 1;
+  const ratio = (pointerY - rect.top) / rect.height;
+  if (!canDropInside) return ratio < 0.5 ? -1 : 1;
+  if (isExpanded) return ratio < 0.25 ? -1 : 0;
   if (ratio < 0.25) return -1;
   if (ratio > 0.75) return 1;
   return 0;
+}
+
+export function canDropTreeNode(
+  dragNode: TreeDataNode,
+  dropNode: TreeDataNode,
+  position: TreeDropPositionType,
+  options: {
+    disabled?: boolean;
+    allowDrop?: TreeProps["allowDrop"];
+  } = {},
+) {
+  if (options.disabled || dropNode.disabled) return false;
+  if (descendants(dragNode).includes(id(dropNode.key))) return false;
+  return options.allowDrop?.({ dropNode, dropPosition: position }) ?? true;
+}
+
+function setTreeDragImage(event: DragEvent<HTMLDivElement>) {
+  if (typeof event.dataTransfer.setDragImage !== "function") return;
+
+  const source = event.currentTarget;
+  const rect = source.getBoundingClientRect();
+  const dragImage = source.cloneNode(true) as HTMLElement;
+  const dragTitle = dragImage.querySelector<HTMLElement>("[data-tree-title]");
+  dragImage.dataset.treeDragPreview = "true";
+  dragImage.removeAttribute("data-tree-dragging");
+  dragImage.style.position = "fixed";
+  dragImage.style.inset = "-10000px auto auto -10000px";
+  dragImage.style.width = "max-content";
+  dragImage.style.maxWidth = "none";
+  dragImage.style.opacity = "0.35";
+  dragImage.style.pointerEvents = "none";
+  if (dragTitle) dragTitle.style.whiteSpace = "pre";
+  document.body.append(dragImage);
+  event.dataTransfer.setDragImage(
+    dragImage,
+    Math.max(0, event.clientX - rect.left),
+    Math.max(0, event.clientY - rect.top),
+  );
+  globalThis.setTimeout(() => dragImage.remove(), 0);
 }
 
 export function Tree({
@@ -33,8 +88,6 @@ export function Tree({
   disabled = false,
   draggable = false,
   allowDrop,
-  showIcon = false,
-  showLine = false,
   switcherIcon,
   titleRender,
   expandedKeys,
@@ -95,27 +148,27 @@ export function Tree({
   const [innerLoaded, setInnerLoaded] = useState((loadedKeys ?? []).map(id));
   const [loading, setLoading] = useState<string[]>([]);
   const [draggingKey, setDraggingKey] = useState<string>();
-  const [dragOverState, setDragOverState] = useState<{
-    key: string;
-    position: TreeDropPositionType;
-  }>();
+  const [dragOverState, setDragOverState] = useState<TreeDragOverState>();
   const dragNodeRef = useRef<TreeDataNode | undefined>(undefined);
-  const dragOverRef = useRef<{ key: string; position: TreeDropPositionType } | undefined>(
-    undefined,
-  );
-  const expandTimerRef = useRef<number | undefined>(undefined);
+  const dragMetricsRef = useRef<
+    { grabOffsetY: number; height: number; startX: number; level: number } | undefined
+  >(undefined);
+  const dragOverRef = useRef<TreeDragOverState | undefined>(undefined);
   const expanded = expandedKeys ? expandedKeys.map(id) : innerExpanded;
   const selected = selectedKeys ? selectedKeys.map(id) : innerSelected;
   const checked = checkedKeys
     ? (Array.isArray(checkedKeys) ? checkedKeys : checkedKeys.checked).map(id)
     : innerChecked;
   const loaded = loadedKeys ? loadedKeys.map(id) : innerLoaded;
-  useEffect(
-    () => () => {
-      window.clearTimeout(expandTimerRef.current);
-    },
-    [],
-  );
+  const visibleNodes: VisibleTreeNode[] = [];
+  const collectVisibleNodes = (nodes: TreeDataNode[], level = 0) => {
+    nodes.forEach((node) => {
+      const key = id(node.key);
+      visibleNodes.push({ key, node, level });
+      if (expanded.includes(key)) collectVisibleNodes(node.children ?? [], level + 1);
+    });
+  };
+  collectVisibleNodes(normalized);
   const parentMap = useMemo(() => {
     const map = new Map<string, TreeDataNode>();
     const walk = (nodes: TreeDataNode[]) =>
@@ -142,12 +195,11 @@ export function Tree({
   const eventInfo = (
     event: TreeEventInfo["event"],
     node: TreeDataNode,
-    nativeEvent: React.SyntheticEvent,
+    nativeEvent: Event,
     extras: Partial<TreeEventInfo> = {},
-  ): TreeEventInfo => ({ event, node, nativeEvent: nativeEvent.nativeEvent, ...extras });
-  const toggleExpand = async (node: TreeDataNode, event: React.MouseEvent) => {
-    const key = id(node.key),
-      nextOpen = !expanded.includes(key);
+  ): TreeEventInfo => ({ event, node, nativeEvent, ...extras });
+  const changeExpanded = async (node: TreeDataNode, nextOpen: boolean, nativeEvent: Event) => {
+    const key = id(node.key);
     if (nextOpen && loadData && !node.isLeaf && !node.children?.length && !loaded.includes(key)) {
       setLoading((keys) => [...keys, key]);
       try {
@@ -161,7 +213,10 @@ export function Tree({
     }
     const next = nextOpen ? [...expanded, key] : expanded.filter((value) => value !== key);
     if (!expandedKeys) setInnerExpanded(next);
-    onExpand?.(restoreKeys(next), eventInfo("expand", node, event, { expanded: nextOpen }));
+    onExpand?.(restoreKeys(next), eventInfo("expand", node, nativeEvent, { expanded: nextOpen }));
+  };
+  const toggleExpand = async (node: TreeDataNode, event: React.MouseEvent) => {
+    await changeExpanded(node, !expanded.includes(id(node.key)), event.nativeEvent);
   };
   const select = (node: TreeDataNode, event: React.MouseEvent) => {
     if (!selectable || node.selectable === false || disabled || node.disabled) return;
@@ -175,7 +230,10 @@ export function Tree({
         ? []
         : [key];
     if (!selectedKeys) setInnerSelected(next);
-    onSelect?.(restoreKeys(next), eventInfo("select", node, event, { selected: !already }));
+    onSelect?.(
+      restoreKeys(next),
+      eventInfo("select", node, event.nativeEvent, { selected: !already }),
+    );
   };
   const check = (node: TreeDataNode, event: React.ChangeEvent<HTMLInputElement>) => {
     if (disabled || node.disabled || node.disableCheckbox) return;
@@ -203,7 +261,7 @@ export function Tree({
     const output = checkStrictly
       ? { checked: restoreKeys(next), halfChecked: restoreKeys(halfChecked) }
       : restoreKeys(next);
-    onCheck?.(output, eventInfo("check", node, event, { checked: nextChecked }));
+    onCheck?.(output, eventInfo("check", node, event.nativeEvent, { checked: nextChecked }));
   };
   const nodeDraggable = (node: TreeDataNode) => {
     if (!draggable || disabled || node.disabled) return false;
@@ -212,14 +270,7 @@ export function Tree({
       return draggable.nodeDraggable(node);
     return true;
   };
-  const dragIcon =
-    typeof draggable === "object" && "icon" in draggable ? (
-      draggable.icon
-    ) : (
-      <Icon icon="drag-handle" size={12} />
-    );
   const clearDragOver = () => {
-    window.clearTimeout(expandTimerRef.current);
     dragOverRef.current = undefined;
     setDragOverState(undefined);
   };
@@ -227,22 +278,54 @@ export function Tree({
     dragNode: TreeDataNode,
     dropNode: TreeDataNode,
     position: TreeDropPositionType,
-  ) => {
-    if (disabled || dropNode.disabled) return false;
-    if (descendants(dragNode).includes(id(dropNode.key))) return false;
-    return allowDrop?.({ dropNode, dropPosition: position }) ?? true;
-  };
-  const handleDragOver = (
+  ) => canDropTreeNode(dragNode, dropNode, position, { disabled, allowDrop });
+  const getDropState = (
     event: DragEvent<HTMLDivElement>,
-    node: TreeDataNode,
-    hasChildren: boolean,
-    open: boolean,
-  ) => {
+    hoveredNode: TreeDataNode,
+  ): Omit<TreeDragOverState, "key"> | undefined => {
+    const dragMetrics = dragMetricsRef.current;
     const dragNode = dragNodeRef.current;
-    if (!dragNode) return;
-    const position = dropPosition(event);
+    if (!dragMetrics || !dragNode) return undefined;
+    const dragCenterY = dragMetrics
+      ? event.clientY - dragMetrics.grabOffsetY + dragMetrics.height / 2
+      : event.clientY;
+    const targetRect = event.currentTarget.getBoundingClientRect();
+    const indicatorPosition: -1 | 1 = dragCenterY < targetRect.top + targetRect.height / 2 ? -1 : 1;
+    const draggedKeys = new Set(descendants(dragNode));
+    const availableNodes = visibleNodes.filter((item) => !draggedKeys.has(item.key));
+    const hoveredIndex = availableNodes.findIndex((item) => item.key === id(hoveredNode.key));
+    if (hoveredIndex < 0) return undefined;
+
+    const boundaryIndex = hoveredIndex + (indicatorPosition === 1 ? 1 : 0);
+    const previous = availableNodes[boundaryIndex - 1];
+    const next = availableNodes[boundaryIndex];
+    const minimumLevel = next?.level ?? 0;
+    const maximumLevel = previous
+      ? previous.level + (previous.node.isLeaf === true ? 0 : 1)
+      : minimumLevel;
+    const currentX = Number.isFinite(event.clientX) ? event.clientX : dragMetrics.startX;
+    const requestedLevel = dragMetrics.level + Math.round((currentX - dragMetrics.startX) / 24);
+    const level = Math.min(Math.max(requestedLevel, minimumLevel), maximumLevel);
+
+    if (next?.level === level) {
+      return { dropNode: next.node, position: -1, indicatorPosition, level };
+    }
+    if (previous?.level === level) {
+      return { dropNode: previous.node, position: 1, indicatorPosition, level };
+    }
+    if (previous && previous.level + 1 === level && previous.node.isLeaf !== true) {
+      return { dropNode: previous.node, position: 0, indicatorPosition, level };
+    }
+    return undefined;
+  };
+  const handleDragOver = (event: DragEvent<HTMLDivElement>, node: TreeDataNode) => {
+    const dragNode = dragNodeRef.current;
+    if (!dragNode || dragNode === node) return;
+    const dropState = getDropState(event, node);
+    if (!dropState) return;
+    const { dropNode, position } = dropState;
     onDragOver?.({ event, node });
-    if (!canDrop(dragNode, node, position)) {
+    if (!canDrop(dragNode, dropNode, position)) {
       if (dragOverRef.current?.key === id(node.key)) clearDragOver();
       event.dataTransfer.dropEffect = "none";
       return;
@@ -250,50 +333,36 @@ export function Tree({
     event.preventDefault();
     event.stopPropagation();
     event.dataTransfer.dropEffect = "move";
-    const next = { key: id(node.key), position };
+    const next = { key: id(node.key), ...dropState };
     const previous = dragOverRef.current;
-    if (previous?.key !== next.key || previous.position !== next.position) {
-      window.clearTimeout(expandTimerRef.current);
+    if (
+      previous?.key !== next.key ||
+      id(previous.dropNode.key) !== id(next.dropNode.key) ||
+      previous.position !== next.position ||
+      previous.indicatorPosition !== next.indicatorPosition ||
+      previous.level !== next.level
+    ) {
       dragOverRef.current = next;
       setDragOverState(next);
       onDragEnter?.({ event, node, expandedKeys: restoreKeys(expanded) });
-      if (position === 0 && hasChildren && !open) {
-        expandTimerRef.current = window.setTimeout(() => {
-          const nextExpanded = [...expanded, id(node.key)];
-          if (!expandedKeys) setInnerExpanded(nextExpanded);
-          onExpand?.(
-            restoreKeys(nextExpanded),
-            eventInfo("expand", node, event, { expanded: true }),
-          );
-        }, 400);
-      }
     }
   };
   const renderNodes = (nodes: TreeDataNode[], level = 0) => (
-    <ul
-      className={twMerge(
-        "m-0 list-none p-0",
-        level > 0 && "relative overflow-hidden",
-        showLine &&
-          level > 0 &&
-          "before:pointer-events-none before:absolute before:top-0 before:bottom-0 before:left-[var(--wizard-tree-line-left)] before:border-l before:border-solid before:border-[#d9d9d9]",
-      )}
-      style={
-        showLine && level > 0
-          ? ({ "--wizard-tree-line-left": `${12 + (level - 1) * 24}px` } as React.CSSProperties)
-          : undefined
-      }
-    >
-      {nodes.map((node) => {
+    <ul className={twMerge("m-0 list-none p-0", level > 0 && "relative")}>
+      {nodes.map((node, nodeIndex) => {
         const key = id(node.key),
           hasChildren = Boolean(node.children?.length) || Boolean(!node.isLeaf && loadData),
+          canDropInside = hasChildren || node.isLeaf !== true,
           open = expanded.includes(key),
           isSelected = selected.includes(key),
           isChecked = checked.includes(key),
           half = halfChecked.includes(key),
           nodeDisabled = disabled || node.disabled,
           canDragNode = nodeDraggable(node),
-          dragOverPosition = dragOverState?.key === key ? dragOverState.position : undefined;
+          nodeDropState = dragOverState?.key === key ? dragOverState : undefined,
+          dragOverPosition = nodeDropState?.position,
+          dragOverIndicatorPosition = nodeDropState?.indicatorPosition,
+          dragOverLevel = nodeDropState?.level;
         const switcher =
           typeof switcherIcon === "function"
             ? switcherIcon({ expanded: open, node })
@@ -302,24 +371,34 @@ export function Tree({
                 <Icon icon="loading" loading size={12} />
               ) : hasChildren ? (
                 <Icon icon="chevron-right" size={12} />
-              ) : showLine && typeof showLine === "object" && showLine.showLeafIcon ? (
-                typeof showLine.showLeafIcon === "boolean" ? (
-                  <Icon icon="file-outlined" size={12} />
-                ) : (
-                  showLine.showLeafIcon
-                )
               ) : null));
         return (
-          <li key={key} className={twMerge("relative pb-1", node.className)} style={node.style}>
+          <li
+            key={key}
+            className={twMerge("relative", hasChildren && open ? "pb-0" : "pb-1", node.className)}
+            style={node.style}
+          >
             <div
               data-tree-node={key}
+              data-tree-draggable={canDragNode || undefined}
+              data-tree-can-drop-inside={canDropInside || undefined}
+              data-tree-dragging={draggingKey === key || undefined}
+              data-tree-drop-position={
+                dragOverPosition === -1
+                  ? "before"
+                  : dragOverPosition === 0
+                    ? "inside"
+                    : dragOverPosition === 1
+                      ? "after"
+                      : undefined
+              }
               draggable={canDragNode}
               className={twMerge(
-                "relative flex min-h-6 items-start text-sm",
-                blockNode && "w-full",
+                "relative flex min-h-6 w-fit max-w-full items-start rounded-md text-sm select-none",
+                draggable && "w-full",
+                blockNode && !canDragNode && "w-full",
                 nodeDisabled && "cursor-not-allowed text-[#bbb]",
                 canDragNode && "cursor-grab active:cursor-grabbing",
-                draggingKey === key && "opacity-50",
               )}
               style={{ paddingInlineStart: level * 24 }}
               onDragStart={(event) => {
@@ -327,30 +406,41 @@ export function Tree({
                   event.preventDefault();
                   return;
                 }
+                event.stopPropagation();
+                event.dataTransfer.effectAllowed = "move";
+                event.dataTransfer.setData("text/plain", key);
+                const rect = event.currentTarget.getBoundingClientRect();
+                dragMetricsRef.current = {
+                  grabOffsetY: Math.min(Math.max(event.clientY - rect.top, 0), rect.height),
+                  height: rect.height,
+                  startX: Number.isFinite(event.clientX) ? event.clientX : 0,
+                  level,
+                };
+                setTreeDragImage(event);
                 dragNodeRef.current = node;
                 setDraggingKey(key);
-                event.dataTransfer.effectAllowed = "move";
-                event.dataTransfer.setData?.("text/plain", key);
                 onDragStart?.({ event, node });
               }}
-              onDragOver={(event) => handleDragOver(event, node, hasChildren, open)}
+              onDragOver={(event) => handleDragOver(event, node)}
               onDragLeave={(event) => {
-                const nextTarget = event.relatedTarget;
-                if (nextTarget instanceof Node && event.currentTarget.contains(nextTarget)) return;
+                const related = event.relatedTarget;
+                if (related instanceof Node && event.currentTarget.contains(related)) return;
                 if (dragOverRef.current?.key === key) clearDragOver();
                 onDragLeave?.({ event, node });
               }}
               onDrop={(event) => {
                 const dragNode = dragNodeRef.current;
-                const position = dropPosition(event);
-                if (!dragNode) return;
+                if (!dragNode || dragNode === node) return;
                 event.preventDefault();
                 event.stopPropagation();
-                if (!canDrop(dragNode, node, position)) return;
+                const dropState = getDropState(event, node);
+                if (!dropState) return;
+                const { dropNode, position } = dropState;
+                if (!canDrop(dragNode, dropNode, position)) return;
                 clearDragOver();
                 onDrop?.({
                   event,
-                  node,
+                  node: dropNode,
                   dragNode,
                   dragNodesKeys: descendantKeys(dragNode),
                   dropPosition: position,
@@ -362,34 +452,30 @@ export function Tree({
                 clearDragOver();
                 setDraggingKey(undefined);
                 dragNodeRef.current = undefined;
+                dragMetricsRef.current = undefined;
                 if (dragNode) onDragEnd?.({ event, node: dragNode });
               }}
             >
-              {dragOverPosition !== undefined && dragOverPosition !== 0 ? (
+              {draggingKey ? (
                 <span
-                  data-tree-drop-indicator={dragOverPosition === -1 ? "top" : "bottom"}
-                  className="pointer-events-none absolute right-0 z-10 h-0 border-t-2 border-[#0062df]"
-                  style={{
-                    top: dragOverPosition === -1 ? 0 : "100%",
-                    left: level * 24,
-                  }}
-                >
-                  <span className="absolute top-[-4px] left-[-4px] size-2 rounded-full border-2 border-[#0062df] bg-white" />
-                </span>
-              ) : null}
-              {showLine && level > 0 ? (
-                <span
-                  className="pointer-events-none absolute top-3 h-px border-t border-solid border-[#d9d9d9]"
-                  style={{ left: 12 + (level - 1) * 24, width: 12 }}
+                  data-tree-drop-hit-area={key}
+                  className="absolute top-full right-0 left-0 h-1"
                 />
               ) : null}
-              {canDragNode && dragIcon !== false ? (
+              {dragOverIndicatorPosition !== undefined ? (
                 <span
-                  data-tree-drag-handle={key}
-                  className="inline-flex size-6 shrink-0 cursor-grab items-center justify-center text-[#999] active:cursor-grabbing"
-                >
-                  {dragIcon}
-                </span>
+                  data-tree-drop-indicator={dragOverIndicatorPosition === -1 ? "top" : "bottom"}
+                  className="pointer-events-none absolute right-0 z-10 h-0.5 bg-[#0062df]"
+                  style={{
+                    top:
+                      dragOverIndicatorPosition === -1
+                        ? level === 0 && nodeIndex === 0
+                          ? 0
+                          : -3
+                        : "calc(100% + 1px)",
+                    left: (dragOverLevel ?? level) * 24,
+                  }}
+                />
               ) : null}
               {hasChildren ? (
                 <button
@@ -424,30 +510,41 @@ export function Tree({
                   />
                 </span>
               ) : null}
-              {showIcon && node.icon ? (
-                <span className="mr-1 inline-flex size-6 shrink-0 items-center justify-center">
-                  {node.icon}
-                </span>
-              ) : null}
               <span
+                data-tree-selection-content={key}
                 className={twMerge(
-                  "flex min-h-6 min-w-0 cursor-pointer items-center rounded-md px-1 leading-6 whitespace-pre-line transition-colors hover:bg-[#f5f5f5]",
-                  blockNode && "flex-1",
+                  "inline-flex min-h-6 min-w-0 cursor-pointer items-center rounded-md transition-colors hover:bg-[#f5f5f5]",
+                  blockNode && !canDragNode && "flex-1",
                   isSelected && "bg-[#e6f4ff] text-[#0062df] hover:bg-[#e6f4ff]",
-                  dragOverPosition === 0 && "bg-[#e6f4ff] outline-1 outline-[#0062df]",
                   nodeDisabled && "cursor-not-allowed hover:bg-transparent",
                 )}
                 onClick={(event) => select(node, event)}
               >
-                {titleRender?.(node) ?? node.title}
+                {node.icon ? (
+                  <span
+                    data-tree-icon={key}
+                    className="inline-flex h-6 w-4 shrink-0 items-center justify-center"
+                  >
+                    {node.icon}
+                  </span>
+                ) : null}
+                <span
+                  data-tree-title={key}
+                  className="relative -top-px flex min-h-6 min-w-0 items-center px-1 leading-6 whitespace-pre-line"
+                >
+                  {titleRender?.(node) ?? node.title}
+                </span>
               </span>
             </div>
             {hasChildren ? (
               <div
+                data-tree-children={key}
                 className="grid transition-[grid-template-rows] duration-200 ease-[cubic-bezier(0.645,0.045,0.355,1)] motion-reduce:transition-none"
                 style={{ gridTemplateRows: open ? "1fr" : "0fr" }}
               >
-                <div className="overflow-hidden">{renderNodes(node.children ?? [], level + 1)}</div>
+                <div className={twMerge("overflow-hidden", open && "pt-1")}>
+                  {renderNodes(node.children ?? [], level + 1)}
+                </div>
               </div>
             ) : null}
           </li>
@@ -457,6 +554,7 @@ export function Tree({
   );
   return (
     <div
+      data-tree-root
       className={twMerge("overflow-auto font-pretendard text-[#111]", className)}
       style={{ maxHeight: height, ...style }}
     >

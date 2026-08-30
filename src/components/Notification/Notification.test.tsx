@@ -196,6 +196,34 @@ describe("notification", () => {
     expect(lists[1]).toHaveStyle({ bottom: "0px" });
   });
 
+  it("keeps right and centered placements aligned while the page scrollbar is locked", async () => {
+    act(() => {
+      notification.info({
+        key: "right",
+        description: "오른쪽 알림",
+        duration: 0,
+      });
+      notification.info({
+        key: "center",
+        description: "가운데 알림",
+        duration: 0,
+        placement: "top",
+      });
+    });
+
+    await waitFor(() =>
+      expect(document.querySelectorAll(".wizard-notification-list")).toHaveLength(2),
+    );
+
+    const lists = document.querySelectorAll<HTMLElement>(".wizard-notification-list");
+    expect(lists[0]).toHaveStyle({
+      right: "var(--wizard-scrollbar-compensation, 0px)",
+    });
+    expect(lists[1]).toHaveStyle({
+      left: "calc((100% - var(--wizard-scrollbar-compensation, 0px)) / 2)",
+    });
+  });
+
   it("uses the shared overlay close button", async () => {
     act(() =>
       notification.info({

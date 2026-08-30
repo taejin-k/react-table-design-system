@@ -3,6 +3,7 @@ let previousOverflow = "";
 let previousPaddingRight = "";
 let previousDocumentScrollbarGutter = "";
 let previousBodyScrollbarGutter = "";
+let previousScrollbarCompensation = "";
 
 export function lockBodyScroll() {
   if (typeof document === "undefined") return () => undefined;
@@ -12,7 +13,14 @@ export function lockBodyScroll() {
     previousPaddingRight = document.body.style.paddingRight;
     previousDocumentScrollbarGutter = document.documentElement.style.scrollbarGutter;
     previousBodyScrollbarGutter = document.body.style.scrollbarGutter;
+    previousScrollbarCompensation = document.documentElement.style.getPropertyValue(
+      "--wizard-scrollbar-compensation",
+    );
     const scrollbarWidth = Math.max(0, window.innerWidth - document.documentElement.clientWidth);
+    document.documentElement.style.setProperty(
+      "--wizard-scrollbar-compensation",
+      `${scrollbarWidth}px`,
+    );
 
     // Keep the content width without narrowing the body itself. A narrowed body also limits fixed
     // overlay roots and exposes the removed scrollbar area as a white strip.
@@ -37,6 +45,14 @@ export function lockBodyScroll() {
       document.body.style.paddingRight = previousPaddingRight;
       document.documentElement.style.scrollbarGutter = previousDocumentScrollbarGutter;
       document.body.style.scrollbarGutter = previousBodyScrollbarGutter;
+      if (previousScrollbarCompensation) {
+        document.documentElement.style.setProperty(
+          "--wizard-scrollbar-compensation",
+          previousScrollbarCompensation,
+        );
+      } else {
+        document.documentElement.style.removeProperty("--wizard-scrollbar-compensation");
+      }
     }
   };
 }

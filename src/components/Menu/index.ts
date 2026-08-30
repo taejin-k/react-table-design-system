@@ -6,6 +6,5 @@ export type {
   MenuModeType,
   MenuProps,
   MenuSelectInfo,
-  MenuThemeType,
   MenuTriggerType,
 } from "./Menu.types";

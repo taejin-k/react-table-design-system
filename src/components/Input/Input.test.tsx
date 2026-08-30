@@ -201,7 +201,42 @@ describe("Input", () => {
     rerender(<Input variant="underlined" />);
     inputRow = container.querySelector("input")?.parentElement;
 
-    expect(inputRow).toHaveClass("rounded-none", "border-x-0", "border-t-0", "border-b-[#ddd]");
+    expect(inputRow).toHaveClass(
+      "rounded-none",
+      "border-x-transparent",
+      "border-t-transparent",
+      "border-b-[#ddd]",
+    );
+    expect(inputRow).not.toHaveClass("border-x-0", "border-t-0");
+  });
+
+  it("restores the full rounded border when an underlined input is disabled", () => {
+    const { container } = render(<Input variant="underlined" disabled />);
+    const inputRow = container.querySelector("input")?.parentElement;
+
+    expect(inputRow).toHaveClass(
+      "rounded-[4px]",
+      "border-[#ddd]",
+      "border-x-[#ddd]",
+      "border-t-[#ddd]",
+      "bg-[#f8f8f8]",
+    );
+    expect(inputRow).not.toHaveClass("rounded-none");
+  });
+
+  it("shows only a red bottom border when an underlined input has an error", () => {
+    const { container } = render(
+      <Input variant="underlined" errorMessage="이미 가입된 이메일이에요." />,
+    );
+    const inputRow = container.querySelector("input")?.parentElement;
+
+    expect(inputRow).toHaveClass(
+      "rounded-none",
+      "border-x-transparent",
+      "border-t-transparent",
+      "border-b-[#fe5150]",
+    );
+    expect(inputRow).not.toHaveClass("border-[#fe5150]");
   });
 
   it("calls onEnter when Enter is pressed", async () => {
@@ -239,5 +274,13 @@ describe("Input", () => {
 
     await user.click(container.querySelector("svg") as SVGSVGElement);
     expect(input).toHaveAttribute("type", "password");
+  });
+
+  it("keeps password glyph sizing consistent when disabled", () => {
+    render(<Input label="비밀번호" defaultValue="password" password disabled />);
+
+    const input = screen.getByLabelText("비밀번호");
+    expect(input).toHaveClass("text-[14px]", "font-medium", "opacity-100");
+    expect(input).not.toHaveClass("font-normal");
   });
 });

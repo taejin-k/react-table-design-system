@@ -1,7 +1,7 @@
 import type { CSSProperties, MouseEvent, ReactElement, ReactNode } from "react";
 
 export type TabsPlacementType = "top" | "end" | "bottom" | "start";
-export type TabsSizeType = "large" | "medium" | "small";
+export type TabsSizeType = "lg" | "md" | "sm";
 export type TabsType = "line" | "card" | "editable-card";
 
 export interface TabItemType {
@@ -20,7 +20,7 @@ export interface TabsProps {
   items?: TabItemType[];
   activeKey?: string;
   defaultActiveKey?: string;
-  animated?: boolean | { inkBar?: boolean; tabPane?: boolean };
+  animated?: boolean;
   centered?: boolean;
   destroyOnHidden?: boolean;
   type?: TabsType;
@@ -34,9 +34,6 @@ export interface TabsProps {
   removeIcon?: ReactNode;
   indicator?: { size?: number | ((origin: number) => number); align?: "start" | "center" | "end" };
   className?: string;
-  style?: CSSProperties;
-  classNames?: Partial<Record<"root" | "header" | "body" | "item" | "indicator", string>>;
-  styles?: Partial<Record<"root" | "header" | "body" | "item" | "indicator", CSSProperties>>;
   onChange?: (activeKey: string) => void;
   onEdit?: (targetKey: string | MouseEvent, action: "add" | "remove") => void;
   onTabClick?: (key: string, event: MouseEvent<HTMLElement>) => void;

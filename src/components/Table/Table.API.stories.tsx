@@ -17,7 +17,7 @@ const meta: Meta<TableProps<Member>> = {
   component: Table as ComponentType<TableProps<Member>>,
   tags: ["!autodocs"],
   parameters: {
-    controls: { disable: false },
+    controls: { disable: true },
     docs: {
       source: { transform: formatTableStorySource },
       description: {

@@ -86,6 +86,24 @@ function SelectExample() {
     expect(source).toContain("import type { SelectOption } from '@taejin-k/wizard-design';");
   });
 
+  it("imports DatePicker and TimePicker value types used by controlled examples", () => {
+    const source = withStoryImports(`function PickerExample() {
+  const [date, setDate] = useState<DatePickerValueType>(null);
+  const [time, setTime] = useState<TimePickerValueType>(null);
+
+  return (
+    <>
+      <DatePicker value={date} onChange={setDate} />
+      <TimePicker value={time} onChange={setTime} />
+    </>
+  );
+}`);
+
+    expect(source).toContain(
+      "import type { DatePickerValueType, TimePickerValueType } from '@taejin-k/wizard-design';",
+    );
+  });
+
   it("imports UploadFile used by a copyable upload example", () => {
     const source = withStoryImports(`const files: UploadFile[] = [];
 
@@ -95,6 +113,15 @@ function UploadExample() {
 
     expect(source).toContain("import { Upload } from '@taejin-k/wizard-design';");
     expect(source).toContain("import type { UploadFile } from '@taejin-k/wizard-design';");
+  });
+
+  it("imports dayjs used by a copyable date example", () => {
+    const source = withStoryImports(
+      `<Calendar defaultValue={dayjs('2026-08-20').toDate()} />`,
+    );
+
+    expect(source).toContain("import dayjs from 'dayjs';");
+    expect(source).toContain("import { Calendar } from '@taejin-k/wizard-design';");
   });
 
   it("imports Table public types used by copyable examples", () => {

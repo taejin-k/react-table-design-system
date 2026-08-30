@@ -100,7 +100,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 Button.displayName = "Button";
 
 const buttonVariants = cva(
-  "inline-flex cursor-pointer items-center justify-center gap-1 rounded font-pretendard font-medium whitespace-nowrap transition-[width,opacity,color,background-color,box-shadow] duration-200 ease-out disabled:cursor-not-allowed motion-reduce:transition-none",
+  "inline-flex cursor-pointer items-center justify-center gap-1 rounded font-pretendard font-medium whitespace-nowrap duration-200 ease-out disabled:cursor-not-allowed motion-reduce:transition-none",
   {
     variants: {
       variant: {
@@ -114,7 +114,7 @@ const buttonVariants = cva(
           "bg-[#f5f5f5] text-[#111111] ring-1 ring-transparent ring-inset hover:ring-[#ddd] disabled:text-[#999999] disabled:ring-[#dddddd]",
         dark: "bg-[#111111] text-white ring-1 ring-transparent ring-inset hover:bg-[#303030] disabled:bg-[#f5f5f5] disabled:text-[#999999] disabled:ring-[#dddddd]",
         ghost:
-          "bg-white text-[#111111] ring-1 ring-transparent ring-inset hover:bg-[#f5f5f5] disabled:bg-[#f5f5f5] disabled:text-[#999999] disabled:ring-[#dddddd]",
+          "bg-transparent text-[#111111] ring-1 ring-transparent ring-inset hover:bg-[#f5f5f5] disabled:bg-[#f5f5f5] disabled:text-[#999999] disabled:ring-[#dddddd]",
       },
       size: {
         lg: "h-10 px-3.5 text-base",
@@ -122,11 +122,11 @@ const buttonVariants = cva(
         sm: "h-5 px-1.5 text-xs",
       },
       iconOnly: {
-        true: "",
-        false: "",
+        true: "transition-[opacity,color,background-color,box-shadow]",
+        false: "transition-[width,opacity,color,background-color,box-shadow]",
       },
       shadow: {
-        true: "shadow-[0px_2px_4px_0px_rgba(0,0,0,0.16)]",
+        true: "",
         false: "",
       },
       fullWidth: {
@@ -149,6 +149,21 @@ const buttonVariants = cva(
       { rounded: true, size: "lg", className: "rounded-[40px]" },
       { rounded: true, size: "md", className: "rounded-[30px]" },
       { rounded: true, size: "sm", className: "rounded-[20px]" },
+      {
+        shadow: true,
+        size: "sm",
+        className: "shadow-[0_1px_2px_rgba(0,0,0,0.12)]",
+      },
+      {
+        shadow: true,
+        size: "md",
+        className: "shadow-[0_2px_4px_rgba(0,0,0,0.16)]",
+      },
+      {
+        shadow: true,
+        size: "lg",
+        className: "shadow-[0_3px_6px_rgba(0,0,0,0.20)]",
+      },
       { loading: true, variant: "primary", className: "hover:bg-[#0062df]" },
       {
         loading: true,
@@ -158,7 +173,7 @@ const buttonVariants = cva(
       { loading: true, variant: "secondary", className: "hover:bg-white" },
       { loading: true, variant: "tertiary", className: "hover:ring-transparent" },
       { loading: true, variant: "dark", className: "hover:bg-[#111111]" },
-      { loading: true, variant: "ghost", className: "hover:bg-white" },
+      { loading: true, variant: "ghost", className: "hover:bg-transparent" },
     ],
     defaultVariants: {
       variant: "primary",

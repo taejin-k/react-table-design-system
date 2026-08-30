@@ -1,5 +1,7 @@
 export { Tree } from "./Tree";
 export type {
+  TreeAllowDropInfo,
+  TreeCheckedKeys,
   TreeDataNode,
   TreeDragEnterInfo,
   TreeDraggableConfig,
@@ -8,5 +10,8 @@ export type {
   TreeDropInfo,
   TreeDropPositionType,
   TreeEventInfo,
+  TreeFieldNames,
+  TreeLoadInfo,
   TreeProps,
+  TreeSwitcherIconInfo,
 } from "./Tree.types";

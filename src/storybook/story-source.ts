@@ -42,11 +42,14 @@ const apiExports = ["message", "notification"] as const;
 
 const reactExports = ["useCallback", "useEffect", "useMemo", "useRef", "useState"] as const;
 const componentTypeExports = [
+  "DatePickerValueType",
+  "DateRangeValueType",
   "DrawerPlacementType",
   "DropdownItem",
   "Key",
   "SelectOption",
   "TableRef",
+  "TimePickerValueType",
   "TreeDataNode",
   "TreeDropInfo",
   "UploadFile",
@@ -97,6 +100,7 @@ export function withStoryImports(source: string) {
     typeImportLine(example, componentTypeExports, packageName),
     importLine(example, dndCoreExports, "@dnd-kit/core"),
     importLine(example, dndSortableExports, "@dnd-kit/sortable"),
+    used(example, "dayjs") && !imported(example, "dayjs") ? "import dayjs from 'dayjs';" : "",
     used(example, "CSS") && !imported(example, "CSS")
       ? "import { CSS } from '@dnd-kit/utilities';"
       : "",

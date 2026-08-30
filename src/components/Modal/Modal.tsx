@@ -84,14 +84,13 @@ function ModalBase({
   forceRender = false,
   destroyOnHidden = false,
   zIndex = 1000,
-  style,
-  className,
   onAfterClose,
   onAfterOpen,
   onConfirm,
   onCancel,
 }: ModalProps) {
   const [rootVisible, setRootVisible] = useState(open);
+  const [hasOpened, setHasOpened] = useState(open);
   const panelRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLElement | null>(null);
   const transformOriginRef = useRef("center center");
@@ -99,7 +98,10 @@ function ModalBase({
   const resolvedWidth = useResolvedWidth(width);
 
   useEffect(() => {
-    if (open) setRootVisible(true);
+    if (open) {
+      setRootVisible(true);
+      setHasOpened(true);
+    }
   }, [open]);
 
   useEffect(() => {
@@ -122,7 +124,12 @@ function ModalBase({
   useEffect(() => {
     if (!open || !keyboard) return;
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onCancel?.(event);
+      if (event.key === "Escape") {
+        event.preventDefault();
+        panelRef.current?.focus({ preventScroll: true });
+        onCancel?.(event);
+        return;
+      }
       if (event.key !== "Tab" || !panelRef.current) return;
       const elements = panelRef.current.querySelectorAll<HTMLElement>(
         'button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex="-1"])',
@@ -139,9 +146,7 @@ function ModalBase({
       }
     };
     document.addEventListener("keydown", handleKeyDown);
-    const focusTimer = window.setTimeout(() =>
-      panelRef.current?.querySelector<HTMLElement>("button:not(:disabled)")?.focus(),
-    );
+    const focusTimer = window.setTimeout(() => panelRef.current?.focus({ preventScroll: true }));
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
       window.clearTimeout(focusTimer);
@@ -181,8 +186,9 @@ function ModalBase({
     <div
       ref={panelRef}
       data-modal-panel
+      tabIndex={-1}
       className={twMerge(
-        "wizard-modal-panel relative max-h-[calc(100vh-48px)] overflow-hidden rounded-lg bg-white px-6 py-5 font-pretendard text-sm leading-[22px] text-[#111] shadow-[0_6px_16px_rgba(0,0,0,0.08),0_3px_6px_-4px_rgba(0,0,0,0.12),0_9px_28px_8px_rgba(0,0,0,0.05)]",
+        "wizard-modal-panel relative max-h-[calc(100vh-48px)] overflow-hidden rounded-lg bg-white px-6 py-5 font-pretendard text-sm leading-[22px] text-[#111] shadow-[0_6px_16px_rgba(0,0,0,0.08),0_3px_6px_-4px_rgba(0,0,0,0.12),0_9px_28px_8px_rgba(0,0,0,0.05)] outline-none",
         "pointer-events-auto min-w-0",
       )}
       style={{
@@ -210,10 +216,9 @@ function ModalBase({
   const content = (
     <div
       data-modal-root
-      className={twMerge("pointer-events-none fixed inset-0 font-pretendard", className)}
+      className="pointer-events-none fixed inset-0 font-pretendard"
       style={{
         zIndex,
-        ...style,
         display: open || rootVisible ? undefined : "none",
       }}
     >
@@ -238,39 +243,41 @@ function ModalBase({
           )}
         </CSSMotion>
       ) : null}
-      <CSSMotion
-        visible={open}
-        motionName="wizard-modal-motion"
-        motionDeadline={MOTION_DURATION_MID + 50}
-        forceRender={forceRender || !destroyOnHidden}
-        removeOnLeave={destroyOnHidden}
-        onAppearPrepare={prepareTransformOrigin}
-        onEnterPrepare={prepareTransformOrigin}
-        onVisibleChanged={(visible) => {
-          setRootVisible(visible);
-          if (visible) {
-            onAfterOpen?.();
-            return;
-          }
-          onAfterClose?.();
-          triggerRef.current?.focus();
-        }}
-      >
-        {({ className: motionClassName, style: motionStyle }, motionRef) => (
-          <div
-            ref={motionRef}
-            data-modal-motion
-            className={twMerge(
-              "pointer-events-none absolute inset-0 flex overflow-x-hidden overflow-y-auto px-4 py-6",
-              centered ? "items-center justify-center" : "items-start justify-center pt-[100px]",
-              motionClassName,
-            )}
-            style={motionStyle}
-          >
-            {panel}
-          </div>
-        )}
-      </CSSMotion>
+      {forceRender || open || hasOpened ? (
+        <CSSMotion
+          visible={open}
+          motionName="wizard-modal-motion"
+          motionDeadline={MOTION_DURATION_MID + 50}
+          forceRender={forceRender}
+          removeOnLeave={destroyOnHidden}
+          onAppearPrepare={prepareTransformOrigin}
+          onEnterPrepare={prepareTransformOrigin}
+          onVisibleChanged={(visible) => {
+            setRootVisible(visible);
+            if (visible) {
+              onAfterOpen?.();
+              return;
+            }
+            onAfterClose?.();
+            triggerRef.current?.focus();
+          }}
+        >
+          {({ className: motionClassName, style: motionStyle }, motionRef) => (
+            <div
+              ref={motionRef}
+              data-modal-motion
+              className={twMerge(
+                "pointer-events-none absolute inset-0 flex overflow-x-hidden overflow-y-auto px-4 py-6",
+                centered ? "items-center justify-center" : "items-start justify-center pt-[100px]",
+                motionClassName,
+              )}
+              style={motionStyle}
+            >
+              {panel}
+            </div>
+          )}
+        </CSSMotion>
+      ) : null}
     </div>
   );
   return typeof document === "undefined" ? content : createPortal(content, document.body);

@@ -24,6 +24,31 @@ describe("ColorPicker", () => {
     expect(document.querySelector("[data-colorpicker-popup]")).toBeInTheDocument();
   });
 
+  it("keeps the trigger focusable without opening while read only", async () => {
+    const onOpenChange = vi.fn();
+    const onChange = vi.fn();
+    render(
+      <ColorPicker
+        readOnly
+        defaultValue="#0062df"
+        showLabel
+        onOpenChange={onOpenChange}
+        onChange={onChange}
+      />,
+    );
+
+    const trigger = screen.getByRole("button", { name: /#0062DF/ });
+    expect(trigger).not.toBeDisabled();
+    expect(trigger).toHaveClass("cursor-default", "focus:border-[#0062df]", "focus:outline-none");
+
+    await userEvent.click(trigger);
+
+    expect(trigger).toHaveFocus();
+    expect(document.querySelector("[data-colorpicker-popup]")).not.toBeInTheDocument();
+    expect(onOpenChange).not.toHaveBeenCalled();
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
   it("uses defaultOpen and reports user-driven open changes", async () => {
     const onOpenChange = vi.fn();
     const { container } = render(<ColorPicker defaultOpen onOpenChange={onOpenChange} />);

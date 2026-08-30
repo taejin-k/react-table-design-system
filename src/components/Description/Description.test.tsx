@@ -49,18 +49,44 @@ describe("Description", () => {
     expect(screen.getByText("태진").closest("td")).toHaveClass("px-6", "py-4");
   });
 
-  it("keeps common labels and values on one line and uses single cell borders", () => {
+  it("keeps bordered content inside the parent width and uses single cell borders", () => {
     const { container } = render(
       <Description
         bordered
-        items={[{ key: "phone", label: "전화번호", children: "010-1234-5678" }]}
+        column={2}
+        items={[
+          { key: "phone", label: "전화번호", children: "010-1234-5678" },
+          {
+            key: "period",
+            label: "사용 기간",
+            children: "very-long-unbroken-description-value-that-must-stay-inside-the-cell",
+          },
+        ]}
       />,
     );
 
-    expect(screen.getByText("전화번호")).toHaveClass("whitespace-nowrap");
-    expect(screen.getByText("010-1234-5678")).toHaveClass("whitespace-nowrap");
+    expect(screen.getByText("전화번호")).toHaveClass("min-w-0", "[overflow-wrap:anywhere]");
+    expect(screen.getByText("사용 기간")).toHaveClass("min-w-0", "[overflow-wrap:anywhere]");
+    expect(screen.getByText(/very-long-unbroken/)).toHaveClass(
+      "min-w-0",
+      "[overflow-wrap:anywhere]",
+    );
+    expect(container.querySelectorAll("col")).toHaveLength(4);
+    expect(container.querySelectorAll("col")[0]).toHaveStyle({ width: "20%" });
+    expect(container.querySelectorAll("col")[1]).toHaveStyle({ width: "30%" });
     expect(container.querySelector("table")).toHaveClass("border-separate", "border-spacing-0");
     expect(container.querySelector("[data-description-view]")).toHaveClass("overflow-hidden");
+  });
+
+  it("reserves a transparent outer border when bordered is false", () => {
+    const { container } = render(
+      <Description items={[{ key: "name", label: "이름", children: "태진" }]} />,
+    );
+
+    expect(container.querySelector("[data-description-view]")).toHaveClass(
+      "border",
+      "border-transparent",
+    );
   });
 
   it("changes the default column count at responsive breakpoints", () => {

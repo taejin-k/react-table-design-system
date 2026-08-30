@@ -17,6 +17,7 @@ const alignItem =
 const label = "m-0 text-sm font-medium text-[#555]";
 const flexWrapOptions = [false, true, "nowrap", "wrap", "wrap-reverse"];
 const flexJustifyOptions = [
+  "normal",
   "flex-start",
   "center",
   "flex-end",
@@ -24,7 +25,7 @@ const flexJustifyOptions = [
   "space-around",
   "space-evenly",
 ];
-const flexAlignOptions = ["flex-start", "center", "flex-end", "stretch", "baseline"];
+const flexAlignOptions = ["normal", "flex-start", "center", "flex-end", "stretch", "baseline"];
 
 function JustifyExample({ value, gap }: { value: FlexProps["justify"]; gap: number }) {
   return (
@@ -39,11 +40,11 @@ function JustifyExample({ value, gap }: { value: FlexProps["justify"]; gap: numb
   );
 }
 
-function GapExample({ value, align }: { value: number; align: FlexProps["align"] }) {
+function GapExample({ value }: { value: number }) {
   return (
     <div className="grid gap-2">
       <p className={label}>gap={value}</p>
-      <Flex gap={value} align={align}>
+      <Flex gap={value}>
         <Button>첫 번째</Button>
         <Button>두 번째</Button>
         <Button>세 번째</Button>
@@ -534,10 +535,9 @@ function FlexValue() {
 };
 
 export const Gap: Story = {
-  args: { align: "center" },
   parameters: {
     ...storyDescription("components-flex--gap"),
-    controls: { disable: false, include: ["교차축 정렬"] },
+    controls: { disable: true },
     docs: {
       ...storyDescription("components-flex--gap").docs,
       source: {
@@ -585,12 +585,12 @@ export const Gap: Story = {
       },
     },
   },
-  render: (args) => (
+  render: () => (
     <div className="grid gap-6">
-      <GapExample value={0} align={args.align} />
-      <GapExample value={8} align={args.align} />
-      <GapExample value={16} align={args.align} />
-      <GapExample value={24} align={args.align} />
+      <GapExample value={0} />
+      <GapExample value={8} />
+      <GapExample value={16} />
+      <GapExample value={24} />
     </div>
   ),
 };

@@ -26,7 +26,7 @@ export const Toggle = forwardRef<HTMLButtonElement, ToggleProps>(
         }}
         className={twMerge(trackVariants({ size, checked, loading }), className)}
       >
-        <span className={knobVariants({ size, checked })}>
+        <span key={size} className={knobVariants({ size, checked })}>
           {loading ? (
             <Icon
               color={checked ? "#6ea0fa" : "#999"}

@@ -51,7 +51,7 @@ const meta = {
     items: { control: false, table: { disable: true } },
   },
   parameters: {
-    controls: { disable: false },
+    controls: { disable: false, include: ["아이콘 표시"] },
     docs: {
       description: {
         component:
@@ -154,7 +154,7 @@ export const WithIcons: Story = {
   },
   parameters: {
     ...storyDescription("components-breadcrumb--with-icons"),
-    controls: { disable: false },
+    controls: { disable: false, include: ["아이콘 표시"] },
     docs: {
       ...storyDescription("components-breadcrumb--with-icons").docs,
       source: {
@@ -230,7 +230,10 @@ export const ItemColors: Story = {
   },
   parameters: {
     ...storyDescription("components-breadcrumb--item-colors"),
-    controls: { disable: false },
+    controls: {
+      disable: false,
+      include: ["첫 번째 항목 색상", "두 번째 항목 색상", "현재 위치 색상"],
+    },
     docs: {
       ...storyDescription("components-breadcrumb--item-colors").docs,
       source: {

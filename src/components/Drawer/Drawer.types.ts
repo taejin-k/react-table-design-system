@@ -1,11 +1,7 @@
-import type { CSSProperties, MouseEvent, ReactNode } from "react";
+import type { MouseEvent, ReactNode } from "react";
 
 export type DrawerPlacementType = "top" | "right" | "bottom" | "left";
 export type DrawerSizeType = "default" | "large" | number | string;
-
-export interface DrawerPushConfig {
-  distance?: number | string;
-}
 
 export interface DrawerResizableConfig {
   min?: number;
@@ -21,22 +17,17 @@ export interface DrawerProps {
   children?: ReactNode;
   placement?: DrawerPlacementType;
   size?: DrawerSizeType;
-  width?: number | string;
-  height?: number | string;
   closable?: boolean;
   extra?: ReactNode;
   footer?: ReactNode;
-  loading?: boolean;
   keyboard?: boolean;
   mask?: boolean;
   scrollLock?: boolean;
   forceRender?: boolean;
   destroyOnHidden?: boolean;
-  push?: boolean | DrawerPushConfig;
+  push?: boolean;
   resizable?: boolean | DrawerResizableConfig;
   zIndex?: number;
-  className?: string;
-  style?: CSSProperties;
   onAfterClose?: () => void;
   onAfterOpen?: () => void;
   onClose?: (event: MouseEvent<HTMLButtonElement | HTMLDivElement> | KeyboardEvent) => void;

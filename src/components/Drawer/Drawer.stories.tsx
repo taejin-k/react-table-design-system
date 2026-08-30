@@ -10,6 +10,29 @@ import type { DrawerPlacementType, DrawerProps, DrawerSizeType } from "./Drawer.
 
 const drawerPlacements: DrawerPlacementType[] = ["top", "right", "bottom", "left"];
 const drawerSizes = ["default", "large", "number", "string"] satisfies readonly DrawerSizeType[];
+const resizeExamples = {
+  default: {
+    title: "기본 리사이즈",
+    placement: "right",
+    size: "default",
+    resizable: true,
+    guide: "왼쪽 가장자리를 드래그해요. 최소 크기는 기본값인 180px이에요.",
+  },
+  percent: {
+    title: "비율 크기와 제한",
+    placement: "right",
+    size: "50%",
+    resizable: { min: 320, max: 900 },
+    guide: "현재 50% 너비에서 시작하고 320~900px 안에서 조절돼요.",
+  },
+  bottom: {
+    title: "세로 리사이즈",
+    placement: "bottom",
+    size: 320,
+    resizable: { min: 200, max: 600 },
+    guide: "위쪽 가장자리를 드래그해 높이를 200~600px로 조절해요.",
+  },
+} as const;
 
 const storyDescription = (id: string) => ({
   docs: { description: { story: storyDescriptions[id] } },
@@ -27,10 +50,8 @@ const meta = {
     keyboard: { name: "Escape 닫기", control: "boolean" },
     mask: { name: "배경 마스크", control: "boolean" },
     scrollLock: { name: "스크롤 잠금", control: "boolean" },
-    loading: { name: "로딩", control: "boolean" },
     open: { control: false, table: { disable: true } },
     children: { control: false, table: { disable: true } },
-    className: { control: false, table: { disable: true } },
     onClose: { control: false, table: { disable: true } },
   },
   parameters: {
@@ -56,31 +77,20 @@ const meta = {
 | \`children\` | 본문 내용을 설정해요. | \`ReactNode\` | - |
 | \`placement\` | 열리는 방향을 설정해요. | [\`DrawerPlacementType\`](#drawer-placement-type) | \`right\` |
 | \`size\` | 기본·큰 크기 또는 직접 크기를 설정해요. | [\`DrawerSizeType\`](#drawer-size-type) | \`default\` |
-| \`width\` | 좌우 Drawer 너비를 설정해요. | \`number \\| string\` | - |
-| \`height\` | 상하 Drawer 높이를 설정해요. | \`number \\| string\` | - |
 | \`closable\` | 닫기 버튼을 표시해요. | \`boolean\` | \`true\` |
 | \`extra\` | header 오른쪽에 작업을 추가해요. | \`ReactNode\` | - |
 | \`footer\` | footer 내용을 설정해요. | \`ReactNode\` | - |
-| \`loading\` | 본문 로딩 상태를 표시해요. | \`boolean\` | \`false\` |
 | \`keyboard\` | Escape로 닫을 수 있게 해요. | \`boolean\` | \`true\` |
 | \`mask\` | 배경 마스크를 표시해요. | \`boolean\` | \`true\` |
 | \`scrollLock\` | 열려 있는 동안 문서 스크롤을 잠가요. | \`boolean\` | \`true\` |
 | \`forceRender\` | 닫힌 상태에서도 내용을 미리 렌더링해요. | \`boolean\` | \`false\` |
 | \`destroyOnHidden\` | 닫힌 뒤 내용을 제거해요. | \`boolean\` | \`false\` |
-| \`push\` | 중첩 Drawer의 이동 거리를 설정해요. | \`boolean \\|\` [\`DrawerPushConfig\`](#drawer-push-config) | \`{ distance: 180 }\` |
+| \`push\` | 자식 Drawer가 열릴 때 부모를 이동해요. | \`boolean\` | \`true\` |
 | \`resizable\` | 드래그 크기 조절을 설정해요. | \`boolean \\|\` [\`DrawerResizableConfig\`](#drawer-resizable-config) | \`false\` |
 | \`zIndex\` | 겹치는 순서를 설정해요. | \`number\` | \`1000\` |
-| \`className\` | 최상위 요소에 Tailwind 클래스를 추가해요. | \`string\` | - |
-| \`style\` | 최상위 요소에 인라인 스타일을 추가해요. | \`CSSProperties\` | - |
 | \`onAfterClose\` | 닫힘 애니메이션 뒤 실행해요. | \`() => void\` | - |
 | \`onAfterOpen\` | 열림 애니메이션 뒤 실행해요. | \`() => void\` | - |
 | \`onClose\` | 닫기 동작이 발생하면 실행해요. | \`(event) => void\` | - |
-
-### <span id="drawer-push-config">DrawerPushConfig</span>
-
-| Name | Description | Type | Default |
-| --- | --- | --- | --- |
-| \`distance\` | 부모 Drawer가 이동할 거리를 정해요. | \`number \\| string\` | \`180\` |
 
 ### <span id="drawer-resizable-config">DrawerResizableConfig</span>
 
@@ -120,6 +130,9 @@ export const Basic: Story = {
   },
   parameters: {
     ...storyDescription("components-drawer--basic"),
+    controls: {
+      include: ["제목", "위치", "크기", "닫기 버튼", "Escape 닫기", "배경 마스크", "스크롤 잠금"],
+    },
     docs: {
       ...storyDescription("components-drawer--basic").docs,
       source: {
@@ -157,6 +170,9 @@ export const Placements: Story = {
   args: { size: "default", closable: true, keyboard: true, mask: true, scrollLock: true },
   parameters: {
     ...storyDescription("components-drawer--placements"),
+    controls: {
+      include: ["크기", "닫기 버튼", "Escape 닫기", "배경 마스크", "스크롤 잠금"],
+    },
     docs: {
       ...storyDescription("components-drawer--placements").docs,
       source: {
@@ -175,7 +191,7 @@ function DrawerPlacements() {
     <>
       <div className="flex flex-wrap gap-2">
         {placements.map((item) => (
-          <Button key={item} variant="secondary" onClick={() => showDrawer(item)}>
+          <Button key={item} onClick={() => showDrawer(item)}>
             {item}
           </Button>
         ))}
@@ -210,7 +226,7 @@ function PlacementExample(args: Partial<DrawerProps>) {
     <>
       <div className="flex flex-wrap gap-2">
         {(["top", "right", "bottom", "left"] as const).map((item) => (
-          <Button key={item} variant="secondary" onClick={() => showDrawer(item)}>
+          <Button key={item} onClick={() => showDrawer(item)}>
             {item}
           </Button>
         ))}
@@ -228,27 +244,133 @@ function PlacementExample(args: Partial<DrawerProps>) {
   );
 }
 
-export const SizeAndResizable: Story = {
+export const Sizes: Story = {
   args: { placement: "right", closable: true, keyboard: true, mask: true, scrollLock: true },
   parameters: {
-    ...storyDescription("components-drawer--size-resizable"),
+    ...storyDescription("components-drawer--sizes"),
+    controls: {
+      include: ["위치", "닫기 버튼", "Escape 닫기", "배경 마스크", "스크롤 잠금"],
+    },
     docs: {
-      ...storyDescription("components-drawer--size-resizable").docs,
+      ...storyDescription("components-drawer--sizes").docs,
       source: {
-        code: withStoryImports(`function ResizableDrawer() {
+        code: withStoryImports(`function DrawerSizes() {
   const [open, setOpen] = useState(false);
+  const [size, setSize] = useState<DrawerSizeType>('default');
+
+  const showDrawer = (nextSize: DrawerSizeType) => {
+    setSize(nextSize);
+    setOpen(true);
+  };
 
   return (
     <>
-      <Button onClick={() => setOpen(true)}>크기 조절 Drawer</Button>
+      <div className="flex flex-wrap gap-2">
+        <Button onClick={() => showDrawer('default')}>
+          default
+        </Button>
+        <Button onClick={() => showDrawer('large')}>
+          large
+        </Button>
+        <Button onClick={() => showDrawer(520)}>
+          520px
+        </Button>
+      </div>
+      <Drawer open={open} title="크기 비교" size={size} onClose={() => setOpen(false)}>
+        선택한 크기로 열려요.
+      </Drawer>
+    </>
+  );
+}`),
+      },
+    },
+  },
+  render: (args) => <SizesExample {...args} />,
+};
+
+function SizesExample(args: Partial<DrawerProps>) {
+  const [open, setOpen] = useState(false);
+  const [size, setSize] = useState<DrawerSizeType>("default");
+
+  const showDrawer = (nextSize: DrawerSizeType) => {
+    setSize(nextSize);
+    setOpen(true);
+  };
+
+  return (
+    <>
+      <div className="flex flex-wrap gap-2">
+        <Button onClick={() => showDrawer("default")}>default</Button>
+        <Button onClick={() => showDrawer("large")}>large</Button>
+        <Button onClick={() => showDrawer(520)}>520px</Button>
+      </div>
+      <Drawer {...args} open={open} title="크기 비교" size={size} onClose={() => setOpen(false)}>
+        선택한 크기로 열려요.
+      </Drawer>
+    </>
+  );
+}
+
+export const Resizable: Story = {
+  args: { closable: true, keyboard: true, mask: true, scrollLock: true },
+  parameters: {
+    ...storyDescription("components-drawer--resizable"),
+    controls: {
+      include: ["닫기 버튼", "Escape 닫기", "배경 마스크", "스크롤 잠금"],
+    },
+    docs: {
+      ...storyDescription("components-drawer--resizable").docs,
+      source: {
+        code: withStoryImports(`const resizeExamples = {
+  default: {
+    title: '기본 리사이즈',
+    placement: 'right',
+    size: 'default',
+    resizable: true,
+    guide: '왼쪽 가장자리를 드래그해요. 최소 크기는 기본값인 180px이에요.',
+  },
+  percent: {
+    title: '비율 크기와 제한',
+    placement: 'right',
+    size: '50%',
+    resizable: { min: 320, max: 900 },
+    guide: '현재 50% 너비에서 시작하고 320~900px 안에서 조절돼요.',
+  },
+  bottom: {
+    title: '세로 리사이즈',
+    placement: 'bottom',
+    size: 320,
+    resizable: { min: 200, max: 600 },
+    guide: '위쪽 가장자리를 드래그해 높이를 200~600px로 조절해요.',
+  },
+} as const;
+
+function ResizableDrawer() {
+  const [open, setOpen] = useState(false);
+  const [example, setExample] = useState<keyof typeof resizeExamples>('default');
+  const current = resizeExamples[example];
+
+  const showDrawer = (nextExample: keyof typeof resizeExamples) => {
+    setExample(nextExample);
+    setOpen(true);
+  };
+
+  return (
+    <>
+      <div className="flex flex-wrap gap-2">
+        <Button onClick={() => showDrawer('default')}>기본</Button>
+        <Button onClick={() => showDrawer('percent')}>50% + min/max</Button>
+        <Button onClick={() => showDrawer('bottom')}>하단 320px</Button>
+      </div>
       <Drawer
         open={open}
-        title="크기 조절"
-        size="large"
-        resizable={{ min: 320, max: 800 }}
+        title={current.title}
+        placement={current.placement}
+        size={current.size}
+        resizable={current.resizable}
         onClose={() => setOpen(false)}
       >
-        왼쪽 가장자리를 드래그해요.
+        {current.guide}
       </Drawer>
     </>
   );
@@ -261,24 +383,37 @@ export const SizeAndResizable: Story = {
 
 function ResizableExample(args: Partial<DrawerProps>) {
   const [open, setOpen] = useState(false);
+  const [example, setExample] = useState<keyof typeof resizeExamples>("default");
+  const current = resizeExamples[example];
+
+  const showDrawer = (nextExample: keyof typeof resizeExamples) => {
+    setExample(nextExample);
+    setOpen(true);
+  };
+
   return (
     <>
-      <Button onClick={() => setOpen(true)}>크기 조절 Drawer</Button>
+      <div className="flex flex-wrap gap-2">
+        <Button onClick={() => showDrawer("default")}>기본</Button>
+        <Button onClick={() => showDrawer("percent")}>50% + min/max</Button>
+        <Button onClick={() => showDrawer("bottom")}>하단 320px</Button>
+      </div>
       <Drawer
         {...args}
         open={open}
-        title="크기 조절"
-        size="large"
-        resizable={{ min: 320, max: 800 }}
+        title={current.title}
+        placement={current.placement}
+        size={current.size}
+        resizable={current.resizable}
         onClose={() => setOpen(false)}
       >
-        왼쪽 가장자리를 드래그해요.
+        {current.guide}
       </Drawer>
     </>
   );
 }
 
-export const ExtraFooterAndLoading: Story = {
+export const HeaderAndFooter: Story = {
   args: {
     placement: "right",
     size: "default",
@@ -288,9 +423,12 @@ export const ExtraFooterAndLoading: Story = {
     scrollLock: true,
   },
   parameters: {
-    ...storyDescription("components-drawer--extra-footer-loading"),
+    ...storyDescription("components-drawer--header-footer"),
+    controls: {
+      include: ["위치", "크기", "닫기 버튼", "Escape 닫기", "배경 마스크", "스크롤 잠금"],
+    },
     docs: {
-      ...storyDescription("components-drawer--extra-footer-loading").docs,
+      ...storyDescription("components-drawer--header-footer").docs,
       source: {
         code: withStoryImports(`function DrawerLayout() {
   const [open, setOpen] = useState(false);
@@ -301,15 +439,16 @@ export const ExtraFooterAndLoading: Story = {
       <Drawer
         open={open}
         title="상세 정보"
-        loading
-        extra={<Button size="sm">편집</Button>}
+        extra={<Button>편집</Button>}
         footer={
           <div className="flex justify-end">
             <Button onClick={() => setOpen(false)}>확인</Button>
           </div>
         }
         onClose={() => setOpen(false)}
-      />
+      >
+        구성원의 상세 정보를 확인하고 수정할 수 있어요.
+      </Drawer>
     </>
   );
 }`),
@@ -328,15 +467,90 @@ function LayoutExample(args: Partial<DrawerProps>) {
         {...args}
         open={open}
         title="상세 정보"
-        loading
-        extra={<Button size="sm">편집</Button>}
+        extra={<Button>편집</Button>}
         footer={
           <div className="flex justify-end">
             <Button onClick={() => setOpen(false)}>확인</Button>
           </div>
         }
         onClose={() => setOpen(false)}
-      />
+      >
+        구성원의 상세 정보를 확인하고 수정할 수 있어요.
+      </Drawer>
+    </>
+  );
+}
+
+export const ScrollableContent: Story = {
+  args: {
+    placement: "right",
+    size: "default",
+    closable: true,
+    keyboard: true,
+    mask: true,
+    scrollLock: true,
+  },
+  parameters: {
+    ...storyDescription("components-drawer--scrollable"),
+    controls: {
+      include: ["위치", "크기", "닫기 버튼", "Escape 닫기", "배경 마스크", "스크롤 잠금"],
+    },
+    docs: {
+      ...storyDescription("components-drawer--scrollable").docs,
+      source: {
+        code: withStoryImports(`function ScrollableDrawer() {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <>
+      <Button onClick={() => setOpen(true)}>긴 본문 Drawer</Button>
+      <Drawer
+        open={open}
+        title="활동 기록"
+        footer={
+          <div className="flex justify-end">
+            <Button onClick={() => setOpen(false)}>확인</Button>
+          </div>
+        }
+        onClose={() => setOpen(false)}
+      >
+        <div className="space-y-4">
+          {Array.from({ length: 50 }, (_, index) => (
+            <p key={index}>활동 기록 {index + 1}</p>
+          ))}
+        </div>
+      </Drawer>
+    </>
+  );
+}`),
+      },
+    },
+  },
+  render: (args) => <ScrollableExample {...args} />,
+};
+
+function ScrollableExample(args: Partial<DrawerProps>) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <Button onClick={() => setOpen(true)}>긴 본문 Drawer</Button>
+      <Drawer
+        {...args}
+        open={open}
+        title="활동 기록"
+        footer={
+          <div className="flex justify-end">
+            <Button onClick={() => setOpen(false)}>확인</Button>
+          </div>
+        }
+        onClose={() => setOpen(false)}
+      >
+        <div className="space-y-4">
+          {Array.from({ length: 50 }, (_, index) => (
+            <p key={index}>활동 기록 {index + 1}</p>
+          ))}
+        </div>
+      </Drawer>
     </>
   );
 }
@@ -352,6 +566,9 @@ export const Nested: Story = {
   },
   parameters: {
     ...storyDescription("components-drawer--nested"),
+    controls: {
+      include: ["위치", "크기", "닫기 버튼", "Escape 닫기", "배경 마스크", "스크롤 잠금"],
+    },
     docs: {
       ...storyDescription("components-drawer--nested").docs,
       source: {

@@ -18,6 +18,7 @@ export interface ColorPickerProps {
   defaultFormat?: ColorFormatType;
   size?: ColorPickerSizeType;
   disabled?: boolean;
+  readOnly?: boolean;
   allowClear?: boolean;
   open?: boolean;
   defaultOpen?: boolean;

@@ -80,7 +80,7 @@ describe("Table regressions", () => {
       />,
     );
 
-    expect(container.querySelector("tbody td")).not.toHaveClass("border-b");
+    expect(container.querySelector("tbody td")).toHaveClass("border-b", "border-transparent");
     expect(container.querySelector(".rounded-lg.bg-white")).toHaveClass(
       "border",
       "border-[#f0f0f0]",
@@ -1309,6 +1309,30 @@ describe("Table regressions", () => {
     expect(container.querySelector("table")).toHaveClass(
       "[&>thead>tr>th:not(:last-child)]:border-r",
       "[&>tbody>tr>td:not(:last-child)]:border-r",
+    );
+  });
+
+  it("reserves transparent outer and cell borders when bordered is false", () => {
+    const { container } = render(
+      <Table
+        columns={[
+          { title: "이름", dataIndex: "name" },
+          { title: "팀", dataIndex: "team" },
+        ]}
+        dataSource={rows}
+        pagination={false}
+      />,
+    );
+
+    expect(container.querySelector(".rounded-lg.bg-white")).toHaveClass(
+      "border",
+      "border-transparent",
+    );
+    expect(container.querySelector("table")).toHaveClass(
+      "[&>thead>tr>th:not(:last-child)]:border-r",
+      "[&>thead>tr>th:not(:last-child)]:border-r-transparent",
+      "[&>tbody>tr>td:not(:last-child)]:border-r",
+      "[&>tbody>tr>td:not(:last-child)]:border-r-transparent",
     );
   });
 

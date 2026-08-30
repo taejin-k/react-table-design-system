@@ -1,9 +1,66 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { TimePicker } from "./TimePicker";
 
 describe("TimePicker", () => {
+  it("uses the first 24-hour option as the initial time", async () => {
+    const user = userEvent.setup();
+    render(<TimePicker />);
+
+    await user.click(screen.getByRole("button", { name: "시간을 선택하세요" }));
+    const popup = document.querySelector("[data-timepicker-popup]") as HTMLElement;
+    const hourColumn = popup.querySelector('[data-time-column="hour"]') as HTMLElement;
+
+    expect(within(hourColumn).getByRole("button", { name: "00" })).toHaveClass("bg-[#e6f4ff]");
+  });
+
+  it("uses 01 AM as the initial 12-hour option", async () => {
+    const user = userEvent.setup();
+    render(<TimePicker use12Hours />);
+
+    await user.click(screen.getByRole("button", { name: "시간을 선택하세요" }));
+    const popup = document.querySelector("[data-timepicker-popup]") as HTMLElement;
+    const hourColumn = popup.querySelector('[data-time-column="hour"]') as HTMLElement;
+
+    expect(within(hourColumn).getByRole("button", { name: "01" })).toHaveClass("bg-[#e6f4ff]");
+    expect(within(popup).getByRole("button", { name: "AM" })).toHaveClass("bg-[#e6f4ff]");
+  });
+
+  it("resets the open time panel when the value is cleared", async () => {
+    const user = userEvent.setup();
+    render(<TimePicker defaultValue="10:25:10" />);
+
+    const trigger = screen.getByRole("button", { name: /10:25:10/ });
+    await user.click(trigger);
+    await user.click(trigger.querySelector("svg") as Element);
+
+    const hourColumn = document.querySelector('[data-time-column="hour"]') as HTMLElement;
+    const minuteColumn = document.querySelector('[data-time-column="minute"]') as HTMLElement;
+    const secondColumn = document.querySelector('[data-time-column="second"]') as HTMLElement;
+    expect(within(hourColumn).getByRole("button", { name: "00" })).toHaveClass("bg-[#e6f4ff]");
+    expect(within(minuteColumn).getByRole("button", { name: "00" })).toHaveClass("bg-[#e6f4ff]");
+    expect(within(secondColumn).getByRole("button", { name: "00" })).toHaveClass("bg-[#e6f4ff]");
+    expect(screen.getByRole("button", { name: "시간을 선택하세요" })).toBeInTheDocument();
+  });
+
+  it("resets to the first available time when the initial time is disabled", async () => {
+    const user = userEvent.setup();
+    render(
+      <TimePicker
+        defaultValue="10:25:10"
+        disabledTime={() => ({ disabledHours: () => [0, 1, 2] })}
+      />,
+    );
+
+    const trigger = screen.getByRole("button", { name: /10:25:10/ });
+    await user.click(trigger);
+    await user.click(trigger.querySelector("svg") as Element);
+
+    const hourColumn = document.querySelector('[data-time-column="hour"]') as HTMLElement;
+    expect(within(hourColumn).getByRole("button", { name: "03" })).toHaveClass("bg-[#e6f4ff]");
+  });
+
   it("selects time values", async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
@@ -14,6 +71,38 @@ describe("TimePicker", () => {
     const tens = within(popup).getAllByRole("button", { name: "10" });
     await user.click(tens[0]);
     expect(onChange).toHaveBeenCalledWith("10:00:00", "10:00:00");
+  });
+
+  it("uses the same hover and active colors as Select", async () => {
+    const user = userEvent.setup();
+    render(<TimePicker defaultValue="09:00:00" />);
+
+    await user.click(screen.getByRole("button", { name: /09:00:00/ }));
+    const popup = document.querySelector("[data-timepicker-popup]") as HTMLElement;
+    const hourColumn = popup.querySelector('[data-time-column="hour"]') as HTMLElement;
+    const selectedHour = within(hourColumn).getByRole("button", { name: "09" });
+    const unselectedHour = within(hourColumn).getByRole("button", { name: "10" });
+
+    expect(selectedHour).toHaveClass("bg-[#e6f4ff]", "text-[#0062df]", "hover:bg-[#e6f4ff]");
+    expect(unselectedHour).toHaveClass("hover:bg-[#f5f5f5]");
+  });
+
+  it("keeps the filled background and focus style while read only", async () => {
+    const user = userEvent.setup();
+    render(<TimePicker variant="filled" readOnly defaultValue="08:30:00" />);
+
+    const trigger = screen.getByRole("button", { name: /08:30:00/ });
+    expect(trigger).not.toBeDisabled();
+    expect(trigger).toHaveClass(
+      "border-[#f5f5f5]",
+      "bg-[#f5f5f5]",
+      "focus:border-[#0062df]",
+      "focus:outline-none",
+    );
+
+    await user.click(trigger);
+    expect(trigger).toHaveFocus();
+    expect(document.querySelector("[data-timepicker-popup]")).not.toBeInTheDocument();
   });
 
   it("waits for confirmation when requested", async () => {
@@ -61,6 +150,19 @@ describe("TimePicker", () => {
     expect(within(popup).getAllByRole("button", { name: "01" })[0]).toBeDisabled();
   });
 
+  it("hides disabled values with hideDisabled", async () => {
+    const user = userEvent.setup();
+    render(<TimePicker hideDisabled disabledTime={() => ({ disabledHours: () => [0, 1, 2] })} />);
+
+    await user.click(screen.getByRole("button", { name: "시간을 선택하세요" }));
+    const hourColumn = document.querySelector('[data-time-column="hour"]') as HTMLElement;
+
+    expect(within(hourColumn).queryByRole("button", { name: "00" })).not.toBeInTheDocument();
+    expect(within(hourColumn).queryByRole("button", { name: "01" })).not.toBeInTheDocument();
+    expect(within(hourColumn).queryByRole("button", { name: "02" })).not.toBeInTheDocument();
+    expect(within(hourColumn).getByRole("button", { name: "03" })).toBeInTheDocument();
+  });
+
   it("uses hidden scrollbars with an edge fade", async () => {
     const user = userEvent.setup();
     render(<TimePicker />);
@@ -69,5 +171,27 @@ describe("TimePicker", () => {
     const hourColumn = document.querySelector('[data-time-column="hour"]') as HTMLElement;
     expect(hourColumn).toHaveClass("wizard-scrollbar-hidden");
     expect(hourColumn.parentElement?.lastElementChild).toHaveClass("bg-gradient-to-t");
+  });
+
+  it("opens each column at its selected time", async () => {
+    const user = userEvent.setup();
+    render(<TimePicker defaultValue="10:25:10" />);
+
+    const trigger = screen.getByRole("button", { name: /10:25:10/ });
+    await user.click(trigger);
+
+    const hourColumn = document.querySelector<HTMLElement>('[data-time-column="hour"]');
+    expect(hourColumn?.scrollTop).toBe(360);
+    expect(document.querySelector<HTMLElement>('[data-time-column="minute"]')?.scrollTop).toBe(900);
+    expect(document.querySelector<HTMLElement>('[data-time-column="second"]')?.scrollTop).toBe(360);
+
+    await user.click(within(hourColumn as HTMLElement).getByRole("button", { name: "11" }));
+    expect(hourColumn?.scrollTop).toBe(360);
+
+    await user.click(trigger);
+    await waitFor(() => expect(document.querySelector("[data-timepicker-popup]")).toBeNull());
+    await user.click(trigger);
+
+    expect(document.querySelector<HTMLElement>('[data-time-column="hour"]')?.scrollTop).toBe(396);
   });
 });

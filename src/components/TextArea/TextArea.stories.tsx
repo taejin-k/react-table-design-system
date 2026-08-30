@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Description, Markdown, Stories, Title } from "@storybook/addon-docs/blocks";
 import type { Meta, StoryObj } from "@storybook/react";
 import { storyDescriptions } from "../../storybook/story-descriptions";
@@ -27,6 +27,7 @@ const meta = {
   component: TextArea,
   tags: ["autodocs"],
   argTypes: {
+    value: { name: "입력값", control: "text" },
     defaultValue: { name: "초기값", control: "text" },
     size: { name: "크기", control: "select", options: sizes },
     variant: {
@@ -50,11 +51,11 @@ const meta = {
     width: { name: "가로 길이", control: { type: "number", min: 1 } },
     disabled: { name: "비활성", control: "boolean" },
     readOnly: { name: "읽기 전용", control: "boolean" },
-    className: { control: false },
-    validate: { control: false },
-    onBlur: { control: false },
-    onChange: { control: false },
-    onEnter: { control: false },
+    className: { control: false, table: { disable: true } },
+    validate: { control: false, table: { disable: true } },
+    onBlur: { control: false, table: { disable: true } },
+    onChange: { control: false, table: { disable: true } },
+    onEnter: { control: false, table: { disable: true } },
   },
   parameters: {
     controls: { disable: false },
@@ -362,7 +363,7 @@ export const StaticError: Story = {
 };
 
 export const ClientError: Story = {
-  args: { label: "요청 내용", required: true },
+  args: { label: "요청 내용", required: true, value: "" },
   parameters: {
     ...storySource(
       "components-textarea--client-error",
@@ -386,15 +387,33 @@ function RequestTextArea() {
   );
 }`,
     ),
+    controls: {
+      disable: false,
+      include: ["입력값", "레이블", "필수 표시"],
+    },
   },
   render: function ClientErrorStory(args) {
-    const [content, setContent] = useState("");
-    return <TextArea {...args} value={content} validate={validateRequest} onChange={setContent} />;
+    const { value: controlledValue = "", onChange, ...textAreaProps } = args;
+    const [content, setContent] = useState(controlledValue);
+
+    useEffect(() => setContent(controlledValue), [controlledValue]);
+
+    return (
+      <TextArea
+        {...textAreaProps}
+        value={content}
+        validate={validateRequest}
+        onChange={(nextValue) => {
+          setContent(nextValue);
+          onChange?.(nextValue);
+        }}
+      />
+    );
   },
 };
 
 export const ServerError: Story = {
-  args: { label: "요청 내용" },
+  args: { label: "요청 내용", value: "이미 등록된 요청", variant: "default" },
   parameters: {
     ...storySource(
       "components-textarea--server-error",
@@ -416,15 +435,26 @@ function ServerErrorTextArea() {
   );
 }`,
     ),
+    controls: {
+      disable: false,
+      include: ["입력값", "레이블", "표현 방식"],
+    },
   },
   render: function ServerErrorStory(args) {
-    const [content, setContent] = useState("이미 등록된 요청");
+    const { value: controlledValue = "", onChange, ...textAreaProps } = args;
+    const [content, setContent] = useState(controlledValue);
+
+    useEffect(() => setContent(controlledValue), [controlledValue]);
+
     return (
       <TextArea
-        {...args}
+        {...textAreaProps}
         value={content}
         validate={checkRequestAvailability}
-        onChange={setContent}
+        onChange={(nextValue) => {
+          setContent(nextValue);
+          onChange?.(nextValue);
+        }}
       />
     );
   },

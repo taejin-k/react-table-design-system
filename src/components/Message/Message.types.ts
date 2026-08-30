@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from "react";
+import type { ReactNode } from "react";
 
 export type MessageStatusType = "success" | "error" | "info" | "warning" | "loading";
 export type MessageKeyType = string | number;
@@ -10,7 +10,6 @@ export interface MessageArgsProps {
   icon?: ReactNode;
   key?: MessageKeyType;
   pauseOnHover?: boolean;
-  style?: CSSProperties;
   onClick?: () => void;
   onClose?: () => void;
 }

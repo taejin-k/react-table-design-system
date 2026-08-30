@@ -4,22 +4,23 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { storyDescriptions } from "../../storybook/story-descriptions";
 import { withStoryImports } from "../../storybook/story-source";
 import { TypeTokens } from "../../storybook/type-tokens";
-import { Icon } from "../Icon";
 import { TimePicker } from "./TimePicker";
 import type {
   TimePickerPlacementType,
   TimePickerSizeType,
+  TimePickerValueType,
   TimePickerVariantType,
 } from "./TimePicker.types";
 
 const timePickerSizes: TimePickerSizeType[] = ["lg", "md", "sm"];
-const timePickerVariants: TimePickerVariantType[] = ["default", "outlined", "filled"];
+const timePickerVariants: TimePickerVariantType[] = ["default", "filled"];
 const timePickerPlacements: TimePickerPlacementType[] = [
   "topLeft",
   "topRight",
   "bottomLeft",
   "bottomRight",
 ];
+const timePickerValueTypes = ["string", "null"];
 
 const storyDescription = (id: string) => ({
   docs: { description: { story: storyDescriptions[id] } },
@@ -43,7 +44,7 @@ const meta = {
     variant: {
       name: "표현 방식",
       control: "select",
-      options: ["default", "outlined", "filled"],
+      options: timePickerVariants,
     },
     placeholder: { name: "안내 문구", control: "text" },
     label: { name: "레이블", control: "text" },
@@ -78,8 +79,8 @@ const meta = {
 
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
-| \`value\` | 선택값을 HH:mm:ss 문자열로 관리해요. | \`string \\| null\` | - |
-| \`defaultValue\` | 처음 선택할 시간을 설정해요. | \`string\` | - |
+| \`value\` | 선택값을 HH:mm:ss 문자열로 관리해요. | [\`TimePickerValueType\`](#time-picker-value-type) | - |
+| \`defaultValue\` | 처음 선택할 시간을 설정해요. | [\`TimePickerValueType\`](#time-picker-value-type) | - |
 | \`placeholder\` | 선택 전 안내 문구를 설정해요. | \`string\` | \`시간을 선택하세요\` |
 | \`format\` | 표시할 시간 형식을 설정해요. | \`string\` | \`HH:mm:ss\` |
 | \`size\` | TimePicker의 크기를 설정해요. | [\`TimePickerSizeType\`](#time-picker-size-type) | \`md\` |
@@ -92,14 +93,12 @@ const meta = {
 | \`needConfirm\` | 확인을 눌러야 선택값을 반영해요. | \`boolean\` | \`false\` |
 | \`changeOnScroll\` | 시간 목록을 스크롤할 때 값을 변경해요. | \`boolean\` | \`false\` |
 | \`disabledTime\` | 선택할 수 없는 시·분·초를 설정해요. | \`(now: Date) => DisabledTime\` | - |
-| \`hideDisabledOptions\` | 비활성 시간 항목을 목록에서 숨겨요. | \`boolean\` | \`false\` |
+| \`hideDisabled\` | 비활성 시간 항목을 목록에서 숨겨요. | \`boolean\` | \`false\` |
 | \`showNow\` | 현재 시간 버튼을 표시해요. | \`boolean\` | \`true\` |
 | \`allowClear\` | 선택값을 지우는 버튼을 표시해요. | \`boolean \\| { clearIcon }\` | \`true\` |
 | \`disabled\` | 시간 선택과 열기 동작을 비활성화해요. | \`boolean\` | \`false\` |
 | \`readOnly\` | 선택값을 읽기 전용으로 표시해요. | \`boolean\` | \`false\` |
 | \`width\` | TimePicker의 가로 길이를 설정해요. | \`number \\| string\` | \`100%\` |
-| \`prefix\` | 선택 영역 앞에 추가 내용을 표시해요. | \`ReactNode\` | - |
-| \`suffixIcon\` | 시간 아이콘을 변경해요. | \`ReactNode\` | - |
 | \`previewValue\` | 항목 hover 중 선택 전 값을 미리 보여줘요. | \`false \\| hover\` | \`false\` |
 | \`renderExtraFooter\` | 목록 아래에 추가 내용을 표시해요. | \`() => ReactNode\` | - |
 | \`cellRender\` | 시간 항목의 내용을 직접 구성해요. | \`(current, info) => ReactNode\` | - |
@@ -122,15 +121,6 @@ const meta = {
 | \`disabledMinutes\` | 선택한 시에 따라 선택할 수 없는 분 목록을 반환해요. | \`(selectedHour: number) => number[]\` | - |
 | \`disabledSeconds\` | 선택한 시와 분에 따라 선택할 수 없는 초 목록을 반환해요. | \`(selectedHour: number, selectedMinute: number) => number[]\` | - |
 
-### RangePicker
-
-| Name | Description | Type | Default |
-| --- | --- | --- | --- |
-| \`value\` | 시작 시간과 종료 시간을 관리해요. | \`[string \\| null, string \\| null]\` | - |
-| \`defaultValue\` | 처음 선택할 시작 시간과 종료 시간을 설정해요. | \`[string \\| null, string \\| null]\` | - |
-| \`placeholder\` | 두 입력 영역의 안내 문구를 설정해요. | \`[string, string]\` | \`['시작 시간', '종료 시간']\` |
-| \`onChange\` | 시간 범위가 바뀔 때 실행할 함수예요. | \`(value, timeStrings) => void\` | - |
-| \`onCalendarChange\` | 시작 시간이나 종료 시간을 선택할 때 실행해요. | \`(value, timeStrings, info) => void\` | - |
           `}</Markdown>
           <h2 className="component-docs-types-heading">Types</h2>
           <h3 id="time-picker-size-type">TimePickerSizeType</h3>
@@ -142,6 +132,9 @@ const meta = {
           <h3 id="time-picker-placement-type">TimePickerPlacementType</h3>
           <p>시간 패널 위치를 선택해요.</p>
           <TypeTokens values={timePickerPlacements} />
+          <h3 id="time-picker-value-type">TimePickerValueType</h3>
+          <p>TimePicker의 선택값이에요.</p>
+          <TypeTokens values={timePickerValueTypes} />
         </div>
       ),
     },
@@ -152,17 +145,49 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Basic: Story = {
-  args: { placeholder: "시간을 선택하세요" },
+  args: {
+    size: "md",
+    variant: "default",
+    placeholder: "시간을 선택하세요",
+    label: "",
+    errorMessage: "",
+    required: false,
+    allowClear: true,
+    use12Hours: false,
+    showSecond: true,
+    needConfirm: false,
+    readOnly: false,
+    disabled: false,
+    width: 320,
+  },
   parameters: {
     ...storySource("components-timepicker--basic", "<TimePicker width={320} />"),
-    controls: { disable: false },
+    controls: {
+      include: [
+        "크기",
+        "표현 방식",
+        "안내 문구",
+        "레이블",
+        "오류 문구",
+        "필수 표시",
+        "지우기",
+        "12시간제",
+        "초",
+        "확인 버튼",
+        "읽기 전용",
+        "비활성",
+        "가로 길이",
+      ],
+    },
   },
-  render: (args) => <TimePicker {...args} width={320} />,
+  render: (args) => <TimePicker {...args} />,
 };
 
 export const Sizes: Story = {
+  argTypes: { size: { control: false, table: { disable: true } } },
   parameters: {
     ...storyDescription("components-timepicker--sizes"),
+    controls: { disable: true },
     docs: {
       ...storyDescription("components-timepicker--sizes").docs,
       source: {
@@ -208,8 +233,16 @@ export const Widths: Story = {
 };
 
 export const States: Story = {
+  args: {
+    size: "md",
+    variant: "default",
+  },
   parameters: {
     ...storyDescription("components-timepicker--states"),
+    controls: {
+      disable: false,
+      include: ["크기", "표현 방식", "가로 길이"],
+    },
     docs: {
       ...storyDescription("components-timepicker--states").docs,
       source: {
@@ -231,8 +264,31 @@ export const States: Story = {
 };
 
 export const Variants: Story = {
+  args: {
+    size: "md",
+    allowClear: true,
+    use12Hours: false,
+    showSecond: true,
+    needConfirm: false,
+    readOnly: false,
+    disabled: false,
+    width: 320,
+  },
+  argTypes: { placeholder: { control: false, table: { disable: true } } },
   parameters: {
     ...storyDescription("components-timepicker--variants"),
+    controls: {
+      include: [
+        "크기",
+        "지우기",
+        "12시간제",
+        "초",
+        "확인 버튼",
+        "읽기 전용",
+        "비활성",
+        "가로 길이",
+      ],
+    },
     docs: {
       ...storyDescription("components-timepicker--variants").docs,
       source: {
@@ -252,8 +308,36 @@ export const Variants: Story = {
 };
 
 export const StaticError: Story = {
+  args: {
+    size: "md",
+    variant: "default",
+    allowClear: true,
+    use12Hours: false,
+    showSecond: true,
+    needConfirm: false,
+    readOnly: false,
+    disabled: false,
+  },
+  argTypes: {
+    label: { control: false, table: { disable: true } },
+    errorMessage: { control: false, table: { disable: true } },
+    required: { control: false, table: { disable: true } },
+    width: { control: false, table: { disable: true } },
+  },
   parameters: {
     ...storyDescription("components-timepicker--static-error"),
+    controls: {
+      include: [
+        "크기",
+        "표현 방식",
+        "지우기",
+        "12시간제",
+        "초",
+        "확인 버튼",
+        "읽기 전용",
+        "비활성",
+      ],
+    },
     docs: {
       ...storyDescription("components-timepicker--static-error").docs,
       source: {
@@ -280,6 +364,7 @@ export const StaticError: Story = {
 export const FormatAndSteps: Story = {
   parameters: {
     ...storyDescription("components-timepicker--format-and-steps"),
+    controls: { disable: true },
     docs: {
       ...storyDescription("components-timepicker--format-and-steps").docs,
       source: {
@@ -300,51 +385,11 @@ export const FormatAndSteps: Story = {
   ),
 };
 
-export const Range: Story = {
-  args: {
-    size: "md",
-    variant: "default",
-    disabled: false,
-    readOnly: false,
-    allowClear: true,
-    width: 576,
-  },
-  parameters: {
-    ...storyDescription("components-timepicker--range"),
-    docs: {
-      ...storyDescription("components-timepicker--range").docs,
-      source: {
-        code: withStoryImports(`function WorkingHours() {
-  const [hours, setHours] = useState<[string | null, string | null]>([
-    '09:00:00',
-    '18:00:00',
-  ]);
-
-  return <TimePicker.RangePicker width={576} value={hours} onChange={setHours} />;
-}`),
-      },
-    },
-  },
-  render: function TimeRangeStory(args) {
-    const [hours, setHours] = useState<[string | null, string | null]>(["09:00:00", "18:00:00"]);
-    return (
-      <TimePicker.RangePicker
-        size={args.size}
-        variant={args.variant}
-        disabled={args.disabled}
-        readOnly={args.readOnly}
-        allowClear={args.allowClear}
-        width={args.width}
-        value={hours}
-        onChange={setHours}
-      />
-    );
-  },
-};
-
 export const DisabledTime: Story = {
+  argTypes: { width: { control: false, table: { disable: true } } },
   parameters: {
     ...storyDescription("components-timepicker--disabled-time"),
+    controls: { disable: true },
     docs: {
       ...storyDescription("components-timepicker--disabled-time").docs,
       source: {
@@ -370,38 +415,45 @@ export const DisabledTime: Story = {
   ),
 };
 
-export const HideDisabledOptions: Story = {
-  parameters: storySource(
-    "components-timepicker--hide-disabled-options",
-    `<TimePicker
+export const HideDisabled: Story = {
+  argTypes: { width: { control: false, table: { disable: true } } },
+  parameters: {
+    ...storySource(
+      "components-timepicker--hide-disabled",
+      `<TimePicker
   width={320}
-  hideDisabledOptions
+  hideDisabled
   disabledTime={() => ({
     disabledHours: () => Array.from({ length: 9 }, (_, index) => index),
   })}
 />`,
-  ),
+    ),
+    controls: { disable: true },
+  },
   render: (args) => (
     <TimePicker
       {...args}
       width={320}
-      hideDisabledOptions
+      hideDisabled
       disabledTime={() => ({ disabledHours: () => Array.from({ length: 9 }, (_, index) => index) })}
     />
   ),
 };
 
 export const ShowNowAndExtraFooter: Story = {
-  parameters: storySource(
-    "components-timepicker--show-now-and-footer",
-    `<div className="grid max-w-xs gap-3">
+  parameters: {
+    ...storySource(
+      "components-timepicker--show-now-and-footer",
+      `<div className="grid max-w-xs gap-3">
   <TimePicker />
   <TimePicker
     showNow={false}
     renderExtraFooter={() => '운영 시간: 09:00-18:00'}
   />
 </div>`,
-  ),
+    ),
+    controls: { disable: true },
+  },
   render: (args) => (
     <div className="grid max-w-xs gap-3">
       <TimePicker {...args} />
@@ -411,9 +463,11 @@ export const ShowNowAndExtraFooter: Story = {
 };
 
 export const CustomCell: Story = {
-  parameters: storySource(
-    "components-timepicker--custom-cell",
-    `<TimePicker
+  argTypes: { width: { control: false, table: { disable: true } } },
+  parameters: {
+    ...storySource(
+      "components-timepicker--custom-cell",
+      `<TimePicker
   width={320}
   minuteStep={10}
   cellRender={(current, { originNode, subType }) => (
@@ -422,7 +476,9 @@ export const CustomCell: Story = {
     </strong>
   )}
 />`,
-  ),
+    ),
+    controls: { disable: true },
+  },
   render: (args) => (
     <TimePicker
       {...args}
@@ -438,38 +494,27 @@ export const CustomCell: Story = {
 };
 
 export const PreviewOnHover: Story = {
-  parameters: storySource(
-    "components-timepicker--preview-on-hover",
-    '<TimePicker width={320} previewValue="hover" />',
-  ),
+  argTypes: { width: { control: false, table: { disable: true } } },
+  parameters: {
+    ...storySource(
+      "components-timepicker--preview-on-hover",
+      '<TimePicker width={320} previewValue="hover" />',
+    ),
+    controls: { disable: true },
+  },
   render: (args) => <TimePicker {...args} width={320} previewValue="hover" />,
 };
 
 export const ChangeOnScroll: Story = {
-  parameters: storySource(
-    "components-timepicker--change-on-scroll",
-    "<TimePicker width={320} changeOnScroll minuteStep={5} />",
-  ),
+  argTypes: { width: { control: false, table: { disable: true } } },
+  parameters: {
+    ...storySource(
+      "components-timepicker--change-on-scroll",
+      "<TimePicker width={320} changeOnScroll minuteStep={5} />",
+    ),
+    controls: { disable: true },
+  },
   render: (args) => <TimePicker {...args} width={320} changeOnScroll minuteStep={5} />,
-};
-
-export const PrefixAndSuffix: Story = {
-  parameters: storySource(
-    "components-timepicker--prefix-and-suffix",
-    `<TimePicker
-  width={320}
-  prefix={<span>시작</span>}
-  suffixIcon={<Icon icon="clock-outlined" />}
-/>`,
-  ),
-  render: (args) => (
-    <TimePicker
-      {...args}
-      width={320}
-      prefix={<span>시작</span>}
-      suffixIcon={<Icon icon="clock-outlined" />}
-    />
-  ),
 };
 
 export const Controlled: Story = {
@@ -479,32 +524,53 @@ export const Controlled: Story = {
     disabled: false,
     readOnly: false,
     allowClear: true,
+    use12Hours: false,
+    showSecond: true,
+    needConfirm: false,
     width: 320,
   },
-  parameters: storySource(
-    "components-timepicker--controlled",
-    `function ControlledTimePicker() {
-  const [time, setTime] = useState<string | null>('09:00:00');
+  parameters: {
+    ...storySource(
+      "components-timepicker--controlled",
+      `function ControlledTimePicker() {
+  const [time, setTime] = useState<TimePickerValueType>('09:00:00');
 
   return <TimePicker width={320} value={time} onChange={setTime} />;
 }`,
-  ),
+    ),
+    controls: {
+      include: [
+        "크기",
+        "표현 방식",
+        "지우기",
+        "12시간제",
+        "초",
+        "확인 버튼",
+        "읽기 전용",
+        "비활성",
+        "가로 길이",
+      ],
+    },
+  },
   render: function ControlledTimeStory(args) {
-    const [time, setTime] = useState<string | null>("09:00:00");
+    const [time, setTime] = useState<TimePickerValueType>("09:00:00");
     return <TimePicker {...args} value={time} onChange={setTime} />;
   },
 };
 
 export const Placements: Story = {
-  parameters: storySource(
-    "components-timepicker--placements",
-    `<div className="grid max-w-2xl grid-cols-2 gap-3">
+  parameters: {
+    ...storySource(
+      "components-timepicker--placements",
+      `<div className="grid max-w-2xl grid-cols-2 gap-3">
   <TimePicker placement="topLeft" />
   <TimePicker placement="topRight" />
   <TimePicker />
   <TimePicker placement="bottomRight" />
 </div>`,
-  ),
+    ),
+    controls: { disable: true },
+  },
   render: (args) => (
     <div className="grid max-w-2xl grid-cols-2 gap-3">
       <TimePicker {...args} placement="topLeft" />

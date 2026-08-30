@@ -123,7 +123,10 @@ export const Basic: Story = {
   },
   parameters: {
     ...storyDescription("components-popover--basic"),
-    controls: { disable: false },
+    controls: {
+      disable: false,
+      include: ["제목", "내용", "위치", "표시 동작", "화살표", "배경 색상", "위치 자동 보정"],
+    },
     docs: {
       ...storyDescription("components-popover--basic").docs,
       source: {

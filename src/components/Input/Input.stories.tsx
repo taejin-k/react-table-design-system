@@ -46,6 +46,7 @@ const meta = {
       options: variants,
     },
     value: { name: "입력값", control: "text" },
+    placeholder: { name: "안내 문구", control: "text" },
     label: { name: "레이블", control: "text" },
     errorMessage: { name: "오류 문구", control: "text" },
     required: { name: "필수 표시", control: "boolean" },
@@ -227,9 +228,17 @@ export const Variants: Story = {
 };
 
 export const States: Story = {
+  args: {
+    size: "md",
+    variant: "default",
+    width: undefined,
+  },
   parameters: {
     ...storyDescription("components-input--states"),
-    controls: { disable: true },
+    controls: {
+      disable: false,
+      include: ["크기", "표현 방식", "가로 길이"],
+    },
     docs: {
       ...storyDescription("components-input--states").docs,
       source: {
@@ -241,11 +250,11 @@ export const States: Story = {
       },
     },
   },
-  render: () => (
+  render: (args) => (
     <div className="grid max-w-xl gap-4">
-      <Input placeholder="기본" />
-      <Input defaultValue="읽기 전용 입력값" readOnly />
-      <Input defaultValue="입력값" disabled />
+      <Input {...args} placeholder="기본" />
+      <Input {...args} defaultValue="읽기 전용 입력값" readOnly />
+      <Input {...args} defaultValue="입력값" disabled />
     </div>
   ),
 };
@@ -278,7 +287,8 @@ export const Password: Story = {
   args: {
     label: "비밀번호",
     password: true,
-    placeholder: undefined,
+    placeholder: "",
+    disabled: false,
   },
   parameters: {
     controls: {
@@ -308,7 +318,7 @@ export const IconsAndCount: Story = {
     prefixIcon: <Icon icon="setting" />,
     suffixIcon: <Icon icon="edit" />,
     value: "검색어",
-    placeholder: undefined,
+    placeholder: "",
   },
   parameters: {
     controls: {
@@ -362,6 +372,50 @@ export const IconsAndCount: Story = {
           prefixIcon={<Icon icon="setting" />}
           suffixIcon={<Icon icon="edit" />}
           variant="filled"
+          value={limitedKeyword}
+          onChange={setLimitedKeyword}
+        />
+      </div>
+      <div className="grid gap-3">
+        <span className="text-sm font-medium text-[#666]">borderless</span>
+        <Input
+          allowClear
+          showCount
+          prefixIcon={<Icon icon="setting" />}
+          suffixIcon={<Icon icon="edit" />}
+          variant="borderless"
+          value={keyword}
+          onChange={setKeyword}
+        />
+        <Input
+          allowClear
+          showCount
+          maxLength={5}
+          prefixIcon={<Icon icon="setting" />}
+          suffixIcon={<Icon icon="edit" />}
+          variant="borderless"
+          value={limitedKeyword}
+          onChange={setLimitedKeyword}
+        />
+      </div>
+      <div className="grid gap-3">
+        <span className="text-sm font-medium text-[#666]">underlined</span>
+        <Input
+          allowClear
+          showCount
+          prefixIcon={<Icon icon="setting" />}
+          suffixIcon={<Icon icon="edit" />}
+          variant="underlined"
+          value={keyword}
+          onChange={setKeyword}
+        />
+        <Input
+          allowClear
+          showCount
+          maxLength={5}
+          prefixIcon={<Icon icon="setting" />}
+          suffixIcon={<Icon icon="edit" />}
+          variant="underlined"
           value={limitedKeyword}
           onChange={setLimitedKeyword}
         />
@@ -438,6 +492,50 @@ function CountExamples({
           }}
         />
       </div>
+      <div className="grid gap-3">
+        <span className="text-sm font-medium text-[#666]">borderless</span>
+        <Input
+          {...inputProps}
+          variant="borderless"
+          value={keyword}
+          onChange={(nextValue) => {
+            setKeyword(nextValue);
+            onChange?.(nextValue);
+          }}
+        />
+        <Input
+          {...inputProps}
+          maxLength={maxLength}
+          variant="borderless"
+          value={limitedKeyword}
+          onChange={(nextValue) => {
+            setLimitedKeyword(nextValue);
+            onChange?.(nextValue);
+          }}
+        />
+      </div>
+      <div className="grid gap-3">
+        <span className="text-sm font-medium text-[#666]">underlined</span>
+        <Input
+          {...inputProps}
+          variant="underlined"
+          value={keyword}
+          onChange={(nextValue) => {
+            setKeyword(nextValue);
+            onChange?.(nextValue);
+          }}
+        />
+        <Input
+          {...inputProps}
+          maxLength={maxLength}
+          variant="underlined"
+          value={limitedKeyword}
+          onChange={(nextValue) => {
+            setLimitedKeyword(nextValue);
+            onChange?.(nextValue);
+          }}
+        />
+      </div>
     </div>
   );
 }
@@ -446,7 +544,7 @@ export const StaticError: Story = {
   args: {
     errorMessage: "이메일을 확인해 주세요.",
     label: "이메일",
-    placeholder: undefined,
+    placeholder: "",
     required: true,
   },
   parameters: {

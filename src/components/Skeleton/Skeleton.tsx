@@ -6,8 +6,8 @@ import type {
   SkeletonSizeType,
 } from "./Skeleton.types";
 
-function sizeValue(size: SkeletonSizeType = "medium") {
-  return typeof size === "number" ? size : { small: 24, medium: 32, large: 40 }[size];
+function sizeValue(size: SkeletonSizeType = "md") {
+  return typeof size === "number" ? size : { sm: 24, md: 32, lg: 40 }[size];
 }
 function base(active?: boolean) {
   return twMerge("bg-[#f0f0f0]", active && "wizard-skeleton-active");
@@ -18,7 +18,7 @@ function AvatarSkeleton({
   fullWidth = false,
   width,
   height,
-  size = "medium",
+  size = "md",
   shape = "circle",
   className,
 }: SkeletonElementProps) {
@@ -40,7 +40,7 @@ function ButtonSkeleton({
   fullWidth = false,
   width,
   height: heightProp,
-  size = "medium",
+  size = "md",
   shape = "default",
   className,
 }: SkeletonElementProps) {
@@ -65,7 +65,7 @@ function InputSkeleton({
   fullWidth = false,
   width,
   height: heightProp,
-  size = "medium",
+  size = "md",
   className,
 }: SkeletonElementProps) {
   const height = heightProp ?? sizeValue(size);
@@ -130,14 +130,13 @@ function SkeletonBase({
   title = true,
   children,
   className,
-  style,
 }: SkeletonProps) {
   if (loading === false) return <>{children}</>;
   const paragraphConfig = typeof paragraph === "object" ? paragraph : {};
   const rows = paragraphConfig.rows ?? (avatar ? 2 : 3);
   const widths = paragraphConfig.width;
   return (
-    <div className={twMerge("flex w-full gap-4 font-pretendard", className)} style={style}>
+    <div className={twMerge("flex w-full gap-4 font-pretendard", className)}>
       {avatar ? (
         <AvatarSkeleton active={active} {...(typeof avatar === "object" ? avatar : {})} />
       ) : null}

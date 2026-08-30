@@ -215,10 +215,10 @@ const inputRowVariants = cva(
         filled: "border-[#f5f5f5] bg-[#f5f5f5]",
         borderless: "border-transparent bg-white focus-within:border-transparent",
         underlined:
-          "rounded-none border-x-0 border-t-0 border-b-[#ddd] bg-white focus-within:border-x-0 focus-within:border-t-0 focus-within:border-b-[#0062df]",
+          "rounded-none border-x-transparent border-t-transparent border-b-[#ddd] bg-white focus-within:border-x-transparent focus-within:border-t-transparent focus-within:border-b-[#0062df]",
       },
       error: {
-        true: "border-[#fe5150]",
+        true: "",
         false: "",
       },
       disabled: {
@@ -232,6 +232,26 @@ const inputRowVariants = cva(
       error: false,
       disabled: false,
     },
+    compoundVariants: [
+      {
+        variant: ["default", "filled", "borderless"],
+        error: true,
+        disabled: false,
+        className: "border-[#fe5150] focus-within:border-[#fe5150]",
+      },
+      {
+        variant: "underlined",
+        error: true,
+        disabled: false,
+        className:
+          "border-x-transparent border-t-transparent border-b-[#fe5150] focus-within:border-x-transparent focus-within:border-t-transparent focus-within:border-b-[#fe5150]",
+      },
+      {
+        variant: "underlined",
+        disabled: true,
+        className: "rounded-[4px] border-x-[#ddd] border-t-[#ddd]",
+      },
+    ],
   },
 );
 
@@ -243,7 +263,7 @@ const inputVariants = cva("font-pretendard leading-[1.6] font-medium text-[#111]
       sm: "text-[12px]",
     },
     disabled: {
-      true: "font-normal text-[#999]",
+      true: "text-[#999] opacity-100",
       false: "",
     },
   },

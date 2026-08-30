@@ -43,14 +43,18 @@ describe("Button", () => {
     expect(onClick).toHaveBeenCalledOnce();
   });
 
-  it("uses the tertiary background when a ghost button is hovered", () => {
-    render(<Button variant="ghost">Ghost</Button>);
+  it("uses a transparent background and the tertiary background when a ghost button is hovered", () => {
+    const { rerender } = render(<Button variant="ghost">Ghost</Button>);
 
-    expect(screen.getByRole("button", { name: "Ghost" })).toHaveClass(
-      "bg-white",
-      "hover:bg-[#f5f5f5]",
-      "ring-transparent",
+    const button = screen.getByRole("button", { name: "Ghost" });
+    expect(button).toHaveClass("bg-transparent", "hover:bg-[#f5f5f5]", "ring-transparent");
+
+    rerender(
+      <Button variant="ghost" loading>
+        Ghost
+      </Button>,
     );
+    expect(button).toHaveClass("bg-transparent", "hover:bg-transparent");
   });
 
   it("uses the secondary border color when a tertiary button is hovered", () => {
@@ -119,6 +123,17 @@ describe("Button", () => {
     expect(button.style.width).toBe("");
   });
 
+  it("changes icon-only sizes without a width transition", () => {
+    const { rerender } = render(<Button iconOnly size="sm" prefixIcon={<span />} />);
+
+    const button = screen.getByRole("button");
+    expect(button).toHaveClass("w-5", "transition-[opacity,color,background-color,box-shadow]");
+    expect(button).not.toHaveClass("transition-[width,opacity,color,background-color,box-shadow]");
+
+    rerender(<Button iconOnly size="lg" prefixIcon={<span />} />);
+    expect(button).toHaveClass("w-10", "transition-[opacity,color,background-color,box-shadow]");
+  });
+
   it("applies a border radius equal to each button height when rounded", () => {
     const { rerender } = render(
       <Button rounded size="lg">
@@ -178,6 +193,31 @@ describe("Button", () => {
     expect(screen.getByRole("button", { name: "저장" }).querySelector("svg")).toHaveClass(
       "animate-spin",
     );
+  });
+
+  it("scales shadow range and intensity with the button size", () => {
+    const { rerender } = render(
+      <Button size="sm" shadow>
+        Small
+      </Button>,
+    );
+
+    const button = screen.getByRole("button");
+    expect(button).toHaveClass("shadow-[0_1px_2px_rgba(0,0,0,0.12)]");
+
+    rerender(
+      <Button size="md" shadow>
+        Medium
+      </Button>,
+    );
+    expect(button).toHaveClass("shadow-[0_2px_4px_rgba(0,0,0,0.16)]");
+
+    rerender(
+      <Button size="lg" shadow>
+        Large
+      </Button>,
+    );
+    expect(button).toHaveClass("shadow-[0_3px_6px_rgba(0,0,0,0.20)]");
   });
 
   it("keeps text children on one line", () => {

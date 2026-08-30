@@ -1,20 +1,31 @@
+import {
+  closestCenter,
+  DndContext,
+  PointerSensor,
+  useDndContext,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { CSSMotionList } from "@rc-component/motion";
 import { useEffect, useRef, useState } from "react";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { twMerge } from "tailwind-merge";
 import { Icon } from "../Icon";
+import { Image } from "../Image";
 import { message } from "../Message";
-import type {
-  UploadAcceptConfig,
-  UploadChangeParam,
-  UploadComponent,
-  UploadFile,
-  UploadProps,
-  UploadRequestOption,
-} from "./Upload.types";
+import type { UploadChangeParam, UploadComponent, UploadFile, UploadProps } from "./Upload.types";
 
-const LIST_IGNORE = "__WIZARD_UPLOAD_LIST_IGNORE__";
 let uid = 0;
+const IMAGE_FILE_EXTENSION = /\.(avif|bmp|gif|ico|jpe?g|png|svg|webp)$/i;
+
 function toUploadFile(file: File): UploadFile {
   return {
     uid: `${Date.now()}-${uid++}`,
@@ -27,18 +38,14 @@ function toUploadFile(file: File): UploadFile {
 function isImage(file: UploadFile) {
   return Boolean(
     file.type?.startsWith("image/") ||
-    file.thumbUrl ||
-    file.url?.match(/\.(png|jpe?g|gif|webp|svg|bmp)$/i),
+    IMAGE_FILE_EXTENSION.test(file.name) ||
+    IMAGE_FILE_EXTENSION.test(file.url?.split(/[?#]/, 1)[0] ?? ""),
   );
 }
 
-function acceptsFile(file: File, accept?: string | UploadAcceptConfig) {
+function acceptsFile(file: File, accept?: string) {
   if (!accept) return true;
-  if (typeof accept === "object" && typeof accept.filter === "function") {
-    return accept.filter(file);
-  }
-  const format = typeof accept === "string" ? accept : accept.format;
-  return format.split(",").some((rule) => {
+  return accept.split(",").some((rule) => {
     const value = rule.trim().toLowerCase();
     if (!value) return false;
     if (value.startsWith(".")) return file.name.toLowerCase().endsWith(value);
@@ -47,475 +54,506 @@ function acceptsFile(file: File, accept?: string | UploadAcceptConfig) {
   });
 }
 
+const uploadMotionCollapsedStyle: CSSProperties = { height: 0 };
+export const DOWNLOAD_LOADING_DELAY = 1000;
+
+function getUploadMotionExpandedStyle(element: HTMLElement): CSSProperties {
+  return { height: element.scrollHeight };
+}
+
+function getUploadMotionCurrentStyle(element: HTMLElement): CSSProperties {
+  return { height: element.getBoundingClientRect().height };
+}
+
+export function reorderUploadFiles(files: UploadFile[], activeId: string, overId: string) {
+  const previousIndex = files.findIndex((file) => file.uid === activeId);
+  const nextIndex = files.findIndex((file) => file.uid === overId);
+  if (previousIndex < 0 || nextIndex < 0 || previousIndex === nextIndex) return files;
+  return arrayMove(files, previousIndex, nextIndex);
+}
+
+interface UploadSortContextProps {
+  children: ReactNode;
+  enabled: boolean;
+  items: string[];
+  onDragEnd: (event: DragEndEvent) => void;
+}
+
+function EnabledUploadSortContext({
+  children,
+  enabled,
+  items,
+  onDragEnd,
+}: UploadSortContextProps) {
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
+  const [accessibilityContainer] = useState<Element | undefined>(() =>
+    typeof document === "undefined" ? undefined : document.createElement("div"),
+  );
+
+  return (
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      accessibility={{ container: accessibilityContainer, restoreFocus: false }}
+      onDragEnd={enabled ? onDragEnd : undefined}
+    >
+      <SortableContext items={items} strategy={verticalListSortingStrategy}>
+        {children}
+      </SortableContext>
+    </DndContext>
+  );
+}
+
+function UploadSortContext({ enabled, ...props }: UploadSortContextProps) {
+  return <EnabledUploadSortContext {...props} enabled={enabled} />;
+}
+
+interface SortableUploadItemProps {
+  children: (handle: ReactNode, state: { isDragging: boolean; isSorting: boolean }) => ReactNode;
+  enabled: boolean;
+  id: string;
+  listType: "text" | "picture";
+  sortable: boolean;
+}
+
+export function getSortableUploadItemClassName(listType: "text" | "picture", isDragging: boolean) {
+  return twMerge(
+    "relative shadow-none",
+    listType === "picture" && "rounded-lg",
+    isDragging && [
+      listType === "picture" ? "z-[1000]" : "z-10",
+      "shadow-[0_3px_8px_rgba(0,0,0,0.12)]",
+    ],
+  );
+}
+
+export function getSortableUploadItemTransition(transition?: string) {
+  return `${transition ?? "transform 220ms cubic-bezier(.2,.8,.2,1)"}, box-shadow 180ms ease-out`;
+}
+
+export function shouldDisableSortableTextHover(
+  listType: "text" | "picture",
+  isSorting: boolean,
+  isDragging: boolean,
+) {
+  return listType === "text" && isSorting && !isDragging;
+}
+
+function SortableUploadItem({
+  children,
+  enabled,
+  id,
+  listType,
+  sortable,
+}: SortableUploadItemProps) {
+  const { listeners, setActivatorNodeRef, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id, disabled: !enabled });
+  const { active } = useDndContext();
+  const verticalTransform = transform ? { ...transform, x: 0 } : null;
+
+  return (
+    <div
+      ref={setNodeRef}
+      data-upload-sortable-item={sortable ? id : undefined}
+      data-upload-dragging={isDragging || undefined}
+      className={getSortableUploadItemClassName(listType, isDragging)}
+      style={
+        {
+          transform: CSS.Transform.toString(verticalTransform),
+          transition: getSortableUploadItemTransition(transition),
+        } as CSSProperties
+      }
+    >
+      {children(
+        <span
+          ref={setActivatorNodeRef}
+          data-upload-drag-handle={id}
+          className={twMerge(
+            "inline-flex h-6 shrink-0 cursor-grab items-center justify-center text-[#999] active:cursor-grabbing",
+            listType === "text" ? "mr-1 w-6" : "w-4",
+          )}
+          {...listeners}
+        >
+          <Icon icon="drag-handle" size={12} className="select-none" />
+        </span>,
+        { isDragging, isSorting: enabled && Boolean(active) },
+      )}
+    </div>
+  );
+}
+
+function UploadDragHandle({
+  listType,
+  disabled,
+}: {
+  listType: "text" | "picture";
+  disabled: boolean;
+}) {
+  return (
+    <span
+      data-upload-drag-handle-disabled={disabled ? "true" : undefined}
+      className={twMerge(
+        "inline-flex h-6 shrink-0 items-center justify-center text-[#999]",
+        listType === "text" ? "mr-1 w-6" : "w-4",
+        disabled ? "cursor-not-allowed text-[#bbb]" : "cursor-grab",
+      )}
+    >
+      <Icon icon="drag-handle" size={12} className="select-none" />
+    </span>
+  );
+}
+
+function UploadPictureThumbnail({
+  source,
+  alt,
+  fallback,
+}: {
+  source?: string;
+  alt: string;
+  fallback: ReactNode;
+}) {
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => setFailed(false), [source]);
+
+  if (!source || failed) {
+    return (
+      <span
+        data-upload-picture-fallback
+        className={twMerge(
+          "inline-flex size-12 shrink-0 items-center justify-center rounded bg-[#f5f5f5] text-[#bfbfbf]",
+        )}
+      >
+        {fallback}
+      </span>
+    );
+  }
+
+  return (
+    <Image
+      data-upload-picture-thumbnail
+      src={source}
+      alt={alt}
+      width={48}
+      height={48}
+      preview={{ cover: false }}
+      draggable={false}
+      className="size-12 shrink-0 rounded [&>img]:rounded [&>img]:object-contain"
+      onError={() => setFailed(true)}
+    />
+  );
+}
+
 function UploadBase({
   accept,
-  action,
   capture,
   beforeUpload,
-  customRequest,
-  data,
   defaultFileList = [],
   fileList,
   directory = false,
   disabled = false,
-  headers,
+  draggable = false,
   listType = "text",
   maxCount,
-  method = "post",
   multiple = false,
-  name = "file",
-  openFileDialogOnClick = true,
-  pastable = false,
-  progress = {},
   showUploadList = true,
-  withCredentials = false,
   children,
   className,
-  style,
-  itemRender,
-  iconRender,
-  isImageUrl = isImage,
-  previewFile,
   onChange,
   onDrop,
   onDownload,
-  onPreview,
   onRemove,
 }: UploadProps) {
   const [innerFiles, setInnerFiles] = useState(defaultFileList);
+  const [activeDownloadUids, setActiveDownloadUids] = useState<Set<string>>(() => new Set());
+  const [downloadLoadingUids, setDownloadLoadingUids] = useState<Set<string>>(() => new Set());
   const currentFiles = fileList ?? innerFiles;
   const fileListRef = useRef(currentFiles);
+  const activeDownloadUidsRef = useRef(new Set<string>());
+  const downloadLoadingTimersRef = useRef(new Map<string, number>());
+  const listMountedRef = useRef(false);
+  const mountedRef = useRef(true);
   fileListRef.current = currentFiles;
   const inputRef = useRef<HTMLInputElement>(null);
   const rootRef = useRef<HTMLSpanElement>(null);
-  const requests = useRef(new Map<string, { abort?: () => void } | XMLHttpRequest>());
-  const objectUrls = useRef(new Set<string>());
+  const previewUrls = useRef(new Map<string, string>());
+  const revokePreview = (fileUid: string) => {
+    const previewUrl = previewUrls.current.get(fileUid);
+    if (!previewUrl) return;
+    URL.revokeObjectURL(previewUrl);
+    previewUrls.current.delete(fileUid);
+  };
   const addPreview = (file: UploadFile) => {
-    if (file.originFileObj && file.originFileObj.type.startsWith("image/")) {
+    if (file.originFileObj && isImage(file)) {
       const url = URL.createObjectURL(file.originFileObj);
-      objectUrls.current.add(url);
-      file.thumbUrl = url;
+      previewUrls.current.set(file.uid, url);
     }
     return file;
   };
-  const emit = (file: UploadFile, next: UploadFile[], event?: { percent: number }) => {
+  const emit = (file: UploadFile, next: UploadFile[]) => {
     const limited = maxCount ? (maxCount === 1 ? next.slice(-1) : next.slice(0, maxCount)) : next;
     fileListRef.current = limited;
     if (fileList === undefined) setInnerFiles(limited);
-    onChange?.({ file, fileList: limited, event } as UploadChangeParam);
+    onChange?.({ file, fileList: limited } as UploadChangeParam);
   };
-  const update = (target: UploadFile, patch: Partial<UploadFile>, event?: { percent: number }) => {
-    const nextFile = { ...target, ...patch };
-    const latest = fileListRef.current;
-    emit(
-      nextFile,
-      latest.some((file) => file.uid === target.uid)
-        ? latest.map((file) => (file.uid === target.uid ? nextFile : file))
-        : [...latest, nextFile],
-      event,
-    );
-  };
-  const defaultRequest = (options: UploadRequestOption) => {
-    const xhr = new XMLHttpRequest();
-    const form = new FormData();
-    Object.entries(options.data ?? {}).forEach(([key, value]) =>
-      form.append(
-        key,
-        typeof value === "string" || value instanceof Blob ? value : JSON.stringify(value),
-      ),
-    );
-    form.append(options.filename, options.file);
-    xhr.upload.onprogress = (event) =>
-      event.total && options.onProgress({ percent: (event.loaded / event.total) * 100 });
-    xhr.onerror = () => options.onError(new Error("파일 업로드에 실패했습니다."));
-    xhr.onload = () => {
-      let body: unknown = xhr.responseText;
-      try {
-        body = JSON.parse(xhr.responseText);
-      } catch {
-        /* text response */
-      }
-      if (xhr.status >= 200 && xhr.status < 300) options.onSuccess(body);
-      else options.onError(new Error(`HTTP ${xhr.status}`), body);
-    };
-    xhr.open(options.method ?? "post", options.action);
-    Object.entries(options.headers ?? {}).forEach(([key, value]) =>
-      xhr.setRequestHeader(key, value),
-    );
-    xhr.withCredentials = Boolean(options.withCredentials);
-    xhr.send(form);
-    return xhr;
-  };
-  const uploadOne = async (original: File, allFiles: File[]) => {
-    let candidate: File = original;
-    if (beforeUpload) {
-      try {
-        const result = await beforeUpload(original, allFiles);
-        if (result === LIST_IGNORE) return;
-        if (result === false) {
-          const stopped = addPreview(toUploadFile(original));
-          emit(stopped, [...fileListRef.current, stopped]);
-          return;
-        }
-        if (result instanceof File) candidate = result;
-        else if (result instanceof Blob) {
-          candidate = new File([result], original.name, {
-            type: result.type || original.type,
-            lastModified: original.lastModified,
-          });
-        }
-      } catch {
-        return;
-      }
-    }
-    const uploadFile = addPreview(toUploadFile(candidate));
-    const nextList = maxCount === 1 ? [uploadFile] : [...fileListRef.current, uploadFile];
-    emit(uploadFile, nextList);
-    if (!action && !customRequest) return;
-    update(uploadFile, { status: "uploading", percent: 0 });
-    try {
-      const resolvedAction =
-        typeof action === "function" ? await action(candidate) : (action ?? "");
-      const resolvedData = typeof data === "function" ? await data(uploadFile) : data;
-      const options: UploadRequestOption = {
-        action: resolvedAction,
-        filename: name,
-        file: candidate,
-        data: resolvedData,
-        headers,
-        method,
-        withCredentials,
-        onProgress: (event) =>
-          update(uploadFile, { status: "uploading", percent: event.percent }, event),
-        onSuccess: (body) => {
-          requests.current.delete(uploadFile.uid);
-          update(uploadFile, { status: "done", percent: 100, response: body });
-        },
-        onError: (error, body) => {
-          requests.current.delete(uploadFile.uid);
-          update(uploadFile, { status: "error", error, response: body });
-        },
-      };
-      const request = customRequest
-        ? customRequest(options, { defaultRequest })
-        : defaultRequest(options);
-      const latest = fileListRef.current.find((file) => file.uid === uploadFile.uid);
-      if (request && latest?.status === "uploading") requests.current.set(uploadFile.uid, request);
-    } catch (error) {
-      requests.current.delete(uploadFile.uid);
-      update(uploadFile, {
-        status: "error",
-        error: error instanceof Error ? error : new Error("파일 업로드에 실패했습니다."),
+  const processFiles = async (input: FileList | File[]) => {
+    const files = Array.from(input).filter((file) => acceptsFile(file, accept));
+    if (!multiple && files.length > 1) {
+      message.warning({
+        key: "upload-single-file-only",
+        content: "단일 파일만 선택할 수 있어 첫 번째 파일만 추가했어요.",
       });
     }
-  };
-  const processFiles = (input: FileList | File[]) => {
-    const files = Array.from(input).filter((file) => acceptsFile(file, accept));
+    const selectedFiles = multiple ? files : files.slice(0, 1);
     const accepted = maxCount
       ? maxCount === 1
-        ? files.slice(-1)
-        : files.slice(0, Math.max(0, maxCount - fileListRef.current.length))
-      : files;
-    if (maxCount && files.length > accepted.length) {
+        ? selectedFiles.slice(-1)
+        : selectedFiles.slice(0, Math.max(0, maxCount - fileListRef.current.length))
+      : selectedFiles;
+    if (maxCount && selectedFiles.length > accepted.length) {
       message.warning({
         key: `upload-max-count-${maxCount}`,
         content: `${maxCount}개까지 등록할 수 있어요.`,
       });
     }
-    accepted.forEach((file) => void uploadOne(file, files));
+
+    const validationResults = await Promise.all(
+      accepted.map(async (file) => {
+        if (!beforeUpload) return true;
+        try {
+          return await beforeUpload({ file, fileList: selectedFiles });
+        } catch {
+          return false;
+        }
+      }),
+    );
+
+    accepted.forEach((file, index) => {
+      if (!validationResults[index]) return;
+      const uploadFile = addPreview(toUploadFile(file));
+      const nextList = maxCount === 1 ? [uploadFile] : [...fileListRef.current, uploadFile];
+      emit(uploadFile, nextList);
+    });
   };
   const remove = async (file: UploadFile) => {
-    const allowed = await onRemove?.(file);
-    if (allowed === false) return;
-    const request = requests.current.get(file.uid);
-    request?.abort?.();
-    requests.current.delete(file.uid);
-    if (file.thumbUrl && objectUrls.current.has(file.thumbUrl)) {
-      URL.revokeObjectURL(file.thumbUrl);
-      objectUrls.current.delete(file.thumbUrl);
+    try {
+      const allowed = await onRemove?.(file);
+      if (allowed === false) return;
+      emit(
+        file,
+        fileListRef.current.filter((entry) => entry.uid !== file.uid),
+      );
+    } catch {
+      // 삭제 전 검사가 실패하면 파일과 미리보기를 그대로 유지해요.
     }
-    emit(
-      { ...file, status: "removed" },
-      fileListRef.current.filter((entry) => entry.uid !== file.uid),
+  };
+  const download = async (file: UploadFile) => {
+    if ((!onDownload && !file.url) || activeDownloadUidsRef.current.has(file.uid)) return;
+
+    activeDownloadUidsRef.current.add(file.uid);
+    setActiveDownloadUids(new Set(activeDownloadUidsRef.current));
+    downloadLoadingTimersRef.current.set(
+      file.uid,
+      window.setTimeout(() => {
+        downloadLoadingTimersRef.current.delete(file.uid);
+        if (!mountedRef.current || !activeDownloadUidsRef.current.has(file.uid)) return;
+        setDownloadLoadingUids((current) => new Set(current).add(file.uid));
+      }, DOWNLOAD_LOADING_DELAY),
     );
-  };
-  const preview = async (file: UploadFile) => {
-    if (onPreview) {
-      onPreview(file);
-      return;
-    }
-    let url = file.url ?? file.thumbUrl;
-    if (!url && file.originFileObj) {
-      url = previewFile
-        ? await previewFile(file.originFileObj)
-        : URL.createObjectURL(file.originFileObj);
-      if (!previewFile) objectUrls.current.add(url);
-    }
-    if (url) window.open(url, "_blank", "noopener,noreferrer");
-  };
-  const download = (file: UploadFile) => {
-    if (onDownload) onDownload(file);
-    else if (file.url) {
+
+    try {
+      if (onDownload) {
+        await onDownload(file);
+        return;
+      }
+      if (!file.url) return;
+
+      const response = await fetch(file.url);
+      if (!response.ok) {
+        message.error({
+          key: `upload-download-error-${file.uid}`,
+          content: "파일을 다운로드할 수 없어요. 파일 URL을 확인해주세요.",
+        });
+        return;
+      }
+
+      const objectUrl = URL.createObjectURL(await response.blob());
       const anchor = document.createElement("a");
-      anchor.href = file.url;
+      anchor.href = objectUrl;
       anchor.download = file.name;
+      anchor.hidden = true;
+      document.body.append(anchor);
       anchor.click();
+      anchor.remove();
+      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 0);
+    } catch {
+      message.error({
+        key: `upload-download-error-${file.uid}`,
+        content: "파일을 다운로드할 수 없어요. 파일 URL을 확인해주세요.",
+      });
+    } finally {
+      const loadingTimer = downloadLoadingTimersRef.current.get(file.uid);
+      if (loadingTimer !== undefined) window.clearTimeout(loadingTimer);
+      downloadLoadingTimersRef.current.delete(file.uid);
+      activeDownloadUidsRef.current.delete(file.uid);
+      if (mountedRef.current) {
+        setActiveDownloadUids(new Set(activeDownloadUidsRef.current));
+        setDownloadLoadingUids((current) => {
+          if (!current.has(file.uid)) return current;
+          const next = new Set(current);
+          next.delete(file.uid);
+          return next;
+        });
+      }
     }
   };
-  useEffect(
-    () => () => {
-      requests.current.forEach((request) => request.abort?.());
-      objectUrls.current.forEach((url) => URL.revokeObjectURL(url));
-    },
-    [],
-  );
-  const showConfig = typeof showUploadList === "object" ? showUploadList : {};
-  const showAction = (
-    value: boolean | ((file: UploadFile) => boolean) | undefined,
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      downloadLoadingTimersRef.current.forEach((timer) => window.clearTimeout(timer));
+      downloadLoadingTimersRef.current.clear();
+      activeDownloadUidsRef.current.clear();
+      previewUrls.current.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, []);
+  useEffect(() => {
+    if (showUploadList) return;
+    const currentUids = new Set(currentFiles.map((file) => file.uid));
+    previewUrls.current.forEach((_, fileUid) => {
+      if (!currentUids.has(fileUid)) revokePreview(fileUid);
+    });
+  }, [currentFiles, showUploadList]);
+  useEffect(() => {
+    listMountedRef.current = true;
+  }, []);
+  const renderFile = (
     file: UploadFile,
-    defaultValue: boolean,
-  ) => (typeof value === "function" ? value(file) : (value ?? defaultValue));
-  const renderActionIcon = (
-    value: ReactNode | ((file: UploadFile) => ReactNode) | undefined,
-    file: UploadFile,
-    fallback: ReactNode,
-  ) => (typeof value === "function" ? value(file) : (value ?? fallback));
-  const renderExtra = (file: UploadFile) =>
-    typeof showConfig.extra === "function" ? showConfig.extra(file) : showConfig.extra;
-  const renderFile = (file: UploadFile) => {
-    const isPictureCard = listType === "picture-card" || listType === "picture-circle";
-    const previewSource = file.thumbUrl ?? file.url;
-    const canPreview = Boolean(onPreview || file.url || file.thumbUrl || file.originFileObj);
-    const showPreviewAction = canPreview && showAction(showConfig.showPreviewIcon, file, true);
-    const showDownloadAction =
-      showAction(showConfig.showDownloadIcon, file, true) &&
-      file.status === "done" &&
-      Boolean(file.url || onDownload);
-    const showRemoveAction = showAction(showConfig.showRemoveIcon, file, true) && !disabled;
-    const percent = Math.max(0, Math.min(100, file.percent ?? 0));
-    const progressNode =
-      file.status === "uploading" ? (
-        <div data-upload-progress className="flex min-w-0 items-center gap-2">
-          <span
-            className="h-0.5 min-w-0 flex-1 overflow-hidden rounded bg-[#f0f0f0]"
-            style={{ height: progress.strokeWidth }}
-          >
-            <span
-              className="block h-full rounded transition-[width] duration-200 ease-out"
-              style={{ width: `${percent}%`, backgroundColor: progress.strokeColor ?? "#0062df" }}
-            />
-          </span>
-          {progress.showInfo ? (
-            <span className="shrink-0 text-xs leading-none text-[#999]">
-              {Math.round(percent)}%
-            </span>
-          ) : null}
-        </div>
-      ) : null;
-    const origin = isPictureCard ? (
-      <div
-        data-upload-picture-item
-        className={twMerge(
-          "group relative flex size-[102px] min-w-0 items-center justify-center overflow-hidden rounded-lg border border-[#d9d9d9] bg-white p-2 text-sm",
-          file.status === "uploading" && "border-dashed bg-[#fafafa]",
-          file.status === "error" && "border-[#ff4d4f] text-[#ff4d4f]",
-          listType === "picture-circle" && "rounded-full",
-        )}
-      >
-        {file.status === "uploading" ? (
-          <span className="flex size-full min-w-0 flex-col items-center justify-center gap-2 px-1 text-[#666]">
-            {iconRender?.(file, listType) ?? <Icon icon="loading" size={22} />}
-            <span className="max-w-full truncate text-xs">{file.name}</span>
-            <span className="w-full px-1">{progressNode}</span>
-          </span>
-        ) : isImageUrl(file) && previewSource ? (
-          <img
-            src={previewSource}
-            alt=""
-            crossOrigin={file.crossOrigin || undefined}
-            className={twMerge(
-              "size-full rounded object-contain",
-              listType === "picture-circle" && "rounded-full",
-            )}
-          />
-        ) : (
-          <span
-            className={twMerge(
-              "flex max-w-full flex-col items-center gap-1 text-[#666]",
-              file.status === "error" && "text-[#ff4d4f]",
-            )}
-          >
-            {iconRender?.(file, listType) ?? <Icon icon="file-outlined" size={24} />}
-            <span className="max-w-[78px] truncate text-xs">{file.name}</span>
-          </span>
-        )}
-        {file.status !== "uploading" &&
-        (showPreviewAction || showDownloadAction || showRemoveAction) ? (
-          <div
-            data-upload-picture-actions
-            className={twMerge(
-              "absolute inset-2 z-[1] flex items-center justify-center gap-1 rounded bg-black/45 opacity-0 transition-opacity duration-200 group-hover:opacity-100",
-              listType === "picture-circle" && "rounded-full",
-            )}
-          >
-            {showPreviewAction ? (
-              <button
-                data-upload-preview
-                type="button"
-                className="inline-flex size-6 cursor-pointer items-center justify-center text-white/90 transition-colors hover:text-white"
-                onClick={() => void preview(file)}
-              >
-                {renderActionIcon(showConfig.previewIcon, file, <Icon icon="eye" size={16} />)}
-              </button>
-            ) : null}
-            {showDownloadAction ? (
-              <button
-                data-upload-download
-                type="button"
-                className="inline-flex size-6 cursor-pointer items-center justify-center text-white/90 transition-colors hover:text-white"
-                onClick={() => download(file)}
-              >
-                {renderActionIcon(
-                  showConfig.downloadIcon,
-                  file,
-                  <Icon icon="download" size={16} />,
-                )}
-              </button>
-            ) : null}
-            {showRemoveAction ? (
-              <button
-                data-upload-remove
-                type="button"
-                className="inline-flex size-6 cursor-pointer items-center justify-center text-white/90 transition-colors hover:text-white"
-                onClick={() => void remove(file)}
-              >
-                {renderActionIcon(
-                  showConfig.removeIcon,
-                  file,
-                  <Icon icon="delete-outlined" size={16} />,
-                )}
-              </button>
-            ) : null}
-          </div>
-        ) : null}
-      </div>
-    ) : (
+    dragHandle?: ReactNode,
+    dragState?: { isDragging: boolean; isSorting: boolean },
+  ) => {
+    const previewSource = previewUrls.current.get(file.uid) ?? file.url;
+    const imageFile = isImage(file);
+    const downloadActive = activeDownloadUids.has(file.uid);
+    const downloading = downloadLoadingUids.has(file.uid);
+    const textHoverDisabled = shouldDisableSortableTextHover(
+      listType,
+      Boolean(dragState?.isSorting),
+      Boolean(dragState?.isDragging),
+    );
+    const showDownloadAction = Boolean(file.url || onDownload);
+    const showRemoveAction = !disabled;
+    const origin = (
       <div
         data-upload-list-item
+        data-upload-hover-disabled={textHoverDisabled || undefined}
         className={twMerge(
-          "group relative min-w-0 rounded-md text-sm transition-colors hover:bg-[#f5f5f5]",
-          listType === "text" && "px-1 py-0.5",
+          "group relative min-w-0 rounded text-sm transition-[background-color]",
+          listType === "text" && [
+            "h-[22px] px-1",
+            dragState?.isDragging
+              ? "bg-[#f5f5f5]"
+              : dragState?.isSorting
+                ? "pointer-events-none bg-transparent hover:bg-transparent"
+                : "hover:bg-[#f5f5f5]",
+          ],
           listType === "picture" &&
-            "min-h-[66px] rounded-lg border border-[#d9d9d9] p-2 hover:bg-transparent",
-          file.status === "uploading" && listType === "picture" && "border-dashed",
-          file.status === "error" && "text-[#ff4d4f]",
+            "min-h-[66px] rounded-lg border border-[#d9d9d9] bg-white p-2 hover:bg-white",
         )}
       >
         <div className={twMerge("flex min-w-0 items-center", listType === "picture" && "gap-2")}>
-          {listType === "picture" && isImageUrl(file) && previewSource ? (
-            <img
-              src={previewSource}
-              alt=""
-              crossOrigin={file.crossOrigin || undefined}
-              className="size-12 shrink-0 rounded object-contain"
+          {dragHandle}
+          {listType === "picture" ? (
+            <UploadPictureThumbnail
+              source={imageFile ? previewSource : undefined}
+              alt={file.name}
+              fallback={<Icon icon={imageFile ? "image-outlined" : "file-outlined"} size={22} />}
             />
           ) : (
-            <span
-              className={twMerge(
-                "mr-2 inline-flex shrink-0 text-[#8c8c8c]",
-                file.status === "uploading" && "text-[#0062df]",
-                file.status === "error" && "text-[#ff4d4f]",
-              )}
-            >
-              {iconRender?.(file, listType) ?? (
-                <Icon icon={file.status === "uploading" ? "loading" : "paperclip"} size={16} />
-              )}
+            <span className={twMerge("inline-flex shrink-0 text-[#8c8c8c]", "w-3")}>
+              <Icon icon="paperclip" size={12} />
             </span>
           )}
-          {showPreviewAction ? (
-            <button
-              type="button"
-              className={twMerge(
-                "min-w-0 flex-1 cursor-pointer truncate text-left leading-6 transition-colors hover:text-[#0062df]",
-                file.status === "uploading" && "text-[#0062df]",
-              )}
-              onClick={() => void preview(file)}
-            >
-              {file.name}
-            </button>
-          ) : (
-            <span className="min-w-0 flex-1 truncate leading-6">{file.name}</span>
-          )}
-          {renderExtra(file) ? (
-            <span className="ml-2 inline-flex shrink-0 items-center">{renderExtra(file)}</span>
-          ) : null}
           <span
             className={twMerge(
-              "ml-1 inline-flex shrink-0 items-center gap-0.5",
+              "min-w-0 flex-1 truncate leading-6",
+              listType === "text" && "px-1 leading-[22px]",
+            )}
+          >
+            {file.name}
+          </span>
+          <span
+            key={listType}
+            data-upload-actions
+            className={twMerge(
+              "ml-0.5 inline-flex shrink-0 items-center gap-0",
               listType === "text" &&
-                file.status !== "error" &&
-                "opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100",
+                (textHoverDisabled
+                  ? "opacity-0"
+                  : "opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100"),
             )}
           >
             {showDownloadAction ? (
               <button
                 type="button"
-                className="inline-flex size-6 shrink-0 cursor-pointer items-center justify-center text-[#8c8c8c] transition-colors hover:text-[#0062df]"
-                onClick={() => download(file)}
-              >
-                {renderActionIcon(
-                  showConfig.downloadIcon,
-                  file,
-                  <Icon icon="download" size={14} />,
+                data-upload-download-action
+                data-upload-download-active={downloadActive || undefined}
+                data-upload-download-loading={downloading || undefined}
+                aria-busy={downloadActive || undefined}
+                aria-label={`${file.name} ${downloadActive ? "다운로드 중" : "다운로드"}`}
+                disabled={downloadActive}
+                className={twMerge(
+                  "inline-flex shrink-0 cursor-pointer items-center justify-center text-[#8c8c8c] transition-colors hover:text-[#0062df]",
+                  listType === "text" ? "size-5" : "size-6",
+                  downloadActive && "cursor-default hover:text-[#8c8c8c]",
+                  downloading && "cursor-wait",
                 )}
+                onClick={() => void download(file)}
+              >
+                <Icon icon="download" size={14} loading={downloading} />
               </button>
             ) : null}
             {showRemoveAction ? (
               <button
                 type="button"
-                className="inline-flex size-6 shrink-0 cursor-pointer items-center justify-center text-[#8c8c8c] transition-colors hover:text-[#ff4d4f]"
+                data-upload-remove-action
+                className={twMerge(
+                  "inline-flex shrink-0 cursor-pointer items-center justify-center text-[#8c8c8c] transition-colors hover:text-[#ff4d4f]",
+                  listType === "text" ? "size-5" : "size-6",
+                )}
                 onClick={() => void remove(file)}
               >
-                {renderActionIcon(
-                  showConfig.removeIcon,
-                  file,
-                  <Icon icon="delete-outlined" size={14} />,
-                )}
+                <Icon icon="delete-outlined" size={14} />
               </button>
             ) : null}
           </span>
         </div>
-        {progressNode ? (
-          <div className={twMerge("mt-0.5", listType === "text" ? "ml-6" : "ml-14")}>
-            {progressNode}
-          </div>
-        ) : null}
       </div>
     );
-    return (
-      itemRender?.(origin, file, currentFiles, {
-        download: () => download(file),
-        preview: () => void preview(file),
-        remove: () => void remove(file),
-      }) ?? origin
-    );
+    return origin;
   };
-  const isPictureList = listType === "picture-card" || listType === "picture-circle";
-  const canShowTrigger = !isPictureList || !maxCount || currentFiles.length < maxCount;
-  const triggerNode = canShowTrigger ? (
+  const supportsSorting = draggable;
+  const sortingEnabled = supportsSorting && !disabled;
+  const handleSortEnd = ({ active, over }: DragEndEvent) => {
+    if (!over || active.id === over.id) return;
+    const latest = fileListRef.current;
+    const movedFile = latest.find((file) => file.uid === active.id);
+    const nextFiles = reorderUploadFiles(latest, String(active.id), String(over.id));
+    if (!movedFile || nextFiles === latest) return;
+    emit(movedFile, nextFiles);
+  };
+  const triggerNode = (
     <span
+      data-upload-trigger
       tabIndex={disabled ? -1 : 0}
       className={twMerge(
-        "inline-flex",
-        !disabled && openFileDialogOnClick && "cursor-pointer",
-        isPictureList &&
-          "size-[102px] shrink-0 cursor-pointer items-center justify-center rounded-lg border border-dashed border-[#d9d9d9] bg-[#fafafa] transition-colors hover:border-[#0062df]",
-        listType === "picture-circle" && "rounded-full",
+        "inline-flex w-fit self-start",
+        !disabled && "cursor-pointer",
         disabled && "cursor-not-allowed opacity-50 [&>*]:pointer-events-none",
       )}
-      onClick={() => !disabled && openFileDialogOnClick && inputRef.current?.click()}
+      onClick={() => !disabled && inputRef.current?.click()}
       onKeyDown={(event) => {
-        if (!disabled && openFileDialogOnClick && (event.key === "Enter" || event.key === " ")) {
+        if (!disabled && (event.key === "Enter" || event.key === " ")) {
           event.preventDefault();
           inputRef.current?.click();
         }
@@ -523,44 +561,84 @@ function UploadBase({
     >
       {children}
     </span>
-  ) : null;
+  );
   const listNode = showUploadList ? (
-    <CSSMotionList
-      keys={currentFiles.map((file) => ({ key: file.uid, file }))}
-      component="div"
-      motionName="wizard-upload-motion"
-      motionAppear={false}
-      motionDeadline={250}
-      className={twMerge(isPictureList ? "contents" : "flex w-full min-w-[280px] flex-col gap-2")}
+    <UploadSortContext
+      enabled={sortingEnabled}
+      items={currentFiles.map((file) => file.uid)}
+      onDragEnd={handleSortEnd}
     >
-      {({ file, className: motionClassName, style: motionStyle }, motionRef) => (
-        <div
-          ref={motionRef}
-          className={twMerge("wizard-upload-motion-item", motionClassName)}
-          style={motionStyle}
-        >
-          <div>{renderFile(file as UploadFile)}</div>
-        </div>
-      )}
-    </CSSMotionList>
+      <CSSMotionList
+        keys={currentFiles.map((file) => ({ key: file.uid, file }))}
+        component="div"
+        motionName="wizard-upload-motion"
+        motionAppear={listMountedRef.current}
+        motionEnter
+        motionLeave
+        motionDeadline={listType === "picture" ? 420 : 320}
+        onAppearStart={() => uploadMotionCollapsedStyle}
+        onAppearActive={getUploadMotionExpandedStyle}
+        onEnterStart={() => uploadMotionCollapsedStyle}
+        onEnterActive={getUploadMotionExpandedStyle}
+        onLeaveStart={getUploadMotionCurrentStyle}
+        onLeaveActive={() => uploadMotionCollapsedStyle}
+        onLeaveEnd={(element) => {
+          const fileUid = element.dataset.uploadMotionFile;
+          if (fileUid && !fileListRef.current.some((file) => file.uid === fileUid)) {
+            revokePreview(fileUid);
+          }
+        }}
+        className="-mb-2 flex w-full min-w-0 flex-col"
+      >
+        {({ file, className: motionClassName, style: motionStyle }, motionRef) => {
+          const uploadFile = file as UploadFile;
+          return (
+            <div
+              ref={motionRef}
+              data-upload-motion-file={uploadFile.uid}
+              className={twMerge(
+                "wizard-upload-motion-item",
+                listType === "picture" && "wizard-upload-motion-item-picture",
+                motionClassName,
+              )}
+              style={motionStyle}
+            >
+              <div className="wizard-upload-motion-content pb-2">
+                <SortableUploadItem
+                  id={uploadFile.uid}
+                  listType={listType}
+                  sortable={supportsSorting}
+                  enabled={sortingEnabled}
+                >
+                  {(handle, dragState) =>
+                    renderFile(
+                      uploadFile,
+                      supportsSorting ? (
+                        sortingEnabled ? (
+                          handle
+                        ) : (
+                          <UploadDragHandle listType={listType} disabled />
+                        )
+                      ) : undefined,
+                      sortingEnabled ? dragState : undefined,
+                    )
+                  }
+                </SortableUploadItem>
+              </div>
+            </div>
+          );
+        }}
+      </CSSMotionList>
+    </UploadSortContext>
   ) : null;
   return (
     <span
       ref={rootRef}
-      className={twMerge(
-        "inline-flex min-w-0 gap-2 font-pretendard",
-        isPictureList ? "flex-row flex-wrap items-start" : "flex-col",
-        className,
-      )}
-      style={style}
-      tabIndex={pastable ? 0 : undefined}
-      onPaste={(event) => {
-        if (pastable && event.clipboardData.files.length) processFiles(event.clipboardData.files);
-      }}
+      className={twMerge("inline-flex w-full min-w-0 flex-col gap-2 font-pretendard", className)}
       onDragOver={(event) => event.preventDefault()}
       onDrop={(event) => {
         event.preventDefault();
-        if (!disabled) processFiles(event.dataTransfer.files);
+        if (!disabled) void processFiles(event.dataTransfer.files);
         onDrop?.(event);
       }}
     >
@@ -568,7 +646,7 @@ function UploadBase({
         ref={inputRef}
         type="file"
         className="hidden"
-        accept={typeof accept === "string" ? accept : accept?.format}
+        accept={accept}
         capture={capture}
         multiple={multiple}
         disabled={disabled}
@@ -576,44 +654,48 @@ function UploadBase({
           webkitdirectory: directory ? "" : undefined,
         } as React.InputHTMLAttributes<HTMLInputElement>)}
         onChange={(event) => {
-          if (event.target.files) processFiles(event.target.files);
+          if (event.target.files) void processFiles(event.target.files);
           event.target.value = "";
         }}
       />
-      {isPictureList ? listNode : triggerNode}
-      {isPictureList ? triggerNode : listNode}
+      {triggerNode}
+      {listNode}
     </span>
   );
 }
 
 function Dragger(props: UploadProps) {
-  const { children, className, onDrop, disabled, ...rest } = props;
+  const { children, className, onDrop, disabled, multiple = false, ...rest } = props;
   const [dragging, setDragging] = useState(false);
-  const dropRef = useRef<HTMLDivElement>(null);
   return (
-    <div
-      ref={dropRef}
-      className={twMerge(
-        "cursor-pointer rounded-lg border border-dashed border-[#d9d9d9] bg-[#fafafa] transition-colors hover:border-[#0062df]",
-        dragging && "border-[#0062df] bg-[#e6f4ff]",
-        disabled && "cursor-not-allowed opacity-50",
-        className,
-      )}
-      onDragEnter={(event) => {
-        event.preventDefault();
-        setDragging(true);
-      }}
-      onDragOver={(event) => event.preventDefault()}
-      onDragLeave={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget as Node)) setDragging(false);
-      }}
-      onDrop={(event) => {
-        event.preventDefault();
-        setDragging(false);
-      }}
-    >
-      <UploadBase {...rest} disabled={disabled} className="flex w-full" onDrop={onDrop}>
-        <span className="flex min-h-44 w-full flex-col items-center justify-center gap-1 p-4 text-center text-sm text-[#666]">
+    <div className={twMerge("min-w-0", className)}>
+      <UploadBase
+        {...rest}
+        disabled={disabled}
+        multiple={multiple}
+        className="flex w-full [&>span]:w-full"
+        onDrop={onDrop}
+      >
+        <span
+          data-upload-dragger-area
+          className={twMerge(
+            "flex min-h-44 w-full cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-[#d9d9d9] bg-[rgba(0,0,0,0.02)] p-4 text-center text-sm text-[#666] transition-colors hover:border-[#0062df]",
+            dragging && "border-[#0062df] bg-[#e6f4ff]",
+            disabled && "cursor-not-allowed",
+          )}
+          onDragEnter={(event) => {
+            event.preventDefault();
+            setDragging(true);
+          }}
+          onDragOver={(event) => event.preventDefault()}
+          onDragLeave={(event) => {
+            if (!event.currentTarget.contains(event.relatedTarget as Node)) setDragging(false);
+          }}
+          onDrop={(event) => {
+            event.preventDefault();
+            setDragging(false);
+          }}
+        >
           {children ?? (
             <>
               <Icon icon="upload" size={40} color="#0062df" />
@@ -621,7 +703,7 @@ function Dragger(props: UploadProps) {
                 클릭하거나 파일을 이 영역으로 드래그하세요
               </span>
               <span className="text-sm text-[#8c8c8c]">
-                단일 또는 여러 파일을 선택할 수 있어요.
+                {multiple ? "여러 파일을 선택할 수 있어요." : "단일 파일만 선택할 수 있어요."}
               </span>
             </>
           )}
@@ -631,4 +713,4 @@ function Dragger(props: UploadProps) {
   );
 }
 
-export const Upload = Object.assign(UploadBase, { Dragger, LIST_IGNORE }) as UploadComponent;
+export const Upload = Object.assign(UploadBase, { Dragger }) as UploadComponent;

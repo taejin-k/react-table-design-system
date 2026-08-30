@@ -27,7 +27,11 @@ const meta = {
     shape: { name: "모양", control: "select", options: avatarShapes },
     color: { name: "배경색", control: "color" },
     label: { name: "라벨", control: "boolean" },
-    labelWidth: { name: "라벨 너비", control: { type: "number", min: 0, step: 1 } },
+    labelWidth: {
+      name: "라벨 너비",
+      control: { type: "number", min: 0, step: 1 },
+      if: { arg: "label", truthy: true },
+    },
     preview: { name: "이미지 미리보기", control: "boolean" },
     src: { control: false, table: { disable: true } },
     icon: { control: false, table: { disable: true } },
@@ -98,7 +102,7 @@ export const Basic: Story = {
     ...storyDescription("components-avatar--basic"),
     controls: {
       disable: false,
-      include: ["텍스트", "크기", "모양", "배경색", "라벨", "라벨 너비", "이미지 미리보기"],
+      include: ["텍스트", "크기", "모양", "배경색", "라벨", "라벨 너비"],
     },
     docs: {
       ...storyDescription("components-avatar--basic").docs,

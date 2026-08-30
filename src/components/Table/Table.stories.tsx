@@ -255,16 +255,25 @@ export const TextSelection: Story = {
 
 export const Size: Story = {
   args: { size: "sm" },
-  parameters: storyDescription("components-table--size"),
+  parameters: {
+    ...storyDescription("components-table--size"),
+    controls: { disable: false, include: ["크기"] },
+  },
 };
 
 export const Bordered: Story = {
   args: { bordered: true },
-  parameters: storyDescription("components-table--bordered"),
+  parameters: {
+    ...storyDescription("components-table--bordered"),
+    controls: { disable: false, include: ["테두리"] },
+  },
 };
 
 export const Alignment: Story = {
-  parameters: storyDescription("components-table--alignment"),
+  parameters: {
+    ...storyDescription("components-table--alignment"),
+    controls: { disable: true },
+  },
   args: {
     bordered: true,
     columns: [
@@ -282,7 +291,10 @@ export const Alignment: Story = {
 };
 
 export const Ellipsis: Story = {
-  parameters: storyDescription("components-table--ellipsis"),
+  parameters: {
+    ...storyDescription("components-table--ellipsis"),
+    controls: { disable: true },
+  },
   args: {
     dataSource: members.slice(0, 5).map((member, index) =>
       index === 0
@@ -301,6 +313,7 @@ export const Ellipsis: Story = {
 export const Sorter: Story = {
   parameters: {
     ...storyDescription("components-table--sorter"),
+    controls: { disable: true },
     tableSource: false,
     docs: {
       ...storyDescription("components-table--sorter").docs,
@@ -364,6 +377,7 @@ function SorterTable() {
 export const Filter: Story = {
   parameters: {
     ...storyDescription("components-table--filter"),
+    controls: { disable: true },
     tableSource: false,
     docs: {
       ...storyDescription("components-table--filter").docs,
@@ -497,6 +511,7 @@ function FilterTable() {
 export const Checkbox: Story = {
   parameters: {
     ...storyDescription("components-table--checkbox"),
+    controls: { disable: true },
     tableSource: false,
     docs: {
       ...storyDescription("components-table--checkbox").docs,
@@ -526,7 +541,10 @@ function CheckboxTable() {
 };
 
 export const CheckboxWidth: Story = {
-  parameters: storyDescription("components-table--checkbox-width"),
+  parameters: {
+    ...storyDescription("components-table--checkbox-width"),
+    controls: { disable: true },
+  },
   args: {
     rowSelection: {
       type: "checkbox",
@@ -536,7 +554,10 @@ export const CheckboxWidth: Story = {
 };
 
 export const CheckboxDisabled: Story = {
-  parameters: storyDescription("components-table--checkbox-disabled"),
+  parameters: {
+    ...storyDescription("components-table--checkbox-disabled"),
+    controls: { disable: true },
+  },
   args: {
     rowSelection: {
       type: "checkbox",
@@ -548,7 +569,10 @@ export const CheckboxDisabled: Story = {
 };
 
 export const CheckboxFixed: Story = {
-  parameters: storyDescription("components-table--checkbox-fixed"),
+  parameters: {
+    ...storyDescription("components-table--checkbox-fixed"),
+    controls: { disable: true },
+  },
   args: {
     columns: checkboxFixedColumns,
     rowSelection: { type: "checkbox", fixed: true },
@@ -556,12 +580,18 @@ export const CheckboxFixed: Story = {
 };
 
 export const AllCheckboxHidden: Story = {
-  parameters: storyDescription("components-table--all-checkbox-hidden"),
+  parameters: {
+    ...storyDescription("components-table--all-checkbox-hidden"),
+    controls: { disable: true },
+  },
   args: { rowSelection: { type: "checkbox", hideSelectAll: true } },
 };
 
 export const CheckboxDefault: Story = {
-  parameters: storyDescription("components-table--checkbox-default"),
+  parameters: {
+    ...storyDescription("components-table--checkbox-default"),
+    controls: { disable: true },
+  },
   args: {
     rowSelection: {
       type: "checkbox",
@@ -573,6 +603,7 @@ export const CheckboxDefault: Story = {
 export const Radio: Story = {
   parameters: {
     ...storyDescription("components-table--radio"),
+    controls: { disable: true },
     tableSource: false,
     docs: {
       ...storyDescription("components-table--radio").docs,
@@ -635,6 +666,7 @@ export const DragRowSorting: Story = {
   name: "Drag Row",
   parameters: {
     ...storyDescription("components-table--drag-row-sorting"),
+    controls: { disable: true },
     tableSource: false,
     docs: {
       ...storyDescription("components-table--drag-row-sorting").docs,
@@ -668,6 +700,7 @@ export const DragColumnSorting: Story = {
   name: "Drag Column",
   parameters: {
     ...storyDescription("components-table--drag-column-sorting"),
+    controls: { disable: true },
     tableSource: false,
     docs: {
       ...storyDescription("components-table--drag-column-sorting").docs,

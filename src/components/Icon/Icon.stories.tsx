@@ -124,9 +124,10 @@ function IconGallery({ args }: { args: Partial<IconProps> }) {
 }
 
 export const Icons: Story = {
+  args: { loading: false, disabled: false },
   parameters: {
     ...storyDescription("components-icon--icons"),
-    controls: { disable: false },
+    controls: { disable: false, include: ["크기", "색상", "로딩", "비활성"] },
     docs: {
       ...storyDescription("components-icon--icons").docs,
       canvas: { sourceState: "none" },
@@ -140,15 +141,15 @@ export const SizeAndColor: Story = {
   args: { icon: "add", size: 24, color: "#0062df" },
   parameters: {
     ...storyDescription("components-icon--size-and-color"),
-    controls: { disable: false },
+    controls: { disable: false, include: ["아이콘", "크기", "색상"] },
   },
 };
 
 export const Clickable: Story = {
-  args: { icon: "delete-outlined" },
+  args: { icon: "delete-outlined", loading: false, disabled: false },
   parameters: {
     ...storyDescription("components-icon--clickable"),
-    controls: { disable: false },
+    controls: { disable: false, include: ["아이콘", "크기", "색상", "로딩", "비활성"] },
     docs: {
       ...storyDescription("components-icon--clickable").docs,
       source: {
@@ -169,10 +170,10 @@ export const Clickable: Story = {
 };
 
 export const Loading: Story = {
-  args: { color: "#0062df", icon: "close", size: 24 },
+  args: { color: "#0062df", icon: "close", size: 24, disabled: false },
   parameters: {
     ...storyDescription("components-icon--loading"),
-    controls: { disable: false },
+    controls: { disable: false, include: ["아이콘", "크기", "색상", "비활성"] },
     docs: {
       ...storyDescription("components-icon--loading").docs,
       source: {
@@ -224,7 +225,7 @@ export const Disabled: Story = {
   args: { disabled: true, icon: "delete-outlined" },
   parameters: {
     ...storyDescription("components-icon--disabled"),
-    controls: { disable: false },
+    controls: { disable: false, include: ["아이콘", "크기", "색상"] },
     docs: {
       ...storyDescription("components-icon--disabled").docs,
       source: {

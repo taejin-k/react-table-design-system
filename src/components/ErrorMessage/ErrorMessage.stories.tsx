@@ -45,6 +45,6 @@ export const Message: Story = {
   args: { errorMessage: "입력한 내용을 다시 확인해 주세요." },
   parameters: {
     docs: { description: { story: storyDescriptions["components-errormessage--message"] } },
-    controls: { disable: false },
+    controls: { disable: false, include: ["오류 문구"] },
   },
 };

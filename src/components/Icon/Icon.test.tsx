@@ -51,6 +51,16 @@ describe("Icon", () => {
     expect(container.querySelector("path")).toHaveAttribute("fill", "currentColor");
   });
 
+  it("renders the paperclip with a rounded outlined stroke", () => {
+    const { container } = render(<Icon icon="paperclip" />);
+
+    expect(container.querySelector("path")).toHaveAttribute("fill", "none");
+    expect(container.querySelector("path")).toHaveAttribute("stroke", "currentColor");
+    expect(container.querySelector("path")).toHaveAttribute("stroke-width", "1.6");
+    expect(container.querySelector("path")).toHaveAttribute("stroke-linecap", "round");
+    expect(container.querySelector("path")).toHaveAttribute("stroke-linejoin", "round");
+  });
+
   it("keeps per-glyph optical sizing when rendered at 12px", () => {
     const { container } = render(
       <>
@@ -82,22 +92,25 @@ describe("Icon", () => {
   });
 
   it.each(["folder-outlined", "folder-filled"] as const)(
-    "compresses the %s glyph vertically without changing its width",
+    "slightly enlarges the %s glyph for visual balance",
     (icon) => {
       const { container } = render(<Icon icon={icon} />);
 
       expect(container.querySelector("g")).toHaveAttribute(
         "transform",
-        "translate(8 8) scale(1 0.88) translate(-8 -8)",
+        "translate(8 8) scale(1.05 1.05) translate(-8 -8)",
       );
     },
   );
 
-  it.each(["chevron-left", "chevron-right"] as const)("renders the %s icon", (icon) => {
-    const { container } = render(<Icon icon={icon} />);
+  it.each(["chevron-left", "chevron-right", "double-left", "double-right"] as const)(
+    "renders the %s icon",
+    (icon) => {
+      const { container } = render(<Icon icon={icon} />);
 
-    expect(container.querySelector("path")).toHaveAttribute("d");
-  });
+      expect(container.querySelector("path")).toHaveAttribute("d");
+    },
+  );
 
   it.each([
     "flip-vertical",

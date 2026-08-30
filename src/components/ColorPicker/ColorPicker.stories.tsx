@@ -70,6 +70,7 @@ const meta = {
     defaultValue: { name: "기본 색상", control: "color" },
     defaultFormat: { name: "입력 형식", control: "select", options: colorFormats },
     size: { name: "크기", control: "select", options: colorPickerSizes },
+    readOnly: { name: "읽기 전용", control: "boolean" },
     disabled: { name: "비활성", control: "boolean" },
     allowClear: { name: "초기화", control: "boolean" },
     trigger: { name: "표시 동작", control: "select", options: colorPickerTriggers },
@@ -110,6 +111,7 @@ const meta = {
 | \`format\` | 색상 입력 형식을 제어해요. | [\`ColorFormatType\`](#color-format-type) | \`hex\` |
 | \`defaultFormat\` | 처음 사용할 색상 입력 형식을 정해요. | [\`ColorFormatType\`](#color-format-type) | \`hex\` |
 | \`size\` | 트리거의 크기를 정해요. | [\`ColorPickerSizeType\`](#color-picker-size-type) | \`md\` |
+| \`readOnly\` | 선택값을 읽기 전용으로 표시해요. | \`boolean\` | \`false\` |
 | \`disabled\` | 색상 선택을 비활성화해요. | \`boolean\` | \`false\` |
 | \`allowClear\` | 선택한 색상을 지우는 버튼을 표시해요. | \`boolean\` | \`false\` |
 | \`open\` | 패널 표시 상태를 제어해요. | \`boolean\` | - |
@@ -159,6 +161,7 @@ export const Basic: Story = {
     defaultValue: "#0062df",
     defaultFormat: "hex",
     size: "md",
+    readOnly: false,
     disabled: false,
     allowClear: false,
     trigger: "click",
@@ -173,6 +176,7 @@ export const Basic: Story = {
         "기본 색상",
         "입력 형식",
         "크기",
+        "읽기 전용",
         "비활성",
         "초기화",
         "표시 동작",
@@ -189,6 +193,32 @@ export const Basic: Story = {
     },
   },
   render: (args) => <ColorPicker {...args} key={args.defaultValue} />,
+};
+
+export const States: Story = {
+  args: { defaultValue: "#0062df", showLabel: true },
+  parameters: {
+    ...storyDescription("components-colorpicker--states"),
+    controls: { disable: false, include: ["기본 색상"] },
+    docs: {
+      ...storyDescription("components-colorpicker--states").docs,
+      source: {
+        type: "code",
+        code: withStoryImports(`<div className="flex flex-wrap items-center gap-3">
+  <ColorPicker defaultValue="#0062df" showLabel />
+  <ColorPicker defaultValue="#0062df" showLabel readOnly />
+  <ColorPicker defaultValue="#0062df" showLabel disabled />
+</div>`),
+      },
+    },
+  },
+  render: (args) => (
+    <div className="flex flex-wrap items-center gap-3">
+      <ColorPicker defaultValue={args.defaultValue} showLabel />
+      <ColorPicker defaultValue={args.defaultValue} showLabel readOnly />
+      <ColorPicker defaultValue={args.defaultValue} showLabel disabled />
+    </div>
+  ),
 };
 
 export const AllowClear: Story = {
