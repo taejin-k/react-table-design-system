@@ -6,7 +6,7 @@ import { withStoryImports } from "../../storybook/story-source";
 import { TypeTokens } from "../../storybook/type-tokens";
 import { Icon } from "../Icon";
 import { Tree } from "./Tree";
-import type { TreeDataNode, TreeDropInfo, TreeDropPositionType, TreeProps } from "./Tree.types";
+import type { TreeDataNode, TreeDropPositionType, TreeProps } from "./Tree.types";
 
 const treeCheckedKeyTypes = ["Key[]", "{ checked: Key[]; halfChecked: Key[] }"] as const;
 const treeDraggableTypes = [
@@ -78,43 +78,6 @@ const draggableTreeData: TreeDataNode[] = [
   { key: "archive", title: "보관함" },
 ];
 
-function moveTreeNode(data: TreeDataNode[], info: TreeDropInfo) {
-  const cloneTree = (nodes: TreeDataNode[]): TreeDataNode[] =>
-    nodes.map((node) => ({
-      ...node,
-      children: node.children ? cloneTree(node.children) : undefined,
-    }));
-  const next = cloneTree(data);
-  let dragged: TreeDataNode | undefined;
-  const find = (
-    nodes: TreeDataNode[],
-    key: React.Key,
-    callback: (node: TreeDataNode, index: number, siblings: TreeDataNode[]) => void,
-  ) => {
-    for (const [index, node] of nodes.entries()) {
-      if (Object.is(node.key, key)) {
-        callback(node, index, nodes);
-        return true;
-      }
-      if (node.children && find(node.children, key, callback)) return true;
-    }
-    return false;
-  };
-
-  find(next, info.dragNode.key, (node, index, siblings) => {
-    [dragged] = siblings.splice(index, 1);
-  });
-  if (!dragged) return next;
-
-  find(next, info.node.key, (node, index, siblings) => {
-    if (!info.dropToGap) {
-      node.children = [dragged!, ...(node.children ?? [])];
-    } else {
-      siblings.splice(info.dropPosition === -1 ? index : index + 1, 0, dragged!);
-    }
-  });
-  return next;
-}
 const storyDescription = (id: string) => ({
   docs: { description: { story: storyDescriptions[id] } },
 });
@@ -132,11 +95,13 @@ const meta = {
     draggable: { name: "드래그", control: "boolean" },
     height: { name: "높이", control: "number" },
     treeData: { control: false, table: { disable: true } },
+    defaultTreeData: { control: false, table: { disable: true } },
     expandedKeys: { control: false, table: { disable: true } },
     selectedKeys: { control: false, table: { disable: true } },
     checkedKeys: { control: false, table: { disable: true } },
     className: { control: false, table: { disable: true } },
     onDrop: { control: false, table: { disable: true } },
+    onTreeDataChange: { control: false, table: { disable: true } },
   },
   parameters: {
     controls: { disable: false },
@@ -156,7 +121,8 @@ const meta = {
 
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
-| \`treeData\` | 계층형 노드 데이터를 전달해요. | [\`TreeDataNode[]\`](#tree-data-node) | \`[]\` |
+| \`treeData\` | 외부에서 제어할 계층형 노드 데이터를 전달해요. | [\`TreeDataNode[]\`](#tree-data-node) | - |
+| \`defaultTreeData\` | 내부에서 관리할 초기 노드 데이터를 전달해요. 드래그하면 목록이 자동으로 변경돼요. | [\`TreeDataNode[]\`](#tree-data-node) | \`[]\` |
 | \`fieldNames\` | 데이터의 title·key·children 필드명을 바꿔요. | [\`TreeFieldNames\`](#tree-field-names) | 기본 필드명 |
 | \`blockNode\` | 노드 선택 영역을 가로로 채워요. | \`boolean\` | \`false\` |
 | \`expandedKeys\` | 펼친 노드를 제어해요. | \`Key[]\` | - |
@@ -190,6 +156,7 @@ const meta = {
 | \`onDragLeave\` | 드래그가 노드를 벗어날 때 실행해요. | <code>(info: <a href="#tree-drag-info">TreeDragInfo</a>) =&gt; void</code> | - |
 | \`onDragEnd\` | 노드 드래그가 끝날 때 실행해요. | <code>(info: <a href="#tree-drag-info">TreeDragInfo</a>) =&gt; void</code> | - |
 | \`onDrop\` | 노드를 놓은 위치와 이동 정보를 전달해요. | <code>(info: <a href="#tree-drop-info">TreeDropInfo</a>) =&gt; void</code> | - |
+| \`onTreeDataChange\` | 드래그로 변경된 전체 노드 데이터와 이동 정보를 전달해요. | <code>(treeData: <a href="#tree-data-node">TreeDataNode[]</a>, info: <a href="#tree-drop-info">TreeDropInfo</a>) =&gt; void</code> | - |
 
 ### <span id="tree-data-node">TreeDataNode</span>
 
@@ -459,67 +426,24 @@ export const Draggable: Story = {
       ...storyDescription("components-tree--draggable").docs,
       source: {
         type: "code",
-        code: withStoryImports(`function DraggableTree() {
-  const [data, setData] = useState<TreeDataNode[]>([
-    {
-      key: 'project',
-      title: '프로젝트',
-      children: [
-        { key: 'design', title: '디자인' },
-        { key: 'development', title: '개발' },
-      ],
-    },
-    { key: 'documents', title: '문서' },
-    { key: 'assets', title: '에셋', icon: <Icon icon="folder-outlined" /> },
-    { key: 'guide', title: '가이드.md', icon: <Icon icon="file-outlined" /> },
-    { key: 'releases', title: '릴리스' },
-    { key: 'settings', title: '설정', icon: <Icon icon="setting" /> },
-    { key: 'archive', title: '보관함' },
-  ]);
+        code: withStoryImports(`const data: TreeDataNode[] = [
+  {
+    key: 'project',
+    title: '프로젝트',
+    children: [
+      { key: 'design', title: '디자인' },
+      { key: 'development', title: '개발' },
+    ],
+  },
+  { key: 'documents', title: '문서' },
+  { key: 'assets', title: '에셋', icon: <Icon icon="folder-outlined" /> },
+  { key: 'guide', title: '가이드.md', icon: <Icon icon="file-outlined" /> },
+  { key: 'releases', title: '릴리스' },
+  { key: 'settings', title: '설정', icon: <Icon icon="setting" /> },
+  { key: 'archive', title: '보관함' },
+];
 
-  const moveTreeNode = (current: TreeDataNode[], info: TreeDropInfo) => {
-    const cloneTree = (nodes: TreeDataNode[]): TreeDataNode[] =>
-      nodes.map((node) => ({
-        ...node,
-        children: node.children ? cloneTree(node.children) : undefined,
-      }));
-    const next = cloneTree(current);
-    let dragged: TreeDataNode | undefined;
-    const find = (
-      nodes: TreeDataNode[],
-      key: TreeDataNode['key'],
-      callback: (node: TreeDataNode, index: number, siblings: TreeDataNode[]) => void,
-    ) => {
-      for (const [index, node] of nodes.entries()) {
-        if (node.key === key) {
-          callback(node, index, nodes);
-          return true;
-        }
-        if (node.children && find(node.children, key, callback)) return true;
-      }
-      return false;
-    };
-
-    find(next, info.dragNode.key, (node, index, siblings) => {
-      [dragged] = siblings.splice(index, 1);
-    });
-    find(next, info.node.key, (node, index, siblings) => {
-      if (!info.dropToGap) node.children = [dragged!, ...(node.children ?? [])];
-      else siblings.splice(info.dropPosition === -1 ? index : index + 1, 0, dragged!);
-    });
-    return next;
-  };
-
-  return (
-    <Tree
-      blockNode
-      draggable
-      defaultExpandAll
-      treeData={data}
-      onDrop={(info) => setData((current) => moveTreeNode(current, info))}
-    />
-  );
-}`),
+<Tree blockNode draggable defaultExpandAll defaultTreeData={data} />`),
       },
     },
   },
@@ -527,16 +451,8 @@ export const Draggable: Story = {
 };
 
 function DraggableTreeExample(args: Partial<TreeProps>) {
-  const [data, setData] = useState(draggableTreeData);
   return (
-    <Tree
-      {...args}
-      blockNode
-      draggable
-      defaultExpandAll
-      treeData={data}
-      onDrop={(info) => setData((current) => moveTreeNode(current, info))}
-    />
+    <Tree {...args} blockNode draggable defaultExpandAll defaultTreeData={draggableTreeData} />
   );
 }
 

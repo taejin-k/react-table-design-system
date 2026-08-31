@@ -469,7 +469,7 @@ export const storyDescriptions: Record<string, string> = {
   "components-tree--icons": "폴더와 파일 아이콘을 함께 표시해 항목 종류를 구분해요.",
   "components-tree--checkable": "체크박스로 부모와 자식 노드의 선택 상태를 함께 관리해요.",
   "components-tree--draggable":
-    "노드를 위·아래 또는 다른 노드 안으로 드래그해 계층과 순서를 변경해요.",
+    "defaultTreeData의 노드를 드래그하면 별도의 이동 함수 없이 내부에서 계층과 순서를 변경해요.",
   "components-tree--async-loading":
     "노드를 처음 펼칠 때 하위 데이터를 불러오고 완료 후 목록에 표시해요.",
   "components-tree--controlled-state":

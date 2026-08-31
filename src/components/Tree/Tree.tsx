@@ -2,7 +2,14 @@ import { useMemo, useRef, useState, type DragEvent } from "react";
 import { twMerge } from "tailwind-merge";
 import { Checkbox } from "../Checkbox";
 import { Icon } from "../Icon";
-import type { TreeDataNode, TreeDropPositionType, TreeEventInfo, TreeProps } from "./Tree.types";
+import type {
+  TreeDataNode,
+  TreeDropInfo,
+  TreeDropPositionType,
+  TreeEventInfo,
+  TreeFieldNames,
+  TreeProps,
+} from "./Tree.types";
 
 type TreeDragOverState = {
   key: string;
@@ -22,6 +29,56 @@ function descendants(node: TreeDataNode): string[] {
 }
 function descendantKeys(node: TreeDataNode): React.Key[] {
   return [node.key, ...(node.children ?? []).flatMap(descendantKeys)];
+}
+
+function moveTreeNode(treeData: TreeDataNode[], info: TreeDropInfo, fieldNames?: TreeFieldNames) {
+  const keyField = fieldNames?.key ?? "key";
+  const childrenField = fieldNames?.children ?? "children";
+  const nodeKey = (node: TreeDataNode) => (node[keyField] as React.Key | undefined) ?? node.key;
+  const nodeChildren = (node: TreeDataNode) =>
+    (node[childrenField] as TreeDataNode[] | undefined) ?? node.children;
+  const setNodeChildren = (node: TreeDataNode, children: TreeDataNode[]) => {
+    node[childrenField] = children;
+    if (childrenField === "children") node.children = children;
+  };
+  const cloneTree = (nodes: TreeDataNode[]): TreeDataNode[] =>
+    nodes.map((node) => {
+      const next = { ...node };
+      const children = nodeChildren(node);
+      if (children) setNodeChildren(next, cloneTree(children));
+      return next;
+    });
+  const next = cloneTree(treeData);
+  let dragged: TreeDataNode | undefined;
+  const find = (
+    nodes: TreeDataNode[],
+    key: React.Key,
+    callback: (node: TreeDataNode, index: number, siblings: TreeDataNode[]) => void,
+  ): boolean => {
+    for (const [index, node] of nodes.entries()) {
+      if (Object.is(nodeKey(node), key)) {
+        callback(node, index, nodes);
+        return true;
+      }
+      const children = nodeChildren(node);
+      if (children && find(children, key, callback)) return true;
+    }
+    return false;
+  };
+
+  find(next, info.dragNode.key, (_node, index, siblings) => {
+    [dragged] = siblings.splice(index, 1);
+  });
+  if (!dragged) return treeData;
+
+  const inserted = find(next, info.node.key, (node, index, siblings) => {
+    if (info.dropToGap) {
+      siblings.splice(info.dropPosition === -1 ? index : index + 1, 0, dragged!);
+    } else {
+      setNodeChildren(node, [dragged!, ...(nodeChildren(node) ?? [])]);
+    }
+  });
+  return inserted ? next : treeData;
 }
 export function getTreeDropPosition(
   pointerY: number,
@@ -78,7 +135,8 @@ function setTreeDragImage(event: DragEvent<HTMLDivElement>) {
 }
 
 export function Tree({
-  treeData = [],
+  treeData,
+  defaultTreeData = [],
   fieldNames,
   blockNode = false,
   checkable = false,
@@ -112,7 +170,10 @@ export function Tree({
   onDragLeave,
   onDragEnd,
   onDrop,
+  onTreeDataChange,
 }: TreeProps) {
+  const [innerTreeData, setInnerTreeData] = useState(defaultTreeData);
+  const currentTreeData = treeData ?? innerTreeData;
   const normalized = useMemo(() => {
     const normalize = (nodes: TreeDataNode[]): TreeDataNode[] =>
       nodes.map((node) => ({
@@ -123,8 +184,8 @@ export function Tree({
           ? normalize(node[fieldNames?.children ?? "children"] as TreeDataNode[])
           : node.children,
       }));
-    return normalize(treeData);
-  }, [treeData, fieldNames]);
+    return normalize(currentTreeData);
+  }, [currentTreeData, fieldNames]);
   const allKeys = useMemo(() => normalized.flatMap(descendants), [normalized]);
   const keyMap = useMemo(() => {
     const map = new Map<string, React.Key>();
@@ -438,14 +499,18 @@ export function Tree({
                 const { dropNode, position } = dropState;
                 if (!canDrop(dragNode, dropNode, position)) return;
                 clearDragOver();
-                onDrop?.({
+                const info: TreeDropInfo = {
                   event,
                   node: dropNode,
                   dragNode,
                   dragNodesKeys: descendantKeys(dragNode),
                   dropPosition: position,
                   dropToGap: position !== 0,
-                });
+                };
+                const nextTreeData = moveTreeNode(currentTreeData, info, fieldNames);
+                if (treeData === undefined) setInnerTreeData(nextTreeData);
+                onTreeDataChange?.(nextTreeData, info);
+                onDrop?.(info);
               }}
               onDragEnd={(event) => {
                 const dragNode = dragNodeRef.current;

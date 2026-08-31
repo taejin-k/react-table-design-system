@@ -73,6 +73,7 @@ export interface TreeDropInfo extends TreeDragInfo {
 
 export interface TreeProps {
   treeData?: TreeDataNode[];
+  defaultTreeData?: TreeDataNode[];
   fieldNames?: TreeFieldNames;
   blockNode?: boolean;
   checkable?: boolean;
@@ -98,10 +99,7 @@ export interface TreeProps {
   style?: CSSProperties;
   onExpand?: (expandedKeys: Key[], info: TreeEventInfo) => void;
   onSelect?: (selectedKeys: Key[], info: TreeEventInfo) => void;
-  onCheck?: (
-    checkedKeys: TreeCheckedKeys,
-    info: TreeEventInfo,
-  ) => void;
+  onCheck?: (checkedKeys: TreeCheckedKeys, info: TreeEventInfo) => void;
   onLoad?: (loadedKeys: Key[], info: TreeLoadInfo) => void;
   onDragStart?: (info: TreeDragInfo) => void;
   onDragEnter?: (info: TreeDragEnterInfo) => void;
@@ -109,4 +107,5 @@ export interface TreeProps {
   onDragLeave?: (info: TreeDragInfo) => void;
   onDragEnd?: (info: TreeDragInfo) => void;
   onDrop?: (info: TreeDropInfo) => void;
+  onTreeDataChange?: (treeData: TreeDataNode[], info: TreeDropInfo) => void;
 }

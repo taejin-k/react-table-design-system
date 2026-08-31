@@ -107,11 +107,12 @@ describe("Tree", () => {
 
   it("uses vertical movement for order and horizontal movement for depth", () => {
     const onDrop = vi.fn();
+    const onTreeDataChange = vi.fn();
     render(
       <Tree
         draggable
         defaultExpandedKeys={["project"]}
-        treeData={[
+        defaultTreeData={[
           { key: "source", title: "이동" },
           {
             key: "project",
@@ -124,6 +125,7 @@ describe("Tree", () => {
           { key: "archive", title: "보관함" },
         ]}
         onDrop={onDrop}
+        onTreeDataChange={onTreeDataChange}
       />,
     );
     const source = document.querySelector<HTMLElement>('[data-tree-node="source"]')!;
@@ -197,6 +199,14 @@ describe("Tree", () => {
         dropToGap: true,
       }),
     );
+    expect(onTreeDataChange).toHaveBeenLastCalledWith(
+      [
+        expect.objectContaining({ key: "project" }),
+        expect.objectContaining({ key: "archive" }),
+        expect.objectContaining({ key: "source" }),
+      ],
+      expect.objectContaining({ dropPosition: 1, dropToGap: true }),
+    );
 
     fireEvent.dragEnd(source, { dataTransfer });
     dispatchDragEvent("dragstart", source, 100, 62);
@@ -214,6 +224,16 @@ describe("Tree", () => {
         dropPosition: 0,
         dropToGap: false,
       }),
+    );
+    expect(onTreeDataChange).toHaveBeenLastCalledWith(
+      [
+        expect.objectContaining({ key: "project" }),
+        expect.objectContaining({
+          key: "archive",
+          children: [expect.objectContaining({ key: "source" })],
+        }),
+      ],
+      expect.objectContaining({ dropPosition: 0, dropToGap: false }),
     );
   });
 
