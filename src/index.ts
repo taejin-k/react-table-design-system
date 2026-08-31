@@ -238,7 +238,6 @@ export type {
 export { Tree } from "./components/Tree";
 export type {
   TreeAllowDropInfo,
-  TreeCheckedKeys,
   TreeDataNode,
   TreeDragEnterInfo,
   TreeDraggableConfig,

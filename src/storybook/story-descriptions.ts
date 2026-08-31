@@ -466,6 +466,8 @@ export const storyDescriptions: Record<string, string> = {
     "정상 원본 이미지와 로드 실패 후 fallback 이미지가 표시된 결과를 비교해요.",
 
   "components-tree--basic": "계층형 데이터를 펼치고 접으며 항목을 선택해요.",
+  "components-tree--full-width":
+    "fullWidth로 노드의 선택, hover와 클릭 영역을 부모 너비 전체로 확장해요.",
   "components-tree--icons": "폴더와 파일 아이콘을 함께 표시해 항목 종류를 구분해요.",
   "components-tree--checkable": "체크박스로 부모와 자식 노드의 선택 상태를 함께 관리해요.",
   "components-tree--draggable":

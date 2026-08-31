@@ -23,8 +23,15 @@ describe("Tree", () => {
     expect(parentItem).toHaveClass("pb-0");
     expect(children.querySelector("ul")).not.toHaveClass("overflow-hidden");
     await userEvent.click(document.querySelector('[data-tree-switcher="parent"]')!);
+    expect(children.firstElementChild).toHaveClass(
+      "pt-0",
+      "transition-[padding-top]",
+      "duration-200",
+    );
     expect(children.firstElementChild).not.toHaveClass("pt-1");
+    expect(children).toHaveStyle({ gridTemplateRows: "0fr" });
     expect(parentItem).toHaveClass("pb-1");
+    expect(parentItem).toHaveClass("transition-[padding-bottom]", "duration-200");
   });
 
   it("checks descendants together", async () => {
@@ -35,6 +42,14 @@ describe("Tree", () => {
       expect.arrayContaining(["parent", "child"]),
       expect.any(Object),
     );
+  });
+
+  it("always reports checked keys as an array in strict mode", async () => {
+    const onCheck = vi.fn();
+    render(<Tree checkable checkStrictly defaultExpandAll treeData={treeData} onCheck={onCheck} />);
+
+    await userEvent.click(screen.getAllByRole("checkbox")[1]);
+    expect(onCheck).toHaveBeenCalledWith(["child"], expect.any(Object));
   });
 
   it("applies selection styling to the icon and title content", () => {
@@ -48,7 +63,18 @@ describe("Tree", () => {
 
     rerender(
       <Tree
-        blockNode
+        fullWidth
+        treeData={treeData}
+        defaultExpandedKeys={["parent"]}
+        defaultSelectedKeys={["child"]}
+      />,
+    );
+    expect(document.querySelector('[data-tree-selection-content="child"]')).toHaveClass("flex-1");
+
+    rerender(
+      <Tree
+        draggable
+        fullWidth
         treeData={treeData}
         defaultExpandedKeys={["parent"]}
         defaultSelectedKeys={["child"]}

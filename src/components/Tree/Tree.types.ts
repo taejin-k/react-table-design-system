@@ -21,8 +21,6 @@ export interface TreeFieldNames {
   children?: string;
 }
 
-export type TreeCheckedKeys = Key[] | { checked: Key[]; halfChecked: Key[] };
-
 export interface TreeEventInfo {
   event: "select" | "check" | "expand";
   selected?: boolean;
@@ -75,7 +73,7 @@ export interface TreeProps {
   treeData?: TreeDataNode[];
   defaultTreeData?: TreeDataNode[];
   fieldNames?: TreeFieldNames;
-  blockNode?: boolean;
+  fullWidth?: boolean;
   checkable?: boolean;
   checkStrictly?: boolean;
   selectable?: boolean;
@@ -90,7 +88,7 @@ export interface TreeProps {
   defaultExpandAll?: boolean;
   selectedKeys?: Key[];
   defaultSelectedKeys?: Key[];
-  checkedKeys?: TreeCheckedKeys;
+  checkedKeys?: Key[];
   defaultCheckedKeys?: Key[];
   height?: number;
   loadData?: (node: TreeDataNode) => Promise<void>;
@@ -99,7 +97,7 @@ export interface TreeProps {
   style?: CSSProperties;
   onExpand?: (expandedKeys: Key[], info: TreeEventInfo) => void;
   onSelect?: (selectedKeys: Key[], info: TreeEventInfo) => void;
-  onCheck?: (checkedKeys: TreeCheckedKeys, info: TreeEventInfo) => void;
+  onCheck?: (checkedKeys: Key[], info: TreeEventInfo) => void;
   onLoad?: (loadedKeys: Key[], info: TreeLoadInfo) => void;
   onDragStart?: (info: TreeDragInfo) => void;
   onDragEnter?: (info: TreeDragEnterInfo) => void;

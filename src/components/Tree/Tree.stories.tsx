@@ -8,7 +8,6 @@ import { Icon } from "../Icon";
 import { Tree } from "./Tree";
 import type { TreeDataNode, TreeDropPositionType, TreeProps } from "./Tree.types";
 
-const treeCheckedKeyTypes = ["Key[]", "{ checked: Key[]; halfChecked: Key[] }"] as const;
 const treeDraggableTypes = [
   "boolean",
   "(node: TreeDataNode) => boolean",
@@ -30,6 +29,21 @@ const basicTreeData: TreeDataNode[] = [
     ],
   },
   { key: "package", title: "package.json" },
+];
+const controlledTreeData: TreeDataNode[] = [
+  {
+    key: "src",
+    title: "src",
+    children: [
+      {
+        key: "components",
+        title: "components",
+        children: [{ key: "button", title: "Button.tsx", isLeaf: true }],
+      },
+      { key: "index", title: "index.ts", isLeaf: true },
+    ],
+  },
+  { key: "package", title: "package.json", isLeaf: true },
 ];
 const treeData = [
   {
@@ -86,7 +100,7 @@ const meta = {
   component: Tree,
   tags: ["autodocs"],
   argTypes: {
-    blockNode: { name: "가로 채우기", control: "boolean" },
+    fullWidth: { name: "전체 너비", control: "boolean" },
     checkable: { name: "체크박스", control: "boolean" },
     checkStrictly: { name: "독립 체크", control: "boolean" },
     selectable: { name: "선택 가능", control: "boolean" },
@@ -124,12 +138,12 @@ const meta = {
 | \`treeData\` | 외부에서 제어할 계층형 노드 데이터를 전달해요. | [\`TreeDataNode[]\`](#tree-data-node) | - |
 | \`defaultTreeData\` | 내부에서 관리할 초기 노드 데이터를 전달해요. 드래그하면 목록이 자동으로 변경돼요. | [\`TreeDataNode[]\`](#tree-data-node) | \`[]\` |
 | \`fieldNames\` | 데이터의 title·key·children 필드명을 바꿔요. | [\`TreeFieldNames\`](#tree-field-names) | 기본 필드명 |
-| \`blockNode\` | 노드 선택 영역을 가로로 채워요. | \`boolean\` | \`false\` |
+| \`fullWidth\` | 노드의 선택·hover 영역을 부모 너비만큼 채워요. | \`boolean\` | \`false\` |
 | \`expandedKeys\` | 펼친 노드를 제어해요. | \`Key[]\` | - |
 | \`defaultExpandedKeys\` | 처음 펼칠 노드를 정해요. | \`Key[]\` | \`[]\` |
 | \`selectedKeys\` | 선택된 노드를 제어해요. | \`Key[]\` | - |
 | \`defaultSelectedKeys\` | 처음 선택할 노드를 정해요. | \`Key[]\` | \`[]\` |
-| \`checkedKeys\` | 체크된 노드와 부분 체크 노드를 제어해요. | [\`TreeCheckedKeys\`](#tree-checked-keys) | - |
+| \`checkedKeys\` | 체크된 노드 키 목록을 제어해요. | \`Key[]\` | - |
 | \`defaultCheckedKeys\` | 처음 체크할 노드를 정해요. | \`Key[]\` | \`[]\` |
 | \`defaultExpandAll\` | 처음에 모든 노드를 펼쳐요. | \`boolean\` | \`false\` |
 | \`checkable\` | 각 노드에 체크박스를 표시해요. | \`boolean\` | \`false\` |
@@ -148,7 +162,7 @@ const meta = {
 | \`style\` | 최상위 요소에 인라인 스타일을 추가해요. | \`CSSProperties\` | - |
 | \`onExpand\` | 펼친 노드가 바뀔 때 실행해요. | <code>(expandedKeys: Key[], info: <a href="#tree-event-info">TreeEventInfo</a>) =&gt; void</code> | - |
 | \`onSelect\` | 선택된 노드가 바뀔 때 실행해요. | <code>(selectedKeys: Key[], info: <a href="#tree-event-info">TreeEventInfo</a>) =&gt; void</code> | - |
-| \`onCheck\` | 체크 상태가 바뀔 때 실행해요. | <code>(checkedKeys: <a href="#tree-checked-keys">TreeCheckedKeys</a>, info: <a href="#tree-event-info">TreeEventInfo</a>) =&gt; void</code> | - |
+| \`onCheck\` | 체크 상태가 바뀔 때 실행해요. | <code>(checkedKeys: Key[], info: <a href="#tree-event-info">TreeEventInfo</a>) =&gt; void</code> | - |
 | \`onLoad\` | 노드 불러오기가 끝나면 실행해요. | <code>(loadedKeys: Key[], info: <a href="#tree-load-info">TreeLoadInfo</a>) =&gt; void</code> | - |
 | \`onDragStart\` | 노드 드래그를 시작할 때 실행해요. | <code>(info: <a href="#tree-drag-info">TreeDragInfo</a>) =&gt; void</code> | - |
 | \`onDragEnter\` | 드래그가 노드에 들어올 때 실행해요. | <code>(info: <a href="#tree-drag-enter-info">TreeDragEnterInfo</a>) =&gt; void</code> | - |
@@ -247,9 +261,6 @@ TreeDragInfo의 필드와 함께 아래 값을 전달해요.
 | \`dropToGap\` | 노드 사이에 놓았는지 나타내요. | \`boolean\` | - |
           `}</Markdown>
           <h2 className="component-docs-types-heading">Types</h2>
-          <h3 id="tree-checked-keys">TreeCheckedKeys</h3>
-          <p>체크된 키만 전달하거나 부분 체크 키를 함께 전달해요.</p>
-          <TypeTokens values={treeCheckedKeyTypes} />
           <h3 id="tree-draggable-type">TreeDraggableType</h3>
           <p>
             전체 드래그를 설정하거나 노드별 조건을 지정해요. 객체 설정은{" "}
@@ -327,7 +338,7 @@ export const Basic: Story = {
   args: {
     treeData: basicTreeData,
     defaultExpandAll: true,
-    blockNode: false,
+    fullWidth: false,
     checkable: false,
     checkStrictly: false,
     selectable: true,
@@ -340,7 +351,7 @@ export const Basic: Story = {
     ...storyDescription("components-tree--basic"),
     controls: {
       include: [
-        "가로 채우기",
+        "전체 너비",
         "체크박스",
         "독립 체크",
         "선택 가능",
@@ -356,11 +367,47 @@ export const Basic: Story = {
     },
   },
 };
+export const FullWidth: Story = {
+  args: {
+    treeData: basicTreeData,
+    defaultExpandAll: true,
+    defaultSelectedKeys: ["components"],
+    fullWidth: true,
+    selectable: true,
+    disabled: false,
+  },
+  parameters: {
+    ...storyDescription("components-tree--full-width"),
+    controls: { include: ["전체 너비", "선택 가능", "비활성"] },
+    docs: {
+      ...storyDescription("components-tree--full-width").docs,
+      source: {
+        type: "code",
+        code: withStoryImports(`<Tree
+  fullWidth
+  defaultExpandAll
+  defaultSelectedKeys={['components']}
+  treeData={[
+    {
+      key: 'src',
+      title: 'src',
+      children: [
+        { key: 'components', title: 'components' },
+        { key: 'index', title: 'index.ts' },
+      ],
+    },
+    { key: 'package', title: 'package.json' },
+  ]}
+/>`),
+      },
+    },
+  },
+};
 export const Icons: Story = {
   args: {
     treeData,
     defaultExpandAll: true,
-    blockNode: false,
+    fullWidth: false,
     checkable: false,
     checkStrictly: false,
     selectable: true,
@@ -371,7 +418,7 @@ export const Icons: Story = {
   parameters: {
     ...storyDescription("components-tree--icons"),
     controls: {
-      include: ["가로 채우기", "체크박스", "독립 체크", "선택 가능", "다중 선택", "비활성", "높이"],
+      include: ["전체 너비", "체크박스", "독립 체크", "선택 가능", "다중 선택", "비활성", "높이"],
     },
     docs: {
       ...storyDescription("components-tree--icons").docs,
@@ -384,7 +431,7 @@ export const Checkable: Story = {
     treeData,
     defaultExpandAll: true,
     checkable: true,
-    blockNode: false,
+    fullWidth: false,
     checkStrictly: false,
     selectable: true,
     multiple: false,
@@ -395,7 +442,7 @@ export const Checkable: Story = {
   parameters: {
     ...storyDescription("components-tree--checkable"),
     controls: {
-      include: ["가로 채우기", "체크박스", "독립 체크", "선택 가능", "다중 선택", "비활성", "높이"],
+      include: ["전체 너비", "체크박스", "독립 체크", "선택 가능", "다중 선택", "비활성", "높이"],
     },
     docs: {
       ...storyDescription("components-tree--checkable").docs,
@@ -410,7 +457,7 @@ export const Checkable: Story = {
 };
 export const Draggable: Story = {
   args: {
-    blockNode: true,
+    fullWidth: true,
     checkable: false,
     selectable: true,
     multiple: false,
@@ -443,7 +490,7 @@ export const Draggable: Story = {
   { key: 'archive', title: '보관함' },
 ];
 
-<Tree blockNode draggable defaultExpandAll defaultTreeData={data} />`),
+<Tree fullWidth draggable defaultExpandAll defaultTreeData={data} />`),
       },
     },
   },
@@ -452,18 +499,18 @@ export const Draggable: Story = {
 
 function DraggableTreeExample(args: Partial<TreeProps>) {
   return (
-    <Tree {...args} blockNode draggable defaultExpandAll defaultTreeData={draggableTreeData} />
+    <Tree {...args} fullWidth draggable defaultExpandAll defaultTreeData={draggableTreeData} />
   );
 }
 
 export const ControlledState: Story = {
   args: {
-    blockNode: false,
+    fullWidth: false,
     disabled: false,
   },
   parameters: {
     ...storyDescription("components-tree--controlled-state"),
-    controls: { include: ["가로 채우기", "비활성"] },
+    controls: { include: ["전체 너비", "비활성"] },
     docs: {
       ...storyDescription("components-tree--controlled-state").docs,
       source: {
@@ -489,7 +536,7 @@ function ControlledTree() {
         checkedKeys={checkedKeys}
         onExpand={(keys) => setExpandedKeys(keys)}
         onSelect={(keys) => setSelectedKeys(keys)}
-        onCheck={(keys) => setCheckedKeys(Array.isArray(keys) ? keys : keys.checked)}
+        onCheck={setCheckedKeys}
       />
     </div>
   );
@@ -514,13 +561,13 @@ function ControlledTreeExample(args: Partial<TreeProps>) {
       <Tree
         {...args}
         checkable
-        treeData={treeData}
+        treeData={controlledTreeData}
         expandedKeys={expandedKeys}
         selectedKeys={selectedKeys}
         checkedKeys={checkedKeys}
         onExpand={(keys) => setExpandedKeys(keys)}
         onSelect={(keys) => setSelectedKeys(keys)}
-        onCheck={(keys) => setCheckedKeys(Array.isArray(keys) ? keys : keys.checked)}
+        onCheck={setCheckedKeys}
       />
     </div>
   );
@@ -529,12 +576,12 @@ function ControlledTreeExample(args: Partial<TreeProps>) {
 export const CustomTitles: Story = {
   args: {
     defaultExpandAll: true,
-    blockNode: false,
+    fullWidth: false,
     disabled: false,
   },
   parameters: {
     ...storyDescription("components-tree--custom-titles"),
-    controls: { include: ["가로 채우기", "비활성"] },
+    controls: { include: ["전체 너비", "비활성"] },
     docs: {
       ...storyDescription("components-tree--custom-titles").docs,
       source: {
@@ -559,7 +606,7 @@ export const CustomTitles: Story = {
   render: (args) => (
     <Tree
       {...args}
-      treeData={treeData}
+      treeData={controlledTreeData}
       titleRender={(node) => (
         <span className="flex items-center gap-2">
           <span>{node.title}</span>
@@ -574,7 +621,7 @@ export const CustomTitles: Story = {
 
 export const AsyncLoading: Story = {
   args: {
-    blockNode: false,
+    fullWidth: false,
     checkable: false,
     selectable: true,
     multiple: false,
@@ -585,7 +632,7 @@ export const AsyncLoading: Story = {
   parameters: {
     ...storyDescription("components-tree--async-loading"),
     controls: {
-      include: ["가로 채우기", "체크박스", "독립 체크", "선택 가능", "다중 선택", "비활성", "높이"],
+      include: ["전체 너비", "체크박스", "독립 체크", "선택 가능", "다중 선택", "비활성", "높이"],
     },
     docs: {
       ...storyDescription("components-tree--async-loading").docs,

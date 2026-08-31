@@ -138,7 +138,7 @@ export function Tree({
   treeData,
   defaultTreeData = [],
   fieldNames,
-  blockNode = false,
+  fullWidth = false,
   checkable = false,
   checkStrictly = false,
   selectable = true,
@@ -202,9 +202,7 @@ export function Tree({
     defaultExpandAll ? allKeys : defaultExpandedKeys.map(id),
   );
   const [innerSelected, setInnerSelected] = useState(defaultSelectedKeys.map(id));
-  const initialChecked = Array.isArray(checkedKeys)
-    ? checkedKeys
-    : (checkedKeys?.checked ?? defaultCheckedKeys);
+  const initialChecked = checkedKeys ?? defaultCheckedKeys;
   const [innerChecked, setInnerChecked] = useState(initialChecked.map(id));
   const [innerLoaded, setInnerLoaded] = useState((loadedKeys ?? []).map(id));
   const [loading, setLoading] = useState<string[]>([]);
@@ -217,9 +215,7 @@ export function Tree({
   const dragOverRef = useRef<TreeDragOverState | undefined>(undefined);
   const expanded = expandedKeys ? expandedKeys.map(id) : innerExpanded;
   const selected = selectedKeys ? selectedKeys.map(id) : innerSelected;
-  const checked = checkedKeys
-    ? (Array.isArray(checkedKeys) ? checkedKeys : checkedKeys.checked).map(id)
-    : innerChecked;
+  const checked = checkedKeys ? checkedKeys.map(id) : innerChecked;
   const loaded = loadedKeys ? loadedKeys.map(id) : innerLoaded;
   const visibleNodes: VisibleTreeNode[] = [];
   const collectVisibleNodes = (nodes: TreeDataNode[], level = 0) => {
@@ -241,8 +237,7 @@ export function Tree({
     return map;
   }, [normalized]);
   const halfChecked = useMemo(() => {
-    if (checkStrictly)
-      return !Array.isArray(checkedKeys) ? (checkedKeys?.halfChecked.map(id) ?? []) : [];
+    if (checkStrictly) return [];
     const result = new Set<string>();
     checked.forEach((key) => {
       let parent = parentMap.get(key);
@@ -252,7 +247,7 @@ export function Tree({
       }
     });
     return [...result];
-  }, [checked, checkStrictly, checkedKeys, parentMap]);
+  }, [checked, checkStrictly, parentMap]);
   const eventInfo = (
     event: TreeEventInfo["event"],
     node: TreeDataNode,
@@ -319,10 +314,10 @@ export function Tree({
       }
     }
     if (!checkedKeys) setInnerChecked(next);
-    const output = checkStrictly
-      ? { checked: restoreKeys(next), halfChecked: restoreKeys(halfChecked) }
-      : restoreKeys(next);
-    onCheck?.(output, eventInfo("check", node, event.nativeEvent, { checked: nextChecked }));
+    onCheck?.(
+      restoreKeys(next),
+      eventInfo("check", node, event.nativeEvent, { checked: nextChecked }),
+    );
   };
   const nodeDraggable = (node: TreeDataNode) => {
     if (!draggable || disabled || node.disabled) return false;
@@ -436,7 +431,13 @@ export function Tree({
         return (
           <li
             key={key}
-            className={twMerge("relative", hasChildren && open ? "pb-0" : "pb-1", node.className)}
+            className={twMerge(
+              "relative pb-1",
+              hasChildren &&
+                "transition-[padding-bottom] duration-200 ease-[cubic-bezier(0.645,0.045,0.355,1)] motion-reduce:transition-none",
+              hasChildren && open && "pb-0",
+              node.className,
+            )}
             style={node.style}
           >
             <div
@@ -457,7 +458,7 @@ export function Tree({
               className={twMerge(
                 "relative flex min-h-6 w-fit max-w-full items-start rounded-md text-sm select-none",
                 draggable && "w-full",
-                blockNode && !canDragNode && "w-full",
+                fullWidth && "w-full",
                 nodeDisabled && "cursor-not-allowed text-[#bbb]",
                 canDragNode && "cursor-grab active:cursor-grabbing",
               )}
@@ -579,7 +580,7 @@ export function Tree({
                 data-tree-selection-content={key}
                 className={twMerge(
                   "inline-flex min-h-6 min-w-0 cursor-pointer items-center rounded-md transition-colors hover:bg-[#f5f5f5]",
-                  blockNode && !canDragNode && "flex-1",
+                  fullWidth && "flex-1",
                   isSelected && "bg-[#e6f4ff] text-[#0062df] hover:bg-[#e6f4ff]",
                   nodeDisabled && "cursor-not-allowed hover:bg-transparent",
                 )}
@@ -607,7 +608,12 @@ export function Tree({
                 className="grid transition-[grid-template-rows] duration-200 ease-[cubic-bezier(0.645,0.045,0.355,1)] motion-reduce:transition-none"
                 style={{ gridTemplateRows: open ? "1fr" : "0fr" }}
               >
-                <div className={twMerge("overflow-hidden", open && "pt-1")}>
+                <div
+                  className={twMerge(
+                    "overflow-hidden pt-0 transition-[padding-top] duration-200 ease-[cubic-bezier(0.645,0.045,0.355,1)] motion-reduce:transition-none",
+                    open && "pt-1",
+                  )}
+                >
                   {renderNodes(node.children ?? [], level + 1)}
                 </div>
               </div>
