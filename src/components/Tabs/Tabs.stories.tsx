@@ -14,7 +14,7 @@ import type {
   TabsType,
 } from "./Tabs.types";
 
-const tabsTypes: TabsType[] = ["line", "card", "editable-card"];
+const tabsTypes: TabsType[] = ["line", "card"];
 const tabsSizes: TabsSizeType[] = ["lg", "md", "sm"];
 const tabsPlacements: TabsPlacementType[] = ["top", "end", "bottom", "start"];
 
@@ -51,7 +51,7 @@ function EditableTabsExample({
   return (
     <Tabs
       {...args}
-      type="editable-card"
+      type="card"
       items={editableItems}
       onAdd={handleAdd}
       onDelete={deletable ? setEditableItems : undefined}
@@ -82,7 +82,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "같은 영역 안의 연관된 콘텐츠를 탭으로 전환해요.  \n선·카드·편집형 모드, 네 방향 배치, 제어 상태와 탭 전환 애니메이션을 지원해요.",
+          "같은 영역 안의 연관된 콘텐츠를 탭으로 전환해요.  \n선·카드 모드, 네 방향 배치, 탭 추가·삭제와 콘텐츠 전환 애니메이션을 지원해요.",
       },
       page: () => (
         <div className="tabs-docs component-docs">
@@ -106,8 +106,8 @@ const meta = {
 | \`destroyOnHidden\` | 숨겨진 탭 콘텐츠를 DOM에서 제거해요. | \`boolean\` | \`false\` |
 | \`tabBarGutter\` | 탭 사이의 간격을 px로 정해요. | \`number\` | \`0\` |
 | \`tabBarStyle\` | 탭 목록에 인라인 스타일을 적용해요. | \`CSSProperties\` | - |
-| \`addIcon\` | 편집형 탭의 추가 아이콘을 변경해요. | \`ReactNode\` | add Icon |
-| \`removeIcon\` | 편집형 탭의 닫기 아이콘을 변경해요. | \`ReactNode\` | close Icon |
+| \`addIcon\` | onAdd 버튼의 아이콘을 변경해요. | \`ReactNode\` | add Icon |
+| \`removeIcon\` | onDelete 버튼의 아이콘을 변경해요. | \`ReactNode\` | close Icon |
 | \`indicator\` | 표시선의 크기와 정렬을 설정해요. | \`{ size?: number \\| ((origin: number) => number); align?: 'start' \\| 'center' \\| 'end' }\` | 탭 크기·가운데 |
 | \`className\` | 최상위 요소에 Tailwind 클래스를 추가해요. | \`string\` | - |
 | \`onChange\` | 활성 탭이 바뀔 때 실행해요. | \`(activeKey: string) => void\` | - |
@@ -291,7 +291,7 @@ function EditableTabsExample() {
 
   return (
     <Tabs
-      type="editable-card"
+      type="card"
       items={editableItems}
       onAdd={handleAdd}
     />
@@ -336,7 +336,7 @@ function EditableTabsExample() {
 
   return (
     <Tabs
-      type="editable-card"
+      type="card"
       items={editableItems}
       onAdd={handleAdd}
       onDelete={setEditableItems}

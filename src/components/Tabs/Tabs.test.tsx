@@ -31,7 +31,7 @@ describe("Tabs", () => {
           { key: "custom", label: "사용자 탭", children: "사용자 탭 내용" },
         ]);
       };
-      return <Tabs type="editable-card" items={items} onAdd={handleAdd} onDelete={setItems} />;
+      return <Tabs type="card" items={items} onAdd={handleAdd} onDelete={setItems} />;
     }
 
     render(<EditableTabs />);
@@ -46,16 +46,16 @@ describe("Tabs", () => {
     const items = [{ key: "one", label: "문서" }];
     const onAdd = vi.fn();
     const onDelete = vi.fn();
-    const { rerender } = render(<Tabs type="editable-card" items={items} />);
+    const { rerender } = render(<Tabs type="card" items={items} />);
 
     expect(document.querySelector("[data-tabs-add]")).not.toBeInTheDocument();
     expect(document.querySelector('[data-tab-close="one"]')).not.toBeInTheDocument();
 
-    rerender(<Tabs type="editable-card" items={items} onAdd={onAdd} />);
+    rerender(<Tabs type="card" items={items} onAdd={onAdd} />);
     expect(document.querySelector("[data-tabs-add]")).toBeInTheDocument();
     expect(document.querySelector('[data-tab-close="one"]')).not.toBeInTheDocument();
 
-    rerender(<Tabs type="editable-card" items={items} onAdd={onAdd} onDelete={onDelete} />);
+    rerender(<Tabs type="card" items={items} onAdd={onAdd} onDelete={onDelete} />);
     expect(document.querySelector("[data-tabs-add]")).toBeInTheDocument();
     expect(document.querySelector('[data-tab-close="one"]')).toBeInTheDocument();
   });
@@ -93,7 +93,7 @@ describe("Tabs", () => {
   });
 
   it("matches the editable add button height to card tabs", () => {
-    render(<Tabs type="editable-card" items={[{ key: "one", label: "문서" }]} onAdd={vi.fn()} />);
+    render(<Tabs type="card" items={[{ key: "one", label: "문서" }]} onAdd={vi.fn()} />);
 
     expect(document.querySelector("[data-tabs-add]")).toHaveClass(
       "h-10",

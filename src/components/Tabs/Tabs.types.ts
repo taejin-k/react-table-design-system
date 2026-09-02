@@ -2,7 +2,7 @@ import type { CSSProperties, MouseEvent, ReactElement, ReactNode } from "react";
 
 export type TabsPlacementType = "top" | "end" | "bottom" | "start";
 export type TabsSizeType = "lg" | "md" | "sm";
-export type TabsType = "line" | "card" | "editable-card";
+export type TabsType = "line" | "card";
 
 export interface TabItemType {
   key: string;
