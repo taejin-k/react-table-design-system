@@ -143,6 +143,52 @@ describe("Tree", () => {
     expect(document.querySelector('[data-tree-selection-content="child"]')).toHaveClass("flex-1");
   });
 
+  it("removes selection interaction styles when selection is unavailable", () => {
+    const { rerender } = render(
+      <Tree
+        selectable={false}
+        defaultSelectedKeys={["item"]}
+        treeData={[{ key: "item", title: "선택 불가" }]}
+      />,
+    );
+    const selectionContent = document.querySelector('[data-tree-selection-content="item"]');
+
+    expect(selectionContent).not.toHaveClass("cursor-pointer");
+    expect(selectionContent).not.toHaveClass("hover:bg-[#f5f5f5]");
+    expect(selectionContent).toHaveClass("bg-[#e6f4ff]");
+
+    rerender(
+      <Tree
+        defaultSelectedKeys={["item"]}
+        treeData={[{ key: "item", title: "선택 불가", selectable: false }]}
+      />,
+    );
+    const nodeSelectionContent = document.querySelector('[data-tree-selection-content="item"]');
+    expect(nodeSelectionContent).not.toHaveClass("cursor-pointer");
+    expect(nodeSelectionContent).not.toHaveClass("hover:bg-[#f5f5f5]");
+  });
+
+  it("hides selection styling while the tree is disabled", () => {
+    const { rerender } = render(
+      <Tree defaultSelectedKeys={["item"]} treeData={[{ key: "item", title: "선택 항목" }]} />,
+    );
+    const selectionContent = document.querySelector('[data-tree-selection-content="item"]');
+
+    expect(selectionContent).toHaveClass("bg-[#e6f4ff]", "text-[#0062df]");
+
+    rerender(
+      <Tree
+        disabled
+        defaultSelectedKeys={["item"]}
+        treeData={[{ key: "item", title: "선택 항목" }]}
+      />,
+    );
+    const disabledSelectionContent = document.querySelector('[data-tree-selection-content="item"]');
+    expect(disabledSelectionContent).not.toHaveClass("bg-[#e6f4ff]");
+    expect(disabledSelectionContent).not.toHaveClass("text-[#0062df]");
+    expect(disabledSelectionContent).toHaveClass("cursor-not-allowed");
+  });
+
   it("preserves newlines in node titles", () => {
     render(<Tree treeData={[{ key: "multiline", title: "첫 줄\n둘째 줄" }]} />);
 

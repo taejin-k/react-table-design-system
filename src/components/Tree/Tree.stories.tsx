@@ -196,7 +196,7 @@ type Story = StoryObj<typeof meta>;
 
 const basicSource = `<Tree
   defaultExpandAll
-  treeData={[
+  defaultTreeData={[
     {
       key: 'src',
       title: 'src',
@@ -268,7 +268,7 @@ const draggableTreeDataSource = `const data: TreeDataNode[] = [
 ];`;
 export const Basic: Story = {
   args: {
-    treeData: basicTreeData,
+    defaultTreeData: basicTreeData,
     defaultExpandAll: true,
     fullWidth: false,
     checkable: false,

@@ -525,6 +525,7 @@ export function Tree({
           isChecked = checked.includes(key),
           half = halfChecked.includes(key),
           nodeDisabled = disabled || node.disabled,
+          nodeSelectable = selectable && node.selectable !== false && !nodeDisabled,
           canDragNode = nodeDraggable(node),
           nodeDropState = dragOverState?.key === key ? dragOverState : undefined,
           dragOverPosition = nodeDropState?.position,
@@ -685,10 +686,12 @@ export function Tree({
               <span
                 data-tree-selection-content={key}
                 className={twMerge(
-                  "inline-flex min-h-6 min-w-0 cursor-pointer items-center rounded-md transition-colors hover:bg-[#f5f5f5]",
+                  "inline-flex min-h-6 min-w-0 items-center rounded-md transition-colors",
                   fullWidth && "flex-1",
-                  isSelected && "bg-[#e6f4ff] text-[#0062df] hover:bg-[#e6f4ff]",
-                  nodeDisabled && "cursor-not-allowed hover:bg-transparent",
+                  nodeSelectable && "cursor-pointer hover:bg-[#f5f5f5]",
+                  isSelected && !nodeDisabled && "bg-[#e6f4ff] text-[#0062df]",
+                  isSelected && nodeSelectable && "hover:bg-[#e6f4ff]",
+                  nodeDisabled && "cursor-not-allowed",
                 )}
                 onClick={() => select(node)}
               >
