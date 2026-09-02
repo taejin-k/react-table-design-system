@@ -126,7 +126,7 @@ export function Tabs(props: TabsProps) {
     centered = false,
     type = "line",
     size = "md",
-    tabPlacement: placement = "top",
+    placement = "top",
     className,
     onChange,
     onAdd,

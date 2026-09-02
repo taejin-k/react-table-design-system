@@ -19,7 +19,7 @@ export interface TabsProps {
   defaultActiveKey?: string;
   type?: TabsType;
   size?: TabsSizeType;
-  tabPlacement?: TabsPlacementType;
+  placement?: TabsPlacementType;
   animated?: boolean;
   centered?: boolean;
   className?: string;

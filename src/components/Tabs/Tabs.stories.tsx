@@ -87,7 +87,7 @@ const meta = {
   argTypes: {
     type: { name: "종류", control: "select", options: tabsTypes },
     size: { name: "크기", control: "select", options: tabsSizes },
-    tabPlacement: { name: "위치", control: "select", options: tabsPlacements },
+    placement: { name: "위치", control: "select", options: tabsPlacements },
     animated: { name: "애니메이션", control: "boolean" },
     centered: { name: "가운데 정렬", control: "boolean" },
     items: { control: false, table: { disable: true } },
@@ -121,7 +121,7 @@ const meta = {
 | \`defaultActiveKey\` | 처음 활성화할 탭을 정해요. | \`string\` | 첫 번째 탭 |
 | \`type\` | 탭의 표현 방식을 정해요. | [\`TabsType\`](#tabs-type) | \`line\` |
 | \`size\` | 탭의 높이와 여백을 정해요. | [\`TabsSizeType\`](#tabs-size-type) | \`md\` |
-| \`tabPlacement\` | 탭 목록의 위치를 정해요. | [\`TabsPlacementType\`](#tabs-placement-type) | \`top\` |
+| \`placement\` | 탭 목록의 위치를 정해요. | [\`TabsPlacementType\`](#tabs-placement-type) | \`top\` |
 | \`animated\` | 콘텐츠 전환 애니메이션을 설정해요. | \`boolean\` | \`false\` |
 | \`centered\` | 탭 목록을 가운데 정렬해요. | \`boolean\` | \`false\` |
 | \`className\` | 최상위 요소에 Tailwind 클래스를 추가해요. | \`string\` | - |
@@ -166,7 +166,7 @@ export const Basic: Story = {
     items,
     type: "line",
     size: "md",
-    tabPlacement: "top",
+    placement: "top",
     animated: false,
     centered: false,
   },
@@ -186,7 +186,7 @@ export const Basic: Story = {
 
 export const Sizes: Story = {
   args: {
-    tabPlacement: "top",
+    placement: "top",
     animated: false,
     centered: false,
   },
@@ -220,7 +220,7 @@ export const Animate: Story = {
   args: {
     items,
     size: "md",
-    tabPlacement: "top",
+    placement: "top",
     animated: true,
     centered: false,
   },
@@ -238,7 +238,7 @@ export const Animate: Story = {
 };
 export const Card: Story = {
   args: {
-    tabPlacement: "top",
+    placement: "top",
     animated: false,
     centered: false,
   },
@@ -271,7 +271,7 @@ export const Card: Story = {
 export const OnAdd: Story = {
   args: {
     size: "md",
-    tabPlacement: "top",
+    placement: "top",
     animated: false,
     centered: false,
   },
@@ -316,7 +316,7 @@ function EditableTabsExample() {
 export const OnDelete: Story = {
   args: {
     size: "md",
-    tabPlacement: "top",
+    placement: "top",
     animated: false,
     centered: false,
   },
@@ -353,7 +353,7 @@ function DeletableTabsExample() {
 export const OnAddAndDelete: Story = {
   args: {
     size: "md",
-    tabPlacement: "top",
+    placement: "top",
     animated: false,
     centered: false,
   },
@@ -399,7 +399,7 @@ function EditableTabsExample() {
 export const AddDragDelete: Story = {
   args: {
     size: "md",
-    tabPlacement: "top",
+    placement: "top",
     animated: false,
     centered: false,
   },
@@ -446,7 +446,7 @@ function EditableTabsExample() {
 export const Draggable: Story = {
   args: {
     size: "md",
-    tabPlacement: "top",
+    placement: "top",
     animated: false,
     centered: false,
   },
@@ -482,7 +482,7 @@ export const Placements: Story = {
   },
   argTypes: {
     type: { control: false, table: { disable: true } },
-    tabPlacement: { control: false, table: { disable: true } },
+    placement: { control: false, table: { disable: true } },
     centered: { control: false, table: { disable: true } },
   },
   parameters: {
@@ -505,7 +505,7 @@ const types = ['line', 'card'] as const;
         {placements.map((placement) => (
           <div key={placement} className="min-h-44 rounded-lg border border-[#ddd] p-4">
             <span className="mb-3 block text-sm text-[#666]">{placement}</span>
-            <Tabs type={type} tabPlacement={placement} items={items} />
+            <Tabs type={type} placement={placement} items={items} />
           </div>
         ))}
       </div>
@@ -524,7 +524,7 @@ const types = ['line', 'card'] as const;
             {tabsPlacements.map((placement) => (
               <div key={placement} className="min-h-44 rounded-lg border border-[#ddd] p-4">
                 <span className="mb-3 block text-sm text-[#666]">{placement}</span>
-                <Tabs {...args} type={type} tabPlacement={placement} items={items} />
+                <Tabs {...args} type={type} placement={placement} items={items} />
               </div>
             ))}
           </div>
@@ -539,12 +539,12 @@ export const Centered: Story = {
     items,
     type: "line",
     size: "md",
-    tabPlacement: "top",
+    placement: "top",
     animated: false,
     centered: true,
   },
   argTypes: {
-    tabPlacement: { control: false, table: { disable: true } },
+    placement: { control: false, table: { disable: true } },
     centered: { control: false, table: { disable: true } },
   },
   parameters: {
