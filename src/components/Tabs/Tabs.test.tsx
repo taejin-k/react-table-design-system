@@ -60,7 +60,9 @@ describe("Tabs", () => {
     rerender(<Tabs items={items} onAdd={onAdd} onDelete={onDelete} onDrag={onDrag} />);
     expect(document.querySelector("[data-tabs-add]")).not.toBeInTheDocument();
     expect(document.querySelector('[data-tab-close="one"]')).not.toBeInTheDocument();
-    expect(document.querySelector('[data-tabs-item="one"]')).not.toHaveClass("cursor-grab");
+    expect(document.querySelector('[data-tabs-item="one"]')).not.toHaveClass(
+      "active:cursor-grabbing",
+    );
   });
 
   it("enables sorting only for card tabs with onDrag", () => {
@@ -70,10 +72,16 @@ describe("Tabs", () => {
     ];
     const { rerender } = render(<Tabs type="card" items={items} />);
 
-    expect(document.querySelector('[data-tabs-item="one"]')).not.toHaveClass("cursor-grab");
+    expect(document.querySelector('[data-tabs-item="one"]')).not.toHaveClass(
+      "active:cursor-grabbing",
+    );
 
     rerender(<Tabs type="card" items={items} onDrag={vi.fn()} />);
-    expect(document.querySelector('[data-tabs-item="one"]')).toHaveClass("cursor-grab");
+    expect(document.querySelector('[data-tabs-item="one"]')).toHaveClass(
+      "cursor-pointer",
+      "active:cursor-grabbing",
+    );
+    expect(document.querySelector('[data-tabs-item="one"]')).not.toHaveClass("cursor-grab");
   });
 
   it("reorders items by dragged and target keys", () => {

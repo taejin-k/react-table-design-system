@@ -96,7 +96,7 @@ function SortableTabButton({
       data-tabs-dragging={isDragging || undefined}
       className={twMerge(
         className,
-        enabled && !disabled && "cursor-grab active:cursor-grabbing",
+        enabled && !disabled && "active:cursor-grabbing",
         isDragging && "z-10 opacity-40",
       )}
       style={
