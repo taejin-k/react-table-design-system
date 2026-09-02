@@ -12,15 +12,9 @@ export function Tabs(props: TabsProps) {
     defaultActiveKey,
     animated = false,
     centered = false,
-    destroyOnHidden = false,
     type = "line",
     size = "md",
     tabPlacement: placement = "top",
-    tabBarGutter,
-    tabBarStyle,
-    addIcon,
-    removeIcon,
-    indicator,
     className,
     onChange,
     onAdd,
@@ -53,29 +47,19 @@ export function Tabs(props: TabsProps) {
       const nodeRect = node.getBoundingClientRect();
       const rootRect = root.getBoundingClientRect();
       const origin = vertical ? nodeRect.height : nodeRect.width;
-      const configured =
-        typeof indicator?.size === "function"
-          ? indicator.size(origin)
-          : (indicator?.size ?? origin);
-      const alignOffset =
-        indicator?.align === "start"
-          ? 0
-          : indicator?.align === "end"
-            ? origin - configured
-            : (origin - configured) / 2;
       setInk({
         left: vertical
           ? placement === "start"
             ? root.clientWidth - 2
             : 0
-          : nodeRect.left - rootRect.left + alignOffset,
+          : nodeRect.left - rootRect.left,
         top: vertical
-          ? nodeRect.top - rootRect.top + alignOffset
+          ? nodeRect.top - rootRect.top
           : placement === "bottom"
             ? 0
             : root.clientHeight - 2,
-        width: vertical ? 2 : configured,
-        height: vertical ? configured : 2,
+        width: vertical ? 2 : origin,
+        height: vertical ? origin : 2,
         ready: true,
       });
     };
@@ -90,7 +74,7 @@ export function Tabs(props: TabsProps) {
       observer?.disconnect();
       tabList?.removeEventListener("scroll", updateInk);
     };
-  }, [selected, items, vertical, indicator, placement]);
+  }, [selected, items, vertical, placement]);
   const change = (key: string, event: React.MouseEvent<HTMLElement>) => {
     onTabClick?.(key, event);
     const item = items.find((entry) => entry.key === key);
@@ -158,7 +142,6 @@ export function Tabs(props: TabsProps) {
               ? "border-t border-[#d9d9d9]"
               : "border-b border-[#d9d9d9]"),
       )}
-      style={{ gap: tabBarGutter, ...tabBarStyle }}
     >
       <div
         ref={tabListRef}
@@ -205,7 +188,7 @@ export function Tabs(props: TabsProps) {
                   remove(item.key);
                 }}
               >
-                {item.closeIcon ?? removeIcon ?? <Icon icon="close" size={12} />}
+                <Icon icon="close" size={12} />
               </span>
             ) : null}
           </button>
@@ -226,9 +209,9 @@ export function Tabs(props: TabsProps) {
                     : "w-10 px-0",
               cardEdge,
             )}
-            onClick={onAdd}
+            onClick={() => onAdd(items)}
           >
-            {addIcon ?? <Icon icon="add" />}
+            <Icon icon="add" />
           </button>
         ) : null}
       </div>
@@ -296,9 +279,7 @@ export function Tabs(props: TabsProps) {
       >
         {items.map((item) => {
           const active = item.key === selected;
-          if (!active && (destroyOnHidden || item.destroyOnHidden) && !item.forceRender)
-            return null;
-          if (!active && !item.forceRender && !visitedKeys.current.has(item.key)) return null;
+          if (!active && !visitedKeys.current.has(item.key)) return null;
           return (
             <div
               key={item.key}

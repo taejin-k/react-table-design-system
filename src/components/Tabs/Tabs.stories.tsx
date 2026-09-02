@@ -39,13 +39,13 @@ function EditableTabsExample({
   deletable?: boolean;
 }) {
   const [editableItems, setEditableItems] = useState(items);
-  const handleAdd = () => {
+  const handleAdd = (current: TabItemType[]) => {
     const newItem: TabItemType = {
       key: `new-${Date.now()}`,
       label: "새 탭",
       children: "새 탭 내용",
     };
-    setEditableItems((current) => [...current, newItem]);
+    setEditableItems([...current, newItem]);
   };
 
   return (
@@ -69,7 +69,6 @@ const meta = {
     tabPlacement: { name: "위치", control: "select", options: tabsPlacements },
     animated: { name: "애니메이션", control: "boolean" },
     centered: { name: "가운데 정렬", control: "boolean" },
-    tabBarGutter: { name: "탭 간격", control: "number" },
     items: { control: false, table: { disable: true } },
     activeKey: { control: false, table: { disable: true } },
     className: { control: false, table: { disable: true } },
@@ -103,15 +102,9 @@ const meta = {
 | \`tabPlacement\` | 탭 목록의 위치를 정해요. | [\`TabsPlacementType\`](#tabs-placement-type) | \`top\` |
 | \`animated\` | 콘텐츠 전환 애니메이션을 설정해요. | \`boolean\` | \`false\` |
 | \`centered\` | 탭 목록을 가운데 정렬해요. | \`boolean\` | \`false\` |
-| \`destroyOnHidden\` | 숨겨진 탭 콘텐츠를 DOM에서 제거해요. | \`boolean\` | \`false\` |
-| \`tabBarGutter\` | 탭 사이의 간격을 px로 정해요. | \`number\` | \`0\` |
-| \`tabBarStyle\` | 탭 목록에 인라인 스타일을 적용해요. | \`CSSProperties\` | - |
-| \`addIcon\` | onAdd 버튼의 아이콘을 변경해요. | \`ReactNode\` | add Icon |
-| \`removeIcon\` | onDelete 버튼의 아이콘을 변경해요. | \`ReactNode\` | close Icon |
-| \`indicator\` | 표시선의 크기와 정렬을 설정해요. | \`{ size?: number \\| ((origin: number) => number); align?: 'start' \\| 'center' \\| 'end' }\` | 탭 크기·가운데 |
 | \`className\` | 최상위 요소에 Tailwind 클래스를 추가해요. | \`string\` | - |
 | \`onChange\` | 활성 탭이 바뀔 때 실행해요. | \`(activeKey: string) => void\` | - |
-| \`onAdd\` | 추가 버튼을 표시하고 누르면 실행해요. | \`() => void\` | - |
+| \`onAdd\` | 추가 버튼을 표시하고 현재 목록을 전달해요. | <code>(items: <a href="#tab-item-type">TabItemType[]</a>) =&gt; void</code> | - |
 | \`onDelete\` | 닫기 버튼을 표시하고 삭제된 목록을 전달해요. | <code>(items: <a href="#tab-item-type">TabItemType[]</a>) =&gt; void</code> | - |
 | \`onTabClick\` | 탭을 누를 때 실행해요. | \`(key: string, event: MouseEvent<HTMLElement>) => void\` | - |
 | \`renderTabBar\` | 탭 목록 전체를 사용자 정의해요. | \`(props: TabsProps, DefaultTabBar: () => ReactElement) => ReactElement\` | - |
@@ -126,9 +119,6 @@ const meta = {
 | \`children\` | 탭이 활성화됐을 때 표시할 콘텐츠예요. | \`ReactNode\` | - |
 | \`disabled\` | 탭 선택과 삭제를 막아요. | \`boolean\` | \`false\` |
 | \`closable\` | onDelete 사용 시 이 탭의 닫기 버튼을 표시해요. | \`boolean\` | \`true\` |
-| \`closeIcon\` | 이 탭의 닫기 아이콘을 변경해요. | \`ReactNode\` | removeIcon |
-| \`forceRender\` | 선택하기 전에도 탭 콘텐츠를 렌더링해요. | \`boolean\` | \`false\` |
-| \`destroyOnHidden\` | 숨겨진 탭 콘텐츠를 DOM에서 제거해요. | \`boolean\` | \`false\` |
           `}</Markdown>
           <h2 className="component-docs-types-heading">Types</h2>
           <h3 id="tabs-type">TabsType</h3>
@@ -156,12 +146,11 @@ export const Basic: Story = {
     tabPlacement: "top",
     animated: false,
     centered: false,
-    tabBarGutter: 0,
   },
   argTypes: { size: { control: false, table: { disable: true } } },
   parameters: {
     ...storyDescription("components-tabs--basic"),
-    controls: { include: ["위치", "애니메이션", "가운데 정렬", "탭 간격"] },
+    controls: { include: ["위치", "애니메이션", "가운데 정렬"] },
     docs: {
       ...storyDescription("components-tabs--basic").docs,
       source: {
@@ -177,12 +166,11 @@ export const Sizes: Story = {
     tabPlacement: "top",
     animated: false,
     centered: false,
-    tabBarGutter: 0,
   },
   argTypes: { size: { control: false, table: { disable: true } } },
   parameters: {
     ...storyDescription("components-tabs--sizes"),
-    controls: { include: ["위치", "애니메이션", "가운데 정렬", "탭 간격"] },
+    controls: { include: ["위치", "애니메이션", "가운데 정렬"] },
     docs: {
       ...storyDescription("components-tabs--sizes").docs,
       source: {
@@ -212,11 +200,10 @@ export const Animate: Story = {
     tabPlacement: "top",
     animated: true,
     centered: false,
-    tabBarGutter: 0,
   },
   parameters: {
     ...storyDescription("components-tabs--animate"),
-    controls: { include: ["크기", "위치", "애니메이션", "가운데 정렬", "탭 간격"] },
+    controls: { include: ["크기", "위치", "애니메이션", "가운데 정렬"] },
     docs: {
       ...storyDescription("components-tabs--animate").docs,
       source: {
@@ -231,12 +218,11 @@ export const Card: Story = {
     tabPlacement: "top",
     animated: false,
     centered: false,
-    tabBarGutter: 0,
   },
   argTypes: { size: { control: false, table: { disable: true } } },
   parameters: {
     ...storyDescription("components-tabs--card"),
-    controls: { include: ["위치", "애니메이션", "가운데 정렬", "탭 간격"] },
+    controls: { include: ["위치", "애니메이션", "가운데 정렬"] },
     docs: {
       ...storyDescription("components-tabs--card").docs,
       source: {
@@ -265,12 +251,11 @@ export const OnAdd: Story = {
     tabPlacement: "top",
     animated: false,
     centered: false,
-    tabBarGutter: 0,
   },
   parameters: {
     ...storyDescription("components-tabs--on-add"),
     controls: {
-      include: ["크기", "위치", "애니메이션", "가운데 정렬", "탭 간격"],
+      include: ["크기", "위치", "애니메이션", "가운데 정렬"],
     },
     docs: {
       ...storyDescription("components-tabs--on-add").docs,
@@ -280,13 +265,13 @@ export const OnAdd: Story = {
 
 function EditableTabsExample() {
   const [editableItems, setEditableItems] = useState(items);
-  const handleAdd = () => {
+  const handleAdd = (current: TabItemType[]) => {
     const newItem: TabItemType = {
       key: \`new-\${Date.now()}\`,
       label: '새 탭',
       children: '새 탭 내용',
     };
-    setEditableItems((current) => [...current, newItem]);
+    setEditableItems([...current, newItem]);
   };
 
   return (
@@ -310,12 +295,11 @@ export const OnAddAndDelete: Story = {
     tabPlacement: "top",
     animated: false,
     centered: false,
-    tabBarGutter: 0,
   },
   parameters: {
     ...storyDescription("components-tabs--on-add-and-delete"),
     controls: {
-      include: ["크기", "위치", "애니메이션", "가운데 정렬", "탭 간격"],
+      include: ["크기", "위치", "애니메이션", "가운데 정렬"],
     },
     docs: {
       ...storyDescription("components-tabs--on-add-and-delete").docs,
@@ -325,13 +309,13 @@ export const OnAddAndDelete: Story = {
 
 function EditableTabsExample() {
   const [editableItems, setEditableItems] = useState(items);
-  const handleAdd = () => {
+  const handleAdd = (current: TabItemType[]) => {
     const newItem: TabItemType = {
       key: \`new-\${Date.now()}\`,
       label: '새 탭',
       children: '새 탭 내용',
     };
-    setEditableItems((current) => [...current, newItem]);
+    setEditableItems([...current, newItem]);
   };
 
   return (
@@ -350,23 +334,87 @@ function EditableTabsExample() {
   },
   render: (args) => <EditableTabsExample {...args} deletable />,
 };
-export const Vertical: Story = {
+export const Placements: Story = {
   args: {
-    items,
     size: "md",
-    tabPlacement: "start",
     animated: false,
     centered: false,
-    tabBarGutter: 0,
+  },
+  argTypes: {
+    type: { control: false, table: { disable: true } },
+    tabPlacement: { control: false, table: { disable: true } },
+    centered: { control: false, table: { disable: true } },
   },
   parameters: {
-    ...storyDescription("components-tabs--vertical"),
-    controls: { include: ["크기", "애니메이션", "가운데 정렬", "탭 간격"] },
+    ...storyDescription("components-tabs--placements"),
+    controls: { include: ["크기", "애니메이션"] },
     docs: {
-      ...storyDescription("components-tabs--vertical").docs,
+      ...storyDescription("components-tabs--placements").docs,
       source: {
         type: "code",
-        code: withStoryImports(`${itemsSource}\n\n<Tabs tabPlacement="start" items={items} />`),
+        code: withStoryImports(`${itemsSource}
+
+const placements = ['top', 'end', 'bottom', 'start'] as const;
+const types = ['line', 'card'] as const;
+
+<div className="grid gap-10">
+  {types.map((type) => (
+    <section key={type} className="grid gap-4">
+      <strong className="capitalize">{type}</strong>
+      <div className="grid gap-6 xl:grid-cols-2">
+        {placements.map((placement) => (
+          <div key={placement} className="min-h-44 rounded-lg border border-[#ddd] p-4">
+            <span className="mb-3 block text-sm text-[#666]">{placement}</span>
+            <Tabs type={type} tabPlacement={placement} items={items} />
+          </div>
+        ))}
+      </div>
+    </section>
+  ))}
+</div>`),
+      },
+    },
+  },
+  render: (args) => (
+    <div className="grid gap-10">
+      {tabsTypes.map((type) => (
+        <section key={type} className="grid gap-4">
+          <strong className="capitalize">{type}</strong>
+          <div className="grid gap-6 xl:grid-cols-2">
+            {tabsPlacements.map((placement) => (
+              <div key={placement} className="min-h-44 rounded-lg border border-[#ddd] p-4">
+                <span className="mb-3 block text-sm text-[#666]">{placement}</span>
+                <Tabs {...args} type={type} tabPlacement={placement} items={items} />
+              </div>
+            ))}
+          </div>
+        </section>
+      ))}
+    </div>
+  ),
+};
+
+export const Centered: Story = {
+  args: {
+    items,
+    type: "line",
+    size: "md",
+    tabPlacement: "top",
+    animated: false,
+    centered: true,
+  },
+  argTypes: {
+    tabPlacement: { control: false, table: { disable: true } },
+    centered: { control: false, table: { disable: true } },
+  },
+  parameters: {
+    ...storyDescription("components-tabs--centered"),
+    controls: { include: ["종류", "크기", "애니메이션"] },
+    docs: {
+      ...storyDescription("components-tabs--centered").docs,
+      source: {
+        type: "code",
+        code: withStoryImports(`${itemsSource}\n\n<Tabs centered items={items} />`),
       },
     },
   },

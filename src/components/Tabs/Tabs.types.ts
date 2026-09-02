@@ -1,4 +1,4 @@
-import type { CSSProperties, MouseEvent, ReactElement, ReactNode } from "react";
+import type { MouseEvent, ReactElement, ReactNode } from "react";
 
 export type TabsPlacementType = "top" | "end" | "bottom" | "start";
 export type TabsSizeType = "lg" | "md" | "sm";
@@ -11,9 +11,6 @@ export interface TabItemType {
   children?: ReactNode;
   disabled?: boolean;
   closable?: boolean;
-  closeIcon?: ReactNode;
-  forceRender?: boolean;
-  destroyOnHidden?: boolean;
 }
 
 export interface TabsProps {
@@ -25,15 +22,9 @@ export interface TabsProps {
   tabPlacement?: TabsPlacementType;
   animated?: boolean;
   centered?: boolean;
-  destroyOnHidden?: boolean;
-  tabBarGutter?: number;
-  tabBarStyle?: CSSProperties;
-  addIcon?: ReactNode;
-  removeIcon?: ReactNode;
-  indicator?: { size?: number | ((origin: number) => number); align?: "start" | "center" | "end" };
   className?: string;
   onChange?: (activeKey: string) => void;
-  onAdd?: () => void;
+  onAdd?: (items: TabItemType[]) => void;
   onDelete?: (items: TabItemType[]) => void;
   onTabClick?: (key: string, event: MouseEvent<HTMLElement>) => void;
   renderTabBar?: (props: TabsProps, DefaultTabBar: () => ReactElement) => ReactElement;

@@ -25,11 +25,8 @@ describe("Tabs", () => {
   it("adds a custom tab and deletes tabs", async () => {
     function EditableTabs() {
       const [items, setItems] = useState<TabItemType[]>([{ key: "one", label: "문서" }]);
-      const handleAdd = () => {
-        setItems((current) => [
-          ...current,
-          { key: "custom", label: "사용자 탭", children: "사용자 탭 내용" },
-        ]);
+      const handleAdd = (current: TabItemType[]) => {
+        setItems([...current, { key: "custom", label: "사용자 탭", children: "사용자 탭 내용" }]);
       };
       return <Tabs type="card" items={items} onAdd={handleAdd} onDelete={setItems} />;
     }
@@ -74,6 +71,18 @@ describe("Tabs", () => {
     expect(closeButton).toHaveClass("cursor-not-allowed", "opacity-40");
     fireEvent.click(closeButton);
     expect(onDelete).not.toHaveBeenCalled();
+  });
+
+  it("hides the close button when closable is false", () => {
+    render(
+      <Tabs
+        type="card"
+        items={[{ key: "fixed", label: "고정 탭", closable: false }]}
+        onDelete={vi.fn()}
+      />,
+    );
+
+    expect(document.querySelector('[data-tab-close="fixed"]')).not.toBeInTheDocument();
   });
 
   it("uses Ant Design card dimensions and joins the active tab to the content", () => {
