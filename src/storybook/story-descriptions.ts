@@ -376,8 +376,11 @@ export const storyDescriptions: Record<string, string> = {
   "components-tabs--animate": "표시선과 콘텐츠가 부드럽게 이동하며 전환되는 모습을 확인해요.",
   "components-tabs--card": "카드 탭의 sm, md와 lg 크기를 한 번에 비교해요.",
   "components-tabs--on-add": "onAdd 함수로 원하는 탭을 추가하고 추가 버튼만 표시해요.",
+  "components-tabs--on-delete": "onDelete setter로 탭을 삭제하고 닫기 버튼만 표시해요.",
   "components-tabs--on-add-and-delete":
     "onAdd 함수와 onDelete setter로 탭을 추가·삭제하고 두 버튼을 모두 표시해요.",
+  "components-tabs--add-drag-delete":
+    "card 탭을 추가·정렬·삭제하고 변경된 목록을 하나의 상태에 반영해요.",
   "components-tabs--draggable":
     "card 탭을 잡아 원하는 위치로 옮기고 변경된 순서를 상태에 반영해요.",
   "components-tabs--placements": "line과 card 탭을 top·end·bottom·start 위치별로 비교해요.",

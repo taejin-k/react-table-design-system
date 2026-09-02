@@ -44,6 +44,7 @@ function TabsSortContext({ children, enabled, items, vertical, onDragEnd }: Tabs
     <DndContext
       sensors={sensors}
       collisionDetection={closestCenter}
+      autoScroll={false}
       onDragEnd={enabled ? onDragEnd : undefined}
     >
       <SortableContext

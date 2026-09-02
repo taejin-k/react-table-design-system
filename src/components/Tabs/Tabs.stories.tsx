@@ -43,10 +43,14 @@ const storyDescription = (id: string) => ({
 });
 
 function EditableTabsExample({
+  addable = true,
   deletable = false,
+  draggable = false,
   ...args
 }: Partial<TabsProps> & {
+  addable?: boolean;
   deletable?: boolean;
+  draggable?: boolean;
 }) {
   const [editableItems, setEditableItems] = useState(items);
   const handleAdd = (current: TabItemType[]) => {
@@ -63,8 +67,9 @@ function EditableTabsExample({
       {...args}
       type="card"
       items={editableItems}
-      onAdd={handleAdd}
+      onAdd={addable ? handleAdd : undefined}
       onDelete={deletable ? setEditableItems : undefined}
+      onDrag={draggable ? setEditableItems : undefined}
     />
   );
 }
@@ -98,7 +103,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "같은 영역 안의 연관된 콘텐츠를 탭으로 전환해요.  \n선·카드 모드, 네 방향 배치, 탭 추가·삭제와 콘텐츠 전환 애니메이션을 지원해요.",
+          "같은 영역 안의 연관된 콘텐츠를 탭으로 전환해요.  \n선·카드 모드, 네 방향 배치, 탭 추가·삭제·드래그 정렬과 콘텐츠 전환 애니메이션을 지원해요.",
       },
       page: () => (
         <div className="tabs-docs component-docs">
@@ -307,6 +312,44 @@ function EditableTabsExample() {
   },
   render: (args) => <EditableTabsExample {...args} />,
 };
+
+export const OnDelete: Story = {
+  args: {
+    size: "md",
+    tabPlacement: "top",
+    animated: false,
+    centered: false,
+  },
+  parameters: {
+    ...storyDescription("components-tabs--on-delete"),
+    controls: {
+      include: ["크기", "위치", "애니메이션", "가운데 정렬"],
+    },
+    docs: {
+      ...storyDescription("components-tabs--on-delete").docs,
+      source: {
+        type: "code",
+        code: withStoryImports(`${itemsSource}
+
+function DeletableTabsExample() {
+  const [deletableItems, setDeletableItems] = useState(items);
+
+  return (
+    <Tabs
+      type="card"
+      items={deletableItems}
+      onDelete={setDeletableItems}
+    />
+  );
+}
+
+<DeletableTabsExample />`),
+      },
+    },
+  },
+  render: (args) => <EditableTabsExample {...args} addable={false} deletable />,
+};
+
 export const OnAddAndDelete: Story = {
   args: {
     size: "md",
@@ -351,6 +394,53 @@ function EditableTabsExample() {
     },
   },
   render: (args) => <EditableTabsExample {...args} deletable />,
+};
+
+export const AddDragDelete: Story = {
+  args: {
+    size: "md",
+    tabPlacement: "top",
+    animated: false,
+    centered: false,
+  },
+  parameters: {
+    ...storyDescription("components-tabs--add-drag-delete"),
+    controls: {
+      include: ["크기", "위치", "애니메이션", "가운데 정렬"],
+    },
+    docs: {
+      ...storyDescription("components-tabs--add-drag-delete").docs,
+      source: {
+        type: "code",
+        code: withStoryImports(`${itemsSource}
+
+function EditableTabsExample() {
+  const [editableItems, setEditableItems] = useState(items);
+  const handleAdd = (current: TabItemType[]) => {
+    const newItem: TabItemType = {
+      key: \`new-\${Date.now()}\`,
+      label: '새 탭',
+      children: '새 탭 내용',
+    };
+    setEditableItems([...current, newItem]);
+  };
+
+  return (
+    <Tabs
+      type="card"
+      items={editableItems}
+      onAdd={handleAdd}
+      onDrag={setEditableItems}
+      onDelete={setEditableItems}
+    />
+  );
+}
+
+<EditableTabsExample />`),
+      },
+    },
+  },
+  render: (args) => <EditableTabsExample {...args} deletable draggable />,
 };
 
 export const Draggable: Story = {
