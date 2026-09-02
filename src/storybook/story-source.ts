@@ -46,6 +46,7 @@ const componentTypeExports = [
   "DropdownItem",
   "Key",
   "SelectOption",
+  "TabItemType",
   "TableRef",
   "TimePickerValueType",
   "TreeDataNode",

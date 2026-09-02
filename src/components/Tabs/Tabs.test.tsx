@@ -1,7 +1,9 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { Tabs } from "./Tabs";
+import type { TabItemType } from "./Tabs.types";
 
 describe("Tabs", () => {
   it("changes the active tab and renders its panel", async () => {
@@ -20,11 +22,18 @@ describe("Tabs", () => {
     expect(document.querySelector('[data-tab-panel="two"]')).toHaveTextContent("둘째 내용");
   });
 
-  it("reports editable card removal", async () => {
-    const onEdit = vi.fn();
-    render(<Tabs type="editable-card" items={[{ key: "one", label: "문서" }]} onEdit={onEdit} />);
+  it("adds and deletes editable tabs with state setters", async () => {
+    function EditableTabs() {
+      const [items, setItems] = useState<TabItemType[]>([{ key: "one", label: "문서" }]);
+      return <Tabs type="editable-card" items={items} onAdd={setItems} onDelete={setItems} />;
+    }
+
+    render(<EditableTabs />);
+    await userEvent.click(document.querySelector("[data-tabs-add]")!);
+    expect(screen.getByRole("button", { name: /새 탭 1/ })).toBeInTheDocument();
+
     await userEvent.click(document.querySelector('[data-tab-close="one"]')!);
-    expect(onEdit).toHaveBeenCalledWith("one", "remove");
+    expect(screen.queryByRole("button", { name: /문서/ })).not.toBeInTheDocument();
   });
 
   it("uses Ant Design card dimensions and joins the active tab to the content", () => {

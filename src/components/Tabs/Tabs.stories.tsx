@@ -6,18 +6,24 @@ import { withStoryImports } from "../../storybook/story-source";
 import { TypeTokens } from "../../storybook/type-tokens";
 import { Button } from "../Button";
 import { Tabs } from "./Tabs";
-import type { TabsPlacementType, TabsProps, TabsSizeType, TabsType } from "./Tabs.types";
+import type {
+  TabItemType,
+  TabsPlacementType,
+  TabsProps,
+  TabsSizeType,
+  TabsType,
+} from "./Tabs.types";
 
 const tabsTypes: TabsType[] = ["line", "card", "editable-card"];
 const tabsSizes: TabsSizeType[] = ["lg", "md", "sm"];
 const tabsPlacements: TabsPlacementType[] = ["top", "end", "bottom", "start"];
 
-const items = [
+const items: TabItemType[] = [
   { key: "overview", label: "개요", children: "프로젝트 개요" },
   { key: "activity", label: "활동", children: "최근 활동" },
   { key: "disabled", label: "비활성", disabled: true },
 ];
-const itemsSource = `const items = [
+const itemsSource = `const items: TabItemType[] = [
   { key: 'overview', label: '개요', children: '프로젝트 개요' },
   { key: 'activity', label: '활동', children: '최근 활동' },
   { key: 'disabled', label: '비활성', disabled: true },
@@ -29,15 +35,15 @@ const storyDescription = (id: string) => ({
 function EditableTabsExample(args: Partial<TabsProps>) {
   const [editableItems, setEditableItems] = useState(items);
 
-  const handleEdit: NonNullable<TabsProps["onEdit"]> = (targetKey, action) => {
-    setEditableItems((current) =>
-      action === "add"
-        ? [...current, { key: `new-${Date.now()}`, label: "새 탭", children: "새 탭 내용" }]
-        : current.filter((item) => item.key !== targetKey),
-    );
-  };
-
-  return <Tabs {...args} type="editable-card" items={editableItems} onEdit={handleEdit} />;
+  return (
+    <Tabs
+      {...args}
+      type="editable-card"
+      items={editableItems}
+      onAdd={setEditableItems}
+      onDelete={setEditableItems}
+    />
+  );
 }
 
 const meta = {
@@ -56,7 +62,8 @@ const meta = {
     activeKey: { control: false, table: { disable: true } },
     className: { control: false, table: { disable: true } },
     onChange: { control: false, table: { disable: true } },
-    onEdit: { control: false, table: { disable: true } },
+    onAdd: { control: false, table: { disable: true } },
+    onDelete: { control: false, table: { disable: true } },
   },
   parameters: {
     controls: { disable: false },
@@ -93,7 +100,8 @@ const meta = {
 | \`indicator\` | 표시선의 크기와 정렬을 설정해요. | \`{ size?, align? }\` | - |
 | \`className\` | 최상위 요소에 Tailwind 클래스를 추가해요. | \`string\` | - |
 | \`onChange\` | 활성 탭이 바뀔 때 실행해요. | \`(activeKey: string) => void\` | - |
-| \`onEdit\` | 편집형 탭을 추가하거나 제거할 때 실행해요. | \`(targetKey, action) => void\` | - |
+| \`onAdd\` | 탭이 추가된 다음 목록을 전달해요. | \`(items: TabItemType[]) => void\` | - |
+| \`onDelete\` | 탭이 삭제된 다음 목록을 전달해요. | \`(items: TabItemType[]) => void\` | - |
 | \`onTabClick\` | 탭을 누를 때 실행해요. | \`(key, event) => void\` | - |
 | \`renderTabBar\` | 탭 목록 전체를 사용자 정의해요. | \`(props, DefaultTabBar) => ReactElement\` | - |
 
@@ -260,22 +268,12 @@ export const Editable: Story = {
 function EditableTabsExample() {
   const [editableItems, setEditableItems] = useState(items);
 
-  const handleEdit = (targetKey, action) => {
-    setEditableItems((current) =>
-      action === 'add'
-        ? [
-            ...current,
-            { key: \`new-\${Date.now()}\`, label: '새 탭', children: '새 탭 내용' },
-          ]
-        : current.filter((item) => item.key !== targetKey),
-    );
-  };
-
   return (
     <Tabs
       type="editable-card"
       items={editableItems}
-      onEdit={handleEdit}
+      onAdd={setEditableItems}
+      onDelete={setEditableItems}
     />
   );
 }

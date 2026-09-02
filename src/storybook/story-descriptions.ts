@@ -375,7 +375,7 @@ export const storyDescriptions: Record<string, string> = {
   "components-tabs--sizes": "선형 탭의 sm, md와 lg 크기를 한 번에 비교해요.",
   "components-tabs--animate": "표시선과 콘텐츠가 부드럽게 이동하며 전환되는 모습을 확인해요.",
   "components-tabs--card": "카드 탭의 sm, md와 lg 크기를 한 번에 비교해요.",
-  "components-tabs--editable": "탭 추가·삭제 버튼을 표시하고 onEdit으로 편집 동작을 처리해요.",
+  "components-tabs--editable": "탭 추가·삭제 버튼을 표시하고 setter로 변경된 목록을 반영해요.",
   "components-tabs--vertical": "탭 목록을 콘텐츠 왼쪽에 세로로 배치해요.",
   "components-tabs--controlled":
     "activeKey와 onChange로 활성 탭을 외부 상태 및 별도 버튼과 동기화해요.",

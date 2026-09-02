@@ -22,7 +22,8 @@ export function Tabs(props: TabsProps) {
     indicator,
     className,
     onChange,
-    onEdit,
+    onAdd,
+    onDelete,
     onTabClick,
     renderTabBar,
   } = props;
@@ -95,6 +96,28 @@ export function Tabs(props: TabsProps) {
     if (!item || item.disabled || key === selected) return;
     if (activeKey === undefined) setInnerActive(key);
     onChange?.(key);
+  };
+  const add = () => {
+    if (!onAdd) return;
+    let index = 1;
+    while (items.some((item) => item.key === `new-${index}`)) index += 1;
+    const key = `new-${index}`;
+    onAdd?.([...items, { key, label: `새 탭 ${index}`, children: `새 탭 ${index} 내용` }]);
+    if (activeKey === undefined) setInnerActive(key);
+    onChange?.(key);
+  };
+  const remove = (key: string) => {
+    if (!onDelete) return;
+    const removedIndex = items.findIndex((item) => item.key === key);
+    const nextItems = items.filter((item) => item.key !== key);
+    onDelete?.(nextItems);
+    if (key !== selected) return;
+    const nextSelected = [
+      ...nextItems.slice(Math.max(removedIndex, 0)),
+      ...nextItems.slice(0, Math.max(removedIndex, 0)).reverse(),
+    ].find((item) => !item.disabled)?.key;
+    if (activeKey === undefined) setInnerActive(nextSelected);
+    if (nextSelected !== undefined) onChange?.(nextSelected);
   };
   const linePadding =
     size === "lg"
@@ -182,7 +205,7 @@ export function Tabs(props: TabsProps) {
                 className="inline-flex cursor-pointer rounded p-0.5 hover:bg-black/5"
                 onClick={(event) => {
                   event.stopPropagation();
-                  onEdit?.(item.key, "remove");
+                  remove(item.key);
                 }}
               >
                 {item.closeIcon ?? removeIcon ?? <Icon icon="close" size={12} />}
@@ -206,7 +229,7 @@ export function Tabs(props: TabsProps) {
                     : "w-10 px-0",
               cardEdge,
             )}
-            onClick={(event) => onEdit?.(event, "add")}
+            onClick={add}
           >
             {addIcon ?? <Icon icon="add" />}
           </button>
