@@ -124,7 +124,7 @@ const meta = {
 | \`label\` | 탭 버튼에 표시할 내용이에요. | \`ReactNode\` | - |
 | \`icon\` | 탭 이름 앞에 표시할 아이콘이에요. | \`ReactNode\` | - |
 | \`children\` | 탭이 활성화됐을 때 표시할 콘텐츠예요. | \`ReactNode\` | - |
-| \`disabled\` | 탭 선택을 막아요. | \`boolean\` | \`false\` |
+| \`disabled\` | 탭 선택과 삭제를 막아요. | \`boolean\` | \`false\` |
 | \`closable\` | onDelete 사용 시 이 탭의 닫기 버튼을 표시해요. | \`boolean\` | \`true\` |
 | \`closeIcon\` | 이 탭의 닫기 아이콘을 변경해요. | \`ReactNode\` | removeIcon |
 | \`forceRender\` | 선택하기 전에도 탭 콘텐츠를 렌더링해요. | \`boolean\` | \`false\` |

@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
@@ -58,6 +58,22 @@ describe("Tabs", () => {
     rerender(<Tabs type="card" items={items} onAdd={onAdd} onDelete={onDelete} />);
     expect(document.querySelector("[data-tabs-add]")).toBeInTheDocument();
     expect(document.querySelector('[data-tab-close="one"]')).toBeInTheDocument();
+  });
+
+  it("does not delete a disabled tab", () => {
+    const onDelete = vi.fn();
+    render(
+      <Tabs
+        type="card"
+        items={[{ key: "disabled", label: "비활성", disabled: true }]}
+        onDelete={onDelete}
+      />,
+    );
+    const closeButton = document.querySelector('[data-tab-close="disabled"]')!;
+
+    expect(closeButton).toHaveClass("cursor-not-allowed", "opacity-40");
+    fireEvent.click(closeButton);
+    expect(onDelete).not.toHaveBeenCalled();
   });
 
   it("uses Ant Design card dimensions and joins the active tab to the content", () => {

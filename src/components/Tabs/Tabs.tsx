@@ -101,6 +101,7 @@ export function Tabs(props: TabsProps) {
   const remove = (key: string) => {
     if (!onDelete) return;
     const removedIndex = items.findIndex((item) => item.key === key);
+    if (removedIndex < 0 || items[removedIndex]?.disabled) return;
     const nextItems = items.filter((item) => item.key !== key);
     onDelete(nextItems);
     if (key !== selected) return;
@@ -194,9 +195,13 @@ export function Tabs(props: TabsProps) {
             {type === "card" && onDelete !== undefined && item.closable !== false ? (
               <span
                 data-tab-close={item.key}
-                className="inline-flex cursor-pointer rounded p-0.5 hover:bg-black/5"
+                className={twMerge(
+                  "inline-flex rounded p-0.5",
+                  item.disabled ? "cursor-not-allowed opacity-40" : "cursor-pointer",
+                )}
                 onClick={(event) => {
                   event.stopPropagation();
+                  if (item.disabled) return;
                   remove(item.key);
                 }}
               >
