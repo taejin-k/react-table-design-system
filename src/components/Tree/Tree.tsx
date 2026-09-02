@@ -291,7 +291,7 @@ export function Tree({
       : current.filter((value) => value !== key);
     expandedRef.current = next;
     if (expandedKeys === undefined) setInnerExpanded(next);
-    onExpand?.(restoreKeys(next), node);
+    onExpand?.(restoreKeys(next));
   };
   const toggleExpand = async (node: TreeDataNode) => {
     await changeExpanded(node, !expandedRef.current.includes(id(node.key)));
@@ -308,7 +308,7 @@ export function Tree({
         ? []
         : [key];
     if (!selectedKeys) setInnerSelected(next);
-    onSelect?.(restoreKeys(next), node);
+    onSelect?.(restoreKeys(next));
   };
   const check = (node: TreeDataNode) => {
     if (disabled || node.disabled || node.disableCheckbox) return;
@@ -333,7 +333,7 @@ export function Tree({
       }
     }
     if (!checkedKeys) setInnerChecked(next);
-    onCheck?.(restoreKeys(next), node);
+    onCheck?.(restoreKeys(next));
   };
   const nodeDraggable = (node: TreeDataNode) => {
     if (!draggable || disabled || node.disabled) return false;

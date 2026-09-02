@@ -24,7 +24,7 @@ describe("Tree", () => {
     render(<Tree treeData={treeData} onSelect={onSelect} />);
     await userEvent.click(document.querySelector('[data-tree-switcher="parent"]')!);
     await userEvent.click(screen.getByText("하위"));
-    expect(onSelect).toHaveBeenCalledWith(["child"], expect.objectContaining({ key: "child" }));
+    expect(onSelect).toHaveBeenCalledWith(["child"]);
   });
 
   it("keeps a node collapsed when async loading fails and allows retrying", async () => {
@@ -51,7 +51,7 @@ describe("Tree", () => {
 
     await userEvent.click(switcher);
     await waitFor(() => expect(loadData).toHaveBeenCalledTimes(2));
-    await waitFor(() => expect(onExpand).toHaveBeenCalledWith(["async"], expect.any(Object)));
+    await waitFor(() => expect(onExpand).toHaveBeenCalledWith(["async"]));
   });
 
   it("keeps row spacing stable while a parent is collapsed", async () => {
@@ -101,10 +101,7 @@ describe("Tree", () => {
     render(<Tree checkable defaultExpandAll treeData={treeData} onCheck={onCheck} />);
     expect(screen.getAllByRole("checkbox")[0].parentElement?.parentElement).toHaveClass("mr-1");
     await userEvent.click(screen.getAllByRole("checkbox")[0]);
-    expect(onCheck).toHaveBeenCalledWith(
-      expect.arrayContaining(["parent", "child"]),
-      expect.objectContaining({ key: "parent" }),
-    );
+    expect(onCheck).toHaveBeenCalledWith(expect.arrayContaining(["parent", "child"]));
   });
 
   it("always reports checked keys as an array in strict mode", async () => {
@@ -112,7 +109,7 @@ describe("Tree", () => {
     render(<Tree checkable checkStrictly defaultExpandAll treeData={treeData} onCheck={onCheck} />);
 
     await userEvent.click(screen.getAllByRole("checkbox")[1]);
-    expect(onCheck).toHaveBeenCalledWith(["child"], expect.objectContaining({ key: "child" }));
+    expect(onCheck).toHaveBeenCalledWith(["child"]);
   });
 
   it("applies selection styling to the icon and title content", () => {

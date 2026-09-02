@@ -48,9 +48,9 @@ export interface TreeProps {
   defaultCheckedKeys?: Key[];
   loadData?: (node: TreeDataNode) => Promise<void>;
   className?: string;
-  onExpand?: (expandedKeys: Key[], node: TreeDataNode) => void;
-  onSelect?: (selectedKeys: Key[], node: TreeDataNode) => void;
-  onCheck?: (checkedKeys: Key[], node: TreeDataNode) => void;
+  onExpand?: (expandedKeys: Key[]) => void;
+  onSelect?: (selectedKeys: Key[]) => void;
+  onCheck?: (checkedKeys: Key[]) => void;
   onDragStart?: (info: TreeDragInfo) => void;
   onDragEnd?: (info: TreeDragInfo) => void;
   onDrop?: (info: TreeDropInfo) => void;

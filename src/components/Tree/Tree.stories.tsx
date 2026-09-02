@@ -147,13 +147,13 @@ const meta = {
 | \`titleRender\` | 노드 제목을 직접 구성해요. | <code>(node: <a href="#tree-data-node">TreeDataNode</a>) =&gt; ReactNode</code> | - |
 | \`loadData\` | 노드를 펼칠 때 자식 데이터를 비동기로 불러와요. | <code>(node: <a href="#tree-data-node">TreeDataNode</a>) =&gt; Promise&lt;void&gt;</code> | - |
 | \`className\` | 최상위 요소에 Tailwind 클래스를 추가해요. | \`string\` | - |
-| \`onExpand\` | 펼친 노드가 바뀔 때 실행해요. | <code>(expandedKeys: Key[], node: <a href="#tree-data-node">TreeDataNode</a>) =&gt; void</code> | - |
-| \`onSelect\` | 선택된 노드가 바뀔 때 실행해요. | <code>(selectedKeys: Key[], node: <a href="#tree-data-node">TreeDataNode</a>) =&gt; void</code> | - |
-| \`onCheck\` | 체크 상태가 바뀔 때 실행해요. | <code>(checkedKeys: Key[], node: <a href="#tree-data-node">TreeDataNode</a>) =&gt; void</code> | - |
+| \`onExpand\` | 펼친 노드가 바뀔 때 실행해요. | \`(expandedKeys: Key[]) => void\` | - |
+| \`onSelect\` | 선택된 노드가 바뀔 때 실행해요. | \`(selectedKeys: Key[]) => void\` | - |
+| \`onCheck\` | 체크 상태가 바뀔 때 실행해요. | \`(checkedKeys: Key[]) => void\` | - |
 | \`onDragStart\` | 노드 드래그를 시작할 때 실행해요. | <code>(info: <a href="#tree-drag-info">TreeDragInfo</a>) =&gt; void</code> | - |
 | \`onDragEnd\` | 노드 드래그가 끝날 때 실행해요. | <code>(info: <a href="#tree-drag-info">TreeDragInfo</a>) =&gt; void</code> | - |
 | \`onDrop\` | 노드를 놓은 위치와 이동 정보를 전달해요. | <code>(info: <a href="#tree-drop-info">TreeDropInfo</a>) =&gt; void</code> | - |
-| \`onTreeDataChange\` | 드래그로 변경된 전체 노드 데이터와 이동 정보를 전달해요. | <code>(info: <a href="#tree-drop-info">TreeDropInfo</a>) =&gt; void</code> | - |
+| \`onTreeDataChange\` | 드래그 후 전체 노드 데이터와 이동 정보를 전달해요. | <code>(info: <a href="#tree-drop-info">TreeDropInfo</a>) =&gt; void</code> | - |
 
 ### <span id="tree-data-node">TreeDataNode</span>
 
@@ -183,8 +183,8 @@ const meta = {
 | \`event\` | 원본 드롭 이벤트예요. | \`DragEvent<HTMLDivElement>\` | - |
 | \`dragNode\` | 사용자가 잡아서 이동시킨 노드예요. | [\`TreeDataNode\`](#tree-data-node) | - |
 | \`treeData\` | 드롭이 반영된 최종 전체 노드 데이터예요. | [\`TreeDataNode[]\`](#tree-data-node) | - |
-| \`parentKey\` | 이동한 노드가 들어간 부모의 키예요. 최상위면 \`null\`이에요. | \`Key \\| null\` | - |
-| \`index\` | 부모의 자식 목록에서 이동한 노드의 0부터 시작하는 순서예요. | \`number\` | - |
+| \`parentKey\` | 이동한 노드의 부모 키예요. 최상위면 \`null\`이에요. | \`Key \\| null\` | - |
+| \`index\` | 부모 안에서 이동한 노드의 0부터 시작하는 순서예요. | \`number\` | - |
           `}</Markdown>
         </div>
       ),
@@ -888,9 +888,9 @@ function TreeEvents() {
         draggable
         defaultExpandAll
         defaultTreeData={data}
-        onExpand={(keys, node) => addEvent(\`onExpand · \${node.key} · \${keys.join(', ')}\`)}
-        onSelect={(keys, node) => addEvent(\`onSelect · \${node.key} · \${keys.join(', ')}\`)}
-        onCheck={(keys, node) => addEvent(\`onCheck · \${node.key} · \${keys.join(', ')}\`)}
+        onExpand={(keys) => addEvent(\`onExpand · \${keys.join(', ')}\`)}
+        onSelect={(keys) => addEvent(\`onSelect · \${keys.join(', ')}\`)}
+        onCheck={(keys) => addEvent(\`onCheck · \${keys.join(', ')}\`)}
         onDragStart={({ dragNode }) => addEvent(\`onDragStart · \${dragNode.key}\`)}
         onDragEnd={({ dragNode }) => addEvent(\`onDragEnd · \${dragNode.key}\`)}
         onDrop={({ dragNode, parentKey, index }) =>
@@ -934,9 +934,9 @@ function TreeEventsExample(args: Partial<TreeProps>) {
         draggable
         defaultExpandAll
         defaultTreeData={draggableTreeData}
-        onExpand={(keys, node) => addEvent(`onExpand · ${node.key} · ${keys.join(", ")}`)}
-        onSelect={(keys, node) => addEvent(`onSelect · ${node.key} · ${keys.join(", ")}`)}
-        onCheck={(keys, node) => addEvent(`onCheck · ${node.key} · ${keys.join(", ")}`)}
+        onExpand={(keys) => addEvent(`onExpand · ${keys.join(", ")}`)}
+        onSelect={(keys) => addEvent(`onSelect · ${keys.join(", ")}`)}
+        onCheck={(keys) => addEvent(`onCheck · ${keys.join(", ")}`)}
         onDragStart={({ dragNode }) => addEvent(`onDragStart · ${dragNode.key}`)}
         onDragEnd={({ dragNode }) => addEvent(`onDragEnd · ${dragNode.key}`)}
         onDrop={({ dragNode, parentKey, index }) =>
