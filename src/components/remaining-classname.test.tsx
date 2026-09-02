@@ -1,4 +1,5 @@
 import { render } from "@testing-library/react";
+import type { ReactElement } from "react";
 import { describe, expect, it } from "vitest";
 import { Avatar } from "./Avatar";
 import { Badge } from "./Badge";
@@ -52,6 +53,27 @@ describe("remaining component className convention", () => {
       "upload-dragger-root",
     ]) {
       expect(container.querySelector(`.${className}`)).toBeInTheDocument();
+    }
+  });
+
+  it("applies DatePicker through Skeleton className to the outermost element", () => {
+    const cases: Array<[ReactElement, string]> = [
+      [<DatePicker className="date-picker-outer" />, "date-picker-outer"],
+      [<DatePicker.RangePicker className="date-range-picker-outer" />, "date-range-picker-outer"],
+      [<TimePicker className="time-picker-outer" />, "time-picker-outer"],
+      [<Calendar className="calendar-outer" />, "calendar-outer"],
+      [<Menu className="menu-outer" />, "menu-outer"],
+      [<Skeleton.Avatar className="skeleton-avatar-outer" />, "skeleton-avatar-outer"],
+      [<Skeleton.Button className="skeleton-button-outer" />, "skeleton-button-outer"],
+      [<Skeleton.Input className="skeleton-input-outer" />, "skeleton-input-outer"],
+      [<Skeleton.Image className="skeleton-image-outer" />, "skeleton-image-outer"],
+      [<Skeleton.Node className="skeleton-node-outer" />, "skeleton-node-outer"],
+    ];
+
+    for (const [element, className] of cases) {
+      const { container, unmount } = render(element);
+      expect(container.firstElementChild).toHaveClass(className);
+      unmount();
     }
   });
 });

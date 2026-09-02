@@ -94,7 +94,7 @@ const meta = {
 | \`showProgress\` | 남은 시간을 하단 막대로 표시해요. | \`boolean\` | \`false\` |
 | \`pauseOnHover\` | 마우스를 올리면 닫힘 시간을 멈춰요. | \`boolean\` | \`true\` |
 | \`icon\` | 상태 아이콘을 변경해요. | \`ReactNode\` | - |
-| \`key\` | 알림을 갱신하거나 제거할 key예요. | \`string\` | - |
+| \`key\` | 알림을 갱신하거나 제거할 key예요. | \`Key\` | - |
 | \`placement\` | 화면 배치 위치를 설정해요. | [\`NotificationPlacementType\`](#notification-placement-type) | \`topRight\` |
 | \`onClick\` | 알림을 누르면 실행해요. | \`() => void\` | - |
 | \`onClose\` | 알림이 닫히면 실행해요. | \`() => void\` | - |

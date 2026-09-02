@@ -1,12 +1,11 @@
-import type { ReactNode } from "react";
+import type { Key, ReactNode } from "react";
 
-export type CollapseKeyType = string | number;
 export type CollapseSizeType = "sm" | "md" | "lg";
 export type CollapseCollapsibleType = "header" | "icon" | "disabled";
 export type CollapseExpandIconPlacementType = "start" | "end";
 
 export interface CollapseItem {
-  key: CollapseKeyType;
+  key: Key;
   label?: ReactNode;
   children?: ReactNode;
   extra?: ReactNode;
@@ -17,12 +16,12 @@ export interface CollapseItem {
 export interface CollapseProps {
   items?: CollapseItem[];
   accordion?: boolean;
-  activeKey?: CollapseKeyType[];
-  defaultActiveKey?: CollapseKeyType[];
+  activeKey?: Key[];
+  defaultActiveKey?: Key[];
   bordered?: boolean;
   expandIconPlacement?: CollapseExpandIconPlacementType;
   ghost?: boolean;
   size?: CollapseSizeType;
   className?: string;
-  onChange?: (keys: CollapseKeyType[]) => void;
+  onChange?: (keys: Key[]) => void;
 }

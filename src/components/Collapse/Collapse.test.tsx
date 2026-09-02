@@ -14,6 +14,15 @@ describe("Collapse", () => {
     expect(onChange).toHaveBeenCalledWith(["one"]);
   });
 
+  it("preserves numeric panel keys", async () => {
+    const onChange = vi.fn();
+    render(<Collapse items={[{ key: 1, label: "숫자 패널" }]} onChange={onChange} />);
+
+    await userEvent.click(screen.getByText("숫자 패널").closest("[tabindex]")!);
+
+    expect(onChange).toHaveBeenCalledWith([1]);
+  });
+
   it("keeps one panel open in accordion mode", async () => {
     const onChange = vi.fn();
     render(
@@ -127,10 +136,7 @@ describe("Collapse", () => {
       />,
     );
 
-    expect(container.querySelectorAll("section")[1]).toHaveClass(
-      "border-t",
-      "border-transparent",
-    );
+    expect(container.querySelectorAll("section")[1]).toHaveClass("border-t", "border-transparent");
   });
 
   it("applies className to the top-level element and supports Tailwind overrides", () => {

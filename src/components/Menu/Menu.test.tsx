@@ -9,9 +9,21 @@ describe("Menu", () => {
     render(<Menu items={[{ key: "dashboard", label: "대시보드" }]} onClick={onClick} />);
     await userEvent.click(screen.getByRole("button", { name: "대시보드" }));
     expect(onClick).toHaveBeenCalledWith(
-      expect.objectContaining({ key: "dashboard", keyPath: ["dashboard"] }),
+      expect.objectContaining({
+        key: "dashboard",
+        event: expect.anything(),
+      }),
     );
     expect(screen.getByRole("button", { name: "대시보드" })).toHaveClass("bg-[#e6f4ff]");
+  });
+
+  it("preserves numeric keys in selection callbacks", async () => {
+    const onSelect = vi.fn();
+    render(<Menu items={[{ key: 1, label: "숫자 메뉴" }]} onSelect={onSelect} />);
+
+    await userEvent.click(screen.getByRole("button", { name: "숫자 메뉴" }));
+
+    expect(onSelect).toHaveBeenCalledWith(expect.objectContaining({ key: 1, selectedKeys: [1] }));
   });
 
   it("opens inline submenus with the Ant Motion duration", async () => {
@@ -26,11 +38,58 @@ describe("Menu", () => {
     expect(container.querySelector(".duration-200")).toBeInTheDocument();
   });
 
+  it("aligns nested inline icons with the item indentation", () => {
+    render(
+      <Menu
+        mode="inline"
+        defaultOpenKeys={["parent"]}
+        items={[
+          {
+            key: "parent",
+            label: "워크스페이스",
+            children: [{ key: "overview", label: "개요", icon: <span data-testid="icon" /> }],
+          },
+        ]}
+      />,
+    );
+
+    expect(screen.getByTestId("icon").parentElement).toHaveStyle({ left: "36px" });
+  });
+
+  it("does not indent direct group items but indents their children", () => {
+    render(
+      <Menu
+        mode="inline"
+        defaultOpenKeys={["workspace"]}
+        items={[
+          {
+            type: "group",
+            key: "group",
+            label: "메뉴",
+            children: [
+              {
+                key: "workspace",
+                label: "워크스페이스",
+                children: [{ key: "overview", label: "개요" }],
+              },
+            ],
+          },
+        ]}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "워크스페이스" })).toHaveStyle({
+      paddingInlineStart: "12px",
+    });
+    expect(screen.getByRole("button", { name: "개요" })).toHaveStyle({
+      paddingInlineStart: "36px",
+    });
+  });
+
   it("renders popup submenus in document.body so overflow parents cannot clip them", async () => {
     const { container } = render(
       <div className="overflow-hidden">
         <Menu
-          mode="horizontal"
           items={[
             {
               key: "workspace",
@@ -81,27 +140,17 @@ describe("Menu", () => {
 
     expect(root).toHaveClass("w-16", "transition-[width]");
     expect(label).toBeInTheDocument();
-    expect(label.parentElement).toHaveClass("-translate-x-1", "opacity-0");
+    expect(label.parentElement).toHaveClass("transition-opacity", "opacity-0");
     expect(screen.getByText("문서")).toBeInTheDocument();
     expect(document.body.querySelector("[data-menu-popup]")).not.toBeInTheDocument();
   });
 
-  it("keeps horizontal items inside the menu viewport", () => {
+  it("applies inlineCollapsed only to inline menus", () => {
     const { container } = render(
-      <Menu
-        mode="horizontal"
-        items={[
-          { key: "home", label: "홈" },
-          { key: "workspace", label: "워크스페이스" },
-          { key: "settings", label: "설정" },
-        ]}
-      />,
+      <Menu inlineCollapsed items={[{ key: "home", label: "홈", icon: <span /> }]} />,
     );
 
-    expect(container.querySelector("ul")).toHaveClass(
-      "max-w-full",
-      "overflow-x-auto",
-      "wizard-scrollbar-hidden",
-    );
+    expect(container.querySelector("nav > ul")).toHaveClass("w-64");
+    expect(screen.getByText("홈").parentElement).toHaveClass("opacity-100");
   });
 });

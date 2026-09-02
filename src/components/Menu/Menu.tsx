@@ -1,4 +1,12 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type Key,
+  type ReactNode,
+} from "react";
 import { createPortal } from "react-dom";
 import { twMerge } from "tailwind-merge";
 import { Icon } from "../Icon";
@@ -10,15 +18,15 @@ import {
 import type { MenuClickInfo, MenuItemType, MenuProps } from "./Menu.types";
 
 const SUBMENU_CLOSE_DELAY_MS = 100;
+const INLINE_INDENT = 24;
 
-function normalize(keys?: string[]) {
-  return keys?.map(String) ?? [];
+function normalize(keys?: Key[]) {
+  return keys ?? [];
 }
 
 function MenuPopupPortal({
   getAnchor,
   open,
-  placement,
   offset,
   className,
   onMouseEnter,
@@ -27,7 +35,6 @@ function MenuPopupPortal({
 }: {
   getAnchor: () => HTMLElement | null;
   open: boolean;
-  placement: "bottomLeft" | "rightTop";
   offset?: [number, number];
   className?: string;
   onMouseEnter: () => void;
@@ -47,7 +54,7 @@ function MenuPopupPortal({
     const next = calculateFloatingPosition(
       anchor.getBoundingClientRect(),
       popup.getBoundingClientRect(),
-      placement,
+      "rightTop",
       { targetGap: 4 },
     );
     setPosition((current) =>
@@ -57,7 +64,7 @@ function MenuPopupPortal({
         ? current
         : next,
     );
-  }, [placement]);
+  }, []);
 
   const setPopupNode = useCallback(
     (node: HTMLDivElement | null) => {
@@ -97,7 +104,7 @@ function MenuPopupPortal({
   }, [open, position]);
 
   if (typeof document === "undefined") return null;
-  const resolvedPlacement = position?.placement ?? placement;
+  const resolvedPlacement = position?.placement ?? "rightTop";
   const hiddenTransform = getMenuPopupHiddenTransform(resolvedPlacement);
 
   return createPortal(
@@ -152,7 +159,6 @@ export function Menu({
   openKeys,
   defaultOpenKeys = [],
   inlineCollapsed = false,
-  inlineIndent = 24,
   triggerSubMenuAction = "hover",
   className,
   onClick,
@@ -162,18 +168,18 @@ export function Menu({
 }: MenuProps) {
   const [innerSelected, setInnerSelected] = useState(normalize(defaultSelectedKeys));
   const [innerOpen, setInnerOpen] = useState(normalize(defaultOpenKeys));
-  const [collapsedPopupOpen, setCollapsedPopupOpen] = useState<string[]>([]);
+  const [collapsedPopupOpen, setCollapsedPopupOpen] = useState<Key[]>([]);
   const selected = selectedKeys === undefined ? innerSelected : normalize(selectedKeys);
   const opened = openKeys === undefined ? innerOpen : normalize(openKeys);
   const visitedOpenKeys = useRef(new Set(opened));
-  const visitedCollapsedPopupKeys = useRef(new Set<string>());
-  const timers = useRef(new Map<string, ReturnType<typeof setTimeout>>());
-  const popupAnchors = useRef(new Map<string, HTMLLIElement>());
+  const visitedCollapsedPopupKeys = useRef(new Set<Key>());
+  const timers = useRef(new Map<Key, ReturnType<typeof setTimeout>>());
+  const popupAnchors = useRef(new Map<Key, HTMLLIElement>());
   useEffect(() => {
     opened.forEach((key) => visitedOpenKeys.current.add(key));
   }, [opened]);
   useLayoutEffect(() => {
-    setCollapsedPopupOpen([]);
+    setCollapsedPopupOpen((current) => (current.length === 0 ? current : []));
     visitedCollapsedPopupKeys.current.clear();
   }, [inlineCollapsed]);
   useEffect(
@@ -184,11 +190,11 @@ export function Menu({
     [],
   );
 
-  const changeOpen = (key: string, nextOpen: boolean, collapsedPopup = false) => {
+  const changeOpen = (key: Key, nextOpen: boolean, collapsedPopup = false) => {
     const current = collapsedPopup ? collapsedPopupOpen : opened;
     const next = nextOpen
       ? Array.from(new Set([...current, key]))
-      : current.filter((value) => value !== key);
+      : current.filter((value) => !Object.is(value, key));
     if (collapsedPopup) {
       if (nextOpen) visitedCollapsedPopupKeys.current.add(key);
       setCollapsedPopupOpen(next);
@@ -198,7 +204,7 @@ export function Menu({
     onOpenChange?.(next);
   };
 
-  const delayOpen = (key: string, nextOpen: boolean, collapsedPopup = false) => {
+  const delayOpen = (key: Key, nextOpen: boolean, collapsedPopup = false) => {
     const previous = timers.current.get(key);
     if (previous) clearTimeout(previous);
     const delay = nextOpen ? 0 : SUBMENU_CLOSE_DELAY_MS;
@@ -208,22 +214,18 @@ export function Menu({
     );
   };
 
-  const selectItem = (
-    item: MenuItemType,
-    keyPath: string[],
-    domEvent: React.MouseEvent<HTMLElement>,
-  ) => {
+  const selectItem = (item: MenuItemType, event: React.MouseEvent<HTMLElement>) => {
     if (item.disabled || item.children?.length || item.type === "group" || item.type === "divider")
       return;
-    const key = String(item.key);
-    const info: MenuClickInfo = { key, keyPath, domEvent };
+    const key = item.key;
+    const info: MenuClickInfo = { key, event };
     item.onClick?.(info);
     onClick?.(info);
     if (!selectable) return;
     const isSelected = selected.includes(key);
     const next = multiple
       ? isSelected
-        ? selected.filter((value) => value !== key)
+        ? selected.filter((value) => !Object.is(value, key))
         : [...selected, key]
       : [key];
     if (selectedKeys === undefined) setInnerSelected(next);
@@ -231,45 +233,35 @@ export function Menu({
     else onSelect?.({ ...info, selectedKeys: next });
   };
 
-  const renderItems = (
-    data: MenuItemType[],
-    parentPath: string[] = [],
-    level = 0,
-    popup = false,
-  ) => (
+  const renderItems = (data: MenuItemType[], level = 0, popup = false) => (
     <ul
       className={twMerge(
         "m-0 list-none space-y-1 p-1",
         level === 0 &&
-          mode === "horizontal" &&
-          "wizard-scrollbar-hidden flex max-w-full items-center gap-2 space-y-0 overflow-x-auto border-b border-[#f0f0f0] p-0",
-        level === 0 &&
-          mode !== "horizontal" &&
-          "transition-[width] duration-300 ease-[cubic-bezier(0.2,0,0,1)] motion-reduce:transition-none",
+          "transition-[width] duration-[280ms] ease-[cubic-bezier(0.4,0,0.2,1)] will-change-[width] motion-reduce:transition-none",
         level === 0 && mode === "inline" && "overflow-hidden",
-        level === 0 && mode !== "horizontal" && (inlineCollapsed ? "w-16" : "w-64"),
+        level === 0 && (mode === "inline" && inlineCollapsed ? "w-16" : "w-64"),
+        level > 0 && mode === "inline" && !popup && "pb-0",
         popup &&
           "min-w-40 rounded-lg bg-white shadow-[0_6px_16px_rgba(0,0,0,0.08),0_3px_6px_-4px_rgba(0,0,0,0.12),0_9px_28px_8px_rgba(0,0,0,0.05)]",
       )}
     >
-      {data.map((item, index) => {
-        const key = String(item.key);
-        const path = [key, ...parentPath];
-        if (item.type === "divider")
-          return <li key={key || `divider-${index}`} className="my-1 border-t border-[#f0f0f0]" />;
+      {data.map((item) => {
+        const key = item.key;
+        if (item.type === "divider") return <li key={key} className="border-t border-[#f0f0f0]" />;
         if (item.type === "group")
           return (
             <li key={key} className="py-1">
-              {item.label ? (
+              {item.label != null ? (
                 <div className="px-3 py-1 text-xs text-[#999]">{item.label}</div>
               ) : null}
-              {renderItems(item.children ?? [], path, level + 1, popup)}
+              {renderItems(item.children ?? [], level, popup)}
             </li>
           );
         const hasChildren = Boolean(item.children?.length);
         const inlineOpen = opened.includes(key);
         const active = selected.includes(key);
-        const collapsed = inlineCollapsed && level === 0;
+        const collapsed = mode === "inline" && inlineCollapsed && level === 0;
         const collapsedPopup = mode === "inline" && collapsed;
         const open = collapsedPopup ? collapsedPopupOpen.includes(key) : inlineOpen;
         const itemNode = (
@@ -285,40 +277,37 @@ export function Menu({
               "relative block h-10 w-full cursor-pointer overflow-hidden rounded-md px-3 text-left text-sm text-[#111] transition-colors duration-200 outline-none hover:bg-[#f5f5f5] motion-reduce:transition-none",
               active && "bg-[#e6f4ff] text-[#0062df]",
               item.disabled && "cursor-not-allowed opacity-40 hover:bg-transparent",
-              mode === "horizontal" &&
-                level === 0 &&
-                "h-12 rounded-none px-5 after:absolute after:right-4 after:bottom-0 after:left-4 after:h-0.5 after:origin-center after:scale-x-0 after:bg-[#0062df] after:transition-transform hover:text-[#0062df]",
-              mode === "horizontal" && level === 0 && active && "bg-transparent after:scale-x-100",
             )}
             style={{
               paddingInlineStart:
-                mode === "inline" && !collapsed ? 12 + level * inlineIndent : undefined,
+                mode === "inline" && !collapsed ? 12 + level * INLINE_INDENT : undefined,
             }}
             onClick={(event) => {
               if (hasChildren) {
-                item.onTitleClick?.({ key, domEvent: event });
+                item.onTitleClick?.({ key, event });
                 if (triggerSubMenuAction === "click" || mode === "inline")
                   changeOpen(key, !open, collapsedPopup);
-              } else selectItem(item, path, event);
+              } else selectItem(item, event);
             }}
           >
             {item.icon ? (
               <span
                 className={twMerge(
-                  "absolute top-1/2 inline-flex shrink-0 -translate-y-1/2 transition-[left,transform] duration-300 ease-[cubic-bezier(0.2,0,0,1)] motion-reduce:transition-none",
-                  collapsed ? "left-1/2 -translate-x-1/2" : "left-3 translate-x-0",
+                  "absolute top-1/2 left-3 inline-flex shrink-0 -translate-y-1/2 transform-gpu transition-transform duration-[280ms] ease-[cubic-bezier(0.4,0,0.2,1)] will-change-transform motion-reduce:transition-none",
+                  collapsed ? "translate-x-2" : "translate-x-0",
                 )}
+                style={{
+                  left: mode === "inline" && !collapsed ? 12 + level * INLINE_INDENT : undefined,
+                }}
               >
                 {item.icon}
               </span>
             ) : null}
             <span
               className={twMerge(
-                "flex h-full min-w-0 items-center gap-2 transition-[opacity,transform] duration-200 ease-out motion-reduce:transition-none",
+                "flex h-full min-w-0 items-center gap-2 transition-opacity duration-150 ease-out motion-reduce:transition-none",
                 item.icon && "pl-6",
-                collapsed
-                  ? "pointer-events-none -translate-x-1 opacity-0 delay-0"
-                  : "translate-x-0 opacity-100 delay-75",
+                collapsed ? "pointer-events-none opacity-0 delay-0" : "opacity-100 delay-100",
               )}
             >
               <span className="min-w-0 flex-1 truncate">{item.label}</span>
@@ -330,13 +319,9 @@ export function Menu({
                   className={twMerge(
                     "inline-flex shrink-0 transition-transform duration-200 ease-out motion-reduce:transition-none",
                     open && mode === "inline" && "rotate-90",
-                    open && mode === "horizontal" && level === 0 && "rotate-180",
                   )}
                 >
-                  <Icon
-                    icon={mode === "horizontal" && level === 0 ? "chevron-down" : "chevron-right"}
-                    size={12}
-                  />
+                  <Icon icon="chevron-right" size={12} />
                 </span>
               ) : null}
             </span>
@@ -351,7 +336,7 @@ export function Menu({
               if (node) popupAnchors.current.set(key, node);
               else popupAnchors.current.delete(key);
             }}
-            className={twMerge("relative", mode === "horizontal" && level === 0 && "h-12")}
+            className="relative"
             onMouseEnter={() =>
               hasChildren &&
               popupSubmenu &&
@@ -368,7 +353,7 @@ export function Menu({
             {itemNode}
             {hasChildren && inlineSubmenu ? (
               <div
-                className="grid transition-[grid-template-rows,opacity] duration-[260ms] ease-[cubic-bezier(0.2,0,0,1)] motion-reduce:transition-none"
+                className="grid transition-[grid-template-rows,opacity] duration-[280ms] ease-[cubic-bezier(0.4,0,0.2,1)] motion-reduce:transition-none"
                 style={{
                   gridTemplateRows: inlineOpen && !collapsed ? "1fr" : "0fr",
                   opacity: inlineOpen && !collapsed ? 1 : 0,
@@ -376,7 +361,7 @@ export function Menu({
               >
                 <div className="overflow-hidden">
                   {inlineOpen || visitedOpenKeys.current.has(key)
-                    ? renderItems(item.children!, path, level + 1)
+                    ? renderItems(item.children!, level + 1)
                     : null}
                 </div>
               </div>
@@ -390,7 +375,6 @@ export function Menu({
               <MenuPopupPortal
                 getAnchor={() => popupAnchors.current.get(key) ?? null}
                 open={open}
-                placement={mode === "horizontal" && level === 0 ? "bottomLeft" : "rightTop"}
                 offset={item.popupOffset}
                 className={item.popupClassName}
                 onMouseEnter={() => {
@@ -400,7 +384,7 @@ export function Menu({
                   if (triggerSubMenuAction === "hover") delayOpen(key, false, collapsedPopup);
                 }}
               >
-                {renderItems(item.children!, path, level + 1, true)}
+                {renderItems(item.children!, level + 1, true)}
               </MenuPopupPortal>
             ) : null}
           </li>

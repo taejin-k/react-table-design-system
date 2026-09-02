@@ -170,6 +170,14 @@ body.sb-show-main {
   width: 38%;
 }
 
+.calendar-docs table :is(th, td):nth-child(2) {
+  width: 30%;
+}
+
+.calendar-docs table :is(th, td):nth-child(3) {
+  width: 38%;
+}
+
 .component-docs table :is(th, td) {
   overflow-wrap: anywhere;
 }

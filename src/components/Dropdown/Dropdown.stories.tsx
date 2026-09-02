@@ -144,7 +144,7 @@ const meta = {
 | --- | --- | --- | --- |
 | \`value\` | 클릭한 항목의 값이에요. | \`string\` | - |
 | \`valuePath\` | 상위 항목부터 클릭한 항목까지의 값이에요. | \`string[]\` | - |
-| \`domEvent\` | 클릭할 때 발생한 이벤트예요. | \`React.MouseEvent<HTMLElement>\` | - |
+| \`event\` | 클릭할 때 발생한 이벤트예요. | \`React.MouseEvent<HTMLElement>\` | - |
 
 ### DropdownSelectInfo
 

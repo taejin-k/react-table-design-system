@@ -1,14 +1,13 @@
-import type { ReactNode } from "react";
+import type { Key, ReactNode } from "react";
 
 export type MessageStatusType = "success" | "error" | "info" | "warning" | "loading";
-export type MessageKeyType = string | number;
 
 export interface MessageArgsProps {
   content: ReactNode;
   type?: MessageStatusType;
   duration?: number;
   icon?: ReactNode;
-  key?: MessageKeyType;
+  key?: Key;
   pauseOnHover?: boolean;
   onClick?: () => void;
   onClose?: () => void;
@@ -25,7 +24,7 @@ export interface MessageInstance {
   info: (config: MessageArgsProps) => MessageType;
   warning: (config: MessageArgsProps) => MessageType;
   loading: (config: MessageArgsProps) => MessageType;
-  destroy: (key?: MessageKeyType) => void;
+  destroy: (key?: Key) => void;
 }
 
 export type MessageApi = MessageInstance;

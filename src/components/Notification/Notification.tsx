@@ -7,6 +7,7 @@ import {
   useRef,
   useState,
   type CSSProperties,
+  type Key,
   type Ref,
   type ReactNode,
 } from "react";
@@ -26,16 +27,16 @@ import type {
 } from "./Notification.types";
 
 interface NotificationItem extends NotificationArgsProps {
-  key: string;
+  key: Key;
 }
 
 function useNotificationHolder(): [NotificationInstance, ReactNode] {
   const [items, setItems] = useState<NotificationItem[]>([]);
-  const onCloseCallbacks = useRef(new Map<string, (() => void) | undefined>());
-  const close = useCallback((key?: string) => {
+  const onCloseCallbacks = useRef(new Map<Key, (() => void) | undefined>());
+  const close = useCallback((key?: Key) => {
     setItems((current) => (key === undefined ? [] : current.filter((item) => item.key !== key)));
   }, []);
-  const finishClose = useCallback((key: string) => {
+  const finishClose = useCallback((key: Key) => {
     onCloseCallbacks.current.get(key)?.();
     onCloseCallbacks.current.delete(key);
   }, []);
@@ -108,8 +109,8 @@ function NotificationHolder({
   onAfterClose,
 }: {
   items: NotificationItem[];
-  onClose: (key?: string) => void;
-  onAfterClose: (key: string) => void;
+  onClose: (key?: Key) => void;
+  onAfterClose: (key: Key) => void;
 }) {
   const [expandedPlacements, setExpandedPlacements] = useState<Set<NotificationPlacementType>>(
     () => new Set(),
@@ -182,8 +183,8 @@ function NotificationPlacementList({
   placement: NotificationPlacementType;
   expanded: boolean;
   onExpandedChange: (expanded: boolean) => void;
-  onClose: (key?: string) => void;
-  onAfterClose: (key: string) => void;
+  onClose: (key?: Key) => void;
+  onAfterClose: (key: Key) => void;
   onAllRemoved: () => void;
 }) {
   const listRef = useRef<HTMLDivElement>(null);
@@ -196,8 +197,8 @@ function NotificationPlacementList({
     stackCollapsed,
     threshold,
   );
-  const positionCacheRef = useRef(new Map<string, number>());
-  const indexCacheRef = useRef(new Map<string, number>());
+  const positionCacheRef = useRef(new Map<Key, number>());
+  const indexCacheRef = useRef(new Map<Key, number>());
   const keys = useMemo(
     () =>
       items.map((item, index) => ({
@@ -264,7 +265,7 @@ function NotificationPlacementList({
           motionName="wizard-notification-motion"
           motionDeadline={MOTION_DURATION_MID + 50}
           onVisibleChanged={(visible, info) => {
-            if (!visible) onAfterClose(String(info.key));
+            if (!visible) onAfterClose(info.key as Key);
           }}
           onAllRemoved={onAllRemoved}
         >
@@ -310,10 +311,10 @@ function useNotificationLayout(
   stackCollapsed: boolean,
   threshold: number,
 ) {
-  const [sizes, setSizes] = useState<Record<string, number>>({});
-  const observersRef = useRef(new Map<string, ResizeObserver>());
+  const [sizes, setSizes] = useState(() => new Map<Key, number>());
+  const observersRef = useRef(new Map<Key, ResizeObserver>());
 
-  const setNodeSize = useCallback((key: string, node: HTMLDivElement | null) => {
+  const setNodeSize = useCallback((key: Key, node: HTMLDivElement | null) => {
     observersRef.current.get(key)?.disconnect();
     observersRef.current.delete(key);
     if (!node) return;
@@ -322,7 +323,12 @@ function useNotificationLayout(
       // transform(scale)은 시각 크기만 바꾸므로 배치 계산에는 원래 레이아웃 높이를 사용한다.
       const height = node.offsetHeight || node.getBoundingClientRect().height;
       if (!height) return;
-      setSizes((current) => (current[key] === height ? current : { ...current, [key]: height }));
+      setSizes((current) => {
+        if (current.get(key) === height) return current;
+        const next = new Map(current);
+        next.set(key, height);
+        return next;
+      });
     };
 
     measure();
@@ -336,10 +342,8 @@ function useNotificationLayout(
   useEffect(() => {
     const activeKeys = new Set(items.map((item) => item.key));
     setSizes((current) => {
-      const next = Object.fromEntries(
-        Object.entries(current).filter(([key]) => activeKeys.has(key)),
-      );
-      return Object.keys(next).length === Object.keys(current).length ? current : next;
+      if ([...current.keys()].every((key) => activeKeys.has(key))) return current;
+      return new Map([...current].filter(([key]) => activeKeys.has(key)));
     });
     observersRef.current.forEach((observer, key) => {
       if (!activeKeys.has(key)) {
@@ -358,12 +362,12 @@ function useNotificationLayout(
   );
 
   return useMemo(() => {
-    const positions = new Map<string, number>();
+    const positions = new Map<Key, number>();
     const fallbackHeight =
       items
         .slice()
         .reverse()
-        .map((item) => sizes[item.key])
+        .map((item) => sizes.get(item.key))
         .find((height) => height !== undefined && height > 0) ?? 0;
     let offset = 0;
     let totalHeight = 0;
@@ -374,7 +378,7 @@ function useNotificationLayout(
       .forEach((item, index) => {
         // A newly opened card is measured after its first commit. Reuse the latest measured
         // card height for that single frame so an existing stack never jumps to a negative row.
-        const height = sizes[item.key] ?? (fallbackHeight || estimateNotificationHeight(item));
+        const height = sizes.get(item.key) ?? (fallbackHeight || estimateNotificationHeight(item));
         const position =
           stackCollapsed && index > 0 ? offset + NOTIFICATION_STACK_OFFSET - height : offset;
         positions.set(item.key, position);
@@ -426,7 +430,7 @@ function NotificationCard({
   motionClassName?: string;
   motionStyle?: CSSProperties;
   motionRef: Ref<HTMLDivElement>;
-  onMeasure: (key: string, node: HTMLDivElement | null) => void;
+  onMeasure: (key: Key, node: HTMLDivElement | null) => void;
   onClose: () => void;
 }) {
   const timer = useRef<number | undefined>(undefined);

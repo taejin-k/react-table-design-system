@@ -1,11 +1,11 @@
-import type { MouseEvent, ReactElement, ReactNode } from "react";
+import type { Key, MouseEvent, ReactElement, ReactNode } from "react";
 
 export type TabsPlacementType = "top" | "end" | "bottom" | "start";
 export type TabsSizeType = "lg" | "md" | "sm";
 export type TabsType = "line" | "card";
 
 export interface TabItemType {
-  key: string;
+  key: Key;
   label?: ReactNode;
   icon?: ReactNode;
   children?: ReactNode;
@@ -15,18 +15,18 @@ export interface TabItemType {
 
 export interface TabsProps {
   items?: TabItemType[];
-  activeKey?: string;
-  defaultActiveKey?: string;
+  activeKey?: Key;
+  defaultActiveKey?: Key;
   type?: TabsType;
   size?: TabsSizeType;
   placement?: TabsPlacementType;
   animated?: boolean;
   centered?: boolean;
   className?: string;
-  onChange?: (activeKey: string) => void;
+  onChange?: (activeKey: Key) => void;
   onAdd?: (items: TabItemType[]) => void;
   onDelete?: (items: TabItemType[]) => void;
   onDrag?: (items: TabItemType[]) => void;
-  onTabClick?: (key: string, event: MouseEvent<HTMLElement>) => void;
+  onTabClick?: (key: Key, event: MouseEvent<HTMLElement>) => void;
   renderTabBar?: (props: TabsProps, DefaultTabBar: () => ReactElement) => ReactElement;
 }

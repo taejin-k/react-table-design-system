@@ -146,12 +146,13 @@ export const storyDescriptions: Record<string, string> = {
     "목록에서 시·분·초를 선택하고 선택값을 확인하거나 지울 수 있어요.",
   "components-timepicker--format-and-steps":
     "12시간제, 시간 간격과 확인 버튼을 조합해 선택 방식을 설정할 수 있어요.",
+  "components-timepicker--multiple":
+    "시간을 여러 개 선택하고 입력창에서 각 선택값을 확인하거나 개별로 지울 수 있어요.",
   "components-timepicker--disabled-time":
     "disabledTime 조건에 맞는 시·분·초를 비활성화해 선택할 수 없게 해요.",
   "components-timepicker--hide-disabled":
     "비활성 시간 항목을 목록에 표시하거나 완전히 숨길 수 있어요.",
-  "components-timepicker--show-now-and-footer":
-    "현재 시간 선택 버튼과 시간 패널 아래의 추가 콘텐츠를 구성할 수 있어요.",
+  "components-timepicker--show-now": "현재 시간 선택 버튼을 표시하거나 숨길 수 있어요.",
   "components-timepicker--custom-cell":
     "cellRender로 시간 항목의 내용과 상태 표현을 목적에 맞게 구성할 수 있어요.",
   "components-timepicker--preview-on-hover":
@@ -362,14 +363,11 @@ export const storyDescriptions: Record<string, string> = {
   "components-table-selection--associated-tree-selection":
     "checkStrictly=false로 부모와 자식 선택 상태를 연동해요.",
 
-  "components-menu--basic":
-    "같은 항목을 기본 세로형과 펼침 가능한 인라인형으로 구성해 배치 차이를 비교해요.",
-  "components-menu--horizontal":
-    "메뉴를 가로로 배치하고 하위 메뉴를 팝업으로 열어 상단 내비게이션에 사용해요.",
+  "components-menu--basic": "같은 메뉴를 세로형과 인라인형으로 보여주고 차이를 비교해요.",
   "components-menu--collapsed":
-    "인라인 메뉴를 접고 펼치며 좁은 사이드바에서 아이콘 중심으로 사용하는 방법을 확인해요.",
+    "인라인 메뉴를 접고 펼쳐 좁은 사이드바에서 사용하는 모습을 확인해요.",
   "components-menu--item-states":
-    "그룹, 추가 정보, 비활성 항목, 점선 구분선과 위험 작업을 한 메뉴에서 구성해요.",
+    "그룹, 보조 정보, 비활성 항목, 구분선과 삭제 항목을 함께 보여줘요.",
 
   "components-tabs--basic": "탭을 선택해 연결된 콘텐츠를 전환하고 비활성 탭의 동작을 제한해요.",
   "components-tabs--sizes": "선형 탭의 sm, md와 lg 크기를 한 번에 비교해요.",
@@ -434,8 +432,14 @@ export const storyDescriptions: Record<string, string> = {
   "components-calendar--fullscreen":
     "월간 달력을 전체 너비로 표시하고 날짜와 이전·다음 달을 탐색해요.",
   "components-calendar--card": "작은 카드형 달력에서 날짜를 확인하고 선택해요.",
-  "components-calendar--selection-rules-and-cell":
-    "선택 가능한 기간과 요일을 제한하고 일정이 있는 날짜에 표시를 추가해요.",
+  "components-calendar--selection-rules":
+    "선택 가능한 기간을 정하고 주말 날짜는 선택하지 못하게 해요.",
+  "components-calendar--cell-render":
+    "일정이 있는 날짜에 상태 배지와 일정 이름을 목록으로 표시해요.",
+  "components-calendar--range-events":
+    "시작일과 종료일을 연결해 여러 날짜에 걸친 일정을 막대로 표시해요.",
+  "components-calendar--custom-header":
+    "표시 중인 날짜와 변경 함수를 사용해 이전·다음 달 헤더를 만들어요.",
 
   "components-collapse--basic": "여러 패널을 독립적으로 열고 닫아요.",
   "components-collapse--accordion": "한 번에 하나의 패널만 펼쳐지는 아코디언을 사용해요.",

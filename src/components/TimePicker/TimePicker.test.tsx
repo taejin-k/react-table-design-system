@@ -1,9 +1,50 @@
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import dayjs from "dayjs";
 import { describe, expect, it, vi } from "vitest";
 import { TimePicker } from "./TimePicker";
 
 describe("TimePicker", () => {
+  it("normalizes serialized legacy values without crashing", () => {
+    render(<TimePicker multiple defaultValue={["09:00:00", "13:30:00"] as never} />);
+
+    expect(document.querySelectorAll("[data-timepicker-tag]")).toHaveLength(2);
+    expect(screen.getByText("09:00:00")).toBeInTheDocument();
+    expect(screen.getByText("13:30:00")).toBeInTheDocument();
+  });
+
+  it("orders initial multiple values when order is enabled", () => {
+    render(
+      <TimePicker
+        multiple
+        defaultValue={[dayjs("2026-08-20 13:30:00"), dayjs("2026-08-20 09:00:00")]}
+      />,
+    );
+
+    expect(
+      Array.from(document.querySelectorAll("[data-timepicker-tag]"), (tag) => tag.textContent),
+    ).toEqual(["09:00:00", "13:30:00"]);
+  });
+
+  it("uses format for the displayed value and change string", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(
+      <TimePicker
+        defaultValue={dayjs("2026-08-20 09:25:30")}
+        format="HH시 mm분"
+        onChange={onChange}
+      />,
+    );
+
+    expect(screen.getByText("09시 25분")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /09시 25분/ }));
+    expect(document.querySelector('[data-time-column="second"]')).not.toBeInTheDocument();
+    const hourColumn = document.querySelector('[data-time-column="hour"]') as HTMLElement;
+    await user.click(within(hourColumn).getByRole("button", { name: "10" }));
+    expect(onChange.mock.calls[0]?.[1]).toBe("10시 25분");
+  });
+
   it("uses the first 24-hour option as the initial time", async () => {
     const user = userEvent.setup();
     render(<TimePicker />);
@@ -29,7 +70,7 @@ describe("TimePicker", () => {
 
   it("resets the open time panel when the value is cleared", async () => {
     const user = userEvent.setup();
-    render(<TimePicker defaultValue="10:25:10" />);
+    render(<TimePicker defaultValue={dayjs("2026-08-20 10:25:10")} />);
 
     const trigger = screen.getByRole("button", { name: /10:25:10/ });
     await user.click(trigger);
@@ -48,7 +89,7 @@ describe("TimePicker", () => {
     const user = userEvent.setup();
     render(
       <TimePicker
-        defaultValue="10:25:10"
+        defaultValue={dayjs("2026-08-20 10:25:10")}
         disabledTime={() => ({ disabledHours: () => [0, 1, 2] })}
       />,
     );
@@ -64,18 +105,69 @@ describe("TimePicker", () => {
   it("selects time values", async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
-    render(<TimePicker defaultValue="09:00:00" onChange={onChange} />);
+    render(<TimePicker defaultValue={dayjs("2026-08-20 09:00:00")} onChange={onChange} />);
 
     await user.click(screen.getByRole("button", { name: /09:00:00/ }));
     const popup = document.querySelector("[data-timepicker-popup]") as HTMLElement;
     const tens = within(popup).getAllByRole("button", { name: "10" });
     await user.click(tens[0]);
-    expect(onChange).toHaveBeenCalledWith("10:00:00", "10:00:00");
+    expect(onChange.mock.calls[0]?.[0].format("HH:mm:ss")).toBe("10:00:00");
+    expect(onChange.mock.calls[0]?.[1]).toBe("10:00:00");
+  });
+
+  it("adds and orders multiple time values after confirmation", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(
+      <TimePicker
+        multiple
+        defaultValue={[dayjs("2026-08-20 13:30:00"), dayjs("2026-08-20 09:00:00")]}
+        onChange={onChange}
+      />,
+    );
+
+    const trigger = screen.getByRole("button", { name: /09:00:00/ });
+    expect(document.querySelectorAll("[data-timepicker-tag]")).toHaveLength(2);
+    await user.click(trigger);
+
+    const popup = document.querySelector("[data-timepicker-popup]") as HTMLElement;
+    const hourColumn = popup.querySelector('[data-time-column="hour"]') as HTMLElement;
+    await user.click(within(hourColumn).getByRole("button", { name: "10" }));
+    expect(onChange).not.toHaveBeenCalled();
+
+    await user.click(within(popup).getByRole("button", { name: "확인" }));
+    const values = onChange.mock.calls[0]?.[0];
+    expect(values.map((item: dayjs.Dayjs) => item.format("HH:mm:ss"))).toEqual([
+      "09:00:00",
+      "10:00:00",
+      "13:30:00",
+    ]);
+    expect(onChange.mock.calls[0]?.[1]).toEqual(["09:00:00", "10:00:00", "13:30:00"]);
+  });
+
+  it("removes one multiple time from its tag", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(
+      <TimePicker
+        multiple
+        defaultValue={[dayjs("2026-08-20 09:00:00"), dayjs("2026-08-20 13:30:00")]}
+        onChange={onChange}
+      />,
+    );
+
+    const firstTag = document.querySelector("[data-timepicker-tag]") as HTMLElement;
+    await user.click(firstTag.querySelector("svg") as Element);
+
+    expect(onChange.mock.calls[0]?.[0]).toHaveLength(1);
+    expect(onChange.mock.calls[0]?.[0][0].format("HH:mm:ss")).toBe("13:30:00");
+    expect(onChange.mock.calls[0]?.[1]).toEqual(["13:30:00"]);
+    expect(document.querySelectorAll("[data-timepicker-tag]")).toHaveLength(1);
   });
 
   it("uses the same hover and active colors as Select", async () => {
     const user = userEvent.setup();
-    render(<TimePicker defaultValue="09:00:00" />);
+    render(<TimePicker defaultValue={dayjs("2026-08-20 09:00:00")} />);
 
     await user.click(screen.getByRole("button", { name: /09:00:00/ }));
     const popup = document.querySelector("[data-timepicker-popup]") as HTMLElement;
@@ -89,7 +181,7 @@ describe("TimePicker", () => {
 
   it("keeps the filled background and focus style while read only", async () => {
     const user = userEvent.setup();
-    render(<TimePicker variant="filled" readOnly defaultValue="08:30:00" />);
+    render(<TimePicker variant="filled" readOnly defaultValue={dayjs("2026-08-20 08:30:00")} />);
 
     const trigger = screen.getByRole("button", { name: /08:30:00/ });
     expect(trigger).not.toBeDisabled();
@@ -108,19 +200,22 @@ describe("TimePicker", () => {
   it("waits for confirmation when requested", async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
-    render(<TimePicker defaultValue="09:00:00" needConfirm onChange={onChange} />);
+    render(
+      <TimePicker defaultValue={dayjs("2026-08-20 09:00:00")} needConfirm onChange={onChange} />,
+    );
 
     await user.click(screen.getByRole("button", { name: /09:00:00/ }));
     const popup = document.querySelector("[data-timepicker-popup]") as HTMLElement;
     await user.click(within(popup).getAllByRole("button", { name: "10" })[0]);
     expect(onChange).not.toHaveBeenCalled();
     await user.click(within(popup).getByRole("button", { name: "확인" }));
-    expect(onChange).toHaveBeenCalledWith("10:00:00", "10:00:00");
+    expect(onChange.mock.calls[0]?.[0].format("HH:mm:ss")).toBe("10:00:00");
+    expect(onChange.mock.calls[0]?.[1]).toBe("10:00:00");
   });
 
   it("renders a 12-hour selector", async () => {
     const user = userEvent.setup();
-    render(<TimePicker defaultValue="13:00:00" use12Hours />);
+    render(<TimePicker defaultValue={dayjs("2026-08-20 13:00:00")} use12Hours />);
     expect(screen.getByText("01:00:00 PM")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: /01:00:00 PM/ }));
     const popup = document.querySelector("[data-timepicker-popup]") as HTMLElement;
@@ -150,6 +245,31 @@ describe("TimePicker", () => {
     expect(within(popup).getAllByRole("button", { name: "01" })[0]).toBeDisabled();
   });
 
+  it("does not allow the current-time shortcut when that time is disabled", async () => {
+    const user = userEvent.setup();
+    const currentHour = new Date().getHours();
+    render(<TimePicker disabledTime={() => ({ disabledHours: () => [currentHour] })} />);
+
+    await user.click(screen.getByRole("button", { name: "시간을 선택하세요" }));
+
+    expect(screen.getByRole("button", { name: "지금" })).toBeDisabled();
+  });
+
+  it("disables a meridiem option when its matching hour is disabled", async () => {
+    const user = userEvent.setup();
+    render(
+      <TimePicker
+        use12Hours
+        defaultValue={dayjs("2026-08-20 01:00:00")}
+        disabledTime={() => ({ disabledHours: () => [13] })}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: /01:00:00 AM/ }));
+
+    expect(screen.getByRole("button", { name: "PM" })).toBeDisabled();
+  });
+
   it("hides disabled values with hideDisabled", async () => {
     const user = userEvent.setup();
     render(<TimePicker hideDisabled disabledTime={() => ({ disabledHours: () => [0, 1, 2] })} />);
@@ -175,7 +295,7 @@ describe("TimePicker", () => {
 
   it("opens each column at its selected time", async () => {
     const user = userEvent.setup();
-    render(<TimePicker defaultValue="10:25:10" />);
+    render(<TimePicker defaultValue={dayjs("2026-08-20 10:25:10")} />);
 
     const trigger = screen.getByRole("button", { name: /10:25:10/ });
     await user.click(trigger);

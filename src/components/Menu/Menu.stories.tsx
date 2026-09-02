@@ -9,7 +9,7 @@ import { Icon } from "../Icon";
 import { Menu } from "./Menu";
 import type { MenuItemKindType, MenuModeType, MenuTriggerType } from "./Menu.types";
 
-const menuModes: MenuModeType[] = ["vertical", "horizontal", "inline"];
+const menuModes: MenuModeType[] = ["vertical", "inline"];
 const menuTriggers: MenuTriggerType[] = ["hover", "click"];
 const menuItemKinds: MenuItemKindType[] = ["item", "group", "divider"];
 
@@ -55,7 +55,6 @@ const meta = {
     selectable: { name: "선택 가능", control: "boolean" },
     multiple: { name: "다중 선택", control: "boolean" },
     inlineCollapsed: { name: "인라인 접기", control: "boolean" },
-    inlineIndent: { name: "들여쓰기", control: "number" },
     triggerSubMenuAction: { name: "하위 메뉴 동작", control: "select", options: menuTriggers },
     items: { control: false, table: { disable: true } },
     selectedKeys: { control: false, table: { disable: true } },
@@ -68,7 +67,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "페이지 이동과 작업을 계층적으로 구성해요.  \n세 가지 배치 모드, 단일·다중 선택과 제어·비제어 펼침 상태를 지원해요.",
+          "페이지 이동이나 작업 메뉴를 단계별로 보여줘요.  \n세로형과 인라인형, 한 개·여러 개 선택과 펼침 상태 제어를 지원해요.",
       },
       page: () => (
         <div className="menu-docs component-docs">
@@ -81,44 +80,63 @@ const meta = {
 
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
-| \`items\` | 메뉴 항목, 그룹, 구분선과 하위 메뉴를 구성해요. | \`MenuItemType[]\` | \`[]\` |
-| \`mode\` | 메뉴의 배치 방식을 정해요. | [\`MenuModeType\`](#menu-mode-type) | \`vertical\` |
-| \`selectable\` | 항목 선택 상태를 사용해요. | \`boolean\` | \`true\` |
-| \`selectedKeys\` | 선택된 항목을 제어해요. | \`string[]\` | - |
-| \`defaultSelectedKeys\` | 처음 선택할 항목을 정해요. | \`string[]\` | \`[]\` |
-| \`openKeys\` | 펼친 하위 메뉴를 제어해요. | \`string[]\` | - |
-| \`defaultOpenKeys\` | 처음 펼칠 하위 메뉴를 정해요. | \`string[]\` | \`[]\` |
-| \`multiple\` | 여러 항목을 동시에 선택해요. | \`boolean\` | \`false\` |
-| \`inlineCollapsed\` | 인라인 메뉴를 아이콘 너비로 접어요. | \`boolean\` | \`false\` |
-| \`inlineIndent\` | 인라인 하위 메뉴의 들여쓰기를 정해요. | \`number\` | \`24\` |
-| \`triggerSubMenuAction\` | 팝업 하위 메뉴를 여는 동작을 정해요. | [\`MenuTriggerType\`](#menu-trigger-type) | \`hover\` |
-| \`className\` | 최상위 요소에 Tailwind 클래스를 추가해요. | \`string\` | - |
-| \`onClick\` | 항목을 누를 때 실행해요. | \`(info: MenuClickInfo) => void\` | - |
-| \`onSelect\` | 항목을 선택할 때 실행해요. | \`(info: MenuSelectInfo) => void\` | - |
-| \`onDeselect\` | 다중 선택 항목을 해제할 때 실행해요. | \`(info: MenuSelectInfo) => void\` | - |
-| \`onOpenChange\` | 펼친 하위 메뉴가 바뀔 때 실행해요. | \`(openKeys: string[]) => void\` | - |
+| \`items\` | 메뉴 항목과 그룹, 구분선, 하위 메뉴를 넣어요. | [\`MenuItemType[]\`](#menu-item-type) | \`[]\` |
+| \`mode\` | 메뉴를 세로형 또는 인라인형으로 배치해요. | [\`MenuModeType\`](#menu-mode-type) | \`vertical\` |
+| \`selectable\` | 메뉴 항목을 선택할 수 있게 해요. | \`boolean\` | \`true\` |
+| \`selectedKeys\` | 현재 선택된 항목을 직접 관리해요. | \`Key[]\` | - |
+| \`defaultSelectedKeys\` | 처음 선택할 항목을 정해요. | \`Key[]\` | \`[]\` |
+| \`openKeys\` | 현재 펼친 하위 메뉴를 직접 관리해요. | \`Key[]\` | - |
+| \`defaultOpenKeys\` | 처음 펼쳐둘 하위 메뉴를 정해요. | \`Key[]\` | \`[]\` |
+| \`multiple\` | 메뉴 항목을 여러 개 선택할 수 있게 해요. | \`boolean\` | \`false\` |
+| \`inlineCollapsed\` | 인라인 메뉴를 아이콘만 보이게 접어요. | \`boolean\` | \`false\` |
+| \`triggerSubMenuAction\` | 하위 메뉴를 클릭 또는 호버로 열게 해요. | [\`MenuTriggerType\`](#menu-trigger-type) | \`hover\` |
+| \`className\` | 메뉴 최상위 요소에 Tailwind 스타일을 추가해요. | \`string\` | - |
+| \`onClick\` | 메뉴 항목을 누르면 실행해요. | <code>(info: <a href="#menu-click-info">MenuClickInfo</a>) =&gt; void</code> | - |
+| \`onSelect\` | 메뉴 항목이 선택되면 실행해요. | <code>(info: <a href="#menu-select-info">MenuSelectInfo</a>) =&gt; void</code> | - |
+| \`onDeselect\` | 선택된 항목을 해제하면 실행해요. | <code>(info: <a href="#menu-select-info">MenuSelectInfo</a>) =&gt; void</code> | - |
+| \`onOpenChange\` | 메뉴를 펼치거나 접을 때 실행해요. | \`(openKeys: Key[]) => void\` | - |
 
-### MenuItemType
+### <span id="menu-item-type">MenuItemType</span>
 
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
-| \`key\` | 항목을 구분하는 고유한 값이에요. | \`Key\` | - |
-| \`label\` | 항목에 표시할 내용이에요. | \`ReactNode\` | - |
-| \`icon\` | 레이블 앞에 표시할 아이콘이에요. | \`ReactNode\` | - |
-| \`extra\` | 레이블 반대쪽에 보조 정보를 표시해요. | \`ReactNode\` | - |
-| \`children\` | 하위 메뉴 항목이에요. | \`MenuItemType[]\` | - |
-| \`disabled\` | 항목 선택을 막아요. | \`boolean\` | \`false\` |
-| \`type\` | 일반 항목, 그룹 또는 구분선을 정해요. | [\`MenuItemKindType\`](#menu-item-kind-type) | \`item\` |
+| \`key\` | 항목을 구분하는 고유 값이에요. | \`Key\` | - |
+| \`label\` | 항목에 보여줄 내용이에요. | \`ReactNode\` | - |
+| \`icon\` | 항목 앞에 보여줄 아이콘이에요. | \`ReactNode\` | - |
+| \`extra\` | 항목 오른쪽에 보조 내용을 보여줘요. | \`ReactNode\` | - |
+| \`title\` | 항목의 기본 툴팁 문구를 정해요. | \`string\` | 접힌 메뉴의 문자열 \`label\` |
+| \`children\` | 항목 아래에 표시할 하위 메뉴예요. | [\`MenuItemType[]\`](#menu-item-type) | - |
+| \`disabled\` | 항목을 누르거나 선택하지 못하게 해요. | \`boolean\` | \`false\` |
+| \`type\` | 항목을 일반, 그룹 또는 구분선으로 정해요. | [\`MenuItemKindType\`](#menu-item-kind-type) | \`item\` |
+| \`popupClassName\` | 팝업 하위 메뉴에 Tailwind 클래스를 추가해요. | \`string\` | - |
+| \`popupOffset\` | 팝업 하위 메뉴의 가로·세로 위치를 조정해요. | \`[number, number]\` | \`[0, 0]\` |
+| \`onClick\` | 해당 메뉴 항목을 누르면 실행해요. | <code>(info: <a href="#menu-click-info">MenuClickInfo</a>) =&gt; void</code> | - |
+| \`onTitleClick\` | 하위 메뉴가 있는 항목을 누르면 실행해요. | \`(info: { key: Key; event: MouseEvent<HTMLElement> }) => void\` | - |
+
+### <span id="menu-click-info">MenuClickInfo</span>
+
+| Name | Description | Type | Default |
+| --- | --- | --- | --- |
+| \`key\` | 누른 메뉴 항목의 키예요. | \`Key\` | - |
+| \`event\` | 메뉴 항목에서 발생한 마우스 이벤트예요. | \`MouseEvent<HTMLElement>\` | - |
+
+### <span id="menu-select-info">MenuSelectInfo</span>
+
+| Name | Description | Type | Default |
+| --- | --- | --- | --- |
+| \`key\` | 선택하거나 해제한 메뉴 항목의 키예요. | \`Key\` | - |
+| \`event\` | 메뉴 항목에서 발생한 마우스 이벤트예요. | \`MouseEvent<HTMLElement>\` | - |
+| \`selectedKeys\` | 현재 선택된 모든 메뉴 항목의 키예요. | \`Key[]\` | - |
           `}</Markdown>
           <h2 className="component-docs-types-heading">Types</h2>
           <h3 id="menu-mode-type">MenuModeType</h3>
-          <p>메뉴 배치 방식을 선택해요.</p>
+          <p>세로형 또는 인라인형을 선택해요.</p>
           <TypeTokens values={menuModes} />
           <h3 id="menu-trigger-type">MenuTriggerType</h3>
-          <p>팝업 하위 메뉴를 여는 동작을 선택해요.</p>
+          <p>클릭 또는 호버 중 여는 방법을 선택해요.</p>
           <TypeTokens values={menuTriggers} />
           <h3 id="menu-item-kind-type">MenuItemKindType</h3>
-          <p>메뉴 항목의 종류를 선택해요.</p>
+          <p>일반 항목, 그룹 또는 구분선을 선택해요.</p>
           <TypeTokens values={menuItemKinds} />
         </div>
       ),
@@ -134,14 +152,13 @@ export const Basic: Story = {
     selectable: true,
     multiple: false,
     inlineCollapsed: false,
-    inlineIndent: 24,
     triggerSubMenuAction: "hover",
   },
   argTypes: { mode: { control: false, table: { disable: true } } },
   parameters: {
     ...storyDescription("components-menu--basic"),
     controls: {
-      include: ["선택 가능", "다중 선택", "인라인 접기", "들여쓰기", "하위 메뉴 동작"],
+      include: ["선택 가능", "다중 선택", "인라인 접기", "하위 메뉴 동작"],
     },
     docs: {
       ...storyDescription("components-menu--basic").docs,
@@ -187,35 +204,13 @@ export const Basic: Story = {
   ),
 };
 
-export const Horizontal: Story = {
-  parameters: {
-    ...storyDescription("components-menu--horizontal"),
-    controls: { include: ["선택 가능", "다중 선택", "하위 메뉴 동작"] },
-    docs: {
-      ...storyDescription("components-menu--horizontal").docs,
-      source: {
-        type: "code",
-        code: withStoryImports(`${itemsSource}\n\n<Menu mode="horizontal" items={items} />`),
-      },
-    },
-  },
-  args: {
-    items,
-    mode: "horizontal",
-    selectable: true,
-    multiple: false,
-    triggerSubMenuAction: "hover",
-  },
-};
-
 export const Collapsed: Story = {
   args: {
     selectable: true,
-    inlineIndent: 24,
   },
   parameters: {
     ...storyDescription("components-menu--collapsed"),
-    controls: { include: ["선택 가능", "들여쓰기"] },
+    controls: { include: ["선택 가능"] },
     docs: {
       ...storyDescription("components-menu--collapsed").docs,
       source: {

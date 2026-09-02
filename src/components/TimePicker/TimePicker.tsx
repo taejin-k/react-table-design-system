@@ -1,11 +1,13 @@
 import { createPortal } from "react-dom";
 import { useLayoutEffect, useRef, useState } from "react";
 import { cva } from "class-variance-authority";
+import dayjs, { type Dayjs } from "dayjs";
 import { twMerge } from "tailwind-merge";
 import { Button } from "../Button";
 import { ErrorMessage } from "../ErrorMessage";
 import { Icon } from "../Icon";
 import { Label } from "../Label";
+import { Tag } from "../Tag";
 import { ScrollFade } from "../_internal/ScrollFade";
 import { getPopupMotionStyle } from "../_internal/motion";
 import { useFloatingLayer } from "../_internal/use-floating-layer";
@@ -17,18 +19,74 @@ interface TimeParts {
   second: number;
 }
 
+const multipleTagSizeClasses = {
+  lg: "h-8",
+  md: "h-[22px]",
+  sm: "h-4 px-1 text-[10px]",
+} as const;
+
 function pad(value: number) {
   return String(value).padStart(2, "0");
 }
 
-function parseTime(value?: string | null): TimeParts {
+function parseTime(value?: unknown): TimeParts {
   if (!value) return { hour: 0, minute: 0, second: 0 };
-  const [hour = 0, minute = 0, second = 0] = (value ?? "").split(":").map(Number);
+  if (dayjs.isDayjs(value)) {
+    return { hour: value.hour(), minute: value.minute(), second: value.second() };
+  }
+  if (typeof value !== "string") return { hour: 0, minute: 0, second: 0 };
+  const [hour = 0, minute = 0, second = 0] = value.split(":").map(Number);
   return { hour, minute, second };
 }
 
 function formatTime(parts: TimeParts, showSecond: boolean) {
   return `${pad(parts.hour)}:${pad(parts.minute)}${showSecond ? `:${pad(parts.second)}` : ""}`;
+}
+
+function timeValueKey(value: Dayjs, showSecond: boolean) {
+  return formatTime(parseTime(value), showSecond);
+}
+
+function formatDisplayTime(
+  value: Dayjs,
+  format: string | undefined,
+  use12Hours: boolean,
+  showSecond: boolean,
+) {
+  if (format) return value.format(format);
+  return use12Hours
+    ? formatTwelveHours(value, showSecond)
+    : formatTime(parseTime(value), showSecond);
+}
+
+function normalizeTimeValue(value: unknown) {
+  if (dayjs.isDayjs(value)) return value.isValid() ? value : null;
+  if (value instanceof Date) {
+    const normalizedValue = dayjs(value);
+    return normalizedValue.isValid() ? normalizedValue : null;
+  }
+  if (typeof value !== "string") return null;
+  const [hour, minute = 0, second = 0] = value.split(":").map(Number);
+  if (
+    !Number.isInteger(hour) ||
+    !Number.isInteger(minute) ||
+    !Number.isInteger(second) ||
+    hour < 0 ||
+    hour > 23 ||
+    minute < 0 ||
+    minute > 59 ||
+    second < 0 ||
+    second > 59
+  ) {
+    return null;
+  }
+  return dayjs().hour(hour).minute(minute).second(second).millisecond(0);
+}
+
+function normalizeValues(value?: unknown) {
+  if (!value) return [];
+  const values = Array.isArray(value) ? value : [value];
+  return values.map(normalizeTimeValue).filter((item): item is Dayjs => item !== null);
 }
 
 function resolveInitialTime({
@@ -40,14 +98,9 @@ function resolveInitialTime({
   disabledTime,
 }: Pick<
   TimePickerProps,
-  | "use12Hours"
-  | "showSecond"
-  | "hourStep"
-  | "minuteStep"
-  | "secondStep"
-  | "disabledTime"
+  "use12Hours" | "showSecond" | "hourStep" | "minuteStep" | "secondStep" | "disabledTime"
 >): TimeParts {
-  const disabled = disabledTime?.(new Date()) ?? {};
+  const disabled = disabledTime?.(dayjs()) ?? {};
   const disabledHours = disabled.disabledHours?.() ?? [];
   const hourValues = use12Hours
     ? numberSteps(13, hourStep ?? 1, 1).map((hour) => toTwentyFourHour(hour, false))
@@ -70,6 +123,25 @@ function resolveInitialTime({
   return { hour, minute, second };
 }
 
+function isTimeDisabled(
+  parts: TimeParts,
+  disabledTime: TimePickerProps["disabledTime"],
+  showSecond: boolean,
+) {
+  const value = dayjs()
+    .hour(parts.hour)
+    .minute(parts.minute)
+    .second(showSecond ? parts.second : 0)
+    .millisecond(0);
+  const disabled = disabledTime?.(value) ?? {};
+  return (
+    (disabled.disabledHours?.() ?? []).includes(parts.hour) ||
+    (disabled.disabledMinutes?.(parts.hour) ?? []).includes(parts.minute) ||
+    (showSecond &&
+      (disabled.disabledSeconds?.(parts.hour, parts.minute) ?? []).includes(parts.second))
+  );
+}
+
 function BaseTimePicker({
   value,
   defaultValue,
@@ -83,6 +155,8 @@ function BaseTimePicker({
   readOnly = false,
   width,
   allowClear = true,
+  multiple = false,
+  order = true,
   use12Hours = false,
   showSecond = true,
   hourStep = 1,
@@ -94,7 +168,6 @@ function BaseTimePicker({
   hideDisabled = false,
   showNow = true,
   previewValue = false,
-  renderExtraFooter,
   cellRender,
   format,
   open,
@@ -105,9 +178,16 @@ function BaseTimePicker({
   onClear,
   onOpenChange,
 }: TimePickerProps) {
-  const [innerValue, setInnerValue] = useState<string | null>(defaultValue ?? null);
-  const selectedValue = value === undefined ? innerValue : value;
-  const resolvedShowSecond = showSecond && format !== "HH:mm" && format !== "hh:mm A";
+  const [innerValues, setInnerValues] = useState<Dayjs[]>(() => normalizeValues(defaultValue));
+  const sourceValues = value === undefined ? innerValues : normalizeValues(value);
+  const selectedValues = order
+    ? [...sourceValues].sort((first, second) =>
+        timeValueKey(first, true).localeCompare(timeValueKey(second, true)),
+      )
+    : sourceValues;
+  const selectedValue = sourceValues[multiple ? sourceValues.length - 1 : 0] ?? null;
+  const resolvedShowSecond = showSecond && (!format || format.includes("s"));
+  const resolvedNeedConfirm = needConfirm || multiple;
   const initialPanelTime = () =>
     selectedValue
       ? parseTime(selectedValue)
@@ -135,22 +215,69 @@ function BaseTimePicker({
     },
   });
 
+  const emitValues = (nextValues: Dayjs[]) => {
+    const normalizedValues = order
+      ? [...nextValues].sort((first, second) =>
+          timeValueKey(first, true).localeCompare(timeValueKey(second, true)),
+        )
+      : nextValues;
+    if (value === undefined) setInnerValues(normalizedValues);
+    if (multiple) {
+      onChange?.(
+        normalizedValues,
+        normalizedValues.map((item) =>
+          formatDisplayTime(item, format, use12Hours, resolvedShowSecond),
+        ),
+      );
+      return;
+    }
+    const nextValue = normalizedValues[0] ?? null;
+    onChange?.(
+      nextValue,
+      nextValue ? formatDisplayTime(nextValue, format, use12Hours, resolvedShowSecond) : "",
+    );
+  };
+
   const commitTime = (parts: TimeParts | null) => {
-    const nextValue = parts ? formatTime(parts, resolvedShowSecond) : null;
-    if (value === undefined) setInnerValue(nextValue);
-    onChange?.(nextValue, nextValue ?? "");
+    if (!parts) {
+      emitValues([]);
+      return;
+    }
+    const nextValue = (selectedValue ?? dayjs())
+      .hour(parts.hour)
+      .minute(parts.minute)
+      .second(resolvedShowSecond ? parts.second : 0)
+      .millisecond(0);
+    if (!multiple) {
+      emitValues([nextValue]);
+      return;
+    }
+    const nextKey = timeValueKey(nextValue, resolvedShowSecond);
+    const exists = selectedValues.some(
+      (item) => timeValueKey(item, resolvedShowSecond) === nextKey,
+    );
+    emitValues(
+      exists
+        ? selectedValues.filter((item) => timeValueKey(item, resolvedShowSecond) !== nextKey)
+        : [...selectedValues, nextValue],
+    );
   };
 
   const selectParts = (nextParts: TimeParts) => {
     setPending(nextParts);
-    if (!needConfirm) commitTime(nextParts);
+    if (!resolvedNeedConfirm) commitTime(nextParts);
   };
 
   const displayedValue = selectedValue
-    ? use12Hours
-      ? formatTwelveHours(selectedValue, resolvedShowSecond)
-      : formatTime(parseTime(selectedValue), resolvedShowSecond)
+    ? formatDisplayTime(selectedValue, format, use12Hours, resolvedShowSecond)
     : null;
+  const now = new Date();
+  const nowParts = {
+    hour: now.getHours(),
+    minute: now.getMinutes(),
+    second: now.getSeconds(),
+  };
+  const nowDisabled = isTimeDisabled(nowParts, disabledTime, resolvedShowSecond);
 
   return (
     <div className={twMerge("flex w-full flex-col gap-1", className)} style={{ width }}>
@@ -159,25 +286,78 @@ function BaseTimePicker({
         <button
           type="button"
           disabled={disabled}
-          className={timePickerRootVariants({
-            size,
-            variant,
-            error: Boolean(errorMessage),
-            disabled,
-            readOnly,
-            interactive: !disabled && !readOnly,
-          })}
+          className={twMerge(
+            timePickerRootVariants({
+              size,
+              variant,
+              error: Boolean(errorMessage),
+              disabled,
+              readOnly,
+              interactive: !disabled && !readOnly,
+            }),
+            multiple &&
+              selectedValues.length > 0 && [
+                "h-auto items-start",
+                size === "lg" && "min-h-10 py-[3px] pl-[3px]",
+                size === "md" && "min-h-[30px] py-[3px] pl-[3px]",
+                size === "sm" && "min-h-5 py-0.5 pl-0.5",
+              ],
+          )}
         >
-          <span className={twMerge("min-w-0 flex-1 truncate", !displayedValue && "text-[#999]")}>
-            {preview && previewValue === "hover"
-              ? use12Hours
-                ? formatTwelveHours(formatTime(preview, resolvedShowSecond), resolvedShowSecond)
-                : formatTime(preview, resolvedShowSecond)
-              : (displayedValue ?? placeholder)}
-          </span>
-          {allowClear && selectedValue && !disabled && !readOnly ? (
+          {multiple && selectedValues.length > 0 ? (
+            <span className="flex min-w-0 flex-1 flex-wrap items-center gap-[5px]">
+              {selectedValues.map((item) => {
+                const itemKey = timeValueKey(item, resolvedShowSecond);
+                return (
+                  <Tag
+                    key={itemKey}
+                    data-timepicker-tag
+                    color="grey"
+                    variant="filled"
+                    className={twMerge(
+                      multipleTagSizeClasses[size],
+                      "tabular-nums",
+                      variant === "filled" && "bg-white",
+                    )}
+                    suffixIcon={
+                      disabled || readOnly ? undefined : (
+                        <Icon
+                          icon="close"
+                          size={12}
+                          className="cursor-pointer"
+                          onMouseDown={(event) => event.preventDefault()}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            emitValues(
+                              selectedValues.filter(
+                                (value) => timeValueKey(value, resolvedShowSecond) !== itemKey,
+                              ),
+                            );
+                          }}
+                        />
+                      )
+                    }
+                  >
+                    {formatDisplayTime(item, format, use12Hours, resolvedShowSecond)}
+                  </Tag>
+                );
+              })}
+            </span>
+          ) : (
+            <span className={twMerge("min-w-0 flex-1 truncate", !displayedValue && "text-[#999]")}>
+              {preview && previewValue === "hover"
+                ? formatDisplayTime(
+                    dayjs().hour(preview.hour).minute(preview.minute).second(preview.second),
+                    format,
+                    use12Hours,
+                    resolvedShowSecond,
+                  )
+                : (displayedValue ?? placeholder)}
+            </span>
+          )}
+          {allowClear && selectedValues.length > 0 && !disabled && !readOnly ? (
             <span
-              className="cursor-pointer"
+              className="cursor-pointer self-center"
               onClick={(event) => {
                 event.stopPropagation();
                 commitTime(null);
@@ -244,23 +424,15 @@ function BaseTimePicker({
                 onPreview={setPreview}
                 onChange={selectParts}
               />
-              {renderExtraFooter ? (
-                <div className="border-t border-[#f0f0f0] p-2">{renderExtraFooter()}</div>
-              ) : null}
-              {showNow || needConfirm ? (
+              {showNow || resolvedNeedConfirm ? (
                 <div className="flex min-h-10 items-center justify-between gap-2 border-t border-[#f0f0f0] px-2 py-1">
                   {showNow ? (
                     <Button
+                      disabled={nowDisabled}
                       variant="ghost"
                       onClick={() => {
-                        const now = new Date();
-                        const next = {
-                          hour: now.getHours(),
-                          minute: now.getMinutes(),
-                          second: now.getSeconds(),
-                        };
-                        setPending(next);
-                        commitTime(next);
+                        setPending(nowParts);
+                        commitTime(nowParts);
                         floating.changeOpen(false, "menu");
                       }}
                     >
@@ -269,7 +441,7 @@ function BaseTimePicker({
                   ) : (
                     <span />
                   )}
-                  {needConfirm ? (
+                  {resolvedNeedConfirm ? (
                     <Button
                       onClick={() => {
                         commitTime(pending);
@@ -321,7 +493,7 @@ export function TimePanel({
   onChange,
 }: TimePanelProps) {
   const selected = parseTime(value);
-  const disabledConfig = disabledTime?.(new Date()) ?? {};
+  const disabledConfig = disabledTime?.(dayjs()) ?? {};
   const disabledHours = disabledConfig.disabledHours?.() ?? [];
   const isPm = selected.hour >= 12;
 
@@ -386,18 +558,22 @@ export function TimePanel({
         <ScrollFade className="w-16" viewportClassName="flex flex-col gap-1 p-1" fadeSize={48}>
           {["AM", "PM"].map((meridiem) => {
             const isSelected = (selected.hour >= 12 ? "PM" : "AM") === meridiem;
+            const nextHour = toTwentyFourHour(twelveHour(selected.hour), meridiem === "PM");
+            const disabled = disabledHours.includes(nextHour);
             return (
               <button
                 key={meridiem}
                 type="button"
+                disabled={disabled}
                 className={twMerge(
                   "h-8 w-full shrink-0 cursor-pointer rounded hover:bg-[#f5f5f5]",
                   isSelected && "bg-[#e6f4ff] text-[#0062df] hover:bg-[#e6f4ff]",
+                  disabled && "cursor-not-allowed text-[#ccc] hover:bg-transparent",
                 )}
                 onClick={() =>
                   onChange({
                     ...selected,
-                    hour: toTwentyFourHour(twelveHour(selected.hour), meridiem === "PM"),
+                    hour: nextHour,
                   })
                 }
               >
@@ -505,7 +681,7 @@ function toTwentyFourHour(hour: number, isPm: boolean) {
   return (hour % 12) + (isPm ? 12 : 0);
 }
 
-function formatTwelveHours(value: string, showSecond: boolean) {
+function formatTwelveHours(value: string | Dayjs, showSecond: boolean) {
   const parts = parseTime(value);
   return `${pad(twelveHour(parts.hour))}:${pad(parts.minute)}${showSecond ? `:${pad(parts.second)}` : ""} ${parts.hour >= 12 ? "PM" : "AM"}`;
 }

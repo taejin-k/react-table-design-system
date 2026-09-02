@@ -9,7 +9,7 @@ export type DropdownItemType = "item" | "divider" | "group";
 export interface DropdownClickInfo {
   value: string;
   valuePath: string[];
-  domEvent: React.MouseEvent<HTMLElement>;
+  event: React.MouseEvent<HTMLElement>;
 }
 
 export interface DropdownSelectInfo {

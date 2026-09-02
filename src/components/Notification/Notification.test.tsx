@@ -46,6 +46,19 @@ describe("notification", () => {
     expect(screen.queryByText("완료")).not.toBeInTheDocument();
   });
 
+  it("updates and destroys a notification with a numeric key", async () => {
+    act(() => {
+      notification.open({ key: 1, description: "처음", duration: 0 });
+      notification.open({ key: 1, description: "변경", duration: 0 });
+    });
+
+    expect(await screen.findByText("변경")).toBeInTheDocument();
+    expect(screen.queryByText("처음")).not.toBeInTheDocument();
+
+    act(() => notification.destroy(1));
+    await waitFor(() => expect(screen.queryByText("변경")).not.toBeInTheDocument());
+  });
+
   it("expands a collapsed stack while hovering", async () => {
     render(
       <button

@@ -44,13 +44,13 @@ const meta = {
 
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
-| \`Avatar\` | 아바타 자리 표시자를 표시해요. | \`(props: SkeletonElementProps) => ReactNode\` | - |
-| \`Button\` | 버튼 자리 표시자를 표시해요. | \`(props: SkeletonElementProps) => ReactNode\` | - |
-| \`Input\` | 입력창 자리 표시자를 표시해요. | \`(props: SkeletonElementProps) => ReactNode\` | - |
-| \`Image\` | 이미지 자리 표시자를 표시해요. | \`(props: SkeletonElementProps) => ReactNode\` | - |
-| \`Node\` | 사용자 정의 자리 표시자를 표시해요. | \`(props: SkeletonElementProps) => ReactNode\` | - |
+| \`Avatar\` | 아바타 자리 표시자를 표시해요. | <code>(props: <a href="#skeleton-element-props">SkeletonElementProps</a>) =&gt; ReactNode</code> | - |
+| \`Button\` | 버튼 자리 표시자를 표시해요. | <code>(props: <a href="#skeleton-element-props">SkeletonElementProps</a>) =&gt; ReactNode</code> | - |
+| \`Input\` | 입력창 자리 표시자를 표시해요. | <code>(props: <a href="#skeleton-element-props">SkeletonElementProps</a>) =&gt; ReactNode</code> | - |
+| \`Image\` | 이미지 자리 표시자를 표시해요. | <code>(props: <a href="#skeleton-element-props">SkeletonElementProps</a>) =&gt; ReactNode</code> | - |
+| \`Node\` | 사용자 정의 자리 표시자를 표시해요. | <code>(props: <a href="#skeleton-element-props">SkeletonElementProps</a>) =&gt; ReactNode</code> | - |
 
-### SkeletonElementProps
+### <span id="skeleton-element-props">SkeletonElementProps</span>
 
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |

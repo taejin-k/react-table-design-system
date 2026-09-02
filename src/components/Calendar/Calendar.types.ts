@@ -1,23 +1,37 @@
-import type { ReactElement, ReactNode } from "react";
-
-export type CalendarSelectSourceType = "date";
+import type { Key, ReactElement, ReactNode } from "react";
+import type { Dayjs } from "dayjs";
 
 export interface CalendarCellInfo {
   originNode: ReactElement;
-  today: Date;
+  today: Dayjs;
+}
+
+export interface CalendarHeaderConfig {
+  value: Dayjs;
+  onChange: (date: Dayjs) => void;
+}
+
+export interface CalendarEvent {
+  key: Key;
+  title: ReactNode;
+  start: Dayjs;
+  end?: Dayjs;
+  color?: string;
 }
 
 export interface CalendarProps {
-  value?: Date;
-  defaultValue?: Date;
+  value?: Dayjs;
+  defaultValue?: Dayjs;
   fullscreen?: boolean;
-  validRange?: [Date, Date];
-  disabledDate?: (date: Date) => boolean;
-  cellRender?: (date: Date, info: CalendarCellInfo) => ReactNode;
-  fullCellRender?: (date: Date, info: CalendarCellInfo) => ReactNode;
-  headerRender?: (config: { value: Date; onChange: (date: Date) => void }) => ReactNode;
+  validRange?: [Dayjs, Dayjs];
+  disabledDate?: (date: Dayjs) => boolean;
+  cellRender?: (date: Dayjs, info: CalendarCellInfo) => ReactNode;
+  fullCellRender?: (date: Dayjs, info: CalendarCellInfo) => ReactNode;
+  headerRender?: (config: CalendarHeaderConfig) => ReactNode;
+  events?: CalendarEvent[];
   className?: string;
-  onChange?: (date: Date) => void;
-  onPanelChange?: (date: Date) => void;
-  onSelect?: (date: Date, info: { source: CalendarSelectSourceType }) => void;
+  onChange?: (date: Dayjs) => void;
+  onPanelChange?: (date: Dayjs) => void;
+  onSelect?: (date: Dayjs) => void;
+  onEventClick?: (event: CalendarEvent) => void;
 }

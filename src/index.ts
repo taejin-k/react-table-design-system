@@ -101,7 +101,6 @@ export type {
   MessageApi,
   MessageArgsProps,
   MessageInstance,
-  MessageKeyType,
   MessageType,
   MessageStatusType,
 } from "./components/Message";
@@ -201,15 +200,15 @@ export type { BadgeProps, BadgeStatusType } from "./components/Badge";
 export { Calendar } from "./components/Calendar";
 export type {
   CalendarCellInfo,
+  CalendarEvent,
+  CalendarHeaderConfig,
   CalendarProps,
-  CalendarSelectSourceType,
 } from "./components/Calendar";
 export { Collapse } from "./components/Collapse";
 export type {
   CollapseCollapsibleType,
   CollapseExpandIconPlacementType,
   CollapseItem,
-  CollapseKeyType,
   CollapseProps,
   CollapseSizeType,
 } from "./components/Collapse";

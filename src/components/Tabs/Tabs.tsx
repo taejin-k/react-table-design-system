@@ -16,7 +16,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import type { CSSProperties, MouseEvent, ReactNode } from "react";
+import type { CSSProperties, Key, MouseEvent, ReactNode } from "react";
 import { twMerge } from "tailwind-merge";
 import { Icon } from "../Icon";
 import type { TabItemType, TabsProps } from "./Tabs.types";
@@ -25,9 +25,13 @@ const EMPTY_ITEMS: TabItemType[] = [];
 const restrictToHorizontalAxis: Modifier = ({ transform }) => ({ ...transform, y: 0 });
 const restrictToVerticalAxis: Modifier = ({ transform }) => ({ ...transform, x: 0 });
 
-export function reorderTabItems(items: TabItemType[], activeKey: string, overKey: string) {
-  const previousIndex = items.findIndex((item) => item.key === activeKey);
-  const nextIndex = items.findIndex((item) => item.key === overKey);
+function sortableId(key: Key) {
+  return `${typeof key}:${String(key)}`;
+}
+
+export function reorderTabItems(items: TabItemType[], activeKey: Key, overKey: Key) {
+  const previousIndex = items.findIndex((item) => Object.is(item.key, activeKey));
+  const nextIndex = items.findIndex((item) => Object.is(item.key, overKey));
   if (previousIndex < 0 || nextIndex < 0 || previousIndex === nextIndex) return items;
   return arrayMove(items, previousIndex, nextIndex);
 }
@@ -67,7 +71,8 @@ interface SortableTabButtonProps {
   className: string;
   disabled: boolean;
   enabled: boolean;
-  itemKey: string;
+  itemKey: Key;
+  sortableId: string;
   onClick: (event: MouseEvent<HTMLButtonElement>) => void;
   register: (node: HTMLButtonElement | null) => void;
 }
@@ -79,11 +84,12 @@ function SortableTabButton({
   disabled,
   enabled,
   itemKey,
+  sortableId,
   onClick,
   register,
 }: SortableTabButtonProps) {
   const { isDragging, listeners, setNodeRef, transform, transition } = useSortable({
-    id: itemKey,
+    id: sortableId,
     disabled: { draggable: !enabled || disabled, droppable: !enabled },
   });
 
@@ -95,7 +101,7 @@ function SortableTabButton({
       }}
       type="button"
       disabled={disabled}
-      data-tabs-item={itemKey}
+      data-tabs-item={String(itemKey)}
       data-tabs-active={active ? "true" : "false"}
       data-tabs-dragging={isDragging || undefined}
       className={twMerge(
@@ -141,14 +147,14 @@ export function Tabs(props: TabsProps) {
   );
   const selected = activeKey ?? innerActive;
   useEffect(() => {
-    if (activeKey !== undefined || items.some((item) => item.key === selected)) return;
+    if (activeKey !== undefined || items.some((item) => Object.is(item.key, selected))) return;
     setInnerActive(items.find((item) => !item.disabled)?.key);
   }, [activeKey, items, selected]);
-  const visitedKeys = useRef(new Set(selected === undefined ? [] : [selected]));
+  const visitedKeys = useRef(new Set<Key>(selected === undefined ? [] : [selected]));
   useEffect(() => {
     if (selected !== undefined) visitedKeys.current.add(selected);
   }, [selected]);
-  const refs = useRef(new Map<string, HTMLButtonElement>());
+  const refs = useRef(new Map<Key, HTMLButtonElement>());
   const headerRef = useRef<HTMLDivElement>(null);
   const tabListRef = useRef<HTMLDivElement>(null);
   const [ink, setInk] = useState({ left: 0, top: 0, width: 0, height: 0, ready: false });
@@ -188,20 +194,20 @@ export function Tabs(props: TabsProps) {
       tabList?.removeEventListener("scroll", updateInk);
     };
   }, [selected, items, vertical, placement]);
-  const change = (key: string, event: React.MouseEvent<HTMLElement>) => {
+  const change = (key: Key, event: React.MouseEvent<HTMLElement>) => {
     onTabClick?.(key, event);
-    const item = items.find((entry) => entry.key === key);
-    if (!item || item.disabled || key === selected) return;
+    const item = items.find((entry) => Object.is(entry.key, key));
+    if (!item || item.disabled || Object.is(key, selected)) return;
     if (activeKey === undefined) setInnerActive(key);
     onChange?.(key);
   };
-  const remove = (key: string) => {
+  const remove = (key: Key) => {
     if (!onDelete) return;
-    const removedIndex = items.findIndex((item) => item.key === key);
+    const removedIndex = items.findIndex((item) => Object.is(item.key, key));
     if (removedIndex < 0 || items[removedIndex]?.disabled) return;
-    const nextItems = items.filter((item) => item.key !== key);
+    const nextItems = items.filter((item) => !Object.is(item.key, key));
     onDelete(nextItems);
-    if (key !== selected) return;
+    if (!Object.is(key, selected)) return;
     const nextSelected = [
       ...nextItems.slice(Math.max(removedIndex, 0)),
       ...nextItems.slice(0, Math.max(removedIndex, 0)).reverse(),
@@ -232,7 +238,10 @@ export function Tabs(props: TabsProps) {
   const sortingEnabled = type === "card" && onDrag !== undefined;
   const handleDragEnd = ({ active, over }: DragEndEvent) => {
     if (!sortingEnabled || !onDrag || !over || active.id === over.id) return;
-    const nextItems = reorderTabItems(items, String(active.id), String(over.id));
+    const activeItem = items.find((item) => sortableId(item.key) === active.id);
+    const overItem = items.find((item) => sortableId(item.key) === over.id);
+    if (!activeItem || !overItem) return;
+    const nextItems = reorderTabItems(items, activeItem.key, overItem.key);
     if (nextItems !== items) onDrag(nextItems);
   };
   const DefaultTabBar = () => (
@@ -264,7 +273,7 @@ export function Tabs(props: TabsProps) {
     >
       <TabsSortContext
         enabled={sortingEnabled}
-        items={items.map((item) => item.key)}
+        items={items.map((item) => sortableId(item.key))}
         vertical={vertical}
         onDragEnd={handleDragEnd}
       >
@@ -279,19 +288,20 @@ export function Tabs(props: TabsProps) {
           {items.map((item) => (
             <SortableTabButton
               key={item.key}
-              active={item.key === selected}
+              active={Object.is(item.key, selected)}
               className={twMerge(
                 "relative inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 whitespace-nowrap text-[#666] hover:text-[#0062df] disabled:cursor-not-allowed disabled:text-[#bbb] motion-reduce:transition-none",
-                item.key === selected && "font-medium text-[#0062df]",
+                Object.is(item.key, selected) && "font-medium text-[#0062df]",
                 type === "line"
                   ? `${linePadding} transition-colors duration-200`
                   : `${cardSize} border border-[#d9d9d9] bg-[#fafafa] ${cardEdge} transition-[background-color,border-color,color] duration-300 ease-[cubic-bezier(0.645,0.045,0.355,1)]`,
-                type !== "line" && item.key === selected && "z-[1] bg-white",
+                type !== "line" && Object.is(item.key, selected) && "z-[1] bg-white",
                 type !== "line" && vertical ? "w-full" : "",
               )}
               disabled={Boolean(item.disabled)}
               enabled={sortingEnabled}
               itemKey={item.key}
+              sortableId={sortableId(item.key)}
               register={(node) => {
                 if (node) refs.current.set(item.key, node);
                 else refs.current.delete(item.key);
@@ -302,7 +312,7 @@ export function Tabs(props: TabsProps) {
               <span>{item.label}</span>
               {type === "card" && onDelete !== undefined && item.closable !== false ? (
                 <span
-                  data-tab-close={item.key}
+                  data-tab-close={String(item.key)}
                   className={twMerge(
                     "inline-flex rounded p-0.5",
                     item.disabled ? "cursor-not-allowed opacity-40" : "cursor-pointer",
@@ -405,12 +415,12 @@ export function Tabs(props: TabsProps) {
         )}
       >
         {items.map((item) => {
-          const active = item.key === selected;
+          const active = Object.is(item.key, selected);
           if (!active && !visitedKeys.current.has(item.key)) return null;
           return (
             <div
               key={item.key}
-              data-tab-panel={item.key}
+              data-tab-panel={String(item.key)}
               hidden={!active}
               className={twMerge(
                 animated &&

@@ -17,6 +17,19 @@ describe("message", () => {
     expect(await screen.findByText("저장했어요")).toBeInTheDocument();
   });
 
+  it("destroys only the message with the matching numeric key", async () => {
+    act(() => {
+      message.info({ key: 1, content: "첫 메시지", duration: 0 });
+      message.info({ key: 2, content: "둘째 메시지", duration: 0 });
+    });
+    await screen.findByText("첫 메시지");
+
+    act(() => message.destroy(1));
+
+    await waitFor(() => expect(screen.queryByText("첫 메시지")).not.toBeInTheDocument());
+    expect(screen.getByText("둘째 메시지")).toBeInTheDocument();
+  });
+
   it("preserves newlines in its content", async () => {
     act(() => {
       message.info({ content: "첫 줄\n둘째 줄", duration: 0 });

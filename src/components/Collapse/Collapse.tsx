@@ -1,13 +1,13 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type Key } from "react";
 import { twMerge } from "tailwind-merge";
 import { Icon } from "../Icon";
-import type { CollapseItem, CollapseKeyType, CollapseProps } from "./Collapse.types";
+import type { CollapseItem, CollapseProps } from "./Collapse.types";
 
-function keys(value?: CollapseKeyType[]) {
+function keys(value?: Key[]) {
   return value ?? [];
 }
 
-function includesKey(values: CollapseKeyType[], key: CollapseKeyType) {
+function includesKey(values: Key[], key: Key) {
   return values.some((value) => Object.is(value, key));
 }
 

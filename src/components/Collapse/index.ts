@@ -3,7 +3,6 @@ export type {
   CollapseCollapsibleType,
   CollapseExpandIconPlacementType,
   CollapseItem,
-  CollapseKeyType,
   CollapseProps,
   CollapseSizeType,
 } from "./Collapse.types";

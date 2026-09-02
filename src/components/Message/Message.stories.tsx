@@ -68,7 +68,7 @@ const meta = {
 | \`type\` | 상태 타입을 설정해요. | [\`MessageStatusType\`](#message-status-type) | \`info\` |
 | \`duration\` | 닫히기까지의 초예요. 0이면 유지해요. | \`number\` | \`3\` (loading: \`0\`) |
 | \`icon\` | 상태 아이콘을 변경해요. | \`ReactNode\` | - |
-| \`key\` | 같은 메시지를 갱신하거나 제거할 key예요. | \`string \\| number\` | - |
+| \`key\` | 같은 메시지를 갱신하거나 제거할 key예요. | \`Key\` | - |
 | \`pauseOnHover\` | 마우스를 올리면 닫힘 시간을 멈춰요. | \`boolean\` | \`true\` |
 | \`onClick\` | 메시지를 누르면 실행해요. | \`() => void\` | - |
 | \`onClose\` | 메시지가 닫히면 실행해요. | \`() => void\` | - |

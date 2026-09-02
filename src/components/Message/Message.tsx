@@ -6,6 +6,7 @@ import {
   useRef,
   useState,
   type CSSProperties,
+  type Key,
   type Ref,
   type ReactNode,
 } from "react";
@@ -19,13 +20,12 @@ import type {
   MessageApi,
   MessageArgsProps,
   MessageInstance,
-  MessageKeyType,
   MessageType,
   MessageStatusType,
 } from "./Message.types";
 
 interface MessageItem extends MessageArgsProps {
-  key: MessageKeyType;
+  key: Key;
   resolve: (value: boolean) => void;
 }
 
@@ -34,12 +34,12 @@ const MESSAGE_TOP = 8;
 
 function useMessageHolder(): [MessageInstance, ReactNode] {
   const [items, setItems] = useState<MessageItem[]>([]);
-  const resolvers = useRef(new Map<MessageKeyType, Array<(value: boolean) => void>>());
-  const onCloseCallbacks = useRef(new Map<MessageKeyType, (() => void) | undefined>());
-  const close = useCallback((key?: MessageKeyType) => {
+  const resolvers = useRef(new Map<Key, Array<(value: boolean) => void>>());
+  const onCloseCallbacks = useRef(new Map<Key, (() => void) | undefined>());
+  const close = useCallback((key?: Key) => {
     setItems((current) => (key === undefined ? [] : current.filter((item) => item.key !== key)));
   }, []);
-  const finishClose = useCallback((key: MessageKeyType) => {
+  const finishClose = useCallback((key: Key) => {
     onCloseCallbacks.current.get(key)?.();
     onCloseCallbacks.current.delete(key);
     resolvers.current.get(key)?.forEach((resolve) => resolve(true));
@@ -96,14 +96,14 @@ function MessageHolder({
   onAfterClose,
 }: {
   items: MessageItem[];
-  onClose: (key?: MessageKeyType) => void;
-  onAfterClose: (key: MessageKeyType) => void;
+  onClose: (key?: Key) => void;
+  onAfterClose: (key: Key) => void;
 }) {
   const { positions, totalHeight, setNodeSize } = useMessageLayout(items);
   const previousHeightRef = useRef(totalHeight);
   const decreasing = totalHeight < previousHeightRef.current;
   previousHeightRef.current = totalHeight;
-  const positionCacheRef = useRef(new Map<MessageKeyType, number>());
+  const positionCacheRef = useRef(new Map<Key, number>());
   const keys = items.map((item) => {
     positionCacheRef.current.set(item.key, positions.get(item.key) ?? 0);
     return { key: item.key, item };
@@ -127,7 +127,7 @@ function MessageHolder({
           motionName="wizard-message-motion"
           motionDeadline={MOTION_DURATION_MID + 50}
           onVisibleChanged={(visible, info) => {
-            if (!visible) onAfterClose(info.key as MessageKeyType);
+            if (!visible) onAfterClose(info.key as Key);
           }}
         >
           {({ item, visible, className: motionClassName, style: motionStyle }, motionRef) => (
@@ -152,38 +152,38 @@ function MessageHolder({
 }
 
 function useMessageLayout(items: MessageItem[]) {
-  const [sizes, setSizes] = useState<Record<string, number>>({});
-  const observersRef = useRef(new Map<string, ResizeObserver>());
+  const [sizes, setSizes] = useState(() => new Map<Key, number>());
+  const observersRef = useRef(new Map<Key, ResizeObserver>());
 
-  const setNodeSize = useCallback((key: MessageKeyType, node: HTMLDivElement | null) => {
-    const stringKey = String(key);
-    observersRef.current.get(stringKey)?.disconnect();
-    observersRef.current.delete(stringKey);
+  const setNodeSize = useCallback((key: Key, node: HTMLDivElement | null) => {
+    observersRef.current.get(key)?.disconnect();
+    observersRef.current.delete(key);
     if (!node) return;
 
     const measure = () => {
       const height = node.offsetHeight || node.getBoundingClientRect().height;
       if (!height) return;
-      setSizes((current) =>
-        current[stringKey] === height ? current : { ...current, [stringKey]: height },
-      );
+      setSizes((current) => {
+        if (current.get(key) === height) return current;
+        const next = new Map(current);
+        next.set(key, height);
+        return next;
+      });
     };
 
     measure();
     if (typeof ResizeObserver !== "undefined") {
       const observer = new ResizeObserver(measure);
       observer.observe(node);
-      observersRef.current.set(stringKey, observer);
+      observersRef.current.set(key, observer);
     }
   }, []);
 
   useEffect(() => {
-    const activeKeys = new Set(items.map((item) => String(item.key)));
+    const activeKeys = new Set(items.map((item) => item.key));
     setSizes((current) => {
-      const next = Object.fromEntries(
-        Object.entries(current).filter(([key]) => activeKeys.has(key)),
-      );
-      return Object.keys(next).length === Object.keys(current).length ? current : next;
+      if ([...current.keys()].every((key) => activeKeys.has(key))) return current;
+      return new Map([...current].filter(([key]) => activeKeys.has(key)));
     });
     observersRef.current.forEach((observer, key) => {
       if (!activeKeys.has(key)) {
@@ -202,12 +202,12 @@ function useMessageLayout(items: MessageItem[]) {
   );
 
   return useMemo(() => {
-    const positions = new Map<MessageKeyType, number>();
+    const positions = new Map<Key, number>();
     let offset = 0;
     let totalHeight = 0;
 
     items.forEach((item) => {
-      const height = sizes[String(item.key)] ?? 0;
+      const height = sizes.get(item.key) ?? 0;
       positions.set(item.key, offset);
       totalHeight = Math.max(totalHeight, offset + height);
       offset += height + 8;
@@ -233,7 +233,7 @@ function MessageCard({
   motionClassName?: string;
   motionStyle?: CSSProperties;
   motionRef: Ref<HTMLDivElement>;
-  onMeasure: (key: MessageKeyType, node: HTMLDivElement | null) => void;
+  onMeasure: (key: Key, node: HTMLDivElement | null) => void;
   onClose: () => void;
 }) {
   const timer = useRef<number | undefined>(undefined);

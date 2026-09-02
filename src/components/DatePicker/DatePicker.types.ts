@@ -1,8 +1,9 @@
 import type { ReactNode } from "react";
+import type { Dayjs } from "dayjs";
 import type { DisabledTime } from "../TimePicker";
 
-export type DatePickerValueType = string | string[] | null;
-export type DateRangeValueType = [string | null, string | null];
+export type DatePickerValueType = Dayjs | Dayjs[] | null;
+export type DateRangeValueType = [Dayjs | null, Dayjs | null];
 export type DatePickerSizeType = "md" | "lg";
 export type DatePickerModeType = "date" | "month" | "year";
 export type DatePickerPlacementType = "bottomLeft" | "bottomRight" | "topLeft" | "topRight";
@@ -10,7 +11,7 @@ export type DatePickerVariantType = "default" | "filled";
 
 export interface DatePickerPreset {
   label: ReactNode;
-  value: string | (() => string);
+  value: Dayjs | (() => Dayjs);
 }
 
 export interface DateRangePreset {
@@ -19,7 +20,7 @@ export interface DateRangePreset {
 }
 
 export interface DatePickerShowTime {
-  defaultOpenValue?: string;
+  defaultOpenValue?: Dayjs;
   format?: string;
   use12Hours?: boolean;
   showSecond?: boolean;
@@ -34,11 +35,11 @@ export interface DatePickerShowTime {
 export interface DatePickerProps {
   value?: DatePickerValueType;
   defaultValue?: DatePickerValueType;
-  defaultPickerValue?: string;
-  pickerValue?: string;
+  defaultPickerValue?: Dayjs;
+  pickerValue?: Dayjs;
   picker?: DatePickerModeType;
   placeholder?: string;
-  format?: string | ((value: string) => string);
+  format?: string | ((value: Dayjs) => string);
   size?: DatePickerSizeType;
   variant?: DatePickerVariantType;
   label?: ReactNode;
@@ -50,23 +51,23 @@ export interface DatePickerProps {
   allowClear?: boolean;
   multiple?: boolean;
   order?: boolean;
-  minDate?: string;
-  maxDate?: string;
+  minDate?: Dayjs;
+  maxDate?: Dayjs;
   showNow?: boolean;
   showTime?: boolean | DatePickerShowTime;
   needConfirm?: boolean;
   open?: boolean;
   defaultOpen?: boolean;
   placement?: DatePickerPlacementType;
-  disabledDate?: (date: Date) => boolean;
-  cellRender?: (date: Date, origin: ReactNode) => ReactNode;
+  disabledDate?: (date: Dayjs) => boolean;
+  cellRender?: (date: Dayjs, origin: ReactNode) => ReactNode;
   presets?: DatePickerPreset[];
   className?: string;
   onChange?: (value: DatePickerValueType) => void;
   onCalendarChange?: (value: DatePickerValueType) => void;
   onClear?: () => void;
   onConfirm?: (value: DatePickerValueType) => void;
-  onPanelChange?: (value: string, mode: DatePickerModeType) => void;
+  onPanelChange?: (value: Dayjs, mode: DatePickerModeType) => void;
   onOpenChange?: (open: boolean) => void;
 }
 

@@ -1,6 +1,7 @@
 import { createPortal } from "react-dom";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { cva } from "class-variance-authority";
+import dayjs from "dayjs";
 import { twMerge } from "tailwind-merge";
 import { Button } from "../Button";
 import { Tag } from "../Tag";
@@ -25,6 +26,7 @@ const multipleTagSizeClasses = {
   md: "h-[22px]",
 } as const;
 type DatePickerLayoutPosition = { left: number; top: number };
+type InternalDateRangeValue = [string | null, string | null];
 
 function pad(value: number) {
   return String(value).padStart(2, "0");
@@ -74,8 +76,36 @@ function formatDate(date: Date, picker: DatePickerModeType, time?: string) {
   return time ? `${value} ${time}` : value;
 }
 
-function parseDate(value?: string | null) {
+function toInternalValue(
+  value: unknown,
+  picker: DatePickerModeType,
+  showTime: boolean,
+  showSecond: boolean,
+) {
+  const normalizedValue = normalizeDayjs(value);
+  if (!normalizedValue) return null;
+  return formatDate(
+    normalizedValue.toDate(),
+    picker,
+    showTime ? normalizedValue.format(showSecond ? "HH:mm:ss" : "HH:mm") : undefined,
+  );
+}
+
+function toDayjsValues(values: string[]) {
+  return values.map((value) => dayjs(value));
+}
+
+function normalizeDayjs(value: unknown) {
+  if (value === null || value === undefined || value === "") return null;
+  const normalizedValue = dayjs.isDayjs(value) ? value : dayjs(value as string | Date);
+  return normalizedValue.isValid() ? normalizedValue : null;
+}
+
+function parseDate(value?: unknown) {
   if (!value) return null;
+  if (dayjs.isDayjs(value)) return value.isValid() ? value.startOf("day").toDate() : null;
+  if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : new Date(value);
+  if (typeof value !== "string") return null;
   const datePart = value.split(" ")[0];
   const [year, month = 1, day = 1] = datePart.split("-").map(Number);
   const result = new Date(year, month - 1, day);
@@ -94,14 +124,10 @@ function calendarDays(month: Date) {
 }
 
 function formatDisplayValue(value: string, format?: DatePickerProps["format"]) {
-  if (typeof format === "function") return format(value);
+  if (typeof format === "function") return format(dayjs(value));
   if (!format) return value;
-  const date = parseDate(value);
-  if (!date) return value;
-  return format
-    .replace("YYYY", String(date.getFullYear()))
-    .replace("MM", pad(date.getMonth() + 1))
-    .replace("DD", pad(date.getDate()));
+  const normalizedValue = dayjs(value);
+  return normalizedValue.isValid() ? normalizedValue.format(format) : value;
 }
 
 function BaseDatePicker({
@@ -142,20 +168,35 @@ function BaseDatePicker({
   onPanelChange,
   onOpenChange,
 }: DatePickerProps) {
+  const showTimeConfig = typeof showTime === "object" ? showTime : {};
+  const showTimeSecond =
+    showTimeConfig.showSecond ??
+    (showTimeConfig.format !== "HH:mm" && showTimeConfig.format !== "hh:mm A");
+  const serializeValue = (date: unknown) =>
+    toInternalValue(date, picker, Boolean(showTime), showTimeSecond);
   const initialValues = Array.isArray(defaultValue)
-    ? defaultValue
+    ? defaultValue.map(serializeValue).filter((item): item is string => item !== null)
     : defaultValue
-      ? [defaultValue]
+      ? [serializeValue(defaultValue)].filter((item): item is string => item !== null)
       : [];
   const [innerValues, setInnerValues] = useState<string[]>(initialValues);
-  const selectedValues =
-    value === undefined ? innerValues : Array.isArray(value) ? value : value ? [value] : [];
+  const sourceValues =
+    value === undefined
+      ? innerValues
+      : Array.isArray(value)
+        ? value.map(serializeValue).filter((item): item is string => item !== null)
+        : value
+          ? [serializeValue(value)].filter((item): item is string => item !== null)
+          : [];
+  const selectedValues = order ? [...sourceValues].sort() : sourceValues;
   const selectedValuesKey = selectedValues.join("\u0000");
   const isDateDisabled = (date: Date) => {
     const min = parseDate(minDate);
     const max = parseDate(maxDate);
     return (
-      Boolean(min && date < min) || Boolean(max && date > max) || Boolean(disabledDate?.(date))
+      Boolean(min && date < min) ||
+      Boolean(max && date > max) ||
+      Boolean(disabledDate?.(dayjs(date)))
     );
   };
   const multipleTriggerRef = useRef<HTMLButtonElement>(null);
@@ -166,12 +207,9 @@ function BaseDatePicker({
   const multipleLayoutAnimationsRef = useRef(
     new Map<string, { element: HTMLElement; animation: Animation }>(),
   );
-  const showTimeConfig = typeof showTime === "object" ? showTime : {};
-  const showTimeSecond =
-    showTimeConfig.showSecond ??
-    (showTimeConfig.format !== "HH:mm" && showTimeConfig.format !== "hh:mm A");
   const defaultSelectedTime = resolveAvailableTime(
-    showTimeConfig.defaultOpenValue ?? (showTimeConfig.use12Hours ? "01:00:00" : "00:00:00"),
+    normalizeDayjs(showTimeConfig.defaultOpenValue)?.format("HH:mm:ss") ??
+      (showTimeConfig.use12Hours ? "01:00:00" : "00:00:00"),
     showTimeConfig,
     showTimeSecond,
   );
@@ -221,7 +259,7 @@ function BaseDatePicker({
   const emitValues = (nextValues: string[], close = false) => {
     const sorted = order ? [...nextValues].sort() : nextValues;
     if (value === undefined) setInnerValues(sorted);
-    const outputValue = multiple ? sorted : (sorted[0] ?? null);
+    const outputValue = multiple ? toDayjsValues(sorted) : sorted[0] ? dayjs(sorted[0]) : null;
     onChange?.(outputValue);
     if (close) floating.changeOpen(false, "menu");
   };
@@ -235,7 +273,9 @@ function BaseDatePicker({
         ? currentValues.filter((item) => item !== rawValue)
         : [...currentValues, rawValue]
       : [rawValue];
-    onCalendarChange?.(multiple ? nextValues : nextValues[0]);
+    onCalendarChange?.(
+      multiple ? toDayjsValues(nextValues) : nextValues[0] ? dayjs(nextValues[0]) : null,
+    );
     if (needConfirm) {
       setPendingValues(nextValues);
       return;
@@ -245,7 +285,7 @@ function BaseDatePicker({
 
   const changePanelDate = (nextDate: Date) => {
     if (pickerValue === undefined) setInnerPanelDate(nextDate);
-    onPanelChange?.(formatDate(nextDate, picker), picker);
+    onPanelChange?.(dayjs(nextDate), picker);
   };
 
   const clear = () => {
@@ -253,8 +293,7 @@ function BaseDatePicker({
     setPendingValues(createDefaultPendingValues());
     setSelectedTime(defaultSelectedTime);
     setTimePanelResetKey((current) => current + 1);
-    if (pickerValue === undefined)
-      setInnerPanelDate(parseDate(defaultPickerValue) ?? new Date());
+    if (pickerValue === undefined) setInnerPanelDate(parseDate(defaultPickerValue) ?? new Date());
     onClear?.();
   };
 
@@ -595,7 +634,11 @@ function BaseDatePicker({
                     if (!preset) return;
                     const presetValue =
                       typeof preset.value === "function" ? preset.value() : preset.value;
-                    const nextValues = multiple ? [...selectedValues, presetValue] : [presetValue];
+                    const serializedPresetValue = serializeValue(presetValue);
+                    if (!serializedPresetValue) return;
+                    const nextValues = multiple
+                      ? [...selectedValues, serializedPresetValue]
+                      : [serializedPresetValue];
                     const uniqueValues = Array.from(new Set(nextValues));
                     if (needConfirm) {
                       setPendingValues(uniqueValues);
@@ -606,7 +649,13 @@ function BaseDatePicker({
                   onNow={() => selectDate(new Date())}
                   onConfirm={() => {
                     emitValues(pendingValues, true);
-                    onConfirm?.(multiple ? pendingValues : (pendingValues[0] ?? null));
+                    onConfirm?.(
+                      multiple
+                        ? toDayjsValues(pendingValues)
+                        : pendingValues[0]
+                          ? dayjs(pendingValues[0])
+                          : null,
+                    );
                   }}
                 />
               ) : null}
@@ -633,7 +682,7 @@ function PickerPanel({
   picker: DatePickerModeType;
   panelDate: Date;
   selectedValues: string[];
-  rangeValues?: DateRangeValueType;
+  rangeValues?: InternalDateRangeValue;
   previousButton?: boolean;
   nextButton?: boolean;
   disabledDate: (date: Date) => boolean;
@@ -797,7 +846,7 @@ function DateGrid({
   picker: "date";
   panelDate: Date;
   selectedValues: string[];
-  rangeValues?: DateRangeValueType;
+  rangeValues?: InternalDateRangeValue;
   disabledDate: (date: Date) => boolean;
   cellRender?: DatePickerProps["cellRender"];
   onSelect: (date: Date) => void;
@@ -854,7 +903,7 @@ function DateGrid({
                 )}
                 onClick={() => onSelect(date)}
               >
-                {cellRender ? cellRender(date, origin) : origin}
+                {cellRender ? cellRender(dayjs(date), origin) : origin}
               </button>
             </div>
           </div>
@@ -907,7 +956,7 @@ function MonthGrid({
             )}
             onClick={() => onSelect(date)}
           >
-            {cellRender ? cellRender(date, origin) : origin}
+            {cellRender ? cellRender(dayjs(date), origin) : origin}
           </button>
         );
       })}
@@ -943,7 +992,7 @@ function YearGrid({
             )}
             onClick={() => onSelect(date)}
           >
-            {cellRender ? cellRender(date, origin) : origin}
+            {cellRender ? cellRender(dayjs(date), origin) : origin}
           </button>
         );
       })}
@@ -1007,9 +1056,16 @@ function DateRangePicker({
   width,
   onOpenChange,
 }: DateRangePickerProps) {
-  const [innerValue, setInnerValue] = useState(defaultValue);
-  const [selectionDraft, setSelectionDraft] = useState<DateRangeValueType | null>(null);
-  const selectedValue = selectionDraft ?? value ?? innerValue;
+  const serializeRange = (range: DateRangeValueType): InternalDateRangeValue => [
+    range[0] ? toInternalValue(range[0], picker, false, false) : null,
+    range[1] ? toInternalValue(range[1], picker, false, false) : null,
+  ];
+  const [innerValue, setInnerValue] = useState<InternalDateRangeValue>(() =>
+    serializeRange(defaultValue),
+  );
+  const [selectionDraft, setSelectionDraft] = useState<InternalDateRangeValue | null>(null);
+  const selectedValue =
+    selectionDraft ?? (value === undefined ? innerValue : serializeRange(value));
   const initialPanel =
     parseDate(pickerValue) ??
     parseDate(defaultPickerValue) ??
@@ -1042,29 +1098,33 @@ function DateRangePicker({
       onOpenChange?.(nextOpen);
     },
   });
-  const emitRange = (nextRange: DateRangeValueType) => {
+  const emitRange = (nextRange: InternalDateRangeValue) => {
     setSelectionDraft(null);
     if (value === undefined) setInnerValue(nextRange);
-    onChange?.(nextRange);
+    onChange?.([
+      nextRange[0] ? dayjs(nextRange[0]) : null,
+      nextRange[1] ? dayjs(nextRange[1]) : null,
+    ]);
   };
   const selectRangeDate = (date: Date) => {
     const min = parseDate(minDate);
     const max = parseDate(maxDate);
-    if (Boolean(min && date < min) || Boolean(max && date > max) || disabledDate?.(date)) return;
+    if (Boolean(min && date < min) || Boolean(max && date > max) || disabledDate?.(dayjs(date)))
+      return;
     const nextDate = formatDate(date, picker);
     if (selecting === "start" || !selectedValue[0] || selectedValue[1]) {
-      const next: [string, null] = [nextDate, null];
+      const next: InternalDateRangeValue = [nextDate, null];
       if (value === undefined) setInnerValue(next);
       else setSelectionDraft(next);
-      onCalendarChange?.(next, { range: "start" });
+      onCalendarChange?.([dayjs(nextDate), null], { range: "start" });
       setSelecting("end");
       return;
     }
     const startDate = selectedValue[0];
-    const next: [string, string] =
+    const next: InternalDateRangeValue =
       startDate && nextDate < startDate ? [nextDate, startDate] : [startDate ?? nextDate, nextDate];
     emitRange(next);
-    onCalendarChange?.(next, { range: "end" });
+    onCalendarChange?.([dayjs(next[0]!), dayjs(next[1]!)], { range: "end" });
     setSelecting("start");
     floating.changeOpen(false, "menu");
   };
@@ -1151,7 +1211,7 @@ function DateRangePicker({
                       return (
                         Boolean(min && date < min) ||
                         Boolean(max && date > max) ||
-                        Boolean(disabledDate?.(date))
+                        Boolean(disabledDate?.(dayjs(date)))
                       );
                     }}
                     cellRender={cellRender}
@@ -1159,7 +1219,7 @@ function DateRangePicker({
                       setLeftPanel(next);
                       const right = offsetPanelDate(next, picker, 1);
                       setRightPanel(right);
-                      onPanelChange?.(formatDate(next, picker), picker);
+                      onPanelChange?.(dayjs(next), picker);
                     }}
                     onSelect={selectRangeDate}
                   />
@@ -1177,7 +1237,7 @@ function DateRangePicker({
                       return (
                         Boolean(min && date < min) ||
                         Boolean(max && date > max) ||
-                        Boolean(disabledDate?.(date))
+                        Boolean(disabledDate?.(dayjs(date)))
                       );
                     }}
                     cellRender={cellRender}
@@ -1185,7 +1245,7 @@ function DateRangePicker({
                       setRightPanel(next);
                       const left = offsetPanelDate(next, picker, -1);
                       setLeftPanel(left);
-                      onPanelChange?.(formatDate(next, picker), picker);
+                      onPanelChange?.(dayjs(next), picker);
                     }}
                     onSelect={selectRangeDate}
                   />
@@ -1201,7 +1261,7 @@ function DateRangePicker({
                       if (!preset) return;
                       const nextRange =
                         typeof preset.value === "function" ? preset.value() : preset.value;
-                      emitRange(nextRange);
+                      emitRange(serializeRange(nextRange));
                       floating.changeOpen(false, "menu");
                     }}
                     onNow={() => selectRangeDate(new Date())}

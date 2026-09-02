@@ -86,7 +86,9 @@ describe("Dropdown", () => {
     await user.click(screen.getByRole("button", { name: "메뉴" }));
     await user.click(screen.getByRole("button", { name: "수정" }));
 
-    expect(onClick).toHaveBeenCalledWith(expect.objectContaining({ value: "edit" }));
+    expect(onClick).toHaveBeenCalledWith(
+      expect.objectContaining({ value: "edit", event: expect.anything() }),
+    );
     expect(onOpenChange).toHaveBeenLastCalledWith(false);
     const motion = document.querySelector<HTMLElement>("[data-dropdown-motion]");
     expect(motion).toHaveStyle({ opacity: "0", transform: "scaleY(0.8)" });

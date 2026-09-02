@@ -116,9 +116,7 @@ function UploadExample() {
   });
 
   it("imports dayjs used by a copyable date example", () => {
-    const source = withStoryImports(
-      `<Calendar defaultValue={dayjs('2026-08-20').toDate()} />`,
-    );
+    const source = withStoryImports(`<Calendar defaultValue={dayjs('2026-08-20')} />`);
 
     expect(source).toContain("import dayjs from 'dayjs';");
     expect(source).toContain("import { Calendar } from '@taejin-k/wizard-design';");

@@ -96,21 +96,21 @@ const meta = {
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
 | \`items\` | 패널 헤더와 콘텐츠를 구성해요. | [\`CollapseItem[]\`](#collapse-item) | \`[]\` |
-| \`activeKey\` | 펼친 패널을 제어해요. | \`(string \\| number)[]\` | - |
-| \`defaultActiveKey\` | 처음 펼칠 패널을 정해요. | \`(string \\| number)[]\` | \`[]\` |
+| \`activeKey\` | 펼친 패널을 제어해요. | \`Key[]\` | - |
+| \`defaultActiveKey\` | 처음 펼칠 패널을 정해요. | \`Key[]\` | \`[]\` |
 | \`accordion\` | 한 번에 하나의 패널만 펼쳐요. | \`boolean\` | \`false\` |
 | \`bordered\` | 외곽선과 패널 구분선을 표시해요. | \`boolean\` | \`true\` |
 | \`ghost\` | 배경과 테두리를 제거해요. | \`boolean\` | \`false\` |
 | \`size\` | 패널 헤더와 본문의 여백을 정해요. | [\`CollapseSizeType\`](#collapse-size-type) | \`md\` |
 | \`expandIconPlacement\` | 펼침 아이콘을 시작 또는 끝에 배치해요. | [\`CollapseExpandIconPlacementType\`](#collapse-expand-icon-placement-type) | \`start\` |
-| \`onChange\` | 펼친 패널이 바뀔 때 실행해요. | \`(keys: (string \\| number)[]) => void\` | - |
+| \`onChange\` | 펼친 패널이 바뀔 때 실행해요. | \`(keys: Key[]) => void\` | - |
 | \`className\` | 최상위 요소에 Tailwind 클래스를 추가해요. | \`string\` | - |
 
 ### <span id="collapse-item">CollapseItem</span>
 
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
-| \`key\` | 패널을 구분하는 고유한 값이에요. | \`string \\| number\` | - |
+| \`key\` | 패널을 구분하는 고유한 값이에요. | \`Key\` | - |
 | \`label\` | 패널 헤더에 표시할 내용이에요. | \`ReactNode\` | - |
 | \`children\` | 패널을 펼쳤을 때 표시할 내용이에요. | \`ReactNode\` | - |
 | \`extra\` | 헤더 반대편에 추가 콘텐츠를 배치해요. | \`ReactNode\` | - |

@@ -1,17 +1,16 @@
 import type { Key, MouseEvent, ReactNode } from "react";
 
-export type MenuModeType = "vertical" | "horizontal" | "inline";
+export type MenuModeType = "vertical" | "inline";
 export type MenuTriggerType = "hover" | "click";
 export type MenuItemKindType = "item" | "group" | "divider";
 
 export interface MenuClickInfo {
-  key: string;
-  keyPath: string[];
-  domEvent: MouseEvent<HTMLElement>;
+  key: Key;
+  event: MouseEvent<HTMLElement>;
 }
 
 export interface MenuSelectInfo extends MenuClickInfo {
-  selectedKeys: string[];
+  selectedKeys: Key[];
 }
 
 export interface MenuItemType {
@@ -26,7 +25,7 @@ export interface MenuItemType {
   popupClassName?: string;
   popupOffset?: [number, number];
   onClick?: (info: MenuClickInfo) => void;
-  onTitleClick?: (info: { key: string; domEvent: MouseEvent<HTMLElement> }) => void;
+  onTitleClick?: (info: { key: Key; event: MouseEvent<HTMLElement> }) => void;
 }
 
 export interface MenuProps {
@@ -34,16 +33,15 @@ export interface MenuProps {
   mode?: MenuModeType;
   selectable?: boolean;
   multiple?: boolean;
-  selectedKeys?: string[];
-  defaultSelectedKeys?: string[];
-  openKeys?: string[];
-  defaultOpenKeys?: string[];
+  selectedKeys?: Key[];
+  defaultSelectedKeys?: Key[];
+  openKeys?: Key[];
+  defaultOpenKeys?: Key[];
   inlineCollapsed?: boolean;
-  inlineIndent?: number;
   triggerSubMenuAction?: MenuTriggerType;
   className?: string;
   onClick?: (info: MenuClickInfo) => void;
   onSelect?: (info: MenuSelectInfo) => void;
   onDeselect?: (info: MenuSelectInfo) => void;
-  onOpenChange?: (openKeys: string[]) => void;
+  onOpenChange?: (openKeys: Key[]) => void;
 }

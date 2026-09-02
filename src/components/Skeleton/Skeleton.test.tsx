@@ -23,4 +23,12 @@ describe("Skeleton", () => {
     const { container } = render(<Skeleton.Input width={180} height={36} />);
     expect(container.firstElementChild).toHaveStyle({ width: "180px", height: "36px" });
   });
+
+  it("allows Tailwind size classes to override element defaults", () => {
+    const { container } = render(<Skeleton.Node className="h-12 w-40" />);
+
+    expect(container.firstElementChild).toHaveClass("h-12", "w-40");
+    expect(container.firstElementChild).not.toHaveClass("h-24", "w-24");
+    expect(container.firstElementChild).not.toHaveAttribute("style");
+  });
 });

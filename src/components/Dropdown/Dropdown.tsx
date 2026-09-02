@@ -38,12 +38,12 @@ export function Dropdown({
   const handleItemClick = (
     item: DropdownItem,
     valuePath: string[],
-    domEvent: React.MouseEvent<HTMLElement>,
+    event: React.MouseEvent<HTMLElement>,
   ) => {
     if (item.disabled || item.type === "divider" || item.type === "group" || item.children?.length)
       return;
 
-    const info: DropdownClickInfo = { value: item.value, valuePath, domEvent };
+    const info: DropdownClickInfo = { value: item.value, valuePath, event };
     item.onClick?.(info);
     menu.onClick?.(info);
 

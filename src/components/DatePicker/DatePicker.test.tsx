@@ -1,20 +1,49 @@
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
+import dayjs, { type Dayjs } from "dayjs";
 import { describe, expect, it, vi } from "vitest";
 import { DatePicker } from "./DatePicker";
 
 describe("DatePicker", () => {
+  it("normalizes serialized legacy values without crashing", () => {
+    render(<DatePicker multiple defaultValue={["2026-08-11", "2026-08-14"] as never} />);
+
+    expect(document.querySelectorAll("[data-datepicker-tag]")).toHaveLength(2);
+    expect(screen.getByText("2026-08-11")).toBeInTheDocument();
+    expect(screen.getByText("2026-08-14")).toBeInTheDocument();
+  });
+
+  it("orders initial multiple values when order is enabled", () => {
+    render(<DatePicker multiple defaultValue={[dayjs("2026-08-14"), dayjs("2026-08-11")]} />);
+
+    expect(
+      Array.from(document.querySelectorAll("[data-datepicker-tag]"), (tag) => tag.textContent),
+    ).toEqual(["2026-08-11", "2026-08-14"]);
+  });
+
+  it("formats both date and time tokens", () => {
+    render(
+      <DatePicker
+        defaultValue={dayjs("2026-08-11 09:25:30")}
+        showTime
+        format="YYYY년 MM월 DD일 HH:mm:ss"
+      />,
+    );
+
+    expect(screen.getByText("2026년 08월 11일 09:25:30")).toBeInTheDocument();
+  });
+
   it("selects a date from the calendar", async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
-    render(<DatePicker defaultValue="2026-08-11" onChange={onChange} />);
+    render(<DatePicker defaultValue={dayjs("2026-08-11")} onChange={onChange} />);
 
     await user.click(screen.getByRole("button", { name: /2026-08-11/ }));
     const popup = document.querySelector("[data-datepicker-popup]") as HTMLElement;
     await user.click(within(popup).getAllByRole("button", { name: "12" })[0]);
 
-    expect(onChange).toHaveBeenCalledWith("2026-08-12");
+    expect(onChange.mock.calls[0]?.[0].format("YYYY-MM-DD")).toBe("2026-08-12");
     await waitFor(() =>
       expect(document.querySelector("[data-datepicker-popup]")).not.toBeInTheDocument(),
     );
@@ -22,7 +51,9 @@ describe("DatePicker", () => {
 
   it("prevents disabled dates from being selected", async () => {
     const user = userEvent.setup();
-    render(<DatePicker defaultValue="2026-08-11" disabledDate={(date) => date.getDate() === 12} />);
+    render(
+      <DatePicker defaultValue={dayjs("2026-08-11")} disabledDate={(date) => date.date() === 12} />,
+    );
     await user.click(screen.getByRole("button", { name: /2026-08-11/ }));
     const popup = document.querySelector("[data-datepicker-popup]") as HTMLElement;
     expect(within(popup).getByRole("button", { name: "12" })).toBeDisabled();
@@ -32,8 +63,8 @@ describe("DatePicker", () => {
     const user = userEvent.setup();
     render(
       <DatePicker
-        defaultValue="2026-08-11"
-        disabledDate={(date) => date.getDate() === 12 || date.getDate() === 13}
+        defaultValue={dayjs("2026-08-11")}
+        disabledDate={(date) => date.date() === 12 || date.date() === 13}
       />,
     );
 
@@ -55,7 +86,7 @@ describe("DatePicker", () => {
     const user = userEvent.setup();
     render(
       <DatePicker
-        defaultPickerValue="2026-08-01"
+        defaultPickerValue={dayjs("2026-08-01")}
         cellRender={(_, origin) => <span className="text-[#fe5150]">{origin}</span>}
       />,
     );
@@ -71,7 +102,7 @@ describe("DatePicker", () => {
   it("keeps the trigger focusable without opening while read only", async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
-    render(<DatePicker readOnly defaultValue="2026-08-11" onChange={onChange} />);
+    render(<DatePicker readOnly defaultValue={dayjs("2026-08-11")} onChange={onChange} />);
 
     const trigger = screen.getByRole("button", { name: /2026-08-11/ });
     expect(trigger).not.toBeDisabled();
@@ -85,7 +116,7 @@ describe("DatePicker", () => {
   });
 
   it("keeps the filled background while read only", () => {
-    render(<DatePicker variant="filled" readOnly defaultValue="2026-08-11" />);
+    render(<DatePicker variant="filled" readOnly defaultValue={dayjs("2026-08-11")} />);
 
     expect(screen.getByRole("button", { name: /2026-08-11/ })).toHaveClass(
       "border-[#f5f5f5]",
@@ -94,14 +125,14 @@ describe("DatePicker", () => {
   });
 
   it("uses the disabled text color for a selected value", () => {
-    render(<DatePicker disabled defaultValue="2026-08-11" />);
+    render(<DatePicker disabled defaultValue={dayjs("2026-08-11")} />);
 
     expect(screen.getByText("2026-08-11").parentElement).toHaveClass("text-[#999]");
   });
 
   it("moves the date panel by one year with the outer header buttons", async () => {
     const user = userEvent.setup();
-    render(<DatePicker defaultValue="2026-08-11" />);
+    render(<DatePicker defaultValue={dayjs("2026-08-11")} />);
 
     await user.click(screen.getByRole("button", { name: /2026-08-11/ }));
     const popup = document.querySelector("[data-datepicker-popup]") as HTMLElement;
@@ -116,7 +147,7 @@ describe("DatePicker", () => {
 
   it("clears a selected date", async () => {
     const user = userEvent.setup();
-    render(<DatePicker defaultValue="2026-08-11" />);
+    render(<DatePicker defaultValue={dayjs("2026-08-11")} />);
     const clearIcon = screen.getByRole("button", { name: /2026-08-11/ }).querySelector("svg");
     expect(clearIcon).not.toBeNull();
     await user.click(clearIcon as Element);
@@ -125,7 +156,9 @@ describe("DatePicker", () => {
 
   it("resets the open date panel when the value is cleared", async () => {
     const user = userEvent.setup();
-    render(<DatePicker defaultValue="2026-08-11" defaultPickerValue="2026-08-01" />);
+    render(
+      <DatePicker defaultValue={dayjs("2026-08-11")} defaultPickerValue={dayjs("2026-08-01")} />,
+    );
 
     const trigger = screen.getByRole("button", { name: /2026-08-11/ });
     await user.click(trigger);
@@ -144,7 +177,7 @@ describe("DatePicker", () => {
     const user = userEvent.setup();
     render(
       <DatePicker
-        defaultValue="2026-08-11 10:25:10"
+        defaultValue={dayjs("2026-08-11 10:25:10")}
         showTime={{ disabledTime: () => ({ disabledHours: () => [0, 1, 2] }) }}
       />,
     );
@@ -167,7 +200,7 @@ describe("DatePicker", () => {
     const onChange = vi.fn();
     render(
       <DatePicker
-        defaultValue="2026-08-11 09:00"
+        defaultValue={dayjs("2026-08-11 09:00")}
         showTime={{ showSecond: false }}
         needConfirm
         onChange={onChange}
@@ -186,7 +219,7 @@ describe("DatePicker", () => {
     await user.click(within(popup).getAllByRole("button", { name: "12" })[0]);
     await user.click(within(popup).getByRole("button", { name: "확인" }));
 
-    expect(onChange).toHaveBeenCalledWith("2026-08-12 10:00");
+    expect(onChange.mock.calls[0]?.[0].format("YYYY-MM-DD HH:mm")).toBe("2026-08-12 10:00");
   });
 
   it("adds popup width only for rendered time columns", async () => {
@@ -257,7 +290,9 @@ describe("DatePicker", () => {
     expect(within(popup).getByRole("button", { name: "AM" })).toHaveClass("bg-[#e6f4ff]");
 
     await user.click(within(popup).getByRole("button", { name: "확인" }));
-    expect(onChange).toHaveBeenCalledWith(`${todayValue} 01:00:00`);
+    expect(onChange.mock.calls[0]?.[0].format("YYYY-MM-DD HH:mm:ss")).toBe(
+      `${todayValue} 01:00:00`,
+    );
   });
 
   it("does not select today when it is outside the allowed range", async () => {
@@ -266,7 +301,7 @@ describe("DatePicker", () => {
     const tomorrow = new Date();
     tomorrow.setHours(0, 0, 0, 0);
     tomorrow.setDate(tomorrow.getDate() + 1);
-    const minDate = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, "0")}-${String(tomorrow.getDate()).padStart(2, "0")}`;
+    const minDate = dayjs(tomorrow);
 
     render(<DatePicker minDate={minDate} showNow onChange={onChange} />);
     await user.click(screen.getByRole("button", { name: "날짜를 선택하세요" }));
@@ -284,8 +319,8 @@ describe("DatePicker", () => {
       <DatePicker
         showNow
         presets={[
-          { label: "오늘", value: "2026-08-11" },
-          { label: "프로젝트 시작일", value: "2026-08-17" },
+          { label: "오늘", value: dayjs("2026-08-11") },
+          { label: "프로젝트 시작일", value: dayjs("2026-08-17") },
         ]}
         onChange={onChange}
       />,
@@ -300,7 +335,7 @@ describe("DatePicker", () => {
     await user.click(presetTrigger);
     await user.click(screen.getByRole("button", { name: "프로젝트 시작일" }));
 
-    expect(onChange).toHaveBeenCalledWith("2026-08-17");
+    expect(onChange.mock.calls[0]?.[0].format("YYYY-MM-DD")).toBe("2026-08-17");
   });
 
   it("waits for confirmation after selecting a preset when confirmation is required", async () => {
@@ -310,7 +345,7 @@ describe("DatePicker", () => {
     render(
       <DatePicker
         needConfirm
-        presets={[{ label: "프로젝트 시작일", value: "2026-08-17" }]}
+        presets={[{ label: "프로젝트 시작일", value: dayjs("2026-08-17") }]}
         onChange={onChange}
         onConfirm={onConfirm}
       />,
@@ -322,13 +357,13 @@ describe("DatePicker", () => {
 
     expect(onChange).not.toHaveBeenCalled();
     await user.click(screen.getByRole("button", { name: "확인" }));
-    expect(onChange).toHaveBeenCalledWith("2026-08-17");
-    expect(onConfirm).toHaveBeenCalledWith("2026-08-17");
+    expect(onChange.mock.calls[0]?.[0].format("YYYY-MM-DD")).toBe("2026-08-17");
+    expect(onConfirm.mock.calls[0]?.[0].format("YYYY-MM-DD")).toBe("2026-08-17");
   });
 
   it("renders two adjacent calendar panels for a range", async () => {
     const user = userEvent.setup();
-    render(<DatePicker.RangePicker defaultPickerValue="2026-08-01" />);
+    render(<DatePicker.RangePicker defaultPickerValue={dayjs("2026-08-01")} />);
     expect(document.querySelector("[data-datepicker-range-separator] svg")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: /시작 날짜.*종료 날짜/ }));
@@ -343,8 +378,8 @@ describe("DatePicker", () => {
     const user = userEvent.setup();
     render(
       <DatePicker.RangePicker
-        defaultValue={["2026-08-11", "2026-08-14"]}
-        defaultPickerValue="2026-08-01"
+        defaultValue={[dayjs("2026-08-11"), dayjs("2026-08-14")]}
+        defaultPickerValue={dayjs("2026-08-01")}
       />,
     );
 
@@ -368,11 +403,11 @@ describe("DatePicker", () => {
     const onChange = vi.fn();
 
     function ControlledRange() {
-      const [value, setValue] = useState<[string | null, string | null]>([null, null]);
+      const [value, setValue] = useState<[Dayjs | null, Dayjs | null]>([null, null]);
       return (
         <DatePicker.RangePicker
           value={value}
-          defaultPickerValue="2026-08-01"
+          defaultPickerValue={dayjs("2026-08-01")}
           onChange={(next) => {
             setValue(next);
             onChange(next);
@@ -390,7 +425,11 @@ describe("DatePicker", () => {
     expect(trigger).toHaveTextContent("2026-08-14");
 
     await user.click(within(popup).getAllByRole("button", { name: "15" })[0]);
-    expect(onChange).toHaveBeenCalledWith(["2026-08-14", "2026-08-15"]);
+    const changedRange = onChange.mock.calls[0]?.[0] as [Dayjs, Dayjs];
+    expect(changedRange.map((date) => date.format("YYYY-MM-DD"))).toEqual([
+      "2026-08-14",
+      "2026-08-15",
+    ]);
     expect(trigger).toHaveTextContent("2026-08-142026-08-15");
   });
 
@@ -398,8 +437,8 @@ describe("DatePicker", () => {
     const user = userEvent.setup();
     render(
       <DatePicker.RangePicker
-        defaultValue={["2026-08-18", "2026-09-03"]}
-        defaultPickerValue="2026-08-01"
+        defaultValue={[dayjs("2026-08-18"), dayjs("2026-09-03")]}
+        defaultPickerValue={dayjs("2026-08-01")}
       />,
     );
 
@@ -416,7 +455,13 @@ describe("DatePicker", () => {
   it("removes one multiple value from its chip close icon", async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
-    render(<DatePicker multiple defaultValue={["2026-08-11", "2026-08-14"]} onChange={onChange} />);
+    render(
+      <DatePicker
+        multiple
+        defaultValue={[dayjs("2026-08-11"), dayjs("2026-08-14")]}
+        onChange={onChange}
+      />,
+    );
 
     const tags = document.querySelectorAll("[data-datepicker-tag]");
     tags.forEach((tag) => expect(tag).toHaveClass("tabular-nums"));
@@ -425,12 +470,14 @@ describe("DatePicker", () => {
     const firstTag = tags[0];
     await user.click(firstTag.querySelector("svg")!);
 
-    expect(onChange).toHaveBeenCalledWith(["2026-08-14"]);
+    expect(onChange.mock.calls[0]?.[0].map((date: Dayjs) => date.format("YYYY-MM-DD"))).toEqual([
+      "2026-08-14",
+    ]);
     await waitFor(() => expect(screen.queryByText("2026-08-11")).not.toBeInTheDocument());
   });
 
   it("centers the clear button for multiple values", () => {
-    render(<DatePicker multiple defaultValue={["2026-08-11", "2026-08-14"]} />);
+    render(<DatePicker multiple defaultValue={[dayjs("2026-08-11"), dayjs("2026-08-14")]} />);
 
     const trigger = screen.getByRole("button", { name: /2026-08-11.*2026-08-14/ });
     const clearButton = trigger.querySelector<HTMLElement>(":scope > span.cursor-pointer");

@@ -22,6 +22,23 @@ describe("Tabs", () => {
     expect(document.querySelector('[data-tab-panel="two"]')).toHaveTextContent("둘째 내용");
   });
 
+  it("preserves numeric keys when changing tabs", async () => {
+    const onChange = vi.fn();
+    render(
+      <Tabs
+        items={[
+          { key: 1, label: "첫째" },
+          { key: 2, label: "둘째" },
+        ]}
+        onChange={onChange}
+      />,
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: "둘째" }));
+
+    expect(onChange).toHaveBeenCalledWith(2);
+  });
+
   it("adds a custom tab and deletes tabs", async () => {
     function EditableTabs() {
       const [items, setItems] = useState<TabItemType[]>([{ key: "one", label: "문서" }]);
@@ -98,6 +115,12 @@ describe("Tabs", () => {
     ]);
     expect(reorderTabItems(items, "one", "one")).toBe(items);
     expect(reorderTabItems(items, "missing", "one")).toBe(items);
+
+    const numericItems = [
+      { key: 1, label: "첫째" },
+      { key: 2, label: "둘째" },
+    ];
+    expect(reorderTabItems(numericItems, 2, 1).map((item) => item.key)).toEqual([2, 1]);
   });
 
   it("does not delete a disabled tab", () => {

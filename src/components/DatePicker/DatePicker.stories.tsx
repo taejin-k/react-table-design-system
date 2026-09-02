@@ -24,8 +24,8 @@ const datePickerPlacements: DatePickerPlacementType[] = [
   "bottomLeft",
   "bottomRight",
 ];
-const datePickerValueTypes = ["string", "string[]", "null"];
-const dateRangeValueTypes = ["[string | null, string | null]"];
+const datePickerValueTypes = ["Dayjs", "Dayjs[]", "null"];
+const dateRangeValueTypes = ["[Dayjs | null, Dayjs | null]"];
 
 const storySource = (id: string, code: string) => ({
   docs: {
@@ -87,7 +87,7 @@ const meta = {
 | \`defaultValue\` | 처음 선택할 값을 설정해요. | [\`DatePickerValueType\`](#date-picker-value-type) | - |
 | \`placeholder\` | 선택 전 안내 문구를 설정해요. | \`string\` | \`날짜를 선택하세요\` |
 | \`picker\` | 날짜 선택 단위를 설정해요. | [\`DatePickerModeType\`](#date-picker-mode-type) | \`date\` |
-| \`format\` | 선택값을 화면에 표시할 형식을 설정해요. | \`string \\| (value) => string\` | - |
+| \`format\` | 선택값을 화면에 표시할 형식을 설정해요. | \`string \\| (value: Dayjs) => string\` | - |
 | \`size\` | DatePicker의 크기를 설정해요. | [\`DatePickerSizeType\`](#date-picker-size-type) | \`md\` |
 | \`variant\` | 배경과 테두리 표현 방식을 설정해요. | [\`DatePickerVariantType\`](#date-picker-variant-type) | \`default\` |
 | \`allowClear\` | 선택값을 지우는 버튼을 표시해요. | \`boolean\` | \`true\` |
@@ -96,16 +96,16 @@ const meta = {
 | \`width\` | DatePicker의 가로 길이를 설정해요. | \`number\` | \`100%\` |
 | \`multiple\` | 여러 날짜를 선택해요. | \`boolean\` | \`false\` |
 | \`order\` | 여러 선택값을 날짜 순서로 정렬해요. | \`boolean\` | \`true\` |
-| \`minDate\` | 선택할 수 있는 최소 날짜를 설정해요. | \`string\` | - |
-| \`maxDate\` | 선택할 수 있는 최대 날짜를 설정해요. | \`string\` | - |
-| \`disabledDate\` | 선택할 수 없는 날짜를 반환해요. | \`(date: Date) => boolean\` | - |
+| \`minDate\` | 선택할 수 있는 최소 날짜를 설정해요. | \`Dayjs\` | - |
+| \`maxDate\` | 선택할 수 있는 최대 날짜를 설정해요. | \`Dayjs\` | - |
+| \`disabledDate\` | 선택할 수 없는 날짜를 반환해요. | \`(date: Dayjs) => boolean\` | - |
 | \`showNow\` | 오늘로 이동하는 버튼을 표시해요. | \`boolean\` | \`date\`일 때 \`true\` |
 | \`showTime\` | 날짜와 함께 시간을 선택해요. | \`boolean\` \\| [\`DatePickerShowTime\`](#date-picker-show-time) | \`false\` |
-| \`needConfirm\` | 확인을 눌러야 선택값을 반영해요. | \`boolean\` | \`false\` |
+| \`needConfirm\` | 확인을 눌러야 선택값을 반영해요. | \`boolean\` | 시간 선택은 \`true\`, 그 외 \`false\` |
 | \`presets\` | 빠르게 선택할 날짜 목록을 설정해요. | [\`DatePickerPreset[]\`](#date-picker-preset) | - |
 | \`cellRender\` | 날짜 셀의 내용을 직접 구성해요. | \`(date, origin) => ReactNode\` | - |
-| \`pickerValue\` | 달력 패널의 기준 날짜를 외부에서 관리해요. | \`string\` | - |
-| \`defaultPickerValue\` | 달력이 처음 보여줄 기준 날짜를 설정해요. | \`string\` | - |
+| \`pickerValue\` | 달력 패널의 기준 날짜를 외부에서 관리해요. | \`Dayjs\` | - |
+| \`defaultPickerValue\` | 달력이 처음 보여줄 기준 날짜를 설정해요. | \`Dayjs\` | - |
 | \`open\` | 달력 표시 상태를 외부에서 관리해요. | \`boolean\` | - |
 | \`defaultOpen\` | 처음 달력을 표시할지 설정해요. | \`boolean\` | \`false\` |
 | \`placement\` | 달력이 표시될 위치를 설정해요. | [\`DatePickerPlacementType\`](#date-picker-placement-type) | \`bottomLeft\` |
@@ -113,18 +113,18 @@ const meta = {
 | \`errorMessage\` | DatePicker 아래에 오류 문구를 표시해요. | \`ReactNode\` | - |
 | \`required\` | 레이블에 필수 표시를 추가해요. | \`boolean\` | \`false\` |
 | \`className\` | 최상위 요소에 Tailwind 클래스를 추가해요. | \`string\` | - |
-| \`onChange\` | 최종 선택값이 바뀔 때 실행해요. | \`(value) => void\` | - |
-| \`onCalendarChange\` | 달력에서 값을 선택할 때 실행해요. | \`(value) => void\` | - |
+| \`onChange\` | 최종 선택값이 바뀔 때 실행해요. | \`(value: DatePickerValueType) => void\` | - |
+| \`onCalendarChange\` | 달력에서 값을 선택할 때 실행해요. | \`(value: DatePickerValueType) => void\` | - |
 | \`onClear\` | 선택값을 지울 때 실행할 함수예요. | \`() => void\` | - |
-| \`onConfirm\` | 확인 버튼을 누를 때 실행할 함수예요. | \`(value) => void\` | - |
-| \`onPanelChange\` | 보고 있는 달·연도가 바뀔 때 실행해요. | \`(value, mode) => void\` | - |
+| \`onConfirm\` | 확인 버튼을 누를 때 실행할 함수예요. | \`(value: DatePickerValueType) => void\` | - |
+| \`onPanelChange\` | 보고 있는 달·연도가 바뀔 때 실행해요. | \`(value: Dayjs, mode: DatePickerModeType) => void\` | - |
 | \`onOpenChange\` | 달력이 열리거나 닫힐 때 실행해요. | \`(open: boolean) => void\` | - |
 
 <h3 id="date-picker-show-time">DatePickerShowTime</h3>
 
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
-| \`defaultOpenValue\` | 처음 열었을 때 기준 시간을 설정해요. | \`string\` | \`00:00:00\` |
+| \`defaultOpenValue\` | 처음 열었을 때 기준 시간을 설정해요. | \`Dayjs\` | 오늘 00:00:00 |
 | \`format\` | 시간 표시 형식을 설정해요. | \`string\` | \`HH:mm:ss\` |
 | \`use12Hours\` | 12시간 형식으로 표시해요. | \`boolean\` | \`false\` |
 | \`showSecond\` | 초 선택 열을 표시해요. | \`boolean\` | \`true\` |
@@ -148,7 +148,7 @@ const meta = {
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
 | \`label\` | 빠른 선택 항목에 표시할 내용을 설정해요. | \`ReactNode\` | - |
-| \`value\` | 날짜나 반환 함수를 설정해요. | \`string \\| () => string\` | - |
+| \`value\` | 날짜나 반환 함수를 설정해요. | \`Dayjs \\| () => Dayjs\` | - |
 
 <h3 id="date-range-preset">DateRangePreset</h3>
 
@@ -159,14 +159,17 @@ const meta = {
 
 <h3 id="range-picker">RangePicker</h3>
 
+아래 설정 외 나머지는 [DatePicker](#datepicker)와 같아요. 시간·다중 선택 설정은 사용할 수 없어요.
+
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
 | \`value\` | 시작일과 종료일을 관리해요. | [\`DateRangeValueType\`](#date-range-value-type) | - |
 | \`defaultValue\` | 처음 선택할 시작일과 종료일을 설정해요. | [\`DateRangeValueType\`](#date-range-value-type) | - |
 | \`placeholder\` | 두 입력 영역의 안내 문구를 설정해요. | \`[string, string]\` | \`['시작 날짜', '종료 날짜']\` |
 | \`presets\` | 빠르게 선택할 날짜 범위를 설정해요. | [\`DateRangePreset[]\`](#date-range-preset) | - |
-| \`onChange\` | 날짜 범위가 바뀔 때 실행할 함수예요. | \`(value) => void\` | - |
-| \`onCalendarChange\` | 시작일이나 종료일을 선택할 때 실행해요. | \`(value, info) => void\` | - |
+| \`showNow\` | 오늘을 선택하는 버튼을 표시해요. | \`boolean\` | \`false\` |
+| \`onChange\` | 날짜 범위가 바뀔 때 실행할 함수예요. | \`(value: DateRangeValueType) => void\` | - |
+| \`onCalendarChange\` | 시작일이나 종료일을 선택할 때 실행해요. | <code>(value: DateRangeValueType, info: { range: 'start' &#124; 'end' }) =&gt; void</code> | - |
           `}</Markdown>
           <h2 className="component-docs-types-heading">Types</h2>
           <h3 id="date-picker-mode-type">DatePickerModeType</h3>
@@ -344,8 +347,8 @@ export const States: Story = {
       "components-datepicker--states",
       `<div className="grid max-w-xs gap-3">
   <DatePicker placeholder="기본" />
-  <DatePicker readOnly defaultValue="2026-08-10" />
-  <DatePicker disabled defaultValue="2026-08-11" />
+  <DatePicker readOnly defaultValue={dayjs('2026-08-10')} />
+  <DatePicker disabled defaultValue={dayjs('2026-08-11')} />
 </div>`,
     ),
     controls: { include: ["크기", "표현 방식", "가로 길이"] },
@@ -353,8 +356,8 @@ export const States: Story = {
   render: (args) => (
     <div className="grid max-w-xs gap-3">
       <DatePicker {...args} placeholder="기본" />
-      <DatePicker {...args} readOnly defaultValue="2026-08-10" />
-      <DatePicker {...args} disabled defaultValue="2026-08-11" />
+      <DatePicker {...args} readOnly defaultValue={dayjs("2026-08-10")} />
+      <DatePicker {...args} disabled defaultValue={dayjs("2026-08-11")} />
     </div>
   ),
 };
@@ -440,8 +443,8 @@ export const Format: Story = {
     ...storySource(
       "components-datepicker--format",
       `<div className="grid max-w-xs gap-3">
-  <DatePicker defaultValue="2026-08-11" format="YYYY년 MM월 DD일" />
-  <DatePicker defaultValue="2026-08-11" format={(value) => '선택일: ' + value} />
+  <DatePicker defaultValue={dayjs('2026-08-11')} format="YYYY년 MM월 DD일" />
+  <DatePicker defaultValue={dayjs('2026-08-11')} format={(value) => '선택일: ' + value.format('YYYY-MM-DD')} />
 </div>`,
     ),
     controls: {
@@ -450,11 +453,11 @@ export const Format: Story = {
   },
   render: (args) => (
     <div className="grid max-w-xs gap-3">
-      <DatePicker {...args} defaultValue="2026-08-11" format="YYYY년 MM월 DD일" />
+      <DatePicker {...args} defaultValue={dayjs("2026-08-11")} format="YYYY년 MM월 DD일" />
       <DatePicker
         {...args}
-        defaultValue="2026-08-11"
-        format={(pickerValue) => `선택일: ${pickerValue}`}
+        defaultValue={dayjs("2026-08-11")}
+        format={(pickerValue) => `선택일: ${pickerValue.format("YYYY-MM-DD")}`}
       />
     </div>
   ),
@@ -474,13 +477,13 @@ export const DateLimits: Story = {
 
 <div className="grid max-w-xs gap-3">
   <DatePicker
-    defaultPickerValue="2026-08-01"
-    minDate="2026-08-05"
-    maxDate="2026-08-20"
+    defaultPickerValue={dayjs('2026-08-01')}
+    minDate={dayjs('2026-08-05')}
+    maxDate={dayjs('2026-08-20')}
     placeholder="8월 5일 ~ 20일 선택 가능"
   />
   <DatePicker
-    disabledDate={(date) => dayjs(date).isBefore(dayjs(), 'day')}
+    disabledDate={(date) => date.isBefore(dayjs(), 'day')}
     placeholder="오늘 이전 선택 불가"
   />
 </div>`,
@@ -491,14 +494,14 @@ export const DateLimits: Story = {
     <div className="grid max-w-xs gap-3">
       <DatePicker
         {...args}
-        defaultPickerValue="2026-08-01"
-        minDate="2026-08-05"
-        maxDate="2026-08-20"
+        defaultPickerValue={dayjs("2026-08-01")}
+        minDate={dayjs("2026-08-05")}
+        maxDate={dayjs("2026-08-20")}
         placeholder="8월 5일 ~ 20일 선택 가능"
       />
       <DatePicker
         {...args}
-        disabledDate={(date) => dayjs(date).isBefore(dayjs(), "day")}
+        disabledDate={(date) => date.isBefore(dayjs(), "day")}
         placeholder="오늘 이전 선택 불가"
       />
     </div>
@@ -522,8 +525,8 @@ export const Presets: Story = {
   <DatePicker
     needConfirm
     presets={[
-      { label: '오늘', value: () => dayjs().format('YYYY-MM-DD') },
-      { label: '프로젝트 시작일', value: '2026-08-17' },
+      { label: '오늘', value: () => dayjs() },
+      { label: '프로젝트 시작일', value: dayjs('2026-08-17') },
     ]}
   />
 </div>`,
@@ -538,8 +541,8 @@ export const Presets: Story = {
         {...args}
         needConfirm
         presets={[
-          { label: "오늘", value: () => dayjs().format("YYYY-MM-DD") },
-          { label: "프로젝트 시작일", value: "2026-08-17" },
+          { label: "오늘", value: () => dayjs() },
+          { label: "프로젝트 시작일", value: dayjs("2026-08-17") },
         ]}
       />
     </div>
@@ -563,7 +566,7 @@ export const Multiple: Story = {
         <DatePicker
           key={size}
           multiple
-          defaultValue={['2026-08-11', '2026-08-14']}
+          defaultValue={[dayjs('2026-08-11'), dayjs('2026-08-14')]}
           size={size}
           variant={variant}
         />
@@ -584,7 +587,7 @@ export const Multiple: Story = {
               {...args}
               key={size}
               multiple
-              defaultValue={["2026-08-11", "2026-08-14"]}
+              defaultValue={[dayjs("2026-08-11"), dayjs("2026-08-14")]}
               size={size}
               variant={variant}
             />
@@ -605,7 +608,10 @@ export const ControlledMultiple: Story = {
     ...storySource(
       "components-datepicker--controlled-multiple",
       `function ControlledMultipleDatePicker() {
-  const [dates, setDates] = useState<DatePickerValueType>(['2026-08-11', '2026-08-14']);
+  const [dates, setDates] = useState<DatePickerValueType>([
+    dayjs('2026-08-11'),
+    dayjs('2026-08-14'),
+  ]);
 
   return (
     <div className="max-w-lg">
@@ -621,7 +627,10 @@ export const ControlledMultiple: Story = {
     controls: { include: ["지우기", "읽기 전용", "비활성", "가로 길이"] },
   },
   render: function ControlledMultipleStory(args) {
-    const [dates, setDates] = useState<DatePickerValueType>(["2026-08-11", "2026-08-14"]);
+    const [dates, setDates] = useState<DatePickerValueType>([
+      dayjs("2026-08-11"),
+      dayjs("2026-08-14"),
+    ]);
 
     return (
       <div className="max-w-lg">
@@ -671,7 +680,7 @@ export const MultipleShowTime: Story = {
       `<div className="max-w-lg">
   <DatePicker
     multiple
-    defaultValue={['2026-08-11 09:00', '2026-08-14 09:00']}
+    defaultValue={[dayjs('2026-08-11 09:00'), dayjs('2026-08-14 09:00')]}
     showTime={{ format: 'HH:mm', showSecond: false, minuteStep: 15 }}
   />
 </div>`,
@@ -685,7 +694,7 @@ export const MultipleShowTime: Story = {
       <DatePicker
         {...args}
         multiple
-        defaultValue={["2026-08-11 09:00", "2026-08-14 09:00"]}
+        defaultValue={[dayjs("2026-08-11 09:00"), dayjs("2026-08-14 09:00")]}
         showTime={{ format: "HH:mm", showSecond: false, minuteStep: 15 }}
       />
     </div>
@@ -914,15 +923,15 @@ export const RangePresets: Story = {
       {
         label: '이번 주',
         value: () => [
-          dayjs().startOf('week').format('YYYY-MM-DD'),
-          dayjs().endOf('week').format('YYYY-MM-DD'),
+          dayjs().startOf('week'),
+          dayjs().endOf('week'),
         ],
       },
       {
         label: '이번 달',
         value: () => [
-          dayjs().startOf('month').format('YYYY-MM-DD'),
-          dayjs().endOf('month').format('YYYY-MM-DD'),
+          dayjs().startOf('month'),
+          dayjs().endOf('month'),
         ],
       },
     ]}
@@ -946,17 +955,11 @@ export const RangePresets: Story = {
         presets={[
           {
             label: "이번 주",
-            value: () => [
-              dayjs().startOf("week").format("YYYY-MM-DD"),
-              dayjs().endOf("week").format("YYYY-MM-DD"),
-            ],
+            value: () => [dayjs().startOf("week"), dayjs().endOf("week")],
           },
           {
             label: "이번 달",
-            value: () => [
-              dayjs().startOf("month").format("YYYY-MM-DD"),
-              dayjs().endOf("month").format("YYYY-MM-DD"),
-            ],
+            value: () => [dayjs().startOf("month"), dayjs().endOf("month")],
           },
         ]}
       />
@@ -976,19 +979,19 @@ export const ControlledPanel: Story = {
     ...storySource(
       "components-datepicker--controlled-panel",
       `function ControlledDatePanel() {
-  const [value, setValue] = useState<DatePickerValueType>('2026-08-15');
-  const [pickerValue, setPickerValue] = useState('2026-04-01');
+  const [value, setValue] = useState<DatePickerValueType>(dayjs('2026-08-15'));
+  const [pickerValue, setPickerValue] = useState(dayjs('2026-04-01'));
 
   return (
     <div className="max-w-xs">
       <div className="mb-3 grid gap-1 text-sm text-[#555]">
-        <span>선택된 날짜 (value): {value ?? '선택 안 함'}</span>
-        <span>달력에서 보고 있는 달 (pickerValue): {pickerValue.slice(0, 7)}</span>
+        <span>선택된 날짜 (value): {dayjs.isDayjs(value) ? value.format('YYYY-MM-DD') : '선택 안 함'}</span>
+        <span>달력에서 보고 있는 달 (pickerValue): {pickerValue.format('YYYY-MM')}</span>
       </div>
       <DatePicker
         value={value}
         pickerValue={pickerValue}
-        onChange={(nextValue) => setValue(typeof nextValue === 'string' ? nextValue : null)}
+        onChange={(nextValue) => setValue(dayjs.isDayjs(nextValue) ? nextValue : null)}
         onPanelChange={setPickerValue}
       />
     </div>
@@ -1000,19 +1003,21 @@ export const ControlledPanel: Story = {
     },
   },
   render: function ControlledPanelStory(args) {
-    const [value, setValue] = useState<DatePickerValueType>("2026-08-15");
-    const [pickerValue, setPickerValue] = useState("2026-04-01");
+    const [value, setValue] = useState<DatePickerValueType>(dayjs("2026-08-15"));
+    const [pickerValue, setPickerValue] = useState(dayjs("2026-04-01"));
     return (
       <div className="max-w-xs">
         <div className="mb-3 grid gap-1 text-sm text-[#555]">
-          <span>선택된 날짜 (value): {value ?? "선택 안 함"}</span>
-          <span>달력에서 보고 있는 달 (pickerValue): {pickerValue.slice(0, 7)}</span>
+          <span>
+            선택된 날짜 (value): {dayjs.isDayjs(value) ? value.format("YYYY-MM-DD") : "선택 안 함"}
+          </span>
+          <span>달력에서 보고 있는 달 (pickerValue): {pickerValue.format("YYYY-MM")}</span>
         </div>
         <DatePicker
           {...args}
           value={value}
           pickerValue={pickerValue}
-          onChange={(nextValue) => setValue(typeof nextValue === "string" ? nextValue : null)}
+          onChange={(nextValue) => setValue(dayjs.isDayjs(nextValue) ? nextValue : null)}
           onPanelChange={setPickerValue}
         />
       </div>
