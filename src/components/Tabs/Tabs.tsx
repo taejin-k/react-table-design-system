@@ -1,11 +1,13 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { twMerge } from "tailwind-merge";
 import { Icon } from "../Icon";
-import type { TabsProps } from "./Tabs.types";
+import type { TabItemType, TabsProps } from "./Tabs.types";
+
+const EMPTY_ITEMS: TabItemType[] = [];
 
 export function Tabs(props: TabsProps) {
   const {
-    items = [],
+    items = EMPTY_ITEMS,
     activeKey,
     defaultActiveKey,
     animated = false,
@@ -16,7 +18,6 @@ export function Tabs(props: TabsProps) {
     tabPlacement: placement = "top",
     tabBarGutter,
     tabBarStyle,
-    hideAdd = false,
     addIcon,
     removeIcon,
     indicator,
@@ -102,7 +103,7 @@ export function Tabs(props: TabsProps) {
     let index = 1;
     while (items.some((item) => item.key === `new-${index}`)) index += 1;
     const key = `new-${index}`;
-    onAdd?.([...items, { key, label: `새 탭 ${index}`, children: `새 탭 ${index} 내용` }]);
+    onAdd([...items, { key, label: `새 탭 ${index}`, children: `새 탭 ${index} 내용` }]);
     if (activeKey === undefined) setInnerActive(key);
     onChange?.(key);
   };
@@ -110,7 +111,7 @@ export function Tabs(props: TabsProps) {
     if (!onDelete) return;
     const removedIndex = items.findIndex((item) => item.key === key);
     const nextItems = items.filter((item) => item.key !== key);
-    onDelete?.(nextItems);
+    onDelete(nextItems);
     if (key !== selected) return;
     const nextSelected = [
       ...nextItems.slice(Math.max(removedIndex, 0)),
@@ -213,7 +214,7 @@ export function Tabs(props: TabsProps) {
             ) : null}
           </button>
         ))}
-        {type === "editable-card" && onAdd !== undefined && !hideAdd ? (
+        {type === "editable-card" && onAdd !== undefined ? (
           <button
             type="button"
             data-tabs-add=""

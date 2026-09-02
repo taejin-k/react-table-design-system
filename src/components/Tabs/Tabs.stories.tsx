@@ -62,7 +62,6 @@ const meta = {
     animated: { name: "애니메이션", control: "boolean" },
     centered: { name: "가운데 정렬", control: "boolean" },
     tabBarGutter: { name: "탭 간격", control: "number" },
-    hideAdd: { name: "추가 버튼 숨김", control: "boolean" },
     items: { control: false, table: { disable: true } },
     activeKey: { control: false, table: { disable: true } },
     className: { control: false, table: { disable: true } },
@@ -84,11 +83,11 @@ const meta = {
           <Stories />
           <h2>API</h2>
           <Markdown>{`
-### Tabs
+### <span id="tabs">Tabs</span>
 
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
-| \`items\` | 탭 레이블과 콘텐츠를 구성해요. | \`TabItemType[]\` | \`[]\` |
+| \`items\` | 탭 레이블과 콘텐츠를 구성해요. | [\`TabItemType[]\`](#tab-item-type) | \`[]\` |
 | \`activeKey\` | 활성 탭을 제어해요. | \`string\` | - |
 | \`defaultActiveKey\` | 처음 활성화할 탭을 정해요. | \`string\` | 첫 번째 탭 |
 | \`type\` | 탭의 표현 방식을 정해요. | [\`TabsType\`](#tabs-type) | \`line\` |
@@ -97,28 +96,30 @@ const meta = {
 | \`animated\` | 콘텐츠 전환 애니메이션을 설정해요. | \`boolean\` | \`false\` |
 | \`centered\` | 탭 목록을 가운데 정렬해요. | \`boolean\` | \`false\` |
 | \`destroyOnHidden\` | 숨겨진 탭 콘텐츠를 DOM에서 제거해요. | \`boolean\` | \`false\` |
-| \`tabBarGutter\` | 탭 사이의 간격을 px로 정해요. | \`number\` | - |
+| \`tabBarGutter\` | 탭 사이의 간격을 px로 정해요. | \`number\` | \`0\` |
 | \`tabBarStyle\` | 탭 목록에 인라인 스타일을 적용해요. | \`CSSProperties\` | - |
-| \`hideAdd\` | 편집형 탭의 추가 버튼을 숨겨요. | \`boolean\` | \`false\` |
-| \`addIcon\` | 편집형 탭의 추가 아이콘을 변경해요. | \`ReactNode\` | - |
-| \`removeIcon\` | 편집형 탭의 제거 아이콘을 변경해요. | \`ReactNode\` | - |
-| \`indicator\` | 표시선의 크기와 정렬을 설정해요. | \`{ size?, align? }\` | - |
+| \`addIcon\` | 편집형 탭의 추가 아이콘을 변경해요. | \`ReactNode\` | add Icon |
+| \`removeIcon\` | 편집형 탭의 닫기 아이콘을 변경해요. | \`ReactNode\` | close Icon |
+| \`indicator\` | 표시선의 크기와 정렬을 설정해요. | \`{ size?: number \\| ((origin: number) => number); align?: 'start' \\| 'center' \\| 'end' }\` | 탭 크기·가운데 |
 | \`className\` | 최상위 요소에 Tailwind 클래스를 추가해요. | \`string\` | - |
 | \`onChange\` | 활성 탭이 바뀔 때 실행해요. | \`(activeKey: string) => void\` | - |
-| \`onAdd\` | 추가 버튼을 표시하고 추가된 목록을 전달해요. | \`(items: TabItemType[]) => void\` | - |
-| \`onDelete\` | 닫기 버튼을 표시하고 삭제된 목록을 전달해요. | \`(items: TabItemType[]) => void\` | - |
-| \`onTabClick\` | 탭을 누를 때 실행해요. | \`(key, event) => void\` | - |
-| \`renderTabBar\` | 탭 목록 전체를 사용자 정의해요. | \`(props, DefaultTabBar) => ReactElement\` | - |
+| \`onAdd\` | 추가 버튼을 표시하고 추가된 목록을 전달해요. | <code>(items: <a href="#tab-item-type">TabItemType[]</a>) =&gt; void</code> | - |
+| \`onDelete\` | 닫기 버튼을 표시하고 삭제된 목록을 전달해요. | <code>(items: <a href="#tab-item-type">TabItemType[]</a>) =&gt; void</code> | - |
+| \`onTabClick\` | 탭을 누를 때 실행해요. | \`(key: string, event: MouseEvent<HTMLElement>) => void\` | - |
+| \`renderTabBar\` | 탭 목록 전체를 사용자 정의해요. | \`(props: TabsProps, DefaultTabBar: () => ReactElement) => ReactElement\` | - |
 
-### TabItemType
+### <span id="tab-item-type">TabItemType</span>
 
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
 | \`key\` | 탭을 구분하는 고유한 값이에요. | \`string\` | - |
 | \`label\` | 탭 버튼에 표시할 내용이에요. | \`ReactNode\` | - |
+| \`icon\` | 탭 이름 앞에 표시할 아이콘이에요. | \`ReactNode\` | - |
 | \`children\` | 탭이 활성화됐을 때 표시할 콘텐츠예요. | \`ReactNode\` | - |
 | \`disabled\` | 탭 선택을 막아요. | \`boolean\` | \`false\` |
-| \`closable\` | 편집형 탭의 닫기 버튼을 표시해요. | \`boolean\` | \`true\` |
+| \`closable\` | onDelete 사용 시 이 탭의 닫기 버튼을 표시해요. | \`boolean\` | \`true\` |
+| \`closeIcon\` | 이 탭의 닫기 아이콘을 변경해요. | \`ReactNode\` | removeIcon |
+| \`forceRender\` | 선택하기 전에도 탭 콘텐츠를 렌더링해요. | \`boolean\` | \`false\` |
 | \`destroyOnHidden\` | 숨겨진 탭 콘텐츠를 DOM에서 제거해요. | \`boolean\` | \`false\` |
           `}</Markdown>
           <h2 className="component-docs-types-heading">Types</h2>
@@ -257,12 +258,11 @@ export const OnAdd: Story = {
     animated: false,
     centered: false,
     tabBarGutter: 0,
-    hideAdd: false,
   },
   parameters: {
     ...storyDescription("components-tabs--on-add"),
     controls: {
-      include: ["크기", "위치", "애니메이션", "가운데 정렬", "탭 간격", "추가 버튼 숨김"],
+      include: ["크기", "위치", "애니메이션", "가운데 정렬", "탭 간격"],
     },
     docs: {
       ...storyDescription("components-tabs--on-add").docs,
@@ -295,12 +295,11 @@ export const OnAddAndDelete: Story = {
     animated: false,
     centered: false,
     tabBarGutter: 0,
-    hideAdd: false,
   },
   parameters: {
     ...storyDescription("components-tabs--on-add-and-delete"),
     controls: {
-      include: ["크기", "위치", "애니메이션", "가운데 정렬", "탭 간격", "추가 버튼 숨김"],
+      include: ["크기", "위치", "애니메이션", "가운데 정렬", "탭 간격"],
     },
     docs: {
       ...storyDescription("components-tabs--on-add-and-delete").docs,

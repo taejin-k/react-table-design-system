@@ -20,15 +20,14 @@ export interface TabsProps {
   items?: TabItemType[];
   activeKey?: string;
   defaultActiveKey?: string;
-  animated?: boolean;
-  centered?: boolean;
-  destroyOnHidden?: boolean;
   type?: TabsType;
   size?: TabsSizeType;
   tabPlacement?: TabsPlacementType;
+  animated?: boolean;
+  centered?: boolean;
+  destroyOnHidden?: boolean;
   tabBarGutter?: number;
   tabBarStyle?: CSSProperties;
-  hideAdd?: boolean;
   addIcon?: ReactNode;
   removeIcon?: ReactNode;
   indicator?: { size?: number | ((origin: number) => number); align?: "start" | "center" | "end" };
