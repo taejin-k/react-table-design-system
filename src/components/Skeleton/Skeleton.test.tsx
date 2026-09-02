@@ -14,7 +14,7 @@ describe("Skeleton", () => {
   });
 
   it("supports active element skeletons", () => {
-    const { container } = render(<Skeleton.Button active fullWidth height={40} />);
+    const { container } = render(<Skeleton.Button active width="100%" height={40} />);
     expect(container.firstElementChild).toHaveClass("wizard-skeleton-active");
     expect(container.firstElementChild).toHaveStyle({ width: "100%", height: "40px" });
   });

@@ -1,13 +1,10 @@
 import type { CSSProperties, ReactNode } from "react";
 
-export type SkeletonSizeType = number | "lg" | "md" | "sm";
 export type SkeletonShapeType = "circle" | "round" | "square" | "default";
 export interface SkeletonElementProps {
   active?: boolean;
-  fullWidth?: boolean;
   width?: CSSProperties["width"];
   height?: CSSProperties["height"];
-  size?: SkeletonSizeType;
   shape?: SkeletonShapeType;
   className?: string;
 }

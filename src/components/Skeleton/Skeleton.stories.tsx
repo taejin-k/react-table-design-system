@@ -1,17 +1,13 @@
 import { Description, Markdown, Stories, Title } from "@storybook/addon-docs/blocks";
 import type { Meta, StoryObj } from "@storybook/react";
-import { useState } from "react";
+import type { ReactNode } from "react";
 import { storyDescriptions } from "../../storybook/story-descriptions";
 import { withStoryImports } from "../../storybook/story-source";
 import { TypeTokens } from "../../storybook/type-tokens";
-import { Button } from "../Button";
 import { Icon } from "../Icon";
 import { Skeleton } from "./Skeleton";
-import type { SkeletonShapeType, SkeletonSizeType } from "./Skeleton.types";
+import type { SkeletonElementProps, SkeletonShapeType } from "./Skeleton.types";
 
-const skeletonSizes = ["lg", "md", "sm", "number"] satisfies readonly (
-  SkeletonSizeType | "number"
-)[];
 const skeletonShapes: SkeletonShapeType[] = ["circle", "round", "square", "default"];
 
 const storyDescription = (id: string) => ({
@@ -24,10 +20,8 @@ const meta = {
   tags: ["autodocs"],
   argTypes: {
     active: { name: "애니메이션", control: "boolean" },
-    fullWidth: { name: "전체 너비", control: "boolean" },
     width: { name: "너비", control: "number" },
     height: { name: "높이", control: "number" },
-    size: { name: "크기", control: "select", options: ["lg", "md", "sm"] },
     shape: { name: "모양", control: "select", options: skeletonShapes },
     children: { control: false, table: { disable: true } },
     className: { control: false, table: { disable: true } },
@@ -61,17 +55,12 @@ const meta = {
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
 | \`active\` | 흐르는 애니메이션을 적용해요. | \`boolean\` | \`false\` |
-| \`fullWidth\` | 부모 너비를 모두 채워요. | \`boolean\` | \`false\` |
 | \`width\` | 요소 너비를 정해요. | \`CSSProperties['width']\` | 요소별 기본값 |
 | \`height\` | 요소 높이를 정해요. | \`CSSProperties['height']\` | 요소별 기본값 |
-| \`size\` | 요소 크기를 정해요. | [\`SkeletonSizeType\`](#skeleton-size-type) | \`md\` |
 | \`shape\` | 요소 모양을 정해요. | [\`SkeletonShapeType\`](#skeleton-shape-type) | 요소별 기본값 |
 | \`className\` | 최상위 요소에 Tailwind 클래스를 추가해요. | \`string\` | - |
           `}</Markdown>
           <h2 className="component-docs-types-heading">Types</h2>
-          <h3 id="skeleton-size-type">SkeletonSizeType</h3>
-          <p>미리 정한 크기 또는 px 숫자를 사용해요.</p>
-          <TypeTokens values={skeletonSizes} />
           <h3 id="skeleton-shape-type">SkeletonShapeType</h3>
           <p>자리 표시자 모양을 선택해요.</p>
           <TypeTokens values={skeletonShapes} />
@@ -84,12 +73,10 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Basic: Story = {
-  args: { active: true, fullWidth: false, width: 240, height: 16, shape: "round" },
+  args: { active: true, width: 240, height: 16, shape: "round" },
   parameters: {
     ...storyDescription("components-skeleton--basic"),
-    controls: {
-      include: ["애니메이션", "전체 너비", "너비", "높이", "모양"],
-    },
+    controls: { include: ["애니메이션", "너비", "높이", "모양"] },
     docs: {
       ...storyDescription("components-skeleton--basic").docs,
       source: {
@@ -101,21 +88,20 @@ export const Basic: Story = {
 };
 
 export const Elements: Story = {
-  args: { active: true },
   parameters: {
     ...storyDescription("components-skeleton--elements"),
-    controls: { include: ["애니메이션"] },
+    controls: { disable: true },
     docs: {
       ...storyDescription("components-skeleton--elements").docs,
       source: {
         type: "code",
         code: withStoryImports(
-          `<div className="flex flex-wrap items-center gap-3">
-  <Skeleton.Avatar active />
-  <Skeleton.Button active />
-  <Skeleton.Input active width={180} />
-  <Skeleton.Image active />
-  <Skeleton.Node active width={96} height={96}>
+          `<div className="flex flex-wrap items-end gap-6">
+  <Skeleton.Avatar />
+  <Skeleton.Button />
+  <Skeleton.Input />
+  <Skeleton.Image />
+  <Skeleton.Node>
     <Icon icon="file-outlined" />
   </Skeleton.Node>
 </div>`,
@@ -123,171 +109,136 @@ export const Elements: Story = {
       },
     },
   },
-  render: (args) => (
-    <div className="flex flex-wrap items-center gap-3">
-      <Skeleton.Avatar active={args.active} />
-      <Skeleton.Button active={args.active} />
-      <Skeleton.Input active={args.active} width={180} />
-      <Skeleton.Image active={args.active} />
-      <Skeleton.Node active={args.active} width={96} height={96}>
-        <Icon icon="file-outlined" />
-      </Skeleton.Node>
-    </div>
-  ),
+  render: () => <ElementExamples />,
 };
 
-export const Loaded: Story = {
+export const Active: Story = {
   args: { active: true },
   parameters: {
-    ...storyDescription("components-skeleton--loaded"),
+    ...storyDescription("components-skeleton--active"),
     controls: { include: ["애니메이션"] },
     docs: {
-      ...storyDescription("components-skeleton--loaded").docs,
+      ...storyDescription("components-skeleton--active").docs,
       source: {
         type: "code",
-        code: withStoryImports(`function LoadingContent() {
-  const [loading, setLoading] = useState(true);
+        code: withStoryImports(
+          `<div className="flex flex-wrap items-end gap-6">
+  <Skeleton.Avatar active />
+  <Skeleton.Button active />
+  <Skeleton.Input active />
+  <Skeleton.Image active />
+  <Skeleton.Node active />
+</div>`,
+        ),
+      },
+    },
+  },
+  render: (args) => <ElementExamples active={args.active} />,
+};
+
+export const Width: Story = {
+  args: { width: 120 },
+  parameters: {
+    ...storyDescription("components-skeleton--width"),
+    controls: { include: ["너비"] },
+    docs: {
+      ...storyDescription("components-skeleton--width").docs,
+      source: {
+        type: "code",
+        code: withStoryImports(
+          `<div className="flex flex-wrap items-end gap-6">
+  <Skeleton.Avatar width={120} />
+  <Skeleton.Button width={120} />
+  <Skeleton.Input width={120} />
+  <Skeleton.Image width={120} />
+  <Skeleton.Node width={120} />
+</div>`,
+        ),
+      },
+    },
+  },
+  render: (args) => <ElementExamples width={args.width} />,
+};
+
+export const Height: Story = {
+  args: { height: 48 },
+  parameters: {
+    ...storyDescription("components-skeleton--height"),
+    controls: { include: ["높이"] },
+    docs: {
+      ...storyDescription("components-skeleton--height").docs,
+      source: {
+        type: "code",
+        code: withStoryImports(
+          `<div className="flex flex-wrap items-end gap-6">
+  <Skeleton.Avatar height={48} />
+  <Skeleton.Button height={48} />
+  <Skeleton.Input height={48} />
+  <Skeleton.Image height={48} />
+  <Skeleton.Node height={48} />
+</div>`,
+        ),
+      },
+    },
+  },
+  render: (args) => <ElementExamples height={args.height} />,
+};
+
+export const Shape: Story = {
+  args: { shape: "round" },
+  parameters: {
+    ...storyDescription("components-skeleton--shape"),
+    controls: { include: ["모양"] },
+    docs: {
+      ...storyDescription("components-skeleton--shape").docs,
+      source: {
+        type: "code",
+        code: withStoryImports(
+          `<div className="flex flex-wrap items-end gap-6">
+  <Skeleton.Avatar shape="round" />
+  <Skeleton.Button shape="round" />
+  <Skeleton.Input shape="round" />
+  <Skeleton.Image shape="round" />
+  <Skeleton.Node shape="round" />
+</div>`,
+        ),
+      },
+    },
+  },
+  render: (args) => <ElementExamples shape={args.shape} />,
+};
+
+function ElementExamples({ active, width, height, shape }: SkeletonElementProps) {
+  const props = { active, width, height, shape };
 
   return (
-    <div className="grid gap-4">
-      <Button className="w-fit" onClick={() => setLoading((current) => !current)}>
-        {loading ? '불러오기 완료' : '다시 불러오기'}
-      </Button>
-      {loading ? (
-        <div className="flex gap-4">
-          <Skeleton.Avatar active size="lg" />
-          <div className="grid flex-1 gap-3">
-            <Skeleton.Node active width="38%" height={16} shape="round" />
-            <Skeleton.Node active fullWidth height={16} shape="round" />
-            <Skeleton.Node active width="61%" height={16} shape="round" />
-          </div>
-        </div>
-      ) : (
-        <div className="rounded-lg border border-[#eee] p-4">
-          <strong>프로젝트 현황</strong>
-          <p className="mt-2 text-[#666]">최신 데이터를 모두 불러왔어요.</p>
-        </div>
-      )}
+    <div className="flex flex-wrap items-end gap-6">
+      <Element label="Avatar">
+        <Skeleton.Avatar {...props} />
+      </Element>
+      <Element label="Button">
+        <Skeleton.Button {...props} />
+      </Element>
+      <Element label="Input">
+        <Skeleton.Input {...props} />
+      </Element>
+      <Element label="Image">
+        <Skeleton.Image {...props} />
+      </Element>
+      <Element label="Node">
+        <Skeleton.Node {...props}>
+          <Icon icon="file-outlined" />
+        </Skeleton.Node>
+      </Element>
     </div>
   );
 }
 
-<LoadingContent />`),
-      },
-    },
-  },
-  render: (args) => <LoadingContent active={args.active} />,
-};
-
-export const CardGrid: Story = {
-  args: { active: true },
-  parameters: {
-    ...storyDescription("components-skeleton--card-grid"),
-    controls: { include: ["애니메이션"] },
-    docs: {
-      ...storyDescription("components-skeleton--card-grid").docs,
-      source: {
-        type: "code",
-        code: withStoryImports(`<div className="grid gap-4 md:grid-cols-3">
-  {[1, 2, 3].map((item) => (
-    <article key={item} className="grid gap-4 rounded-lg border border-[#eee] p-4">
-      <Skeleton.Image active fullWidth height={128} />
-      <Skeleton.Node active width="55%" height={16} shape="round" />
-      <Skeleton.Node active fullWidth height={16} shape="round" />
-      <Skeleton.Node active width="61%" height={16} shape="round" />
-      <Skeleton.Button active fullWidth />
-    </article>
-  ))}
-</div>`),
-      },
-    },
-  },
-  render: (args) => (
-    <div className="grid gap-4 md:grid-cols-3">
-      {[1, 2, 3].map((item) => (
-        <article key={item} className="grid gap-4 rounded-lg border border-[#eee] p-4">
-          <Skeleton.Image active={args.active} fullWidth height={128} />
-          <Skeleton.Node active={args.active} width="55%" height={16} shape="round" />
-          <Skeleton.Node active={args.active} fullWidth height={16} shape="round" />
-          <Skeleton.Node active={args.active} width="61%" height={16} shape="round" />
-          <Skeleton.Button active={args.active} fullWidth />
-        </article>
-      ))}
-    </div>
-  ),
-};
-
-export const List: Story = {
-  args: { active: true },
-  parameters: {
-    ...storyDescription("components-skeleton--list"),
-    controls: { include: ["애니메이션"] },
-    docs: {
-      ...storyDescription("components-skeleton--list").docs,
-      source: {
-        type: "code",
-        code: withStoryImports(`<div className="divide-y divide-[#eee] rounded-lg border border-[#eee] px-4">
-  {[1, 2, 3, 4].map((item) => (
-    <div key={item} className="flex gap-4 py-4">
-      <Skeleton.Avatar active size="lg" />
-      <div className="grid flex-1 gap-3">
-        <Skeleton.Node active width={item % 2 ? '32%' : '44%'} height={16} shape="round" />
-        <Skeleton.Node active width={item % 2 ? '72%' : '58%'} height={16} shape="round" />
-      </div>
-    </div>
-  ))}
-</div>`),
-      },
-    },
-  },
-  render: (args) => (
-    <div className="divide-y divide-[#eee] rounded-lg border border-[#eee] px-4">
-      {[1, 2, 3, 4].map((item) => (
-        <div key={item} className="flex gap-4 py-4">
-          <Skeleton.Avatar active={args.active} size="lg" />
-          <div className="grid flex-1 gap-3">
-            <Skeleton.Node
-              active={args.active}
-              width={item % 2 ? "32%" : "44%"}
-              height={16}
-              shape="round"
-            />
-            <Skeleton.Node
-              active={args.active}
-              width={item % 2 ? "72%" : "58%"}
-              height={16}
-              shape="round"
-            />
-          </div>
-        </div>
-      ))}
-    </div>
-  ),
-};
-
-function LoadingContent({ active = false }: { active?: boolean }) {
-  const [loading, setLoading] = useState(true);
-
+function Element({ children, label }: { children: ReactNode; label: string }) {
   return (
-    <div className="grid gap-4">
-      <Button className="w-fit" onClick={() => setLoading((current) => !current)}>
-        {loading ? "불러오기 완료" : "다시 불러오기"}
-      </Button>
-      {loading ? (
-        <div className="flex gap-4">
-          <Skeleton.Avatar active={active} size="lg" />
-          <div className="grid flex-1 gap-3">
-            <Skeleton.Node active={active} width="38%" height={16} shape="round" />
-            <Skeleton.Node active={active} fullWidth height={16} shape="round" />
-            <Skeleton.Node active={active} width="61%" height={16} shape="round" />
-          </div>
-        </div>
-      ) : (
-        <div className="rounded-lg border border-[#eee] p-4">
-          <strong>프로젝트 현황</strong>
-          <p className="mt-2 text-[#666]">최신 데이터를 모두 불러왔어요.</p>
-        </div>
-      )}
+    <div className="grid justify-items-center gap-2">
+      {children}
+      <span className="text-xs text-[#666]">{label}</span>
     </div>
   );
 }

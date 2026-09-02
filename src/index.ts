@@ -229,5 +229,4 @@ export type {
   SkeletonComponent,
   SkeletonElementProps,
   SkeletonShapeType,
-  SkeletonSizeType,
 } from "./components/Skeleton";

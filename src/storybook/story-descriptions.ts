@@ -487,11 +487,10 @@ export const storyDescriptions: Record<string, string> = {
   "components-skeleton--basic": "Node element의 크기와 모양을 정해 자리 표시자를 만들어요.",
   "components-skeleton--elements":
     "아바타, 버튼, 입력창, 이미지와 사용자 정의 영역에 맞는 단독 Skeleton을 사용해요.",
-  "components-skeleton--loaded": "상태에 따라 Skeleton element 조합을 실제 콘텐츠로 교체해요.",
-  "components-skeleton--card-grid":
-    "이미지, 텍스트와 버튼 Skeleton을 조합해 카드 목록의 로딩 화면을 구성해요.",
-  "components-skeleton--list":
-    "아바타와 서로 다른 텍스트 너비를 조합해 반복 목록의 로딩 화면을 구성해요.",
+  "components-skeleton--active": "모든 Skeleton element에 애니메이션을 적용해요.",
+  "components-skeleton--width": "모든 Skeleton element의 너비를 같은 값으로 변경해요.",
+  "components-skeleton--height": "모든 Skeleton element의 높이를 같은 값으로 변경해요.",
+  "components-skeleton--shape": "모든 Skeleton element의 모양을 함께 변경해요.",
 
   "components-table-sorting-filtering--server-table":
     "페이지, 페이지당 행 수, 정렬과 필터 조건을 onChange로 받아 서버 API 요청 파라미터로 사용해요.",

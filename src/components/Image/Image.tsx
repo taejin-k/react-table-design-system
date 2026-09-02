@@ -428,7 +428,7 @@ function ImageBase({
       {loading && placeholder ? (
         <Skeleton.Image
           active
-          fullWidth
+          width="100%"
           height="100%"
           className="absolute inset-0 size-full rounded-none"
         />
