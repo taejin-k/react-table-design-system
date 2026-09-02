@@ -81,8 +81,9 @@ describe("Menu", () => {
 
     expect(root).toHaveClass("w-16", "transition-[width]");
     expect(label).toBeInTheDocument();
-    expect(label).toHaveClass("max-w-0", "opacity-0");
-    expect(screen.getAllByText("문서")).not.toHaveLength(0);
+    expect(label.parentElement).toHaveClass("-translate-x-1", "opacity-0");
+    expect(screen.getByText("문서")).toBeInTheDocument();
+    expect(document.body.querySelector("[data-menu-popup]")).not.toBeInTheDocument();
   });
 
   it("keeps horizontal items inside the menu viewport", () => {
