@@ -2,7 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
-import { Tabs } from "./Tabs";
+import { reorderTabItems, Tabs } from "./Tabs";
 import type { TabItemType } from "./Tabs.types";
 
 describe("Tabs", () => {
@@ -43,6 +43,7 @@ describe("Tabs", () => {
     const items = [{ key: "one", label: "문서" }];
     const onAdd = vi.fn();
     const onDelete = vi.fn();
+    const onDrag = vi.fn();
     const { rerender } = render(<Tabs type="card" items={items} />);
 
     expect(document.querySelector("[data-tabs-add]")).not.toBeInTheDocument();
@@ -55,6 +56,40 @@ describe("Tabs", () => {
     rerender(<Tabs type="card" items={items} onAdd={onAdd} onDelete={onDelete} />);
     expect(document.querySelector("[data-tabs-add]")).toBeInTheDocument();
     expect(document.querySelector('[data-tab-close="one"]')).toBeInTheDocument();
+
+    rerender(<Tabs items={items} onAdd={onAdd} onDelete={onDelete} onDrag={onDrag} />);
+    expect(document.querySelector("[data-tabs-add]")).not.toBeInTheDocument();
+    expect(document.querySelector('[data-tab-close="one"]')).not.toBeInTheDocument();
+    expect(document.querySelector('[data-tabs-item="one"]')).not.toHaveClass("cursor-grab");
+  });
+
+  it("enables sorting only for card tabs with onDrag", () => {
+    const items = [
+      { key: "one", label: "첫째" },
+      { key: "two", label: "둘째" },
+    ];
+    const { rerender } = render(<Tabs type="card" items={items} />);
+
+    expect(document.querySelector('[data-tabs-item="one"]')).not.toHaveClass("cursor-grab");
+
+    rerender(<Tabs type="card" items={items} onDrag={vi.fn()} />);
+    expect(document.querySelector('[data-tabs-item="one"]')).toHaveClass("cursor-grab");
+  });
+
+  it("reorders items by dragged and target keys", () => {
+    const items = [
+      { key: "one", label: "첫째" },
+      { key: "two", label: "둘째" },
+      { key: "three", label: "셋째" },
+    ];
+
+    expect(reorderTabItems(items, "three", "one").map((item) => item.key)).toEqual([
+      "three",
+      "one",
+      "two",
+    ]);
+    expect(reorderTabItems(items, "one", "one")).toBe(items);
+    expect(reorderTabItems(items, "missing", "one")).toBe(items);
   });
 
   it("does not delete a disabled tab", () => {

@@ -378,6 +378,8 @@ export const storyDescriptions: Record<string, string> = {
   "components-tabs--on-add": "onAdd 함수로 원하는 탭을 추가하고 추가 버튼만 표시해요.",
   "components-tabs--on-add-and-delete":
     "onAdd 함수와 onDelete setter로 탭을 추가·삭제하고 두 버튼을 모두 표시해요.",
+  "components-tabs--draggable":
+    "card 탭을 잡아 원하는 위치로 옮기고 변경된 순서를 상태에 반영해요.",
   "components-tabs--placements": "line과 card 탭을 top·end·bottom·start 위치별로 비교해요.",
   "components-tabs--centered": "탭 목록을 가로 영역의 가운데에 배치해요.",
   "components-tabs--controlled":

@@ -26,6 +26,7 @@ export interface TabsProps {
   onChange?: (activeKey: string) => void;
   onAdd?: (items: TabItemType[]) => void;
   onDelete?: (items: TabItemType[]) => void;
+  onDrag?: (items: TabItemType[]) => void;
   onTabClick?: (key: string, event: MouseEvent<HTMLElement>) => void;
   renderTabBar?: (props: TabsProps, DefaultTabBar: () => ReactElement) => ReactElement;
 }

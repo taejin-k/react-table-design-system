@@ -28,6 +28,16 @@ const itemsSource = `const items: TabItemType[] = [
   { key: 'activity', label: '활동', children: '최근 활동' },
   { key: 'disabled', label: '비활성', disabled: true },
 ];`;
+const draggableItems: TabItemType[] = [
+  { key: "overview", label: "개요", children: "프로젝트 개요" },
+  { key: "activity", label: "활동", children: "최근 활동" },
+  { key: "settings", label: "설정", children: "프로젝트 설정" },
+];
+const draggableItemsSource = `const initialItems: TabItemType[] = [
+  { key: 'overview', label: '개요', children: '프로젝트 개요' },
+  { key: 'activity', label: '활동', children: '최근 활동' },
+  { key: 'settings', label: '설정', children: '프로젝트 설정' },
+];`;
 const storyDescription = (id: string) => ({
   docs: { description: { story: storyDescriptions[id] } },
 });
@@ -59,6 +69,12 @@ function EditableTabsExample({
   );
 }
 
+function DraggableTabsExample(args: Partial<TabsProps>) {
+  const [draggableTabs, setDraggableTabs] = useState(draggableItems);
+
+  return <Tabs {...args} type="card" items={draggableTabs} onDrag={setDraggableTabs} />;
+}
+
 const meta = {
   title: "Components/Tabs",
   component: Tabs,
@@ -75,6 +91,7 @@ const meta = {
     onChange: { control: false, table: { disable: true } },
     onAdd: { control: false, table: { disable: true } },
     onDelete: { control: false, table: { disable: true } },
+    onDrag: { control: false, table: { disable: true } },
   },
   parameters: {
     controls: { disable: false },
@@ -106,6 +123,7 @@ const meta = {
 | \`onChange\` | 활성 탭이 바뀔 때 실행해요. | \`(activeKey: string) => void\` | - |
 | \`onAdd\` | 추가 버튼을 표시하고 현재 목록을 전달해요. | <code>(items: <a href="#tab-item-type">TabItemType[]</a>) =&gt; void</code> | - |
 | \`onDelete\` | 닫기 버튼을 표시하고 삭제된 목록을 전달해요. | <code>(items: <a href="#tab-item-type">TabItemType[]</a>) =&gt; void</code> | - |
+| \`onDrag\` | card 탭을 드래그해 정렬하고 변경된 목록을 전달해요. | <code>(items: <a href="#tab-item-type">TabItemType[]</a>) =&gt; void</code> | - |
 | \`onTabClick\` | 탭을 누를 때 실행해요. | \`(key: string, event: MouseEvent<HTMLElement>) => void\` | - |
 | \`renderTabBar\` | 탭 목록 전체를 사용자 정의해요. | \`(props: TabsProps, DefaultTabBar: () => ReactElement) => ReactElement\` | - |
 
@@ -334,6 +352,38 @@ function EditableTabsExample() {
   },
   render: (args) => <EditableTabsExample {...args} deletable />,
 };
+
+export const Draggable: Story = {
+  args: {
+    size: "md",
+    tabPlacement: "top",
+    animated: false,
+    centered: false,
+  },
+  parameters: {
+    ...storyDescription("components-tabs--draggable"),
+    controls: {
+      include: ["크기", "위치", "애니메이션", "가운데 정렬"],
+    },
+    docs: {
+      ...storyDescription("components-tabs--draggable").docs,
+      source: {
+        type: "code",
+        code: withStoryImports(`${draggableItemsSource}
+
+function DraggableTabsExample() {
+  const [items, setItems] = useState(initialItems);
+
+  return <Tabs type="card" items={items} onDrag={setItems} />;
+}
+
+<DraggableTabsExample />`),
+      },
+    },
+  },
+  render: (args) => <DraggableTabsExample {...args} />,
+};
+
 export const Placements: Story = {
   args: {
     size: "md",
