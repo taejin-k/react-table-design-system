@@ -98,15 +98,6 @@ export function Tabs(props: TabsProps) {
     if (activeKey === undefined) setInnerActive(key);
     onChange?.(key);
   };
-  const add = () => {
-    if (!onAdd) return;
-    let index = 1;
-    while (items.some((item) => item.key === `new-${index}`)) index += 1;
-    const key = `new-${index}`;
-    onAdd([...items, { key, label: `새 탭 ${index}`, children: `새 탭 ${index} 내용` }]);
-    if (activeKey === undefined) setInnerActive(key);
-    onChange?.(key);
-  };
   const remove = (key: string) => {
     if (!onDelete) return;
     const removedIndex = items.findIndex((item) => item.key === key);
@@ -230,7 +221,7 @@ export function Tabs(props: TabsProps) {
                     : "w-10 px-0",
               cardEdge,
             )}
-            onClick={add}
+            onClick={onAdd}
           >
             {addIcon ?? <Icon icon="add" />}
           </button>

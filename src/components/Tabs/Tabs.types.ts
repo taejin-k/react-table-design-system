@@ -33,7 +33,7 @@ export interface TabsProps {
   indicator?: { size?: number | ((origin: number) => number); align?: "start" | "center" | "end" };
   className?: string;
   onChange?: (activeKey: string) => void;
-  onAdd?: (items: TabItemType[]) => void;
+  onAdd?: () => void;
   onDelete?: (items: TabItemType[]) => void;
   onTabClick?: (key: string, event: MouseEvent<HTMLElement>) => void;
   renderTabBar?: (props: TabsProps, DefaultTabBar: () => ReactElement) => ReactElement;

@@ -22,15 +22,21 @@ describe("Tabs", () => {
     expect(document.querySelector('[data-tab-panel="two"]')).toHaveTextContent("둘째 내용");
   });
 
-  it("adds and deletes editable tabs with state setters", async () => {
+  it("adds a custom tab and deletes tabs", async () => {
     function EditableTabs() {
       const [items, setItems] = useState<TabItemType[]>([{ key: "one", label: "문서" }]);
-      return <Tabs type="editable-card" items={items} onAdd={setItems} onDelete={setItems} />;
+      const handleAdd = () => {
+        setItems((current) => [
+          ...current,
+          { key: "custom", label: "사용자 탭", children: "사용자 탭 내용" },
+        ]);
+      };
+      return <Tabs type="editable-card" items={items} onAdd={handleAdd} onDelete={setItems} />;
     }
 
     render(<EditableTabs />);
     await userEvent.click(document.querySelector("[data-tabs-add]")!);
-    expect(screen.getByRole("button", { name: /새 탭 1/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /사용자 탭/ })).toBeInTheDocument();
 
     await userEvent.click(document.querySelector('[data-tab-close="one"]')!);
     expect(screen.queryByRole("button", { name: /문서/ })).not.toBeInTheDocument();

@@ -39,13 +39,21 @@ function EditableTabsExample({
   deletable?: boolean;
 }) {
   const [editableItems, setEditableItems] = useState(items);
+  const handleAdd = () => {
+    const newItem: TabItemType = {
+      key: `new-${Date.now()}`,
+      label: "새 탭",
+      children: "새 탭 내용",
+    };
+    setEditableItems((current) => [...current, newItem]);
+  };
 
   return (
     <Tabs
       {...args}
       type="editable-card"
       items={editableItems}
-      onAdd={setEditableItems}
+      onAdd={handleAdd}
       onDelete={deletable ? setEditableItems : undefined}
     />
   );
@@ -103,7 +111,7 @@ const meta = {
 | \`indicator\` | 표시선의 크기와 정렬을 설정해요. | \`{ size?: number \\| ((origin: number) => number); align?: 'start' \\| 'center' \\| 'end' }\` | 탭 크기·가운데 |
 | \`className\` | 최상위 요소에 Tailwind 클래스를 추가해요. | \`string\` | - |
 | \`onChange\` | 활성 탭이 바뀔 때 실행해요. | \`(activeKey: string) => void\` | - |
-| \`onAdd\` | 추가 버튼을 표시하고 추가된 목록을 전달해요. | <code>(items: <a href="#tab-item-type">TabItemType[]</a>) =&gt; void</code> | - |
+| \`onAdd\` | 추가 버튼을 표시하고 누르면 실행해요. | \`() => void\` | - |
 | \`onDelete\` | 닫기 버튼을 표시하고 삭제된 목록을 전달해요. | <code>(items: <a href="#tab-item-type">TabItemType[]</a>) =&gt; void</code> | - |
 | \`onTabClick\` | 탭을 누를 때 실행해요. | \`(key: string, event: MouseEvent<HTMLElement>) => void\` | - |
 | \`renderTabBar\` | 탭 목록 전체를 사용자 정의해요. | \`(props: TabsProps, DefaultTabBar: () => ReactElement) => ReactElement\` | - |
@@ -272,12 +280,20 @@ export const OnAdd: Story = {
 
 function EditableTabsExample() {
   const [editableItems, setEditableItems] = useState(items);
+  const handleAdd = () => {
+    const newItem: TabItemType = {
+      key: \`new-\${Date.now()}\`,
+      label: '새 탭',
+      children: '새 탭 내용',
+    };
+    setEditableItems((current) => [...current, newItem]);
+  };
 
   return (
     <Tabs
       type="editable-card"
       items={editableItems}
-      onAdd={setEditableItems}
+      onAdd={handleAdd}
     />
   );
 }
@@ -309,12 +325,20 @@ export const OnAddAndDelete: Story = {
 
 function EditableTabsExample() {
   const [editableItems, setEditableItems] = useState(items);
+  const handleAdd = () => {
+    const newItem: TabItemType = {
+      key: \`new-\${Date.now()}\`,
+      label: '새 탭',
+      children: '새 탭 내용',
+    };
+    setEditableItems((current) => [...current, newItem]);
+  };
 
   return (
     <Tabs
       type="editable-card"
       items={editableItems}
-      onAdd={setEditableItems}
+      onAdd={handleAdd}
       onDelete={setEditableItems}
     />
   );
