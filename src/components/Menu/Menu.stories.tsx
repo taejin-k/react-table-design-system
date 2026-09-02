@@ -91,11 +91,7 @@ const meta = {
 | \`multiple\` | 여러 항목을 동시에 선택해요. | \`boolean\` | \`false\` |
 | \`inlineCollapsed\` | 인라인 메뉴를 아이콘 너비로 접어요. | \`boolean\` | \`false\` |
 | \`inlineIndent\` | 인라인 하위 메뉴의 들여쓰기를 정해요. | \`number\` | \`24\` |
-| \`forceSubMenuRender\` | 닫힌 팝업 하위 메뉴도 미리 렌더링해요. | \`boolean\` | \`false\` |
 | \`triggerSubMenuAction\` | 팝업 하위 메뉴를 여는 동작을 정해요. | [\`MenuTriggerType\`](#menu-trigger-type) | \`hover\` |
-| \`subMenuOpenDelay\` | hover 후 하위 메뉴를 여는 시간을 정해요. | \`number\` | \`0\` |
-| \`subMenuCloseDelay\` | hover 종료 후 닫는 시간을 정해요. | \`number\` | \`0.1\` |
-| \`expandIcon\` | 하위 메뉴의 펼침 아이콘을 변경해요. | \`ReactNode \\| function\` | - |
 | \`className\` | 최상위 요소에 Tailwind 클래스를 추가해요. | \`string\` | - |
 | \`onClick\` | 항목을 누를 때 실행해요. | \`(info: MenuClickInfo) => void\` | - |
 | \`onSelect\` | 항목을 선택할 때 실행해요. | \`(info: MenuSelectInfo) => void\` | - |
@@ -112,9 +108,7 @@ const meta = {
 | \`extra\` | 레이블 반대쪽에 보조 정보를 표시해요. | \`ReactNode\` | - |
 | \`children\` | 하위 메뉴 항목이에요. | \`MenuItemType[]\` | - |
 | \`disabled\` | 항목 선택을 막아요. | \`boolean\` | \`false\` |
-| \`danger\` | 위험 작업 색상을 적용해요. | \`boolean\` | \`false\` |
 | \`type\` | 일반 항목, 그룹 또는 구분선을 정해요. | [\`MenuItemKindType\`](#menu-item-kind-type) | \`item\` |
-| \`dashed\` | 구분선을 점선으로 표시해요. | \`boolean\` | \`false\` |
           `}</Markdown>
           <h2 className="component-docs-types-heading">Types</h2>
           <h3 id="menu-mode-type">MenuModeType</h3>
@@ -299,12 +293,11 @@ export const ItemStates: Story = {
         { key: 'billing', label: '결제 관리', disabled: true },
       ],
     },
-    { type: 'divider', key: 'divider', dashed: true },
+    { type: 'divider', key: 'divider' },
     {
       key: 'delete',
       label: '워크스페이스 삭제',
       icon: <Icon icon="delete-outlined" />,
-      danger: true,
     },
   ]}
 />`),
@@ -326,12 +319,11 @@ export const ItemStates: Story = {
             { key: "billing", label: "결제 관리", disabled: true },
           ],
         },
-        { type: "divider", key: "divider", dashed: true },
+        { type: "divider", key: "divider" },
         {
           key: "delete",
           label: "워크스페이스 삭제",
           icon: <Icon icon="delete-outlined" />,
-          danger: true,
         },
       ]}
     />

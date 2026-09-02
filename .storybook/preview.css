@@ -162,6 +162,14 @@ body.sb-show-main {
   width: 8.5%;
 }
 
+.skeleton-docs table :is(th, td):nth-child(2) {
+  width: 30%;
+}
+
+.skeleton-docs table :is(th, td):nth-child(3) {
+  width: 38%;
+}
+
 .component-docs table :is(th, td) {
   overflow-wrap: anywhere;
 }

@@ -49,10 +49,40 @@ describe("Menu", () => {
       return element;
     });
     expect(popup).toBeInTheDocument();
-    expect(popup).toHaveClass("fixed", "opacity-100");
+    expect(popup).toHaveClass("fixed");
     expect(container.querySelector("[data-menu-popup]")).not.toBeInTheDocument();
     await waitFor(() => expect(popup).toHaveStyle({ visibility: "visible" }));
+    await waitFor(() => expect(popup).toHaveClass("opacity-100"));
     expect(screen.getByRole("button", { name: "문서" })).toBeVisible();
+
+    await userEvent.unhover(screen.getByRole("button", { name: "워크스페이스" }));
+    await waitFor(() => expect(popup).toHaveClass("opacity-0"));
+  });
+
+  it("keeps collapsed content mounted while its width and opacity transition", () => {
+    const menuItems = [
+      {
+        key: "workspace",
+        label: "워크스페이스",
+        children: [{ key: "document", label: "문서" }],
+      },
+    ];
+    const { container, rerender } = render(
+      <Menu mode="inline" defaultOpenKeys={["workspace"]} items={menuItems} />,
+    );
+
+    const root = container.querySelector("nav > ul");
+    const label = screen.getByText("워크스페이스");
+    expect(root).toHaveClass("w-64", "transition-[width]");
+
+    rerender(
+      <Menu mode="inline" inlineCollapsed defaultOpenKeys={["workspace"]} items={menuItems} />,
+    );
+
+    expect(root).toHaveClass("w-16", "transition-[width]");
+    expect(label).toBeInTheDocument();
+    expect(label).toHaveClass("max-w-0", "opacity-0");
+    expect(screen.getAllByText("문서")).not.toHaveLength(0);
   });
 
   it("keeps horizontal items inside the menu viewport", () => {

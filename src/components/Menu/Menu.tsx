@@ -17,6 +17,8 @@ import {
 } from "../_internal/floating-position";
 import type { MenuClickInfo, MenuItemType, MenuProps } from "./Menu.types";
 
+const SUBMENU_CLOSE_DELAY_MS = 100;
+
 function normalize(keys?: string[]) {
   return keys?.map(String) ?? [];
 }
@@ -45,6 +47,7 @@ function MenuPopupPortal({
   const popupRef = useRef<HTMLDivElement>(null);
   const getAnchorRef = useRef(getAnchor);
   const [position, setPosition] = useState<FloatingPosition | null>(null);
+  const [motionOpen, setMotionOpen] = useState(false);
   getAnchorRef.current = getAnchor;
 
   const updatePosition = useCallback(() => {
@@ -94,6 +97,15 @@ function MenuPopupPortal({
     updatePosition();
   }, [open, updatePosition]);
 
+  useEffect(() => {
+    if (!open || !position) {
+      setMotionOpen(false);
+      return;
+    }
+    const frame = requestAnimationFrame(() => setMotionOpen(true));
+    return () => cancelAnimationFrame(frame);
+  }, [open, position]);
+
   if (typeof document === "undefined") return null;
   const resolvedPlacement = position?.placement ?? placement;
   const hiddenTransform = getMenuPopupHiddenTransform(resolvedPlacement);
@@ -104,8 +116,8 @@ function MenuPopupPortal({
       data-menu-popup=""
       data-placement={resolvedPlacement}
       className={twMerge(
-        "fixed z-[1050] transition-[opacity,transform] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none",
-        open
+        "fixed z-[1050] transition-[opacity,transform] duration-[240ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none",
+        motionOpen
           ? "translate-x-0 translate-y-0 opacity-100"
           : `pointer-events-none opacity-0 ${hiddenTransform}`,
         className,
@@ -143,11 +155,7 @@ export function Menu({
   defaultOpenKeys = [],
   inlineCollapsed = false,
   inlineIndent = 24,
-  forceSubMenuRender = false,
   triggerSubMenuAction = "hover",
-  subMenuOpenDelay = 0,
-  subMenuCloseDelay = 0.1,
-  expandIcon,
   className,
   onClick,
   onSelect,
@@ -183,7 +191,7 @@ export function Menu({
   const delayOpen = (key: string, nextOpen: boolean) => {
     const previous = timers.current.get(key);
     if (previous) clearTimeout(previous);
-    const delay = (nextOpen ? subMenuOpenDelay : subMenuCloseDelay) * 1000;
+    const delay = nextOpen ? 0 : SUBMENU_CLOSE_DELAY_MS;
     timers.current.set(
       key,
       setTimeout(() => changeOpen(key, nextOpen), delay),
@@ -225,6 +233,9 @@ export function Menu({
         level === 0 &&
           mode === "horizontal" &&
           "wizard-scrollbar-hidden flex max-w-full items-center gap-2 space-y-0 overflow-x-auto border-b border-[#f0f0f0] p-0",
+        level === 0 &&
+          mode !== "horizontal" &&
+          "transition-[width] duration-200 ease-[cubic-bezier(0.645,0.045,0.355,1)] motion-reduce:transition-none",
         level === 0 && mode !== "horizontal" && (inlineCollapsed ? "w-16" : "w-64"),
         popup &&
           "min-w-40 rounded-lg bg-white shadow-[0_6px_16px_rgba(0,0,0,0.08),0_3px_6px_-4px_rgba(0,0,0,0.12),0_9px_28px_8px_rgba(0,0,0,0.05)]",
@@ -234,12 +245,7 @@ export function Menu({
         const key = String(item.key);
         const path = [key, ...parentPath];
         if (item.type === "divider")
-          return (
-            <li
-              key={key || `divider-${index}`}
-              className={twMerge("my-1 border-t border-[#f0f0f0]", item.dashed && "border-dashed")}
-            />
-          );
+          return <li key={key || `divider-${index}`} className="my-1 border-t border-[#f0f0f0]" />;
         if (item.type === "group")
           return (
             <li key={key} className="py-1">
@@ -263,15 +269,14 @@ export function Menu({
             }
             disabled={item.disabled}
             className={twMerge(
-              "relative flex h-10 w-full cursor-pointer items-center gap-2 rounded-md px-3 text-left text-sm text-[#111] transition-colors duration-200 outline-none hover:bg-[#f5f5f5] motion-reduce:transition-none",
+              "relative flex h-10 w-full cursor-pointer items-center gap-2 rounded-md px-3 text-left text-sm text-[#111] transition-[color,background-color,gap,padding] duration-200 ease-[cubic-bezier(0.645,0.045,0.355,1)] outline-none hover:bg-[#f5f5f5] motion-reduce:transition-none",
               active && "bg-[#e6f4ff] text-[#0062df]",
-              item.danger && "text-[#ff4d4f] hover:bg-[#fff2f0]",
               item.disabled && "cursor-not-allowed opacity-40 hover:bg-transparent",
               mode === "horizontal" &&
                 level === 0 &&
                 "h-12 rounded-none px-5 after:absolute after:right-4 after:bottom-0 after:left-4 after:h-0.5 after:origin-center after:scale-x-0 after:bg-[#0062df] after:transition-transform hover:text-[#0062df]",
               mode === "horizontal" && level === 0 && active && "bg-transparent after:scale-x-100",
-              collapsed && "justify-center px-0",
+              collapsed && "justify-center gap-0 px-0",
             )}
             style={{
               paddingInlineStart:
@@ -285,33 +290,43 @@ export function Menu({
             }}
           >
             {item.icon ? <span className="inline-flex shrink-0">{item.icon}</span> : null}
-            {!collapsed ? <span className="min-w-0 flex-1 truncate">{item.label}</span> : null}
-            {!collapsed && item.extra ? (
-              <span className="shrink-0 text-xs text-[#999]">{item.extra}</span>
-            ) : null}
-            {!collapsed && hasChildren ? (
+            <span
+              className={twMerge(
+                "min-w-0 flex-1 truncate transition-[max-width,opacity] duration-200 ease-[cubic-bezier(0.645,0.045,0.355,1)] motion-reduce:transition-none",
+                collapsed ? "max-w-0 flex-none opacity-0" : "max-w-48 opacity-100",
+              )}
+            >
+              {item.label}
+            </span>
+            {item.extra ? (
               <span
                 className={twMerge(
-                  "inline-flex transition-transform duration-200",
+                  "shrink-0 overflow-hidden text-xs whitespace-nowrap text-[#999] transition-[max-width,opacity] duration-200 ease-[cubic-bezier(0.645,0.045,0.355,1)] motion-reduce:transition-none",
+                  collapsed ? "max-w-0 opacity-0" : "max-w-24 opacity-100",
+                )}
+              >
+                {item.extra}
+              </span>
+            ) : null}
+            {hasChildren ? (
+              <span
+                className={twMerge(
+                  "inline-flex shrink-0 overflow-hidden transition-[max-width,opacity,transform] duration-200 ease-[cubic-bezier(0.645,0.045,0.355,1)] motion-reduce:transition-none",
+                  collapsed ? "max-w-0 opacity-0" : "max-w-4 opacity-100",
                   open && mode === "inline" && "rotate-90",
                   open && mode === "horizontal" && level === 0 && "rotate-180",
                 )}
               >
-                {typeof expandIcon === "function"
-                  ? expandIcon({ isOpen: open, item })
-                  : (expandIcon ?? (
-                      <Icon
-                        icon={
-                          mode === "horizontal" && level === 0 ? "chevron-down" : "chevron-right"
-                        }
-                        size={12}
-                      />
-                    ))}
+                <Icon
+                  icon={mode === "horizontal" && level === 0 ? "chevron-down" : "chevron-right"}
+                  size={12}
+                />
               </span>
             ) : null}
           </button>
         );
-        const inlineSubmenu = mode === "inline" && !collapsed;
+        const inlineSubmenu = mode === "inline";
+        const popupSubmenu = !inlineSubmenu || collapsed;
         return (
           <li
             key={key}
@@ -322,13 +337,13 @@ export function Menu({
             className={twMerge("relative", mode === "horizontal" && level === 0 && "h-12")}
             onMouseEnter={() =>
               hasChildren &&
-              !inlineSubmenu &&
+              popupSubmenu &&
               triggerSubMenuAction === "hover" &&
               delayOpen(key, true)
             }
             onMouseLeave={() =>
               hasChildren &&
-              !inlineSubmenu &&
+              popupSubmenu &&
               triggerSubMenuAction === "hover" &&
               delayOpen(key, false)
             }
@@ -336,16 +351,20 @@ export function Menu({
             {itemNode}
             {hasChildren && inlineSubmenu ? (
               <div
-                className="grid transition-[grid-template-rows] duration-200 ease-[cubic-bezier(0.645,0.045,0.355,1)] motion-reduce:transition-none"
-                style={{ gridTemplateRows: open ? "1fr" : "0fr" }}
+                className="grid transition-[grid-template-rows,opacity] duration-200 ease-[cubic-bezier(0.645,0.045,0.355,1)] motion-reduce:transition-none"
+                style={{
+                  gridTemplateRows: open && !collapsed ? "1fr" : "0fr",
+                  opacity: open && !collapsed ? 1 : 0,
+                }}
               >
                 <div className="overflow-hidden">
-                  {open || forceSubMenuRender || visitedOpenKeys.current.has(key)
+                  {open || visitedOpenKeys.current.has(key)
                     ? renderItems(item.children!, path, level + 1)
                     : null}
                 </div>
               </div>
-            ) : hasChildren && (open || forceSubMenuRender || visitedOpenKeys.current.has(key)) ? (
+            ) : null}
+            {hasChildren && popupSubmenu && (open || visitedOpenKeys.current.has(key)) ? (
               <MenuPopupPortal
                 getAnchor={() => popupAnchors.current.get(key) ?? null}
                 open={open}

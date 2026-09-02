@@ -21,10 +21,8 @@ export interface MenuItemType {
   extra?: ReactNode;
   title?: string;
   disabled?: boolean;
-  danger?: boolean;
   children?: MenuItemType[];
   type?: MenuItemKindType;
-  dashed?: boolean;
   popupClassName?: string;
   popupOffset?: [number, number];
   onClick?: (info: MenuClickInfo) => void;
@@ -42,11 +40,7 @@ export interface MenuProps {
   defaultOpenKeys?: string[];
   inlineCollapsed?: boolean;
   inlineIndent?: number;
-  forceSubMenuRender?: boolean;
   triggerSubMenuAction?: MenuTriggerType;
-  subMenuOpenDelay?: number;
-  subMenuCloseDelay?: number;
-  expandIcon?: ReactNode | ((props: { isOpen: boolean; item: MenuItemType }) => ReactNode);
   className?: string;
   onClick?: (info: MenuClickInfo) => void;
   onSelect?: (info: MenuSelectInfo) => void;
