@@ -26,7 +26,7 @@ describe("remaining component className convention", () => {
         <DatePicker className="date-picker-root" />
         <Image className="image-root" preview={false} />
         <Menu className="menu-root" />
-        <Skeleton className="skeleton-root" />
+        <Skeleton.Node className="skeleton-root" />
         <Tabs className="tabs-root" />
         <TimePicker className="time-picker-root" />
         <Tree className="tree-root" />

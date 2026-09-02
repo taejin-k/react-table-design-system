@@ -484,11 +484,10 @@ export const storyDescriptions: Record<string, string> = {
     "펼침, 선택과 체크 키를 외부 상태에서 제어하고 현재 값을 함께 확인해요.",
   "components-tree--custom-titles":
     "titleRender로 노드 제목에 종류를 나타내는 보조 정보를 함께 표시해요.",
-  "components-skeleton--basic":
-    "콘텐츠를 불러오는 동안 아바타, 제목과 문단 형태의 자리 표시자를 표시해요.",
+  "components-skeleton--basic": "Node element의 크기와 모양을 정해 자리 표시자를 만들어요.",
   "components-skeleton--elements":
     "아바타, 버튼, 입력창, 이미지와 사용자 정의 영역에 맞는 단독 Skeleton을 사용해요.",
-  "components-skeleton--loaded": "loading이 끝나면 Skeleton을 실제 콘텐츠로 교체해요.",
+  "components-skeleton--loaded": "상태에 따라 Skeleton element 조합을 실제 콘텐츠로 교체해요.",
   "components-skeleton--card-grid":
     "이미지, 텍스트와 버튼 Skeleton을 조합해 카드 목록의 로딩 화면을 구성해요.",
   "components-skeleton--list":

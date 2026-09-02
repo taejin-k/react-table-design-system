@@ -1,10 +1,5 @@
 import { twMerge } from "tailwind-merge";
-import type {
-  SkeletonComponent,
-  SkeletonElementProps,
-  SkeletonProps,
-  SkeletonSizeType,
-} from "./Skeleton.types";
+import type { SkeletonComponent, SkeletonElementProps, SkeletonSizeType } from "./Skeleton.types";
 
 function sizeValue(size: SkeletonSizeType = "md") {
   return typeof size === "number" ? size : { sm: 24, md: 32, lg: 40 }[size];
@@ -104,14 +99,20 @@ function NodeSkeleton({
   fullWidth = false,
   width,
   height,
+  shape = "default",
   children,
   className,
 }: SkeletonElementProps & { children?: React.ReactNode }) {
   return (
     <span
       className={twMerge(
-        "inline-flex items-center justify-center rounded-md",
+        "inline-flex items-center justify-center",
         base(active),
+        shape === "circle" || shape === "round"
+          ? "rounded-full"
+          : shape === "square"
+            ? "rounded-none"
+            : "rounded-md",
         className,
       )}
       style={{ width: fullWidth ? "100%" : (width ?? 96), height: height ?? 96 }}
@@ -121,64 +122,10 @@ function NodeSkeleton({
   );
 }
 
-function SkeletonBase({
-  active = false,
-  avatar = false,
-  loading,
-  paragraph = true,
-  round = false,
-  title = true,
-  children,
-  className,
-}: SkeletonProps) {
-  if (loading === false) return <>{children}</>;
-  const paragraphConfig = typeof paragraph === "object" ? paragraph : {};
-  const rows = paragraphConfig.rows ?? (avatar ? 2 : 3);
-  const widths = paragraphConfig.width;
-  return (
-    <div className={twMerge("flex w-full gap-4 font-pretendard", className)}>
-      {avatar ? (
-        <AvatarSkeleton active={active} {...(typeof avatar === "object" ? avatar : {})} />
-      ) : null}
-      <div className="min-w-0 flex-1">
-        {title ? (
-          <div
-            className={twMerge(
-              "h-4",
-              avatar ? "mt-2 mb-7" : "mb-6",
-              base(active),
-              round ? "rounded-full" : "rounded",
-            )}
-            style={{ width: typeof title === "object" ? title.width : avatar ? "38%" : "100%" }}
-          />
-        ) : null}
-        {paragraph ? (
-          <div className="grid gap-4">
-            {Array.from({ length: rows }, (_, index) => {
-              const rowWidth = Array.isArray(widths)
-                ? widths[index]
-                : index === rows - 1
-                  ? (widths ?? "61%")
-                  : "100%";
-              return (
-                <div
-                  key={index}
-                  className={twMerge("h-4", base(active), round ? "rounded-full" : "rounded")}
-                  style={{ width: rowWidth }}
-                />
-              );
-            })}
-          </div>
-        ) : null}
-      </div>
-    </div>
-  );
-}
-
-export const Skeleton = Object.assign(SkeletonBase, {
+export const Skeleton: SkeletonComponent = {
   Avatar: AvatarSkeleton,
   Button: ButtonSkeleton,
   Input: InputSkeleton,
   Image: ImageSkeleton,
   Node: NodeSkeleton,
-}) as SkeletonComponent;
+};

@@ -3,10 +3,13 @@ import { describe, expect, it } from "vitest";
 import { Skeleton } from "./Skeleton";
 
 describe("Skeleton", () => {
-  it("renders children after loading", () => {
-    const { rerender } = render(<Skeleton loading>내용</Skeleton>);
-    expect(screen.queryByText("내용")).not.toBeInTheDocument();
-    rerender(<Skeleton loading={false}>내용</Skeleton>);
+  it("exposes only element skeletons", () => {
+    expect(typeof Skeleton).toBe("object");
+    expect(Object.keys(Skeleton)).toEqual(["Avatar", "Button", "Input", "Image", "Node"]);
+  });
+
+  it("renders custom content inside a node skeleton", () => {
+    render(<Skeleton.Node>내용</Skeleton.Node>);
     expect(screen.getByText("내용")).toBeInTheDocument();
   });
 
