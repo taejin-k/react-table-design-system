@@ -477,11 +477,6 @@ export const storyDescriptions: Record<string, string> = {
     "펼침, 선택과 체크 키를 외부 상태에서 제어하고 현재 값을 함께 확인해요.",
   "components-tree--custom-titles":
     "titleRender로 노드 제목에 종류를 나타내는 보조 정보를 함께 표시해요.",
-  "components-tree--events":
-    "펼침, 선택, 체크와 드래그 관련 콜백이 전달하는 값을 한곳에서 확인해요.",
-  "components-tree--external-drop":
-    "Tree 노드를 외부 박스에 드롭해 표시하면서 원본 Tree 데이터는 그대로 유지해요.",
-
   "components-skeleton--basic":
     "콘텐츠를 불러오는 동안 아바타, 제목과 문단 형태의 자리 표시자를 표시해요.",
   "components-skeleton--elements":
