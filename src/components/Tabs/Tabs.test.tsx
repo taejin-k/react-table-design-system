@@ -36,6 +36,24 @@ describe("Tabs", () => {
     expect(screen.queryByRole("button", { name: /문서/ })).not.toBeInTheDocument();
   });
 
+  it("shows editable controls only when their callbacks are provided", () => {
+    const items = [{ key: "one", label: "문서" }];
+    const onAdd = vi.fn();
+    const onDelete = vi.fn();
+    const { rerender } = render(<Tabs type="editable-card" items={items} />);
+
+    expect(document.querySelector("[data-tabs-add]")).not.toBeInTheDocument();
+    expect(document.querySelector('[data-tab-close="one"]')).not.toBeInTheDocument();
+
+    rerender(<Tabs type="editable-card" items={items} onAdd={onAdd} />);
+    expect(document.querySelector("[data-tabs-add]")).toBeInTheDocument();
+    expect(document.querySelector('[data-tab-close="one"]')).not.toBeInTheDocument();
+
+    rerender(<Tabs type="editable-card" items={items} onAdd={onAdd} onDelete={onDelete} />);
+    expect(document.querySelector("[data-tabs-add]")).toBeInTheDocument();
+    expect(document.querySelector('[data-tab-close="one"]')).toBeInTheDocument();
+  });
+
   it("uses Ant Design card dimensions and joins the active tab to the content", () => {
     render(
       <Tabs
@@ -69,7 +87,7 @@ describe("Tabs", () => {
   });
 
   it("matches the editable add button height to card tabs", () => {
-    render(<Tabs type="editable-card" items={[{ key: "one", label: "문서" }]} />);
+    render(<Tabs type="editable-card" items={[{ key: "one", label: "문서" }]} onAdd={vi.fn()} />);
 
     expect(document.querySelector("[data-tabs-add]")).toHaveClass(
       "h-10",

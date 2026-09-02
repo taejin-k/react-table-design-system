@@ -32,7 +32,12 @@ const storyDescription = (id: string) => ({
   docs: { description: { story: storyDescriptions[id] } },
 });
 
-function EditableTabsExample(args: Partial<TabsProps>) {
+function EditableTabsExample({
+  deletable = false,
+  ...args
+}: Partial<TabsProps> & {
+  deletable?: boolean;
+}) {
   const [editableItems, setEditableItems] = useState(items);
 
   return (
@@ -41,7 +46,7 @@ function EditableTabsExample(args: Partial<TabsProps>) {
       type="editable-card"
       items={editableItems}
       onAdd={setEditableItems}
-      onDelete={setEditableItems}
+      onDelete={deletable ? setEditableItems : undefined}
     />
   );
 }
@@ -100,8 +105,8 @@ const meta = {
 | \`indicator\` | 표시선의 크기와 정렬을 설정해요. | \`{ size?, align? }\` | - |
 | \`className\` | 최상위 요소에 Tailwind 클래스를 추가해요. | \`string\` | - |
 | \`onChange\` | 활성 탭이 바뀔 때 실행해요. | \`(activeKey: string) => void\` | - |
-| \`onAdd\` | 탭이 추가된 다음 목록을 전달해요. | \`(items: TabItemType[]) => void\` | - |
-| \`onDelete\` | 탭이 삭제된 다음 목록을 전달해요. | \`(items: TabItemType[]) => void\` | - |
+| \`onAdd\` | 추가 버튼을 표시하고 추가된 목록을 전달해요. | \`(items: TabItemType[]) => void\` | - |
+| \`onDelete\` | 닫기 버튼을 표시하고 삭제된 목록을 전달해요. | \`(items: TabItemType[]) => void\` | - |
 | \`onTabClick\` | 탭을 누를 때 실행해요. | \`(key, event) => void\` | - |
 | \`renderTabBar\` | 탭 목록 전체를 사용자 정의해요. | \`(props, DefaultTabBar) => ReactElement\` | - |
 
@@ -245,7 +250,7 @@ export const Card: Story = {
     </div>
   ),
 };
-export const Editable: Story = {
+export const OnAdd: Story = {
   args: {
     size: "md",
     tabPlacement: "top",
@@ -255,12 +260,50 @@ export const Editable: Story = {
     hideAdd: false,
   },
   parameters: {
-    ...storyDescription("components-tabs--editable"),
+    ...storyDescription("components-tabs--on-add"),
     controls: {
       include: ["크기", "위치", "애니메이션", "가운데 정렬", "탭 간격", "추가 버튼 숨김"],
     },
     docs: {
-      ...storyDescription("components-tabs--editable").docs,
+      ...storyDescription("components-tabs--on-add").docs,
+      source: {
+        type: "code",
+        code: withStoryImports(`${itemsSource}
+
+function EditableTabsExample() {
+  const [editableItems, setEditableItems] = useState(items);
+
+  return (
+    <Tabs
+      type="editable-card"
+      items={editableItems}
+      onAdd={setEditableItems}
+    />
+  );
+}
+
+<EditableTabsExample />`),
+      },
+    },
+  },
+  render: (args) => <EditableTabsExample {...args} />,
+};
+export const OnAddAndDelete: Story = {
+  args: {
+    size: "md",
+    tabPlacement: "top",
+    animated: false,
+    centered: false,
+    tabBarGutter: 0,
+    hideAdd: false,
+  },
+  parameters: {
+    ...storyDescription("components-tabs--on-add-and-delete"),
+    controls: {
+      include: ["크기", "위치", "애니메이션", "가운데 정렬", "탭 간격", "추가 버튼 숨김"],
+    },
+    docs: {
+      ...storyDescription("components-tabs--on-add-and-delete").docs,
       source: {
         type: "code",
         code: withStoryImports(`${itemsSource}
@@ -282,7 +325,7 @@ function EditableTabsExample() {
       },
     },
   },
-  render: (args) => <EditableTabsExample {...args} />,
+  render: (args) => <EditableTabsExample {...args} deletable />,
 };
 export const Vertical: Story = {
   args: {

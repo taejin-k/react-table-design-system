@@ -199,7 +199,7 @@ export function Tabs(props: TabsProps) {
           >
             {item.icon}
             <span>{item.label}</span>
-            {type === "editable-card" && item.closable !== false ? (
+            {type === "editable-card" && onDelete !== undefined && item.closable !== false ? (
               <span
                 data-tab-close={item.key}
                 className="inline-flex cursor-pointer rounded p-0.5 hover:bg-black/5"
@@ -213,7 +213,7 @@ export function Tabs(props: TabsProps) {
             ) : null}
           </button>
         ))}
-        {type === "editable-card" && !hideAdd ? (
+        {type === "editable-card" && onAdd !== undefined && !hideAdd ? (
           <button
             type="button"
             data-tabs-add=""
