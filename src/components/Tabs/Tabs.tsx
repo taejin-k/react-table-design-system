@@ -5,6 +5,7 @@ import {
   useSensor,
   useSensors,
   type DragEndEvent,
+  type Modifier,
 } from "@dnd-kit/core";
 import {
   arrayMove,
@@ -21,6 +22,8 @@ import { Icon } from "../Icon";
 import type { TabItemType, TabsProps } from "./Tabs.types";
 
 const EMPTY_ITEMS: TabItemType[] = [];
+const restrictToHorizontalAxis: Modifier = ({ transform }) => ({ ...transform, y: 0 });
+const restrictToVerticalAxis: Modifier = ({ transform }) => ({ ...transform, x: 0 });
 
 export function reorderTabItems(items: TabItemType[], activeKey: string, overKey: string) {
   const previousIndex = items.findIndex((item) => item.key === activeKey);
@@ -45,6 +48,7 @@ function TabsSortContext({ children, enabled, items, vertical, onDragEnd }: Tabs
       sensors={sensors}
       collisionDetection={closestCenter}
       autoScroll={false}
+      modifiers={[vertical ? restrictToVerticalAxis : restrictToHorizontalAxis]}
       onDragEnd={enabled ? onDragEnd : undefined}
     >
       <SortableContext
