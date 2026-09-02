@@ -27,7 +27,6 @@ export interface TabsProps {
   size?: TabsSizeType;
   tabPlacement?: TabsPlacementType;
   tabBarGutter?: number;
-  tabBarExtraContent?: ReactNode | { left?: ReactNode; right?: ReactNode };
   tabBarStyle?: CSSProperties;
   hideAdd?: boolean;
   addIcon?: ReactNode;

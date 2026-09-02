@@ -1,6 +1,6 @@
 import { Description, Markdown, Stories, Title } from "@storybook/addon-docs/blocks";
 import type { Meta, StoryObj } from "@storybook/react";
-import { useState, type MouseEvent } from "react";
+import { useState } from "react";
 import { storyDescriptions } from "../../storybook/story-descriptions";
 import { withStoryImports } from "../../storybook/story-source";
 import { TypeTokens } from "../../storybook/type-tokens";
@@ -15,38 +15,29 @@ const tabsPlacements: TabsPlacementType[] = ["top", "end", "bottom", "start"];
 const items = [
   { key: "overview", label: "개요", children: "프로젝트 개요" },
   { key: "activity", label: "활동", children: "최근 활동" },
-  { key: "disabled", label: "비활성", disabled: true, closable: false },
+  { key: "disabled", label: "비활성", disabled: true },
 ];
 const itemsSource = `const items = [
   { key: 'overview', label: '개요', children: '프로젝트 개요' },
   { key: 'activity', label: '활동', children: '최근 활동' },
-  { key: 'disabled', label: '비활성', disabled: true, closable: false },
+  { key: 'disabled', label: '비활성', disabled: true },
 ];`;
 const storyDescription = (id: string) => ({
   docs: { description: { story: storyDescriptions[id] } },
 });
 
-function EditableTabsExample({ size, ...args }: Partial<TabsProps> & { size: TabsSizeType }) {
+function EditableTabsExample(args: Partial<TabsProps>) {
   const [editableItems, setEditableItems] = useState(items);
-  const [nextTab, setNextTab] = useState(1);
 
-  const handleEdit = (targetKey: string | MouseEvent, action: "add" | "remove") => {
-    if (action === "add") {
-      const key = `new-${nextTab}`;
-      setEditableItems((current) => [
-        ...current,
-        { key, label: `새 탭 ${nextTab}`, children: `새 탭 ${nextTab} 내용` },
-      ]);
-      setNextTab((current) => current + 1);
-      return;
-    }
-
-    setEditableItems((current) => current.filter((item) => item.key !== targetKey));
+  const handleEdit: NonNullable<TabsProps["onEdit"]> = (targetKey, action) => {
+    setEditableItems((current) =>
+      action === "add"
+        ? [...current, { key: `new-${Date.now()}`, label: "새 탭", children: "새 탭 내용" }]
+        : current.filter((item) => item.key !== targetKey),
+    );
   };
 
-  return (
-    <Tabs {...args} type="editable-card" size={size} items={editableItems} onEdit={handleEdit} />
-  );
+  return <Tabs {...args} type="editable-card" items={editableItems} onEdit={handleEdit} />;
 }
 
 const meta = {
@@ -95,7 +86,6 @@ const meta = {
 | \`centered\` | 탭 목록을 가운데 정렬해요. | \`boolean\` | \`false\` |
 | \`destroyOnHidden\` | 숨겨진 탭 콘텐츠를 DOM에서 제거해요. | \`boolean\` | \`false\` |
 | \`tabBarGutter\` | 탭 사이의 간격을 px로 정해요. | \`number\` | - |
-| \`tabBarExtraContent\` | 탭 목록 양쪽에 추가 콘텐츠를 배치해요. | \`ReactNode \\| { left?: ReactNode; right?: ReactNode }\` | - |
 | \`tabBarStyle\` | 탭 목록에 인라인 스타일을 적용해요. | \`CSSProperties\` | - |
 | \`hideAdd\` | 편집형 탭의 추가 버튼을 숨겨요. | \`boolean\` | \`false\` |
 | \`addIcon\` | 편집형 탭의 추가 아이콘을 변경해요. | \`ReactNode\` | - |
@@ -138,7 +128,9 @@ type Story = StoryObj<typeof meta>;
 
 export const Basic: Story = {
   args: {
+    items,
     type: "line",
+    size: "md",
     tabPlacement: "top",
     animated: false,
     centered: false,
@@ -152,21 +144,42 @@ export const Basic: Story = {
       ...storyDescription("components-tabs--basic").docs,
       source: {
         type: "code",
+        code: withStoryImports(`${itemsSource}\n\n<Tabs items={items} />`),
+      },
+    },
+  },
+};
+
+export const Sizes: Story = {
+  args: {
+    tabPlacement: "top",
+    animated: false,
+    centered: false,
+    tabBarGutter: 0,
+  },
+  argTypes: { size: { control: false, table: { disable: true } } },
+  parameters: {
+    ...storyDescription("components-tabs--sizes"),
+    controls: { include: ["위치", "애니메이션", "가운데 정렬", "탭 간격"] },
+    docs: {
+      ...storyDescription("components-tabs--sizes").docs,
+      source: {
+        type: "code",
         code: withStoryImports(`${itemsSource}
 
-<div className="grid gap-3">
-  <Tabs size="sm" defaultActiveKey="overview" items={items} />
-  <Tabs size="md" defaultActiveKey="overview" items={items} />
-  <Tabs size="lg" defaultActiveKey="overview" items={items} />
+<div className="grid gap-4">
+  <Tabs size="sm" items={items} />
+  <Tabs size="md" items={items} />
+  <Tabs size="lg" items={items} />
 </div>`),
       },
     },
   },
   render: (args) => (
-    <div className="grid gap-3">
-      <Tabs {...args} size="sm" defaultActiveKey="overview" items={items} />
-      <Tabs {...args} size="md" defaultActiveKey="overview" items={items} />
-      <Tabs {...args} size="lg" defaultActiveKey="overview" items={items} />
+    <div className="grid gap-4">
+      <Tabs {...args} size="sm" items={items} />
+      <Tabs {...args} size="md" items={items} />
+      <Tabs {...args} size="lg" items={items} />
     </div>
   ),
 };
@@ -193,89 +206,92 @@ export const Animate: Story = {
 };
 export const Card: Story = {
   args: {
-    items,
-    type: "card",
-    size: "md",
     tabPlacement: "top",
-    animated: true,
+    animated: false,
     centered: false,
     tabBarGutter: 0,
   },
+  argTypes: { size: { control: false, table: { disable: true } } },
   parameters: {
     ...storyDescription("components-tabs--card"),
-    controls: { include: ["크기", "위치", "애니메이션", "가운데 정렬", "탭 간격"] },
+    controls: { include: ["위치", "애니메이션", "가운데 정렬", "탭 간격"] },
     docs: {
       ...storyDescription("components-tabs--card").docs,
       source: {
         type: "code",
-        code: withStoryImports(`${itemsSource}\n\n<Tabs type="card" items={items} />`),
+        code: withStoryImports(`${itemsSource}
+
+<div className="grid gap-4">
+  <Tabs type="card" size="sm" items={items} />
+  <Tabs type="card" size="md" items={items} />
+  <Tabs type="card" size="lg" items={items} />
+</div>`),
       },
     },
   },
+  render: (args) => (
+    <div className="grid gap-4">
+      <Tabs {...args} type="card" size="sm" items={items} />
+      <Tabs {...args} type="card" size="md" items={items} />
+      <Tabs {...args} type="card" size="lg" items={items} />
+    </div>
+  ),
 };
 export const Editable: Story = {
-  args: { tabPlacement: "top", animated: true, centered: false, tabBarGutter: 0, hideAdd: false },
-  argTypes: { size: { control: false, table: { disable: true } } },
+  args: {
+    size: "md",
+    tabPlacement: "top",
+    animated: false,
+    centered: false,
+    tabBarGutter: 0,
+    hideAdd: false,
+  },
   parameters: {
     ...storyDescription("components-tabs--editable"),
-    controls: { include: ["위치", "애니메이션", "가운데 정렬", "탭 간격", "추가 버튼 숨김"] },
+    controls: {
+      include: ["크기", "위치", "애니메이션", "가운데 정렬", "탭 간격", "추가 버튼 숨김"],
+    },
     docs: {
       ...storyDescription("components-tabs--editable").docs,
       source: {
         type: "code",
         code: withStoryImports(`${itemsSource}
 
-function EditableTabsExample({ size }) {
+function EditableTabsExample() {
   const [editableItems, setEditableItems] = useState(items);
-  const [nextTab, setNextTab] = useState(1);
 
   const handleEdit = (targetKey, action) => {
-    if (action === 'add') {
-      const key = \`new-\${nextTab}\`;
-      setEditableItems((current) => [
-        ...current,
-        { key, label: \`새 탭 \${nextTab}\`, children: \`새 탭 \${nextTab} 내용\` },
-      ]);
-      setNextTab((current) => current + 1);
-      return;
-    }
-
-    setEditableItems((current) => current.filter((item) => item.key !== targetKey));
+    setEditableItems((current) =>
+      action === 'add'
+        ? [
+            ...current,
+            { key: \`new-\${Date.now()}\`, label: '새 탭', children: '새 탭 내용' },
+          ]
+        : current.filter((item) => item.key !== targetKey),
+    );
   };
 
   return (
     <Tabs
-      animated
       type="editable-card"
-      size={size}
       items={editableItems}
       onEdit={handleEdit}
     />
   );
 }
 
-<div className="grid gap-3">
-  <EditableTabsExample size="sm" />
-  <EditableTabsExample size="md" />
-  <EditableTabsExample size="lg" />
-</div>`),
+<EditableTabsExample />`),
       },
     },
   },
-  render: (args) => (
-    <div className="grid gap-3">
-      <EditableTabsExample {...args} size="sm" />
-      <EditableTabsExample {...args} size="md" />
-      <EditableTabsExample {...args} size="lg" />
-    </div>
-  ),
+  render: (args) => <EditableTabsExample {...args} />,
 };
 export const Vertical: Story = {
   args: {
     items,
     size: "md",
     tabPlacement: "start",
-    animated: true,
+    animated: false,
     centered: false,
     tabBarGutter: 0,
   },
@@ -295,7 +311,7 @@ export const Vertical: Story = {
 export const Controlled: Story = {
   args: {
     size: "md",
-    animated: true,
+    animated: false,
   },
   parameters: {
     ...storyDescription("components-tabs--controlled"),
@@ -346,40 +362,3 @@ function ControlledTabsExample(args: Partial<TabsProps>) {
     </div>
   );
 }
-
-export const ExtraContent: Story = {
-  args: {
-    items,
-    size: "md",
-    animated: true,
-    tabPlacement: "top",
-  },
-  parameters: {
-    ...storyDescription("components-tabs--extra-content"),
-    controls: { include: ["크기", "애니메이션", "위치"] },
-    docs: {
-      ...storyDescription("components-tabs--extra-content").docs,
-      source: {
-        type: "code",
-        code: withStoryImports(`${itemsSource}
-
-<Tabs
-  items={items}
-  tabBarExtraContent={{
-    left: <span className="text-sm font-semibold">프로젝트</span>,
-    right: <Button size="sm">새 작업</Button>,
-  }}
-/>`),
-      },
-    },
-  },
-  render: (args) => (
-    <Tabs
-      {...args}
-      tabBarExtraContent={{
-        left: <span className="text-sm font-semibold">프로젝트</span>,
-        right: <Button size="sm">새 작업</Button>,
-      }}
-    />
-  ),
-};

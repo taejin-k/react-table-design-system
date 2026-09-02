@@ -372,14 +372,13 @@ export const storyDescriptions: Record<string, string> = {
     "그룹, 추가 정보, 비활성 항목, 점선 구분선과 위험 작업을 한 메뉴에서 구성해요.",
 
   "components-tabs--basic": "탭을 선택해 연결된 콘텐츠를 전환하고 비활성 탭의 동작을 제한해요.",
+  "components-tabs--sizes": "선형 탭의 sm, md와 lg 크기를 한 번에 비교해요.",
   "components-tabs--animate": "표시선과 콘텐츠가 부드럽게 이동하며 전환되는 모습을 확인해요.",
-  "components-tabs--card": "탭을 카드 형태로 표시해 영역별 콘텐츠를 명확하게 구분해요.",
+  "components-tabs--card": "카드 탭의 sm, md와 lg 크기를 한 번에 비교해요.",
   "components-tabs--editable": "탭 추가·삭제 버튼을 표시하고 onEdit으로 편집 동작을 처리해요.",
   "components-tabs--vertical": "탭 목록을 콘텐츠 왼쪽에 세로로 배치해요.",
   "components-tabs--controlled":
     "activeKey와 onChange로 활성 탭을 외부 상태 및 별도 버튼과 동기화해요.",
-  "components-tabs--extra-content":
-    "탭 목록 양쪽에 제목과 작업 버튼을 배치해 콘텐츠 도구 모음을 구성해요.",
 
   "components-colorpicker--basic": "색상 패널에서 색조·채도·명도·투명도를 조절해요.",
   "components-colorpicker--states": "기본·읽기 전용·비활성 상태를 나란히 비교해요.",

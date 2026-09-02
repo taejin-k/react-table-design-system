@@ -15,7 +15,6 @@ export function Tabs(props: TabsProps) {
     size = "md",
     tabPlacement: placement = "top",
     tabBarGutter,
-    tabBarExtraContent,
     tabBarStyle,
     hideAdd = false,
     addIcon,
@@ -97,12 +96,6 @@ export function Tabs(props: TabsProps) {
     if (activeKey === undefined) setInnerActive(key);
     onChange?.(key);
   };
-  const extra: { left?: React.ReactNode; right?: React.ReactNode } =
-    typeof tabBarExtraContent === "object" &&
-    tabBarExtraContent !== null &&
-    ("left" in tabBarExtraContent || "right" in tabBarExtraContent)
-      ? (tabBarExtraContent as { left?: React.ReactNode; right?: React.ReactNode })
-      : { right: tabBarExtraContent as React.ReactNode };
   const linePadding =
     size === "lg"
       ? "px-4 py-4 text-base"
@@ -151,7 +144,6 @@ export function Tabs(props: TabsProps) {
       )}
       style={{ gap: tabBarGutter, ...tabBarStyle }}
     >
-      {extra.left ? <div className={vertical ? "mb-2" : "mr-auto"}>{extra.left}</div> : null}
       <div
         ref={tabListRef}
         className={twMerge(
@@ -262,7 +254,6 @@ export function Tabs(props: TabsProps) {
           }
         />
       ) : null}
-      {extra.right ? <div className={vertical ? "mt-2" : "ml-auto"}>{extra.right}</div> : null}
     </div>
   );
   const tabBar = renderTabBar?.(props, DefaultTabBar) ?? DefaultTabBar();

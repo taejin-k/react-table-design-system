@@ -78,6 +78,22 @@ describe("Tabs", () => {
     });
   });
 
+  it("uses animated only for the content transition", () => {
+    const items = [{ key: "one", label: "첫째", children: "첫 내용" }];
+    const { rerender } = render(<Tabs items={items} />);
+
+    expect(document.querySelector('[data-tabs-item="one"]')).toHaveClass("transition-colors");
+    expect(document.querySelector('[data-tab-panel="one"]')).not.toHaveClass(
+      "animate-[wizard-tab-pane-in_0.3s_cubic-bezier(0.23,1,0.32,1)]",
+    );
+
+    rerender(<Tabs animated items={items} />);
+
+    expect(document.querySelector('[data-tab-panel="one"]')).toHaveClass(
+      "animate-[wizard-tab-pane-in_0.3s_cubic-bezier(0.23,1,0.32,1)]",
+    );
+  });
+
   it("keeps the same indicator element while the active tab changes", () => {
     const items = [
       { key: "one", label: "첫째", children: "첫 내용" },
