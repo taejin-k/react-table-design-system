@@ -439,19 +439,6 @@ export const storyDescriptions: Record<string, string> = {
   "components-collapse--header-and-icons":
     "추가 정보, 아이콘 위치와 아이콘을 숨긴 패널을 비교해요.",
 
-  "components-description--basic":
-    "레이블과 값을 열 단위로 정렬해 사용자 정보를 읽기 쉽게 표시해요.",
-  "components-description--bordered": "각 레이블과 값을 테두리로 구분한 정보 표를 만들어요.",
-  "components-description--sizes": "large, medium, small의 셀 여백 차이를 비교해요.",
-  "components-description--responsive": "화면 너비에 따라 한 행에 표시할 항목 수를 변경해요.",
-  "components-description--vertical": "레이블을 값 위에 배치해 세로형 정보 목록을 만들어요.",
-  "components-description--vertical-bordered": "세로형 레이블과 값을 행별 테두리로 구분해요.",
-  "components-description--title-and-extra": "제목 오른쪽에 정보 목록과 관련된 작업을 배치해요.",
-  "components-description--span-and-filled":
-    "span으로 항목 범위를 합치거나 현재 행의 남은 영역을 채워요.",
-  "components-description--item-component":
-    "Description.Item을 사용해 항목을 자식 컴포넌트로 구성해요.",
-
   "components-image--basic":
     "이미지를 표시하고 클릭해 반전·회전·확대·축소하거나 드래그해 이동해요.",
   "components-image--cover": "hover 미리보기 안내의 표시 여부를 비교해요.",
@@ -466,18 +453,34 @@ export const storyDescriptions: Record<string, string> = {
     "정상 원본 이미지와 로드 실패 후 fallback 이미지가 표시된 결과를 비교해요.",
 
   "components-tree--basic": "계층형 데이터를 펼치고 접으며 항목을 선택해요.",
+  "components-tree--multiple": "여러 노드를 차례로 클릭해 동시에 선택하거나 해제해요.",
+  "components-tree--disabled": "전체 Tree를 비활성화해 펼침, 선택과 체크 동작을 막아요.",
   "components-tree--full-width":
     "fullWidth로 노드의 선택, hover와 클릭 영역을 부모 너비 전체로 확장해요.",
   "components-tree--icons": "폴더와 파일 아이콘을 함께 표시해 항목 종류를 구분해요.",
   "components-tree--checkable": "체크박스로 부모와 자식 노드의 선택 상태를 함께 관리해요.",
   "components-tree--draggable":
     "defaultTreeData의 노드를 드래그하면 별도의 이동 함수 없이 내부에서 계층과 순서를 변경해요.",
+  "components-tree--order-only-drop":
+    "다른 노드의 자식으로 들어가는 것은 막고, 노드 위·아래로 순서를 바꾸는 것만 허용해요.",
+  "components-tree--project-children-only":
+    "노드 사이 이동은 허용하고 프로젝트(project) 노드만 새로운 자식을 받을 수 있어요.",
+  "components-tree--design-children-only":
+    "노드 사이 이동은 허용하고 디자인(design) 노드만 새로운 자식을 받을 수 있어요.",
+  "components-tree--protected-releases":
+    "릴리스(releases) 노드의 위, 안과 아래 위치에는 다른 노드를 놓을 수 없어요.",
+  "components-tree--folder-drop-targets":
+    "노드 사이 이동은 허용하고 프로젝트(project)와 보관함(archive) 노드만 새로운 자식을 받을 수 있어요.",
   "components-tree--async-loading":
     "노드를 처음 펼칠 때 하위 데이터를 불러오고 완료 후 목록에 표시해요.",
   "components-tree--controlled-state":
     "펼침, 선택과 체크 키를 외부 상태에서 제어하고 현재 값을 함께 확인해요.",
   "components-tree--custom-titles":
     "titleRender로 노드 제목에 종류를 나타내는 보조 정보를 함께 표시해요.",
+  "components-tree--events":
+    "펼침, 선택, 체크와 드래그 관련 콜백이 전달하는 값을 한곳에서 확인해요.",
+  "components-tree--external-drop":
+    "Tree 노드를 외부 박스에 드롭해 표시하면서 원본 Tree 데이터는 그대로 유지해요.",
 
   "components-skeleton--basic":
     "콘텐츠를 불러오는 동안 아바타, 제목과 문단 형태의 자리 표시자를 표시해요.",

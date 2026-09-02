@@ -79,22 +79,13 @@ interface UploadSortContextProps {
   onDragEnd: (event: DragEndEvent) => void;
 }
 
-function EnabledUploadSortContext({
-  children,
-  enabled,
-  items,
-  onDragEnd,
-}: UploadSortContextProps) {
+function EnabledUploadSortContext({ children, enabled, items, onDragEnd }: UploadSortContextProps) {
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
-  const [accessibilityContainer] = useState<Element | undefined>(() =>
-    typeof document === "undefined" ? undefined : document.createElement("div"),
-  );
 
   return (
     <DndContext
       sensors={sensors}
       collisionDetection={closestCenter}
-      accessibility={{ container: accessibilityContainer, restoreFocus: false }}
       onDragEnd={enabled ? onDragEnd : undefined}
     >
       <SortableContext items={items} strategy={verticalListSortingStrategy}>
@@ -204,17 +195,27 @@ function UploadDragHandle({
 }
 
 function UploadPictureThumbnail({
-  source,
-  alt,
+  file,
+  image,
   fallback,
 }: {
-  source?: string;
-  alt: string;
+  file: UploadFile;
+  image: boolean;
   fallback: ReactNode;
 }) {
-  const [failed, setFailed] = useState(false);
+  const [objectUrl] = useState(() =>
+    image && file.originFileObj ? URL.createObjectURL(file.originFileObj) : undefined,
+  );
+  const [failedSource, setFailedSource] = useState<string>();
+  const source = image ? (objectUrl ?? file.url) : undefined;
+  const failed = Boolean(source && failedSource === source);
 
-  useEffect(() => setFailed(false), [source]);
+  useEffect(
+    () => () => {
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    },
+    [objectUrl],
+  );
 
   if (!source || failed) {
     return (
@@ -233,13 +234,13 @@ function UploadPictureThumbnail({
     <Image
       data-upload-picture-thumbnail
       src={source}
-      alt={alt}
+      alt={file.name}
       width={48}
       height={48}
       preview={{ cover: false }}
       draggable={false}
       className="size-12 shrink-0 rounded [&>img]:rounded [&>img]:object-contain"
-      onError={() => setFailed(true)}
+      onError={() => setFailedSource(source)}
     />
   );
 }
@@ -276,20 +277,6 @@ function UploadBase({
   fileListRef.current = currentFiles;
   const inputRef = useRef<HTMLInputElement>(null);
   const rootRef = useRef<HTMLSpanElement>(null);
-  const previewUrls = useRef(new Map<string, string>());
-  const revokePreview = (fileUid: string) => {
-    const previewUrl = previewUrls.current.get(fileUid);
-    if (!previewUrl) return;
-    URL.revokeObjectURL(previewUrl);
-    previewUrls.current.delete(fileUid);
-  };
-  const addPreview = (file: UploadFile) => {
-    if (file.originFileObj && isImage(file)) {
-      const url = URL.createObjectURL(file.originFileObj);
-      previewUrls.current.set(file.uid, url);
-    }
-    return file;
-  };
   const emit = (file: UploadFile, next: UploadFile[]) => {
     const limited = maxCount ? (maxCount === 1 ? next.slice(-1) : next.slice(0, maxCount)) : next;
     fileListRef.current = limited;
@@ -330,7 +317,7 @@ function UploadBase({
 
     accepted.forEach((file, index) => {
       if (!validationResults[index]) return;
-      const uploadFile = addPreview(toUploadFile(file));
+      const uploadFile = toUploadFile(file);
       const nextList = maxCount === 1 ? [uploadFile] : [...fileListRef.current, uploadFile];
       emit(uploadFile, nextList);
     });
@@ -414,16 +401,8 @@ function UploadBase({
       downloadLoadingTimersRef.current.forEach((timer) => window.clearTimeout(timer));
       downloadLoadingTimersRef.current.clear();
       activeDownloadUidsRef.current.clear();
-      previewUrls.current.forEach((url) => URL.revokeObjectURL(url));
     };
   }, []);
-  useEffect(() => {
-    if (showUploadList) return;
-    const currentUids = new Set(currentFiles.map((file) => file.uid));
-    previewUrls.current.forEach((_, fileUid) => {
-      if (!currentUids.has(fileUid)) revokePreview(fileUid);
-    });
-  }, [currentFiles, showUploadList]);
   useEffect(() => {
     listMountedRef.current = true;
   }, []);
@@ -432,7 +411,6 @@ function UploadBase({
     dragHandle?: ReactNode,
     dragState?: { isDragging: boolean; isSorting: boolean },
   ) => {
-    const previewSource = previewUrls.current.get(file.uid) ?? file.url;
     const imageFile = isImage(file);
     const downloadActive = activeDownloadUids.has(file.uid);
     const downloading = downloadLoadingUids.has(file.uid);
@@ -465,8 +443,9 @@ function UploadBase({
           {dragHandle}
           {listType === "picture" ? (
             <UploadPictureThumbnail
-              source={imageFile ? previewSource : undefined}
-              alt={file.name}
+              key={`${file.uid}-${file.url ?? ""}-${file.originFileObj?.name ?? ""}-${file.originFileObj?.lastModified ?? ""}`}
+              file={file}
+              image={imageFile}
               fallback={<Icon icon={imageFile ? "image-outlined" : "file-outlined"} size={22} />}
             />
           ) : (
@@ -499,8 +478,6 @@ function UploadBase({
                 data-upload-download-action
                 data-upload-download-active={downloadActive || undefined}
                 data-upload-download-loading={downloading || undefined}
-                aria-busy={downloadActive || undefined}
-                aria-label={`${file.name} ${downloadActive ? "다운로드 중" : "다운로드"}`}
                 disabled={downloadActive}
                 className={twMerge(
                   "inline-flex shrink-0 cursor-pointer items-center justify-center text-[#8c8c8c] transition-colors hover:text-[#0062df]",
@@ -582,12 +559,6 @@ function UploadBase({
         onEnterActive={getUploadMotionExpandedStyle}
         onLeaveStart={getUploadMotionCurrentStyle}
         onLeaveActive={() => uploadMotionCollapsedStyle}
-        onLeaveEnd={(element) => {
-          const fileUid = element.dataset.uploadMotionFile;
-          if (fileUid && !fileListRef.current.some((file) => file.uid === fileUid)) {
-            revokePreview(fileUid);
-          }
-        }}
         className="-mb-2 flex w-full min-w-0 flex-col"
       >
         {({ file, className: motionClassName, style: motionStyle }, motionRef) => {

@@ -37,8 +37,8 @@ const listFiles: UploadFile[] = [
 ];
 const sortableFiles: UploadFile[] = [
   { ...listFiles[0], uid: "sortable-1", name: "design-system.png" },
-  { ...listFiles[0], uid: "sortable-2", name: "dashboard.png" },
-  { ...listFiles[0], uid: "sortable-3", name: "profile.png" },
+  { ...listFiles[1], uid: "sortable-2", name: "dashboard.png" },
+  { ...listFiles[2], uid: "sortable-3", name: "profile.png" },
 ];
 
 const storyDescription = (id: string) => ({
@@ -267,19 +267,19 @@ export const SortableLists: Story = {
   {
     uid: 'design',
     name: 'design-system.png',
-    url: '/images/design-system.png',
+    url: 'https://picsum.photos/seed/wizard-upload-design-system/160/160',
     type: 'image/png',
   },
   {
     uid: 'dashboard',
     name: 'dashboard.png',
-    url: '/images/dashboard.png',
+    url: 'https://picsum.photos/seed/wizard-upload-product-photo/160/160',
     type: 'image/png',
   },
   {
     uid: 'profile',
     name: 'profile.png',
-    url: '/images/profile.png',
+    url: 'https://picsum.photos/seed/wizard-upload-profile/160/160',
     type: 'image/png',
   },
 ];
@@ -482,7 +482,7 @@ export const ControlledFileList: Story = {
         type: "code",
         code: withStoryImports(`function ControlledUpload() {
   const [files, setFiles] = useState<UploadFile[]>([
-    { uid: 'guide', name: 'upload-guide.pdf', url: '/guide.pdf' },
+    { uid: 'guide', name: 'upload-guide.pdf', url: 'data:application/pdf,upload-guide' },
   ]);
 
   return (
@@ -503,7 +503,11 @@ export const ControlledFileList: Story = {
 
 function ControlledUploadExample(args: Partial<UploadProps>) {
   const [files, setFiles] = useState<UploadFile[]>([
-    { uid: "guide", name: "upload-guide.pdf", url: "/guide.pdf" },
+    {
+      uid: "guide",
+      name: "upload-guide.pdf",
+      url: "data:application/pdf,upload-guide",
+    },
   ]);
 
   return (

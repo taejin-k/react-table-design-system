@@ -14,6 +14,20 @@ import {
 import type { UploadChangeParam, UploadFile } from "./Upload.types";
 
 describe("Upload", () => {
+  it("merges className into the outermost Upload and Upload.Dragger elements", () => {
+    const upload = render(
+      <Upload className="upload-custom w-fit">
+        <button>파일 선택</button>
+      </Upload>,
+    );
+
+    expect(upload.container.firstElementChild).toHaveClass("upload-custom", "w-fit");
+    expect(upload.container.firstElementChild).not.toHaveClass("w-full");
+
+    const dragger = render(<Upload.Dragger className="dragger-custom w-full" />);
+    expect(dragger.container.firstElementChild).toHaveClass("dragger-custom", "w-full");
+  });
+
   it("fills the available width so file names and actions stay separated", () => {
     const { container } = render(
       <Upload defaultFileList={[{ uid: "1", name: "report.pdf" }]}>
@@ -247,6 +261,56 @@ describe("Upload", () => {
     expect(document.querySelector(".wizard-image-preview-image")).toHaveAttribute(
       "src",
       "blob:uploaded-image",
+    );
+  });
+
+  it("creates a picture thumbnail for an initial controlled originFileObj", () => {
+    const originFileObj = new File(["image"], "controlled.png", { type: "image/png" });
+    const createObjectUrlMock = vi
+      .spyOn(URL, "createObjectURL")
+      .mockReturnValue("blob:controlled-initial-image");
+    const { container } = render(
+      <Upload
+        listType="picture"
+        fileList={[
+          {
+            uid: "controlled-image",
+            name: originFileObj.name,
+            type: originFileObj.type,
+            originFileObj,
+          },
+        ]}
+      />,
+    );
+
+    expect(createObjectUrlMock).toHaveBeenCalledWith(originFileObj);
+    expect(container.querySelector("[data-upload-picture-thumbnail]")).toHaveAttribute(
+      "src",
+      "blob:controlled-initial-image",
+    );
+  });
+
+  it("shows a replacement image immediately when a failed thumbnail source changes", () => {
+    const { container, rerender } = render(
+      <Upload
+        listType="picture"
+        fileList={[{ uid: "image", name: "image.png", type: "image/png", url: "/old.png" }]}
+      />,
+    );
+    fireEvent.error(container.querySelector("[data-upload-picture-thumbnail]")!);
+    expect(container.querySelector("[data-upload-picture-fallback]")).toBeInTheDocument();
+
+    rerender(
+      <Upload
+        listType="picture"
+        fileList={[{ uid: "image", name: "image.png", type: "image/png", url: "/new.png" }]}
+      />,
+    );
+
+    expect(container.querySelector("[data-upload-picture-fallback]")).not.toBeInTheDocument();
+    expect(container.querySelector("[data-upload-picture-thumbnail]")).toHaveAttribute(
+      "src",
+      "/new.png",
     );
   });
 
@@ -605,7 +669,6 @@ describe("Upload", () => {
 
       fireEvent.click(firstButton);
       expect(firstButton).toBeDisabled();
-      expect(firstButton).toHaveAttribute("aria-busy", "true");
       expect(firstButton.querySelector("svg.animate-spin")).not.toBeInTheDocument();
       expect(secondButton).not.toBeDisabled();
 

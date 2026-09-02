@@ -6,7 +6,6 @@ import { Calendar } from "./Calendar";
 import { Collapse } from "./Collapse";
 import { ColorPicker } from "./ColorPicker";
 import { DatePicker } from "./DatePicker";
-import { Description } from "./Description";
 import { Image } from "./Image";
 import { Menu } from "./Menu";
 import { Skeleton } from "./Skeleton";
@@ -25,7 +24,6 @@ describe("remaining component className convention", () => {
         <Collapse className="collapse-root" />
         <ColorPicker className="color-picker-root" />
         <DatePicker className="date-picker-root" />
-        <Description className="description-root" />
         <Image className="image-root" preview={false} />
         <Menu className="menu-root" />
         <Skeleton className="skeleton-root" />
@@ -33,6 +31,7 @@ describe("remaining component className convention", () => {
         <TimePicker className="time-picker-root" />
         <Tree className="tree-root" />
         <Upload className="upload-root" />
+        <Upload.Dragger className="upload-dragger-root" />
       </div>,
     );
 
@@ -43,7 +42,6 @@ describe("remaining component className convention", () => {
       "collapse-root",
       "color-picker-root",
       "date-picker-root",
-      "description-root",
       "image-root",
       "menu-root",
       "skeleton-root",
@@ -51,6 +49,7 @@ describe("remaining component className convention", () => {
       "time-picker-root",
       "tree-root",
       "upload-root",
+      "upload-dragger-root",
     ]) {
       expect(container.querySelector(`.${className}`)).toBeInTheDocument();
     }

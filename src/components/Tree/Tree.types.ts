@@ -1,4 +1,4 @@
-import type { CSSProperties, DragEvent, Key, ReactNode } from "react";
+import type { DragEvent, Key, ReactNode } from "react";
 
 export interface TreeDataNode {
   key: Key;
@@ -10,78 +10,34 @@ export interface TreeDataNode {
   checkable?: boolean;
   selectable?: boolean;
   isLeaf?: boolean;
-  className?: string;
-  style?: CSSProperties;
   [key: string]: unknown;
 }
 
-export interface TreeFieldNames {
-  title?: string;
-  key?: string;
-  children?: string;
-}
-
-export interface TreeEventInfo {
-  event: "select" | "check" | "expand";
-  selected?: boolean;
-  checked?: boolean;
-  expanded?: boolean;
-  node: TreeDataNode;
-  nativeEvent: Event;
-}
-
-export type TreeDropPositionType = -1 | 0 | 1;
-
-export interface TreeAllowDropInfo {
-  dropNode: TreeDataNode;
-  dropPosition: TreeDropPositionType;
-}
-
-export interface TreeSwitcherIconInfo {
-  expanded: boolean;
-  node: TreeDataNode;
-}
-
-export interface TreeLoadInfo {
-  event: "load";
-  node: TreeDataNode;
-}
-
-export interface TreeDraggableConfig {
-  nodeDraggable?: (node: TreeDataNode) => boolean;
-}
-
-export type TreeDraggableType = boolean | ((node: TreeDataNode) => boolean) | TreeDraggableConfig;
-
 export interface TreeDragInfo {
   event: DragEvent<HTMLDivElement>;
-  node: TreeDataNode;
-}
-
-export interface TreeDragEnterInfo extends TreeDragInfo {
-  expandedKeys: Key[];
-}
-
-export interface TreeDropInfo extends TreeDragInfo {
   dragNode: TreeDataNode;
-  dragNodesKeys: Key[];
-  dropPosition: TreeDropPositionType;
-  dropToGap: boolean;
+}
+
+export interface TreeDropInfo {
+  event: DragEvent<HTMLDivElement>;
+  dragNode: TreeDataNode;
+  treeData: TreeDataNode[];
+  parentKey: Key | null;
+  index: number;
 }
 
 export interface TreeProps {
   treeData?: TreeDataNode[];
   defaultTreeData?: TreeDataNode[];
-  fieldNames?: TreeFieldNames;
   fullWidth?: boolean;
   checkable?: boolean;
   checkStrictly?: boolean;
   selectable?: boolean;
   multiple?: boolean;
   disabled?: boolean;
-  draggable?: TreeDraggableType;
-  allowDrop?: (info: TreeAllowDropInfo) => boolean;
-  switcherIcon?: ReactNode | ((info: TreeSwitcherIconInfo) => ReactNode);
+  draggable?: boolean | ((node: TreeDataNode) => boolean);
+  allowDrop?: (node: TreeDataNode) => boolean;
+  allowChildren?: boolean | ((node: TreeDataNode) => boolean);
   titleRender?: (node: TreeDataNode) => ReactNode;
   expandedKeys?: Key[];
   defaultExpandedKeys?: Key[];
@@ -90,20 +46,13 @@ export interface TreeProps {
   defaultSelectedKeys?: Key[];
   checkedKeys?: Key[];
   defaultCheckedKeys?: Key[];
-  height?: number;
   loadData?: (node: TreeDataNode) => Promise<void>;
-  loadedKeys?: Key[];
   className?: string;
-  style?: CSSProperties;
-  onExpand?: (expandedKeys: Key[], info: TreeEventInfo) => void;
-  onSelect?: (selectedKeys: Key[], info: TreeEventInfo) => void;
-  onCheck?: (checkedKeys: Key[], info: TreeEventInfo) => void;
-  onLoad?: (loadedKeys: Key[], info: TreeLoadInfo) => void;
+  onExpand?: (expandedKeys: Key[], node: TreeDataNode) => void;
+  onSelect?: (selectedKeys: Key[], node: TreeDataNode) => void;
+  onCheck?: (checkedKeys: Key[], node: TreeDataNode) => void;
   onDragStart?: (info: TreeDragInfo) => void;
-  onDragEnter?: (info: TreeDragEnterInfo) => void;
-  onDragOver?: (info: TreeDragInfo) => void;
-  onDragLeave?: (info: TreeDragInfo) => void;
   onDragEnd?: (info: TreeDragInfo) => void;
   onDrop?: (info: TreeDropInfo) => void;
-  onTreeDataChange?: (treeData: TreeDataNode[], info: TreeDropInfo) => void;
+  onTreeDataChange?: (info: TreeDropInfo) => void;
 }

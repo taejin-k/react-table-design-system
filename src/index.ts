@@ -213,19 +213,6 @@ export type {
   CollapseProps,
   CollapseSizeType,
 } from "./components/Collapse";
-export { Description, Descriptions } from "./components/Description";
-export type {
-  DescriptionComponent,
-  DescriptionBreakpointType,
-  DescriptionColumnType,
-  DescriptionItemType,
-  DescriptionItemProps,
-  DescriptionLayoutType,
-  DescriptionProps,
-  DescriptionResponsiveType,
-  DescriptionSizeType,
-  DescriptionSpanType,
-} from "./components/Description";
 export { Image } from "./components/Image";
 export type {
   ImageActions,
@@ -236,21 +223,7 @@ export type {
   ImageTransform,
 } from "./components/Image";
 export { Tree } from "./components/Tree";
-export type {
-  TreeAllowDropInfo,
-  TreeDataNode,
-  TreeDragEnterInfo,
-  TreeDraggableConfig,
-  TreeDraggableType,
-  TreeDragInfo,
-  TreeDropInfo,
-  TreeDropPositionType,
-  TreeEventInfo,
-  TreeFieldNames,
-  TreeLoadInfo,
-  TreeProps,
-  TreeSwitcherIconInfo,
-} from "./components/Tree";
+export type { TreeDataNode, TreeDragInfo, TreeDropInfo, TreeProps } from "./components/Tree";
 export { Skeleton } from "./components/Skeleton";
 export type {
   SkeletonComponent,

@@ -9,8 +9,6 @@ const componentExports = [
   "Checkbox",
   "Collapse",
   "ColorPicker",
-  "Description",
-  "Descriptions",
   "Tag",
   "Dropdown",
   "Drawer",
