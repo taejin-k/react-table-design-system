@@ -78,19 +78,19 @@ const colorTokens: ColorToken[] = [
 
 function ColorCard({ color }: { color: ColorToken }) {
   return (
-    <article className="overflow-hidden rounded-2xl border border-[#e1e6ed] bg-white shadow-[0_4px_16px_rgba(17,24,39,0.06)]">
+    <article className="overflow-hidden rounded-2xl border border-[#E1E6ED] bg-white shadow-[0_4px_16px_rgba(17,24,39,0.06)]">
       <div className={`h-36 ${color.swatchClass}`} />
       <div className="p-6">
         <div className="flex items-start justify-between gap-6">
           <div>
             <h3 className="m-0 text-lg font-semibold text-[#111]">{color.name}</h3>
-            <code className="mt-2 inline-block rounded-md bg-[#f3f6f9] px-2 py-1 text-xs font-medium text-[#536071]">
+            <code className="mt-2 inline-block rounded-md bg-[#F3F6F9] px-2 py-1 text-xs font-medium text-[#536071]">
               {color.token}
             </code>
           </div>
           <code className="shrink-0 pt-0.5 text-sm font-semibold text-[#596273]">{color.hex}</code>
         </div>
-        <p className="mt-5 mb-0 min-h-12 text-sm leading-6 text-[#626b79]">{color.description}</p>
+        <p className="mt-5 mb-0 min-h-12 text-sm leading-6 text-[#626B79]">{color.description}</p>
       </div>
     </article>
   );
@@ -98,14 +98,11 @@ function ColorCard({ color }: { color: ColorToken }) {
 
 function ColorGuide() {
   return (
-    <main className="mx-auto w-full max-w-[1440px] bg-[#f8fafc] px-6 py-10 font-pretendard text-[#111] sm:px-10 sm:py-12">
+    <main className="mx-auto w-full max-w-[1440px] bg-[#F8FAFC] px-6 py-10 font-pretendard text-[#111] sm:px-10 sm:py-12">
       <header className="relative overflow-hidden rounded-3xl bg-[#111] px-6 py-9 text-white sm:px-10 sm:py-12">
         <div className="absolute top-0 right-0 size-56 translate-x-20 -translate-y-20 rounded-full bg-primary opacity-35 blur-3xl" />
         <div className="absolute right-40 bottom-0 size-40 translate-y-24 rounded-full bg-purple opacity-25 blur-3xl" />
         <div className="relative max-w-3xl">
-          <span className="inline-flex rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold tracking-[0.12em] uppercase">
-            Design tokens
-          </span>
           <h1 className="mt-5 mb-0 text-3xl font-semibold tracking-tight !text-white sm:text-4xl">
             Color
           </h1>
@@ -120,7 +117,7 @@ function ColorGuide() {
               rel="noreferrer"
               target="_blank"
             >
-              theme.css 보기 ↗
+              theme.css 보기 :오른쪽_위를_향한_화살표:
             </a>
             <a
               className="rounded-lg border border-white/20 px-3 py-2 text-xs font-semibold !text-white no-underline transition-colors hover:bg-white/10"
@@ -128,7 +125,7 @@ function ColorGuide() {
               rel="noreferrer"
               target="_blank"
             >
-              Tailwind color 문서 ↗
+              Tailwind color 문서 :오른쪽_위를_향한_화살표:
             </a>
           </div>
         </div>
@@ -145,9 +142,6 @@ function ColorGuide() {
               같은 의미의 색상은 화면 전체에서 동일한 token 이름으로 사용해요.
             </p>
           </div>
-          <span className="rounded-full bg-[#f5f5f5] px-3 py-1.5 text-xs text-[#666]">
-            {colorTokens.length} tokens
-          </span>
         </div>
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
           {colorTokens.map((color) => (
@@ -165,7 +159,7 @@ function ColorGuide() {
           <p className="mt-2 mb-5 text-sm leading-6 !text-white/65">
             패키지 스타일을 한 번 불러온 다음 일반 Tailwind class처럼 사용합니다.
           </p>
-          <pre className="m-0 overflow-x-auto rounded-xl bg-white/8 p-4 text-xs leading-6 text-white/85">
+          <pre className="m-0 overflow-hidden overflow-x-auto rounded-xl bg-white/8 p-4 text-xs leading-6 text-white/85">
             <code>{`import '@taejin-k/wizard-design/style.css';
 
 <button className="bg-primary hover:bg-primary-hover text-white">
@@ -180,12 +174,6 @@ function ColorGuide() {
           </pre>
         </article>
       </section>
-
-      <footer className="mt-14 border-t border-[#e3e8ef] pt-6 text-xs leading-6 text-[#777]">
-        공식 token은 <code>theme.css</code>에 정의되고 배포 <code>style.css</code>에도 필요한
-        utility와 CSS 변수가 포함돼요. 새 색상을 추가할 때는 HEX를 컴포넌트에 직접 넣지 않고 먼저
-        token을 정의합니다.
-      </footer>
     </main>
   );
 }
