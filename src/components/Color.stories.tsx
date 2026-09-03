@@ -112,20 +112,20 @@ function ColorGuide() {
           </p>
           <div className="mt-6 flex flex-wrap gap-2">
             <a
-              className="rounded-lg bg-white px-3 py-2 text-xs font-semibold text-[#111] no-underline transition-opacity hover:opacity-85"
+              className="rounded-lg bg-white px-3 py-2 text-xs font-semibold text-[#111] !no-underline transition-opacity hover:!no-underline hover:opacity-85"
               href={`${repositoryUrl}/theme.css`}
               rel="noreferrer"
               target="_blank"
             >
-              theme.css 보기 :오른쪽_위를_향한_화살표:
+              theme.css 보기 ↗
             </a>
             <a
-              className="rounded-lg border border-white/20 px-3 py-2 text-xs font-semibold !text-white no-underline transition-colors hover:bg-white/10"
+              className="rounded-lg border border-white/20 px-3 py-2 text-xs font-semibold !text-white !no-underline transition-colors hover:bg-white/10 hover:!no-underline"
               href="https://tailwindcss.com/docs/colors#customizing-your-colors"
               rel="noreferrer"
               target="_blank"
             >
-              Tailwind color 문서 :오른쪽_위를_향한_화살표:
+              Tailwind color 문서 ↗
             </a>
           </div>
         </div>
