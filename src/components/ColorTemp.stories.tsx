@@ -684,8 +684,6 @@ const illustrationColors = [
   ["#84E1BC", "Completed 장식점"],
 ] as const;
 
-const spectrumColors = ["#FF0000", "#FFFF00", "#00FF00", "#00FFFF", "#0000FF", "#FF00FF"];
-
 const storyOnlyColors = [
   ["#333333", "Table 요청 데이터 예시"],
   ["#555555", "Story 설명 label"],
@@ -839,7 +837,7 @@ function ColorInventory() {
               [solidColorCount, "UI solid"],
               [effects.length, "Alpha & effect"],
               [illustrationColors.length, "Illustration only"],
-              [spectrumColors.length, "Picker spectrum"],
+              [dynamicApis.length, "Dynamic APIs"],
             ].map(([value, label]) => (
               <div key={label} className="rounded-xl bg-white/10 px-4 py-3">
                 <strong className="block text-xl">{value}</strong>
@@ -854,7 +852,6 @@ function ColorInventory() {
         {[
           ["#solid-colors", "UI colors"],
           ["#effects", "Alpha & shadow"],
-          ["#picker-spectrum", "Picker spectrum"],
           ["#illustrations", "Illustrations"],
           ["#dynamic-colors", "Dynamic APIs"],
           ["#storybook-only", "Storybook only"],
@@ -921,35 +918,9 @@ function ColorInventory() {
         </div>
       </section>
 
-      <section id="picker-spectrum" className="mt-20 scroll-mt-6">
-        <SectionHeading
-          eyebrow="03"
-          title="ColorPicker spectrum"
-          description="일반 UI token이 아니라 hue와 명도 선택 기능을 만들기 위한 기능 전용 색상이에요. 공통 색상과 분리해서 관리하는 편이 안전해요."
-        />
-        <div className="overflow-hidden rounded-xl border border-[#e3e8ef] bg-white">
-          <div
-            className="h-20"
-            style={{ background: `linear-gradient(90deg, ${spectrumColors.join(", ")}, #FF0000)` }}
-          />
-          <div className="grid grid-cols-2 gap-px bg-[#e3e8ef] sm:grid-cols-3 lg:grid-cols-6">
-            {spectrumColors.map((color) => (
-              <div key={color} className="bg-white p-3 text-center">
-                <code className="text-xs font-semibold">{color}</code>
-              </div>
-            ))}
-          </div>
-        </div>
-        <div className="mt-3 flex flex-wrap gap-3 text-xs text-[#666]">
-          <span>명도 gradient: #000000 → transparent</span>
-          <span>채도 gradient: #FFFFFF → 동적 hsl(...)</span>
-          <SourceLink path="src/styles/interactive.css" line={26} children="ColorPicker CSS" />
-        </div>
-      </section>
-
       <section id="illustrations" className="mt-20 scroll-mt-6">
         <SectionHeading
-          eyebrow="04"
+          eyebrow="03"
           title="Illustration-only palette"
           description="일러스트 내부 도형과 설명에만 쓰는 팔레트예요. UI border나 text token과 값이 같더라도 별도 역할로 유지할지 먼저 결정해야 해요."
         />
@@ -969,7 +940,7 @@ function ColorInventory() {
 
       <section id="dynamic-colors" className="mt-20 scroll-mt-6">
         <SectionHeading
-          eyebrow="05"
+          eyebrow="04"
           title="Dynamic color APIs"
           description="사용자가 직접 색상을 전달하거나 주변 글자색을 상속하는 위치예요. 기본 token을 만들더라도 사용자 정의가 필요한 escape hatch로 남겨야 해요."
         />
@@ -985,7 +956,7 @@ function ColorInventory() {
 
       <section id="storybook-only" className="mt-20 scroll-mt-6">
         <SectionHeading
-          eyebrow="06"
+          eyebrow="05"
           title="Storybook-only colors"
           description="컴포넌트의 기본 UI 색상은 아니고 문서 장식이나 사용 예시에만 등장해요. class로 작성된 일부 문서 색상은 Tailwind 스캔 때문에 dist/style.css에도 생성되고 있어요."
         />
@@ -1006,7 +977,7 @@ function ColorInventory() {
 
       <section id="review-first" className="mt-20 scroll-mt-6">
         <SectionHeading
-          eyebrow="07"
+          eyebrow="06"
           title="통합 우선 검토군"
           description="색이 가깝거나 역할이 겹쳐 보이는 값들이에요. 아직 제거 대상을 정한 것은 아니며 대비, hover와 disabled 구분을 확인한 뒤 결정해야 해요."
         />
