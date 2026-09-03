@@ -63,18 +63,10 @@ const solidGroups: ColorGroup[] = [
       {
         hex: "#6EA0FA",
         name: "Primary loading",
-        description: "켜진 Toggle이 로딩 중일 때 강도를 낮춰 표시해요.",
-        components: ["Toggle"],
-        source: "src/components/Toggle/Toggle.tsx",
-        line: 70,
-      },
-      {
-        hex: "#69B1FF",
-        name: "Progress start",
-        description: "Notification 자동 닫힘 진행선의 밝은 시작 색상이에요.",
-        components: ["Notification"],
-        source: "src/components/Notification/Notification.tsx",
-        line: 578,
+        description: "Primary 버튼과 켜진 Toggle이 로딩 중일 때 사용해요.",
+        components: ["Button", "Toggle"],
+        source: "src/components/Button/Button.tsx",
+        line: 170,
       },
       {
         hex: "#52C41A",
@@ -104,14 +96,6 @@ const solidGroups: ColorGroup[] = [
         hex: "#FF7875",
         name: "Danger hover",
         description: "Danger 버튼에 마우스를 올렸을 때 사용해요.",
-        components: ["Button"],
-        source: "src/components/Button/Button.tsx",
-        line: 110,
-      },
-      {
-        hex: "#D9363E",
-        name: "Danger active",
-        description: "Danger 버튼을 누르고 있는 상태에 사용해요.",
         components: ["Button"],
         source: "src/components/Button/Button.tsx",
         line: 110,
@@ -684,37 +668,6 @@ const illustrationColors = [
   ["#84E1BC", "Completed 장식점"],
 ] as const;
 
-const storyOnlyColors = [
-  ["#333333", "Table 요청 데이터 예시"],
-  ["#555555", "Story 설명 label"],
-  ["#4A5667", "타입 링크와 code pill 글자"],
-  ["#E3E8EF", "타입 링크와 code pill border"],
-  ["#E8E8E8", "Storybook preview border"],
-  ["#F8FAFC", "타입 링크와 code pill 배경"],
-  ["#1677FF", "Calendar 일정·ColorPicker preset 예시"],
-  ["#722ED1", "Avatar·ColorPicker 보라색 예시"],
-  ["#13C2C2", "ColorPicker preset"],
-  ["#2F54EB", "ColorPicker preset"],
-  ["#EB2F96", "ColorPicker preset"],
-  ["#91CAFF", "ColorPicker preset"],
-  ["#B7EB8F", "ColorPicker preset"],
-  ["#FFE58F", "ColorPicker preset"],
-  ["#0062DF99", "ColorPicker 60% alpha 예시"],
-  ["#0062DF33", "ColorPicker 20% alpha 예시"],
-] as const;
-
-const dynamicApis = [
-  ["Icon.color", "SVG fill 또는 stroke"],
-  ["Badge.color", "상태 점"],
-  ["BreadcrumbItem.color", "항목 글자와 아이콘"],
-  ["Avatar.color", "아바타 배경"],
-  ["Tooltip.color", "배경·arrow와 자동 대비 글자"],
-  ["Popover.color", "배경·arrow와 자동 대비 글자"],
-  ["ColorPicker.value / presets", "사용자가 선택하거나 제공한 색상"],
-  ["CalendarEvent.color", "일정 막대, 기본값은 #0062DF"],
-  ["currentColor", "Icon 기본색, Skeleton SVG, Badge animation"],
-] as const;
-
 const consolidationGroups = [
   ["Control border", "#D9D9D9", "#DDDDDD"],
   ["Disabled / muted", "#999999", "#AAAAAA", "#BBBBBB", "#BFBFBF", "#CCCCCC"],
@@ -837,7 +790,7 @@ function ColorInventory() {
               [solidColorCount, "UI solid"],
               [effects.length, "Alpha & effect"],
               [illustrationColors.length, "Illustration only"],
-              [dynamicApis.length, "Dynamic APIs"],
+              [consolidationGroups.length, "Review groups"],
             ].map(([value, label]) => (
               <div key={label} className="rounded-xl bg-white/10 px-4 py-3">
                 <strong className="block text-xl">{value}</strong>
@@ -853,8 +806,6 @@ function ColorInventory() {
           ["#solid-colors", "UI colors"],
           ["#effects", "Alpha & shadow"],
           ["#illustrations", "Illustrations"],
-          ["#dynamic-colors", "Dynamic APIs"],
-          ["#storybook-only", "Storybook only"],
           ["#review-first", "통합 검토군"],
         ].map(([href, label]) => (
           <a
@@ -938,46 +889,9 @@ function ColorInventory() {
         </div>
       </section>
 
-      <section id="dynamic-colors" className="mt-20 scroll-mt-6">
-        <SectionHeading
-          eyebrow="04"
-          title="Dynamic color APIs"
-          description="사용자가 직접 색상을 전달하거나 주변 글자색을 상속하는 위치예요. 기본 token을 만들더라도 사용자 정의가 필요한 escape hatch로 남겨야 해요."
-        />
-        <div className="grid gap-3 md:grid-cols-2">
-          {dynamicApis.map(([api, usage]) => (
-            <div key={api} className="rounded-xl border border-[#e3e8ef] bg-white p-4">
-              <code className="text-sm font-semibold text-[#0062df]">{api}</code>
-              <p className="mt-2 mb-0 text-sm leading-6 text-[#555]">{usage}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section id="storybook-only" className="mt-20 scroll-mt-6">
-        <SectionHeading
-          eyebrow="05"
-          title="Storybook-only colors"
-          description="컴포넌트의 기본 UI 색상은 아니고 문서 장식이나 사용 예시에만 등장해요. class로 작성된 일부 문서 색상은 Tailwind 스캔 때문에 dist/style.css에도 생성되고 있어요."
-        />
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {storyOnlyColors.map(([color, label]) => (
-            <CompactSwatch key={color} color={color} label={label} />
-          ))}
-        </div>
-        <div className="mt-4 flex flex-wrap gap-4">
-          <SourceLink path=".storybook/preview.css" line={66} children="Storybook preview CSS" />
-          <SourceLink
-            path="src/components/ColorPicker/ColorPicker.stories.tsx"
-            line={35}
-            children="ColorPicker 예시 팔레트"
-          />
-        </div>
-      </section>
-
       <section id="review-first" className="mt-20 scroll-mt-6">
         <SectionHeading
-          eyebrow="06"
+          eyebrow="04"
           title="통합 우선 검토군"
           description="색이 가깝거나 역할이 겹쳐 보이는 값들이에요. 아직 제거 대상을 정한 것은 아니며 대비, hover와 disabled 구분을 확인한 뒤 결정해야 해요."
         />

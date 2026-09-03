@@ -107,7 +107,7 @@ const buttonVariants = cva(
         primary:
           "bg-[#0062df] text-white ring-1 ring-transparent ring-inset hover:bg-[#227cef] disabled:bg-[#f5f5f5] disabled:text-[#999999] disabled:ring-[#dddddd]",
         danger:
-          "bg-[#ff4d4f] text-white ring-1 ring-transparent ring-inset hover:bg-[#ff7875] active:bg-[#d9363e] disabled:bg-[#f5f5f5] disabled:text-[#999999] disabled:ring-[#dddddd]",
+          "bg-[#ff4d4f] text-white ring-1 ring-transparent ring-inset hover:bg-[#ff7875] disabled:bg-[#f5f5f5] disabled:text-[#999999] disabled:ring-[#dddddd]",
         secondary:
           "bg-white text-[#111111] ring-1 ring-[#ddd] ring-inset hover:bg-[#f5f5f5] disabled:bg-[#f5f5f5] disabled:text-[#999999] disabled:ring-[#dddddd]",
         tertiary:
@@ -164,11 +164,15 @@ const buttonVariants = cva(
         size: "lg",
         className: "shadow-[0_3px_6px_rgba(0,0,0,0.20)]",
       },
-      { loading: true, variant: "primary", className: "hover:bg-[#0062df]" },
+      {
+        loading: true,
+        variant: "primary",
+        className: "bg-[#6ea0fa] opacity-100 hover:bg-[#6ea0fa]",
+      },
       {
         loading: true,
         variant: "danger",
-        className: "hover:bg-[#ff4d4f] active:bg-[#ff4d4f]",
+        className: "hover:bg-[#ff4d4f]",
       },
       { loading: true, variant: "secondary", className: "hover:bg-white" },
       { loading: true, variant: "tertiary", className: "hover:ring-transparent" },

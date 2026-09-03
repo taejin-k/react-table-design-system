@@ -2,7 +2,12 @@
 @import "tailwindcss/theme.css" layer(theme);
 @import "tailwindcss/preflight.css" layer(base);
 @import "../../theme.css" layer(theme);
-@import "tailwindcss/utilities.css" layer(utilities);
+@import "tailwindcss/utilities.css" layer(utilities) source(none);
+@source "../components/**/*.tsx";
+@source not "../components/**/*.stories.tsx";
+@source not "../components/**/*.test.tsx";
+@source not "../components/Table/Table.docs.tsx";
+@source not "../components/Table/Table.playground-data.tsx";
 @import "./table-scrollbar.css";
 @import "./motion.css";
 @import "./interactive.css";

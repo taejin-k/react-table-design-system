@@ -575,7 +575,7 @@ function NotificationCard({
       ) : null}
       {item.showProgress && item.duration ? (
         <div
-          className="absolute right-2 bottom-0 left-2 h-0.5 origin-left rounded-lg bg-[linear-gradient(90deg,#69b1ff,#0062df)]"
+          className="absolute right-2 bottom-0 left-2 h-0.5 origin-left rounded-lg bg-[#0062df]"
           style={{
             animation: `wizard-notification-progress ${item.duration}s linear forwards`,
             animationPlayState: paused ? "paused" : "running",
