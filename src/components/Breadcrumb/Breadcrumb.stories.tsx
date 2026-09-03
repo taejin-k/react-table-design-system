@@ -222,7 +222,7 @@ export const SingleIcon: Story = {
 };
 
 export const ItemColors: Story = {
-  args: { firstColor: "#0062df", secondColor: "#4f19c4", currentColor: "#d92626" },
+  args: { firstColor: "#0062df", secondColor: "#4f19c4", currentColor: "#ff4d4f" },
   argTypes: {
     firstColor: { name: "첫 번째 항목 색상", control: "color" },
     secondColor: { name: "두 번째 항목 색상", control: "color" },
@@ -254,7 +254,7 @@ export const ItemColors: Story = {
           icon: <Icon icon="folder-outlined" />,
           color: '#4f19c4',
         },
-        { title: '현재 위치', icon: <Icon icon="edit" />, color: '#d92626' },
+        { title: '현재 위치', icon: <Icon icon="edit" />, color: '#ff4d4f' },
       ]}
     />
   );

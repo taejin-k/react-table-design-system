@@ -1291,7 +1291,7 @@ const pickerRootVariants = cva(
         default: "border-[#ddd] bg-white",
         filled: "border-[#f5f5f5] bg-[#f5f5f5]",
       },
-      error: { true: "border-[#fe5150]", false: "" },
+      error: { true: "border-[#ff4d4f]", false: "" },
       readOnly: {
         true: "cursor-default",
         false: "",

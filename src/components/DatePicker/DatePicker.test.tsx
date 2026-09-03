@@ -87,7 +87,7 @@ describe("DatePicker", () => {
     render(
       <DatePicker
         defaultPickerValue={dayjs("2026-08-01")}
-        cellRender={(_, origin) => <span className="text-[#fe5150]">{origin}</span>}
+        cellRender={(_, origin) => <span className="text-[#ff4d4f]">{origin}</span>}
       />,
     );
 
@@ -96,7 +96,7 @@ describe("DatePicker", () => {
     const adjacentJuly26 = within(popup).getAllByRole("button", { name: "26" })[0];
 
     expect(adjacentJuly26).toHaveClass("text-[#bbb]", "[&_*]:text-[#bbb]!");
-    expect(adjacentJuly26.firstElementChild).toHaveClass("text-[#fe5150]");
+    expect(adjacentJuly26.firstElementChild).toHaveClass("text-[#ff4d4f]");
   });
 
   it("keeps the trigger focusable without opening while read only", async () => {

@@ -237,14 +237,14 @@ const inputRowVariants = cva(
         variant: ["default", "filled", "borderless"],
         error: true,
         disabled: false,
-        className: "border-[#fe5150] focus-within:border-[#fe5150]",
+        className: "border-[#ff4d4f] focus-within:border-[#ff4d4f]",
       },
       {
         variant: "underlined",
         error: true,
         disabled: false,
         className:
-          "border-x-transparent border-t-transparent border-b-[#fe5150] focus-within:border-x-transparent focus-within:border-t-transparent focus-within:border-b-[#fe5150]",
+          "border-x-transparent border-t-transparent border-b-[#ff4d4f] focus-within:border-x-transparent focus-within:border-t-transparent focus-within:border-b-[#ff4d4f]",
       },
       {
         variant: "underlined",

@@ -195,7 +195,7 @@ const textAreaRootVariants = cva(
         default: "ring-[#ddd]",
         filled: "bg-[#f5f5f5] ring-[#f5f5f5]",
       },
-      error: { true: "ring-[#fe5150]", false: "" },
+      error: { true: "ring-[#ff4d4f]", false: "" },
       disabled: { true: "bg-[#f8f8f8] ring-[#ddd]", false: "" },
     },
     defaultVariants: { variant: "default", error: false, disabled: false },

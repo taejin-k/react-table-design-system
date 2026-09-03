@@ -33,7 +33,7 @@ describe("TextArea", () => {
     );
     const textarea = screen.getByRole("textbox", { name: "소개" });
     expect(container.firstElementChild).toHaveClass("custom-root");
-    expect(textarea.parentElement).toHaveClass("ring-[#fe5150]");
+    expect(textarea.parentElement).toHaveClass("ring-[#ff4d4f]");
     expect(screen.getByText("내용을 입력해 주세요.")).toBeInTheDocument();
   });
 

@@ -1201,7 +1201,7 @@ const selectRootVariants = cva(
         filled: "border-[#f5f5f5] bg-[#f5f5f5]",
       },
       error: {
-        true: "border-[#fe5150]",
+        true: "border-[#ff4d4f]",
         false: "",
       },
       readOnly: {

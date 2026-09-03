@@ -136,7 +136,7 @@ describe("Icon", () => {
     const user = userEvent.setup();
     const onClick = vi.fn();
     const { container } = render(
-      <Icon data-testid="icon" color="#fe5150" icon="delete-outlined" loading onClick={onClick} />,
+      <Icon data-testid="icon" color="#ff4d4f" icon="delete-outlined" loading onClick={onClick} />,
     );
 
     const icon = screen.getByTestId("icon");
@@ -144,7 +144,7 @@ describe("Icon", () => {
     expect(icon).not.toHaveClass("cursor-pointer", "hover:opacity-75");
     expect(icon).not.toHaveAttribute("tabindex");
     expect(container.querySelector("path")).toHaveAttribute("d", expect.stringContaining("1.333"));
-    expect(container.querySelector("path")).toHaveAttribute("fill", "#fe5150");
+    expect(container.querySelector("path")).toHaveAttribute("fill", "#ff4d4f");
 
     await user.click(icon);
     expect(onClick).not.toHaveBeenCalled();
@@ -186,7 +186,7 @@ describe("Icon", () => {
     const user = userEvent.setup();
     const onClick = vi.fn();
     const { container } = render(
-      <Icon data-testid="icon" color="#fe5150" disabled icon="delete-outlined" onClick={onClick} />,
+      <Icon data-testid="icon" color="#ff4d4f" disabled icon="delete-outlined" onClick={onClick} />,
     );
 
     const icon = screen.getByTestId("icon");

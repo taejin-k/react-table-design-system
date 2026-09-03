@@ -55,13 +55,13 @@ describe("Breadcrumb", () => {
       <Breadcrumb
         items={[
           { title: "홈", icon: <svg data-testid="home-icon" />, color: "#0062df" },
-          { title: "현재 위치", color: "#d92626" },
+          { title: "현재 위치", color: "#ff4d4f" },
         ]}
       />,
     );
 
     expect(screen.getByTestId("home-icon")).toBeInTheDocument();
     expect(screen.getByText("홈").parentElement).toHaveStyle({ color: "#0062df" });
-    expect(screen.getByText("현재 위치").parentElement).toHaveStyle({ color: "#d92626" });
+    expect(screen.getByText("현재 위치").parentElement).toHaveStyle({ color: "#ff4d4f" });
   });
 });

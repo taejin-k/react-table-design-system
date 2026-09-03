@@ -52,7 +52,7 @@ const radioVariants = cva(
   {
     variants: {
       error: {
-        true: "border-[#fe5150] checked:border-[#fe5150] checked:bg-[#fe5150] hover:border-[#fe5150]",
+        true: "border-[#ff4d4f] checked:border-[#ff4d4f] checked:bg-[#ff4d4f] hover:border-[#ff4d4f]",
         false: "",
       },
     },

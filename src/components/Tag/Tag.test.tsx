@@ -42,8 +42,8 @@ describe("Tag", () => {
 
     expect(screen.getByTestId("tag")).toHaveClass(
       "custom-tag",
-      "text-[#d92626]",
-      "shadow-[inset_0_0_0_1px_#d92626]",
+      "text-[#ff4d4f]",
+      "shadow-[inset_0_0_0_1px_#ff4d4f]",
     );
   });
 
@@ -54,7 +54,20 @@ describe("Tag", () => {
       </Tag>,
     );
 
-    expect(screen.getByTestId("tag")).toHaveClass("bg-[#1e59a3]", "text-white");
+    expect(screen.getByTestId("tag")).toHaveClass("bg-[#0062df]", "text-white");
+  });
+
+  it("uses the dedicated navy color", () => {
+    render(
+      <Tag color="navy" data-testid="tag" variant="outlined">
+        네이비
+      </Tag>,
+    );
+
+    expect(screen.getByTestId("tag")).toHaveClass(
+      "text-[#023f97]",
+      "shadow-[inset_0_0_0_1px_#023f97]",
+    );
   });
 
   it("renders a soft outlined tag with a tinted border and background", () => {

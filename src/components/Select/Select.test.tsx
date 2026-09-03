@@ -813,7 +813,7 @@ describe("Select", () => {
 
     const tag = document.querySelector<HTMLElement>("[data-select-tag]");
     expect(tag).not.toBeNull();
-    expect(tag).toHaveClass("bg-[#eff5ee]", "text-[#1c8616]");
+    expect(tag).toHaveClass("bg-[#eff5ee]", "text-[#52c41a]");
 
     const closeIcon = (tag as HTMLElement).querySelector("svg") as SVGSVGElement;
     expect(closeIcon).toHaveClass("cursor-pointer", "hover:opacity-75");
@@ -835,7 +835,7 @@ describe("Select", () => {
         />,
       );
 
-      expect(document.querySelector("[data-select-tag]")).toHaveClass("bg-white", "text-[#1c8616]");
+      expect(document.querySelector("[data-select-tag]")).toHaveClass("bg-white", "text-[#52c41a]");
     },
   );
 
