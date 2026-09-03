@@ -28,7 +28,7 @@ export const Radio = forwardRef<HTMLInputElement, RadioProps>(
           <span
             className={twMerge(
               "font-pretendard text-[14px] leading-4 whitespace-pre-line",
-              disabled ? "text-[#aaa]" : "text-[#111]",
+              disabled ? "text-disabled" : "text-dark",
             )}
           >
             {label}
@@ -48,7 +48,7 @@ const radioVariants = cva(
   // 점이 뚝 끊기듯 나타남/사라짐). 미체크 상태에도 spread가 원을 전부 덮는
   // 8px(size-4의 절반) 흰색 shadow를 깔아둬서, 체크 시 8px→4px로 spread만
   // 매끄럽게 줄어들며(=점이 자라나며) 배경색 전환과 함께 애니메이션되게 함.
-  "relative m-0 size-4 shrink-0 cursor-pointer appearance-none rounded-full border border-solid border-[#ddd] bg-white shadow-[inset_0_0_0_8px_white] transition-[background-color,border-color,box-shadow] checked:border-primary checked:bg-primary checked:shadow-[inset_0_0_0_4px_white] hover:border-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary disabled:cursor-not-allowed disabled:border-[#ddd] disabled:bg-[#f5f5f5] disabled:shadow-[inset_0_0_0_8px_#f5f5f5] disabled:checked:bg-[#ccc] disabled:checked:shadow-[inset_0_0_0_4px_#f5f5f5] disabled:hover:border-[#ddd]",
+  "relative m-0 size-4 shrink-0 cursor-pointer appearance-none rounded-full border border-solid border-border bg-white shadow-[inset_0_0_0_8px_white] transition-[background-color,border-color,box-shadow] checked:border-primary checked:bg-primary checked:shadow-[inset_0_0_0_4px_white] hover:border-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary disabled:cursor-not-allowed disabled:border-border disabled:bg-hover disabled:shadow-[inset_0_0_0_8px_var(--color-hover)] disabled:checked:bg-disabled disabled:checked:shadow-[inset_0_0_0_4px_var(--color-hover)] disabled:hover:border-border",
   {
     variants: {
       error: {

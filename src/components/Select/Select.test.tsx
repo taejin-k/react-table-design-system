@@ -43,7 +43,7 @@ describe("Select", () => {
     render(<Select options={options} variant="filled" />);
 
     const trigger = screen.getByRole("button", { name: "선택하세요" });
-    expect(trigger).toHaveClass("bg-[#f5f5f5]");
+    expect(trigger).toHaveClass("bg-hover");
     expect(trigger).not.toHaveClass("bg-white");
   });
 

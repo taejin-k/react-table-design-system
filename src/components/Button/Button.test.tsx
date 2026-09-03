@@ -47,7 +47,7 @@ describe("Button", () => {
     const { rerender } = render(<Button variant="ghost">Ghost</Button>);
 
     const button = screen.getByRole("button", { name: "Ghost" });
-    expect(button).toHaveClass("bg-transparent", "hover:bg-[#f5f5f5]", "ring-transparent");
+    expect(button).toHaveClass("bg-transparent", "hover:bg-hover", "ring-transparent");
 
     rerender(
       <Button variant="ghost" loading>
@@ -62,7 +62,7 @@ describe("Button", () => {
 
     expect(screen.getByRole("button", { name: "Tertiary" })).toHaveClass(
       "ring-transparent",
-      "hover:ring-[#ddd]",
+      "hover:ring-border",
     );
   });
 
@@ -70,7 +70,7 @@ describe("Button", () => {
     const { rerender } = render(<Button variant="danger">삭제</Button>);
 
     const button = screen.getByRole("button", { name: "삭제" });
-    expect(button).toHaveClass("bg-danger", "text-white", "hover:bg-danger-hover");
+    expect(button).toHaveClass("bg-danger", "text-white", "hover:bg-[#ff7875]");
     expect(button).not.toHaveClass("active:bg-[#d9363e]");
 
     rerender(
@@ -86,11 +86,7 @@ describe("Button", () => {
         삭제
       </Button>,
     );
-    expect(button).toHaveClass(
-      "disabled:bg-[#f5f5f5]",
-      "disabled:text-[#999999]",
-      "disabled:ring-[#dddddd]",
-    );
+    expect(button).toHaveClass("disabled:bg-hover", "disabled:text-gray", "disabled:ring-border");
   });
 
   it("keeps icon interaction owned by the button", async () => {
@@ -175,9 +171,9 @@ describe("Button", () => {
     const button = screen.getByRole("button", { name: "저장" });
     expect(button).toHaveClass(
       "cursor-default",
-      "bg-primary-loading",
+      "bg-[#6ea0fa]",
       "opacity-100",
-      "hover:bg-primary-loading",
+      "hover:bg-[#6ea0fa]",
     );
     expect(screen.getByTestId("prefix")).toBeInTheDocument();
     expect(screen.queryByTestId("suffix")).not.toBeInTheDocument();
@@ -205,21 +201,21 @@ describe("Button", () => {
     );
 
     const button = screen.getByRole("button");
-    expect(button).toHaveClass("shadow-[0_1px_2px_rgba(0,0,0,0.12)]");
+    expect(button).toHaveClass("shadow-xs");
 
     rerender(
       <Button size="md" shadow>
         Medium
       </Button>,
     );
-    expect(button).toHaveClass("shadow-[0_2px_4px_rgba(0,0,0,0.16)]");
+    expect(button).toHaveClass("shadow-sm");
 
     rerender(
       <Button size="lg" shadow>
         Large
       </Button>,
     );
-    expect(button).toHaveClass("shadow-[0_3px_6px_rgba(0,0,0,0.20)]");
+    expect(button).toHaveClass("shadow-lg");
   });
 
   it("keeps text children on one line", () => {

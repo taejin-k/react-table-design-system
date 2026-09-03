@@ -153,7 +153,7 @@ export function Drawer({
       data-drawer-panel
       tabIndex={-1}
       className={twMerge(
-        "wizard-drawer-panel absolute flex flex-col bg-white font-pretendard text-sm text-[#111] shadow-[-8px_0_24px_rgba(0,0,0,0.12)] outline-none",
+        "wizard-drawer-panel absolute flex flex-col bg-white font-pretendard text-sm text-dark shadow-2xl outline-none",
         "pointer-events-auto",
         motionPlacement === "left" && "inset-y-0 left-0",
         motionPlacement === "right" && "inset-y-0 right-0",
@@ -166,7 +166,7 @@ export function Drawer({
         <ResizeHandle placement={motionPlacement} config={resizable} onResize={setResized} />
       ) : null}
       {title !== undefined || extra || closeButton ? (
-        <div className="flex min-h-14 items-center gap-3 border-b border-[#f0f0f0] px-5 py-4">
+        <div className="flex min-h-14 items-center gap-3 border-b border-hover px-5 py-4">
           <div className="min-w-0 flex-1 text-base leading-6 font-semibold [overflow-wrap:anywhere] break-words whitespace-pre-wrap">
             {title}
           </div>
@@ -184,7 +184,7 @@ export function Drawer({
         )}
       </div>
       {footer !== undefined ? (
-        <div className="border-t border-[#f0f0f0] px-5 py-4">{footer}</div>
+        <div className="border-t border-hover px-5 py-4">{footer}</div>
       ) : null}
     </div>
   );

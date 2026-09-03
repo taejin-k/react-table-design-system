@@ -25,8 +25,8 @@ describe("Segmented", () => {
     );
 
     const disabledItem = screen.getByRole("radio", { name: "비활성" }).closest("label");
-    expect(disabledItem).toHaveClass("cursor-not-allowed", "text-[#bbb]");
-    expect(disabledItem).not.toHaveClass("hover:text-[#111]");
+    expect(disabledItem).toHaveClass("cursor-not-allowed", "text-disabled");
+    expect(disabledItem).not.toHaveClass("hover:text-dark");
   });
 
   it("selects an option and reports its value", async () => {

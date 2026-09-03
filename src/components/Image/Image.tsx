@@ -158,7 +158,7 @@ function Preview({
   });
   if (typeof document === "undefined") return null;
   const actionClassName =
-    "pointer-events-auto inline-flex size-[42px] cursor-pointer items-center justify-center border-0 bg-transparent p-3 text-[rgba(255,255,255,0.65)] transition-colors hover:text-[rgba(255,255,255,0.85)] disabled:cursor-not-allowed disabled:text-[rgba(255,255,255,0.25)] motion-reduce:transition-none";
+    "pointer-events-auto inline-flex size-[42px] cursor-pointer items-center justify-center border-0 bg-transparent p-3 text-white/[0.65] transition-colors hover:text-white/[0.85] disabled:cursor-not-allowed disabled:text-white/[0.25] motion-reduce:transition-none";
   const toolbar = (
     <div
       data-image-preview-actions
@@ -258,7 +258,7 @@ function Preview({
                 type="button"
                 data-image-preview-previous
                 disabled={active === 0}
-                className="pointer-events-auto absolute left-3 z-[2] inline-flex size-[42px] cursor-pointer items-center justify-center rounded-full border-0 bg-black/10 p-3 text-white transition-colors hover:bg-black/20 disabled:cursor-not-allowed disabled:bg-transparent disabled:text-[rgba(255,255,255,0.25)] motion-reduce:transition-none"
+                className="pointer-events-auto absolute left-3 z-[2] inline-flex size-[42px] cursor-pointer items-center justify-center rounded-full border-0 bg-black/10 p-3 text-white transition-colors hover:bg-black/20 disabled:cursor-not-allowed disabled:bg-transparent disabled:text-white/[0.25] motion-reduce:transition-none"
                 onClick={() => actions.onActive(active - 1)}
               >
                 <Icon icon="chevron-left" size={18} />
@@ -267,7 +267,7 @@ function Preview({
                 type="button"
                 data-image-preview-next
                 disabled={active === sources.length - 1}
-                className="pointer-events-auto absolute right-3 z-[2] inline-flex size-[42px] cursor-pointer items-center justify-center rounded-full border-0 bg-black/10 p-3 text-white transition-colors hover:bg-black/20 disabled:cursor-not-allowed disabled:bg-transparent disabled:text-[rgba(255,255,255,0.25)] motion-reduce:transition-none"
+                className="pointer-events-auto absolute right-3 z-[2] inline-flex size-[42px] cursor-pointer items-center justify-center rounded-full border-0 bg-black/10 p-3 text-white transition-colors hover:bg-black/20 disabled:cursor-not-allowed disabled:bg-transparent disabled:text-white/[0.25] motion-reduce:transition-none"
                 onClick={() => actions.onActive(active + 1)}
               >
                 <Icon icon="chevron-right" size={18} />
@@ -339,7 +339,7 @@ function Preview({
           </div>
           <div className="absolute bottom-8 z-[2] flex flex-col items-center gap-3">
             {sources.length > 1 ? (
-              <span data-image-preview-count className="text-sm text-[rgba(255,255,255,0.65)]">
+              <span data-image-preview-count className="text-sm text-white/[0.65]">
                 {active + 1} / {sources.length}
               </span>
             ) : null}

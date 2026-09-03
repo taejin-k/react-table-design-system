@@ -273,7 +273,7 @@ export function ColorPicker({
       >
         <span
           data-colorpicker-saturation-thumb
-          className="absolute size-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow"
+          className="absolute size-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow-xs"
           style={{ left: `${hsb.s * 100}%`, top: `${(1 - hsb.b) * 100}%` }}
         />
       </div>
@@ -373,7 +373,7 @@ export function ColorPicker({
           <button
             data-colorpicker-clear
             type="button"
-            className="inline-flex size-[30px] items-center justify-center rounded-md border border-[#d9d9d9]"
+            className="inline-flex size-[30px] items-center justify-center rounded-md border border-border"
             onClick={() => {
               setHuePosition(0);
               if (value === undefined) setInnerValue("");
@@ -387,7 +387,7 @@ export function ColorPicker({
     </div>
   );
   const Presets = presets.length ? (
-    <div className="grid w-full max-w-full min-w-0 gap-3 overflow-hidden border-t border-[#f0f0f0] pt-3">
+    <div className="grid w-full max-w-full min-w-0 gap-3 overflow-hidden border-t border-hover pt-3">
       {presets.map((preset, index) => (
         <div key={index} className="min-w-0">
           <div className="text-sm font-medium">{preset.label}</div>
@@ -425,7 +425,7 @@ export function ColorPicker({
       <Icon
         icon="chevron-down"
         size={12}
-        color="#bbb"
+        color="disabled"
         className={twMerge("transition-transform", floating.isOpen && "rotate-180")}
       />
     </>
@@ -437,7 +437,7 @@ export function ColorPicker({
         type="button"
         disabled={disabled}
         className={twMerge(
-          "inline-flex items-center gap-2 rounded-md border border-[#d9d9d9] bg-white py-[3px] pr-2 pl-[3px] font-pretendard text-sm text-[#111] transition-colors focus:border-primary focus:outline-none disabled:cursor-not-allowed disabled:bg-[#f5f5f5] disabled:text-[#bbb]",
+          "inline-flex items-center gap-2 rounded-md border border-border bg-white py-[3px] pr-2 pl-[3px] font-pretendard text-sm text-dark transition-colors focus:border-primary focus:outline-none disabled:cursor-not-allowed disabled:bg-hover disabled:text-disabled",
           !disabled && !readOnly && "cursor-pointer hover:border-primary",
           readOnly && "cursor-default",
           size === "lg" ? "h-10" : size === "sm" ? "h-6" : "h-8",
@@ -453,7 +453,7 @@ export function ColorPicker({
               ref={floating.popupRef}
               data-colorpicker-popup
               className={twMerge(
-                "fixed z-[1050] box-border w-72 max-w-[calc(100vw-16px)] overflow-hidden rounded-lg bg-white p-3 font-pretendard text-[#111] shadow-[0_6px_16px_rgba(0,0,0,0.06),0_3px_6px_-4px_rgba(0,0,0,0.08),0_9px_28px_8px_rgba(0,0,0,0.03)]",
+                "fixed z-[1050] box-border w-72 max-w-[calc(100vw-16px)] overflow-hidden rounded-lg bg-white p-3 font-pretendard text-dark shadow-xl",
                 !floating.isMotionVisible && "pointer-events-none",
               )}
               style={{

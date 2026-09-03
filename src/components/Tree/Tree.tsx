@@ -561,7 +561,7 @@ export function Tree({
                 "relative flex min-h-6 w-fit max-w-full items-start rounded-md text-sm select-none",
                 draggable && "w-full",
                 fullWidth && "w-full",
-                nodeDisabled && "cursor-not-allowed text-[#bbb]",
+                nodeDisabled && "cursor-not-allowed text-disabled",
                 canDragNode && "cursor-grab active:cursor-grabbing",
               )}
               style={{ paddingInlineStart: level * 24 }}
@@ -688,7 +688,7 @@ export function Tree({
                 className={twMerge(
                   "inline-flex min-h-6 min-w-0 items-center rounded-md transition-colors",
                   fullWidth && "flex-1",
-                  nodeSelectable && "cursor-pointer hover:bg-[#f5f5f5]",
+                  nodeSelectable && "cursor-pointer hover:bg-hover",
                   isSelected && !nodeDisabled && "bg-selected text-primary",
                   isSelected && nodeSelectable && "hover:bg-selected",
                   nodeDisabled && "cursor-not-allowed",
@@ -736,7 +736,7 @@ export function Tree({
   return (
     <div
       data-tree-root
-      className={twMerge("font-pretendard text-[#111]", className)}
+      className={twMerge("font-pretendard text-dark", className)}
       onDragEnter={cancelPendingDragLeave}
       onDragLeave={(event) => {
         const related = event.relatedTarget;

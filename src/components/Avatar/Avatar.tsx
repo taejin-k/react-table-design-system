@@ -126,7 +126,7 @@ function AvatarBase({
     <span
       ref={!label ? rootRef : undefined}
       className={twMerge(
-        "relative inline-flex shrink-0 items-center justify-center overflow-hidden bg-[#bfbfbf] align-middle font-pretendard text-white",
+        "relative inline-flex shrink-0 items-center justify-center overflow-hidden bg-disabled align-middle font-pretendard text-white",
         shape === "circle" ? "rounded-full" : "rounded-md",
         pixelSize >= 40 && "text-xl",
         !label && className,
@@ -148,7 +148,7 @@ function AvatarBase({
       <span
         ref={rootRef}
         className={twMerge(
-          "inline-flex w-fit items-center bg-[#f5f5f5] font-pretendard text-[#111]",
+          "inline-flex w-fit items-center bg-hover font-pretendard text-dark",
           shape === "circle" ? "rounded-full" : "rounded-lg",
           size === "md" && "gap-2 p-1 pr-3 text-base",
           size === "lg" && "gap-2.5 p-1 pr-4 text-lg",
@@ -197,7 +197,7 @@ function AvatarGroup({
           : node,
       )}
       {omitted > 0 ? (
-        <AvatarBase size={size} shape={shape} color="#f0f0f0" className="text-[#666]">
+        <AvatarBase size={size} shape={shape} color="var(--color-hover)" className="text-dark-gray">
           +{omitted}
         </AvatarBase>
       ) : null}

@@ -266,7 +266,7 @@ function MessageCard({
     <div
       ref={combinedRef}
       className={twMerge(
-        "wizard-message-card pointer-events-auto absolute left-1/2 flex min-h-10 max-w-[calc(100vw-32px)] items-start gap-1.5 rounded-lg bg-white px-3 py-2.5 text-sm text-[#111] shadow-[0_6px_16px_rgba(0,0,0,0.08),0_3px_6px_-4px_rgba(0,0,0,0.12),0_9px_28px_8px_rgba(0,0,0,0.05)]",
+        "wizard-message-card pointer-events-auto absolute left-1/2 flex min-h-10 max-w-[calc(100vw-32px)] items-start gap-1.5 rounded-lg bg-white px-3 py-2.5 text-sm text-dark shadow-2xl",
         motionClassName,
         visible === false && "pointer-events-none",
       )}
@@ -299,17 +299,17 @@ function MessageCard({
 }
 
 function TypeIcon({ type }: { type: MessageStatusType }) {
-  if (type === "loading") return <Icon icon="loading" color="var(--color-primary)" size={20} />;
+  if (type === "loading") return <Icon icon="loading" color="primary" size={20} />;
   if (type === "success") {
-    return <Icon icon="check-circle-filled" color="var(--color-success)" size={20} />;
+    return <Icon icon="check-circle-filled" color="success" size={20} />;
   }
   if (type === "error") {
-    return <Icon icon="close-circle-filled" color="var(--color-danger)" size={20} />;
+    return <Icon icon="close-circle-filled" color="danger" size={20} />;
   }
   if (type === "warning") {
-    return <Icon icon="warning-circle-filled" color="var(--color-warning)" size={20} />;
+    return <Icon icon="warning-circle-filled" color="warning" size={20} />;
   }
-  return <Icon icon="info-circle-filled" color="var(--color-primary)" size={20} />;
+  return <Icon icon="info-circle-filled" color="primary" size={20} />;
 }
 
 let root: Root | null = null;

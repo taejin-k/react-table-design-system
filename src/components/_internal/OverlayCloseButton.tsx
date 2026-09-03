@@ -26,7 +26,7 @@ export function OverlayCloseButton({
       iconOnly
       prefixIcon={<span className="inline-flex">{icon ?? <Icon icon="close" size={16} />}</span>}
       disabled={disabled}
-      className={twMerge("size-7 shrink-0 text-[#666]", className)}
+      className={twMerge("size-7 shrink-0 text-dark-gray", className)}
       style={style}
       onClick={onClick}
     />

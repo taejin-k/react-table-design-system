@@ -118,10 +118,10 @@ export function Segmented({
                   : "w-full flex-none"
                 : "flex-none",
               itemDisabled
-                ? "cursor-not-allowed text-[#bbb]"
+                ? "cursor-not-allowed text-disabled"
                 : selected
-                  ? "cursor-pointer font-medium text-[#111]"
-                  : "cursor-pointer text-[#666] hover:text-[#111]",
+                  ? "cursor-pointer font-medium text-dark"
+                  : "cursor-pointer text-dark-gray hover:text-dark",
             )}
           >
             <input
@@ -158,7 +158,7 @@ export function Segmented({
 }
 
 const segmentedVariants = cva(
-  "relative isolate inline-flex w-fit gap-0.5 rounded-lg bg-[#f5f5f5] p-0.5 font-pretendard",
+  "relative isolate inline-flex w-fit gap-0.5 rounded-lg bg-hover p-0.5 font-pretendard",
   {
     variants: {
       fullWidth: { true: "flex w-full", false: "" },
@@ -181,4 +181,4 @@ const itemVariants = cva(
 );
 
 const thumbClassName =
-  "pointer-events-none absolute top-0 left-0 z-0 rounded-md bg-white shadow-[0_1px_2px_rgba(0,0,0,0.08)] will-change-transform";
+  "pointer-events-none absolute top-0 left-0 z-0 rounded-md bg-white shadow-xs will-change-transform";

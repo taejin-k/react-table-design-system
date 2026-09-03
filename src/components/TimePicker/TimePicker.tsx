@@ -344,7 +344,7 @@ function BaseTimePicker({
               })}
             </span>
           ) : (
-            <span className={twMerge("min-w-0 flex-1 truncate", !displayedValue && "text-[#999]")}>
+            <span className={twMerge("min-w-0 flex-1 truncate", !displayedValue && "text-gray")}>
               {preview && previewValue === "hover"
                 ? formatDisplayTime(
                     dayjs().hour(preview.hour).minute(preview.minute).second(preview.second),
@@ -379,11 +379,11 @@ function BaseTimePicker({
               {typeof allowClear === "object" && allowClear.clearIcon ? (
                 allowClear.clearIcon
               ) : (
-                <Icon icon="close" color="#999" />
+                <Icon icon="close" color="gray" />
               )}
             </span>
           ) : (
-            <Icon icon="clock-outlined" color="#999" />
+            <Icon icon="clock-outlined" color="gray" />
           )}
         </button>
       </span>
@@ -394,7 +394,7 @@ function BaseTimePicker({
               ref={floating.popupRef}
               data-timepicker-popup
               className={twMerge(
-                "fixed overflow-hidden rounded-lg bg-white font-pretendard text-sm text-[#111] shadow-[0_6px_16px_rgba(0,0,0,0.06),0_3px_6px_-4px_rgba(0,0,0,0.08),0_9px_28px_8px_rgba(0,0,0,0.03)] motion-reduce:transition-none",
+                "fixed overflow-hidden rounded-lg bg-white font-pretendard text-sm text-dark shadow-xl motion-reduce:transition-none",
                 !floating.isMotionVisible && "pointer-events-none",
               )}
               style={{
@@ -425,7 +425,7 @@ function BaseTimePicker({
                 onChange={selectParts}
               />
               {showNow || resolvedNeedConfirm ? (
-                <div className="flex min-h-10 items-center justify-between gap-2 border-t border-[#f0f0f0] px-2 py-1">
+                <div className="flex min-h-10 items-center justify-between gap-2 border-t border-hover px-2 py-1">
                   {showNow ? (
                     <Button
                       disabled={nowDisabled}
@@ -498,7 +498,7 @@ export function TimePanel({
   const isPm = selected.hour >= 12;
 
   return (
-    <div className={twMerge("flex h-56 divide-x divide-[#f0f0f0]", className)}>
+    <div className={twMerge("flex h-56 divide-x divide-hover", className)}>
       <TimeColumn
         values={numberSteps(use12Hours ? 13 : 24, hourStep, use12Hours ? 1 : 0)}
         selected={use12Hours ? twelveHour(selected.hour) : selected.hour}
@@ -566,9 +566,9 @@ export function TimePanel({
                 type="button"
                 disabled={disabled}
                 className={twMerge(
-                  "h-8 w-full shrink-0 cursor-pointer rounded hover:bg-[#f5f5f5]",
+                  "h-8 w-full shrink-0 cursor-pointer rounded hover:bg-hover",
                   isSelected && "bg-selected text-primary hover:bg-selected",
-                  disabled && "cursor-not-allowed text-[#ccc] hover:bg-transparent",
+                  disabled && "cursor-not-allowed text-disabled hover:bg-transparent",
                 )}
                 onClick={() =>
                   onChange({
@@ -651,9 +651,9 @@ function TimeColumn({
             type="button"
             disabled={valueDisabled}
             className={twMerge(
-              "h-8 w-full shrink-0 cursor-pointer rounded hover:bg-[#f5f5f5]",
+              "h-8 w-full shrink-0 cursor-pointer rounded hover:bg-hover",
               selected === value && "bg-selected font-medium text-primary hover:bg-selected",
-              valueDisabled && "cursor-not-allowed text-[#ccc] hover:bg-transparent",
+              valueDisabled && "cursor-not-allowed text-disabled hover:bg-transparent",
             )}
             onMouseEnter={() => onPreview?.(value)}
             onClick={() => onSelect(value)}
@@ -689,17 +689,17 @@ function formatTwelveHours(value: string | Dayjs, showSecond: boolean) {
 export const TimePicker = BaseTimePicker;
 
 const timePickerRootVariants = cva(
-  "flex w-full items-center gap-2 rounded border border-solid px-2.5 text-left font-pretendard font-medium text-[#111] transition-colors hover:border-primary focus:border-primary focus:outline-none",
+  "flex w-full items-center gap-2 rounded border border-solid px-2.5 text-left font-pretendard font-medium text-dark transition-colors hover:border-primary focus:border-primary focus:outline-none",
   {
     variants: {
       size: { lg: "h-10 text-base", md: "h-[30px] text-sm", sm: "h-5 text-xs" },
       variant: {
-        default: "border-[#ddd] bg-white",
-        filled: "border-[#f5f5f5] bg-[#f5f5f5]",
+        default: "border-border bg-white",
+        filled: "border-hover bg-hover",
       },
       error: { true: "border-danger", false: "" },
       readOnly: {
-        true: "cursor-default hover:border-[#ddd]",
+        true: "cursor-default hover:border-border",
         false: "",
       },
       interactive: {
@@ -707,7 +707,7 @@ const timePickerRootVariants = cva(
         false: "",
       },
       disabled: {
-        true: "cursor-not-allowed border-[#ddd] bg-[#f8f8f8] text-[#999] hover:border-[#ddd]",
+        true: "cursor-not-allowed border-border bg-hover text-gray hover:border-border",
         false: "",
       },
     },
@@ -723,7 +723,7 @@ const timePickerRootVariants = cva(
       {
         variant: "filled",
         readOnly: true,
-        className: "hover:border-[#f5f5f5]",
+        className: "hover:border-hover",
       },
     ],
   },

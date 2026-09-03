@@ -52,11 +52,11 @@ export function Collapse({
   return (
     <div
       className={twMerge(
-        "min-w-0 overflow-hidden border border-transparent font-pretendard text-sm leading-[22px] text-[#111]",
+        "min-w-0 overflow-hidden border border-transparent font-pretendard text-sm leading-[22px] text-dark",
         !ghost && "rounded-lg",
-        bordered && !ghost && "border-[#ddd]",
+        bordered && !ghost && "border-border",
         ghost && "bg-transparent",
-        !ghost && "bg-[#fafafa]",
+        !ghost && "bg-hover",
         className,
       )}
     >
@@ -74,16 +74,16 @@ export function Collapse({
             key={item.key}
             className={twMerge(
               index > 0 && "border-t border-transparent",
-              index > 0 && bordered && !ghost && "border-[#ddd]",
+              index > 0 && bordered && !ghost && "border-border",
             )}
           >
             <div
               tabIndex={disabled ? -1 : 0}
               className={twMerge(
-                "flex items-center gap-3 bg-[rgba(0,0,0,0.02)] transition-colors hover:bg-[#f0f0f0] motion-reduce:transition-none",
+                "flex items-center gap-3 bg-black/[0.02] transition-colors hover:bg-hover motion-reduce:transition-none",
                 ghost && "bg-transparent hover:bg-transparent",
                 disabled
-                  ? "cursor-not-allowed text-[#bbb]"
+                  ? "cursor-not-allowed text-disabled"
                   : itemCollapsible === "icon"
                     ? "cursor-default"
                     : "cursor-pointer",

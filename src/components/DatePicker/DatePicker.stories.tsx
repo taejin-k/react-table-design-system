@@ -256,11 +256,11 @@ export const Sizes: Story = {
       "components-datepicker--sizes",
       `<div className="grid max-w-xs gap-3">
   <div className="grid gap-1">
-    <span className="text-xs text-[#777]">lg</span>
+    <span className="text-xs text-gray">lg</span>
     <DatePicker size="lg" />
   </div>
   <div className="grid gap-1">
-    <span className="text-xs text-[#777]">md</span>
+    <span className="text-xs text-gray">md</span>
     <DatePicker />
   </div>
 </div>`,
@@ -272,11 +272,11 @@ export const Sizes: Story = {
   render: (args) => (
     <div className="grid max-w-xs gap-3">
       <div className="grid gap-1">
-        <span className="text-xs text-[#777]">lg</span>
+        <span className="text-xs text-gray">lg</span>
         <DatePicker {...args} size="lg" />
       </div>
       <div className="grid gap-1">
-        <span className="text-xs text-[#777]">md</span>
+        <span className="text-xs text-gray">md</span>
         <DatePicker {...args} size="md" />
       </div>
     </div>
@@ -561,7 +561,7 @@ export const Multiple: Story = {
       `<div className="grid max-w-lg gap-6">
   {(['default', 'filled'] as const).map((variant) => (
     <div key={variant} className="grid gap-3">
-      <span className="text-sm font-medium text-[#666]">{variant}</span>
+      <span className="text-sm font-medium text-dark-gray">{variant}</span>
       {(['lg', 'md'] as const).map((size) => (
         <DatePicker
           key={size}
@@ -581,7 +581,7 @@ export const Multiple: Story = {
     <div className="grid max-w-lg gap-6">
       {(["default", "filled"] as const).map((variant) => (
         <div key={variant} className="grid gap-3">
-          <span className="text-sm font-medium text-[#666]">{variant}</span>
+          <span className="text-sm font-medium text-dark-gray">{variant}</span>
           {(["lg", "md"] as const).map((size) => (
             <DatePicker
               {...args}
@@ -794,7 +794,7 @@ export const TimeLimits: Story = {
       "components-datepicker--time-limits",
       `<div className="grid max-w-xs gap-3">
   <div>
-    <p className="mb-2 text-sm text-[#777]">비활성 시간 표시</p>
+    <p className="mb-2 text-sm text-gray">비활성 시간 표시</p>
     <DatePicker
       placeholder="업무 시간을 선택하세요"
       showTime={{
@@ -809,7 +809,7 @@ export const TimeLimits: Story = {
     />
   </div>
   <div>
-    <p className="mb-2 text-sm text-[#777]">비활성 시간 숨김</p>
+    <p className="mb-2 text-sm text-gray">비활성 시간 숨김</p>
     <DatePicker
       placeholder="업무 시간을 선택하세요"
       showTime={{
@@ -833,7 +833,7 @@ export const TimeLimits: Story = {
     <div className="grid max-w-xs gap-3">
       {[false, true].map((hideDisabled) => (
         <div key={String(hideDisabled)}>
-          <p className="mb-2 text-sm text-[#777]">비활성 시간 {hideDisabled ? "숨김" : "표시"}</p>
+          <p className="mb-2 text-sm text-gray">비활성 시간 {hideDisabled ? "숨김" : "표시"}</p>
           <DatePicker
             {...args}
             placeholder="업무 시간을 선택하세요"

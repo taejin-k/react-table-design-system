@@ -31,7 +31,7 @@ function JustifyExample({ value, gap }: { value: FlexProps["justify"]; gap: numb
   return (
     <div className="grid gap-2">
       <p className={label}>{value}</p>
-      <Flex justify={value} gap={gap} className="rounded border border-[#ddd] p-3">
+      <Flex justify={value} gap={gap} className="rounded border border-border p-3">
         <span className={item}>1</span>
         <span className={item}>2</span>
         <span className={item}>3</span>
@@ -124,7 +124,7 @@ export const Basic: Story = {
         code: withStoryImports(`<Flex
   gap={8}
   align="center"
-  className="min-h-20 rounded border border-[#ddd] p-3"
+  className="min-h-20 rounded border border-border p-3"
 >
   <Button>첫 번째</Button>
   <Button>두 번째</Button>
@@ -134,7 +134,7 @@ export const Basic: Story = {
     },
   },
   render: (args) => (
-    <Flex {...args} className="min-h-20 rounded border border-[#ddd] p-3">
+    <Flex {...args} className="min-h-20 rounded border border-border p-3">
       <Button>첫 번째</Button>
       <Button>두 번째</Button>
       <Button>세 번째</Button>
@@ -210,7 +210,7 @@ export const Wrap: Story = {
     <div className="grid max-w-xl gap-6">
       <div className="grid gap-2">
         <p className="m-0 text-sm font-medium text-[#555]">nowrap</p>
-        <Flex gap={8} wrap="nowrap" className="overflow-hidden rounded border border-[#ddd] p-3">
+        <Flex gap={8} wrap="nowrap" className="overflow-hidden rounded border border-border p-3">
           <Button>첫 번째</Button>
           <Button>두 번째</Button>
           <Button>세 번째</Button>
@@ -219,7 +219,7 @@ export const Wrap: Story = {
       </div>
       <div className="grid gap-2">
         <p className="m-0 text-sm font-medium text-[#555]">wrap</p>
-        <Flex gap={8} wrap className="rounded border border-[#ddd] p-3">
+        <Flex gap={8} wrap className="rounded border border-border p-3">
           <Button>첫 번째</Button>
           <Button>두 번째</Button>
           <Button>세 번째</Button>
@@ -228,7 +228,7 @@ export const Wrap: Story = {
       </div>
       <div className="grid gap-2">
         <p className="m-0 text-sm font-medium text-[#555]">wrap-reverse</p>
-        <Flex gap={8} wrap="wrap-reverse" className="rounded border border-[#ddd] p-3">
+        <Flex gap={8} wrap="wrap-reverse" className="rounded border border-border p-3">
           <Button>첫 번째</Button>
           <Button>두 번째</Button>
           <Button>세 번째</Button>
@@ -249,7 +249,7 @@ export const Wrap: Story = {
           gap={args.gap}
           align={args.align}
           wrap="nowrap"
-          className="overflow-hidden rounded border border-[#ddd] p-3"
+          className="overflow-hidden rounded border border-border p-3"
         >
           <Button>첫 번째</Button>
           <Button>두 번째</Button>
@@ -259,7 +259,7 @@ export const Wrap: Story = {
       </div>
       <div className="grid gap-2">
         <p className={label}>wrap</p>
-        <Flex gap={args.gap} align={args.align} wrap className="rounded border border-[#ddd] p-3">
+        <Flex gap={args.gap} align={args.align} wrap className="rounded border border-border p-3">
           <Button>첫 번째</Button>
           <Button>두 번째</Button>
           <Button>세 번째</Button>
@@ -272,7 +272,7 @@ export const Wrap: Story = {
           gap={args.gap}
           align={args.align}
           wrap="wrap-reverse"
-          className="rounded border border-[#ddd] p-3"
+          className="rounded border border-border p-3"
         >
           <Button>첫 번째</Button>
           <Button>두 번째</Button>
@@ -293,7 +293,7 @@ export const Justify: Story = {
       ...storyDescription("components-flex--justify").docs,
       source: {
         code: withStoryImports(`const itemClass = "flex h-12 min-w-20 items-center justify-center rounded bg-selected px-4 text-sm text-primary";
-const rowClass = "rounded border border-[#ddd] p-3";
+const rowClass = "rounded border border-border p-3";
 const labelClass = "m-0 text-sm font-medium text-[#555]";
 
 function FlexJustify() {
@@ -381,7 +381,7 @@ function FlexAlign() {
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
       <div className="grid gap-2">
         <p className={labelClass}>flex-start</p>
-        <Flex align="flex-start" gap={8} className="h-32 rounded border border-[#ddd] p-3">
+        <Flex align="flex-start" gap={8} className="h-32 rounded border border-border p-3">
           <span className={itemClass}>첫 요소</span>
           <span className={itemClass + " h-20"}>두 번째 요소</span>
         </Flex>
@@ -389,7 +389,7 @@ function FlexAlign() {
 
       <div className="grid gap-2">
         <p className={labelClass}>center</p>
-        <Flex align="center" gap={8} className="h-32 rounded border border-[#ddd] p-3">
+        <Flex align="center" gap={8} className="h-32 rounded border border-border p-3">
           <span className={itemClass}>첫 요소</span>
           <span className={itemClass + " h-20"}>두 번째 요소</span>
         </Flex>
@@ -397,7 +397,7 @@ function FlexAlign() {
 
       <div className="grid gap-2">
         <p className={labelClass}>flex-end</p>
-        <Flex align="flex-end" gap={8} className="h-32 rounded border border-[#ddd] p-3">
+        <Flex align="flex-end" gap={8} className="h-32 rounded border border-border p-3">
           <span className={itemClass}>첫 요소</span>
           <span className={itemClass + " h-20"}>두 번째 요소</span>
         </Flex>
@@ -405,7 +405,7 @@ function FlexAlign() {
 
       <div className="grid gap-2">
         <p className={labelClass}>stretch</p>
-        <Flex align="stretch" gap={8} className="h-32 rounded border border-[#ddd] p-3">
+        <Flex align="stretch" gap={8} className="h-32 rounded border border-border p-3">
           <span className={itemClass + " h-auto"}>첫 요소</span>
           <span className={itemClass + " h-auto"}>두 번째 요소</span>
         </Flex>
@@ -413,7 +413,7 @@ function FlexAlign() {
 
       <div className="grid gap-2">
         <p className={labelClass}>baseline</p>
-        <Flex align="baseline" gap={8} className="h-32 rounded border border-[#ddd] p-3">
+        <Flex align="baseline" gap={8} className="h-32 rounded border border-border p-3">
           <span className={itemClass}>작은 글자</span>
           <span className={itemClass + " h-20 text-xl"}>큰 글자</span>
         </Flex>
@@ -432,7 +432,7 @@ function FlexAlign() {
           align="flex-start"
           justify={args.justify}
           gap={args.gap}
-          className="h-32 rounded border border-[#ddd] p-3"
+          className="h-32 rounded border border-border p-3"
         >
           <span className={alignItem}>첫 요소</span>
           <span className={`${alignItem} h-20`}>두 번째 요소</span>
@@ -444,7 +444,7 @@ function FlexAlign() {
           align="center"
           justify={args.justify}
           gap={args.gap}
-          className="h-32 rounded border border-[#ddd] p-3"
+          className="h-32 rounded border border-border p-3"
         >
           <span className={alignItem}>첫 요소</span>
           <span className={`${alignItem} h-20`}>두 번째 요소</span>
@@ -456,7 +456,7 @@ function FlexAlign() {
           align="flex-end"
           justify={args.justify}
           gap={args.gap}
-          className="h-32 rounded border border-[#ddd] p-3"
+          className="h-32 rounded border border-border p-3"
         >
           <span className={alignItem}>첫 요소</span>
           <span className={`${alignItem} h-20`}>두 번째 요소</span>
@@ -468,7 +468,7 @@ function FlexAlign() {
           align="stretch"
           justify={args.justify}
           gap={args.gap}
-          className="h-32 rounded border border-[#ddd] p-3"
+          className="h-32 rounded border border-border p-3"
         >
           <span className={`${alignItem} h-auto`}>첫 요소</span>
           <span className={`${alignItem} h-auto`}>두 번째 요소</span>
@@ -480,7 +480,7 @@ function FlexAlign() {
           align="baseline"
           justify={args.justify}
           gap={args.gap}
-          className="h-32 rounded border border-[#ddd] p-3"
+          className="h-32 rounded border border-border p-3"
         >
           <span className={alignItem}>작은 글자</span>
           <span className={`${alignItem} h-20 text-xl`}>큰 글자</span>

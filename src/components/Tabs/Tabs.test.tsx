@@ -162,10 +162,7 @@ describe("Tabs", () => {
       />,
     );
 
-    expect(document.querySelector("[data-tabs-header]")).toHaveClass(
-      "border-b",
-      "border-[#d9d9d9]",
-    );
+    expect(document.querySelector("[data-tabs-header]")).toHaveClass("border-b", "border-border");
     expect(document.querySelector('[data-tabs-item="overview"]')).toHaveClass(
       "h-10",
       "px-4",
@@ -176,7 +173,7 @@ describe("Tabs", () => {
     expect(document.querySelector('[data-tabs-item="activity"]')).toHaveClass(
       "h-10",
       "px-4",
-      "bg-[#fafafa]",
+      "bg-hover",
     );
     expect(document.querySelector("[data-tabs-card-bridge]")).toHaveStyle({
       transition: "width 300ms, height 300ms, transform 300ms",

@@ -188,7 +188,7 @@ describe("Modal", () => {
 
     expect(document.querySelector("[data-overlay-close-button]")).toHaveClass(
       "size-7",
-      "text-[#666]",
+      "text-dark-gray",
     );
   });
 

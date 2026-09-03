@@ -176,7 +176,7 @@ describe("TimePicker", () => {
     const unselectedHour = within(hourColumn).getByRole("button", { name: "10" });
 
     expect(selectedHour).toHaveClass("bg-selected", "text-primary", "hover:bg-selected");
-    expect(unselectedHour).toHaveClass("hover:bg-[#f5f5f5]");
+    expect(unselectedHour).toHaveClass("hover:bg-hover");
   });
 
   it("keeps the filled background and focus style while read only", async () => {
@@ -186,8 +186,8 @@ describe("TimePicker", () => {
     const trigger = screen.getByRole("button", { name: /08:30:00/ });
     expect(trigger).not.toBeDisabled();
     expect(trigger).toHaveClass(
-      "border-[#f5f5f5]",
-      "bg-[#f5f5f5]",
+      "border-hover",
+      "bg-hover",
       "focus:border-primary",
       "focus:outline-none",
     );

@@ -1,4 +1,5 @@
 import type { CSSProperties, SVGProps } from "react";
+import type { ColorTokenType } from "../../color-tokens";
 import type { IconGalleryName } from "./Icon.names";
 
 export type IconNameType =
@@ -55,7 +56,7 @@ export type IconNameType =
 export interface IconProps extends Omit<SVGProps<SVGSVGElement>, "color" | "name"> {
   icon: IconNameType;
   size?: number;
-  color?: CSSProperties["color"];
+  color?: ColorTokenType | CSSProperties["color"];
   /** true면 클릭과 hover 동작을 비활성화한다. */
   disabled?: boolean;
   /** true면 기존 아이콘 대신 로딩 아이콘을 표시하고 동작을 막는다. */

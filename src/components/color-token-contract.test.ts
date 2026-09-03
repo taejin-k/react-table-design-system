@@ -11,17 +11,27 @@ const interactiveCss = readFileSync("src/styles/interactive.css", "utf8");
 
 const tokens = {
   primary: "#0062df",
-  "primary-hover": "#227cef",
-  "primary-loading": "#6ea0fa",
   selected: "#e6f4ff",
   success: "#52c41a",
   warning: "#faad14",
   danger: "#ff4d4f",
-  "danger-hover": "#ff7875",
   navy: "#023f97",
   purple: "#4f19c4",
+  dark: "#111111",
+  "dark-gray": "#666666",
+  gray: "#999999",
+  disabled: "#bbbbbb",
+  border: "#dddddd",
+  hover: "#f2f2f2",
   black: "#000000",
   white: "#ffffff",
+} as const;
+
+const shadows = {
+  xs: "0 1px 2px rgb(0 0 0 / 0.12)",
+  sm: "0 2px 4px rgb(0 0 0 / 0.16)",
+  md: "0 3px 8px rgb(0 0 0 / 0.12)",
+  lg: "0 3px 6px rgb(0 0 0 / 0.2)",
 } as const;
 
 const presentationSources = import.meta.glob<string>(
@@ -50,5 +60,16 @@ describe("semantic color token contract", () => {
       expect(source, path).not.toMatch(hardcodedToken);
     }
     expect(interactiveCss).not.toMatch(hardcodedToken);
+  });
+});
+
+describe("shadow token contract", () => {
+  it("defines the shared elevation scale as static Tailwind theme tokens", () => {
+    for (const [name, value] of Object.entries(shadows)) {
+      expect(themeCss.toLowerCase()).toContain(`--shadow-${name}: ${value}`);
+    }
+    expect(themeCss).toContain("--shadow-xl:");
+    expect(themeCss).toContain("--shadow-2xl:");
+    expect(themeCss).toContain("--drop-shadow-md:");
   });
 });

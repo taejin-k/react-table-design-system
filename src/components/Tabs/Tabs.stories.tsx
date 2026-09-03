@@ -503,8 +503,8 @@ const types = ['line', 'card'] as const;
       <strong className="capitalize">{type}</strong>
       <div className="grid gap-6 xl:grid-cols-2">
         {placements.map((placement) => (
-          <div key={placement} className="min-h-44 rounded-lg border border-[#ddd] p-4">
-            <span className="mb-3 block text-sm text-[#666]">{placement}</span>
+          <div key={placement} className="min-h-44 rounded-lg border border-border p-4">
+            <span className="mb-3 block text-sm text-dark-gray">{placement}</span>
             <Tabs type={type} placement={placement} items={items} />
           </div>
         ))}
@@ -522,8 +522,8 @@ const types = ['line', 'card'] as const;
           <strong className="capitalize">{type}</strong>
           <div className="grid gap-6 xl:grid-cols-2">
             {tabsPlacements.map((placement) => (
-              <div key={placement} className="min-h-44 rounded-lg border border-[#ddd] p-4">
-                <span className="mb-3 block text-sm text-[#666]">{placement}</span>
+              <div key={placement} className="min-h-44 rounded-lg border border-border p-4">
+                <span className="mb-3 block text-sm text-dark-gray">{placement}</span>
                 <Tabs {...args} type={type} placement={placement} items={items} />
               </div>
             ))}
@@ -585,7 +585,7 @@ function ControlledTabs() {
           활동 열기
         </Button>
       </div>
-      <span className="text-sm text-[#666]">현재 탭: {activeKey}</span>
+      <span className="text-sm text-dark-gray">현재 탭: {activeKey}</span>
       <Tabs activeKey={activeKey} items={items} onChange={setActiveKey} />
     </div>
   );
@@ -609,7 +609,7 @@ function ControlledTabsExample(args: Partial<TabsProps>) {
           활동 열기
         </Button>
       </div>
-      <span className="text-sm text-[#666]">현재 탭: {activeKey}</span>
+      <span className="text-sm text-dark-gray">현재 탭: {activeKey}</span>
       <Tabs {...args} activeKey={activeKey} items={items} onChange={setActiveKey} />
     </div>
   );

@@ -75,7 +75,7 @@ const meta = {
 | \`placement\` | 대상을 기준으로 Tooltip이 표시될 위치를 설정해요. | [\`TooltipPlacementType\`](#tooltip-placement-type) | \`top\` |
 | \`trigger\` | hover, focus, click, contextMenu로 표시해요. | [\`TooltipTriggerType\`](#tooltip-trigger-type) \\| [\`TooltipTriggerType[]\`](#tooltip-trigger-type) | \`hover\` |
 | \`arrow\` | 대상 방향을 가리키는 화살표를 표시해요. | \`boolean\` | \`true\` |
-| \`color\` | Tooltip의 배경 색상을 설정해요. | \`CSSProperties['backgroundColor']\` | \`#111\` |
+| \`color\` | Tooltip의 배경 색상을 설정해요. | \`CSSProperties['backgroundColor']\` | \`var(--color-dark)\` |
 | \`open\` | Tooltip의 표시 상태를 외부에서 관리해요. | \`boolean\` | - |
 | \`defaultOpen\` | 처음 렌더링할 때 Tooltip을 표시해요. | \`boolean\` | \`false\` |
 | \`autoAdjustOverflow\` | 화면을 벗어나면 반대 위치로 전환하고 안쪽으로 이동해요. | \`boolean\` | \`true\` |
@@ -317,7 +317,7 @@ export const Appearance: Story = {
 };
 
 export const Controlled: Story = {
-  args: { title: "Tooltip", placement: "top", arrow: true, color: "#111111" },
+  args: { title: "Tooltip", placement: "top", arrow: true, color: "var(--color-dark)" },
   parameters: {
     ...storyDescription("components-tooltip--controlled"),
     controls: { disable: false, include: ["내용", "위치", "화살표", "배경 색상"] },

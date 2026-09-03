@@ -51,7 +51,6 @@ const preview: Preview = {
       storySort: (a, b) => {
         const componentRank = (title) => {
           if (title === "Components/Color") return 0;
-          if (title === "Components/Color Temp") return 1;
           if (title === "Components/Icon") return 2;
           if (title === "Components/Button") return 3;
           if (title === "Components/Tag") return 4;

@@ -157,7 +157,7 @@ export function Calendar({
   return (
     <div
       className={twMerge(
-        "bg-white font-pretendard text-sm text-[#111]",
+        "bg-white font-pretendard text-sm text-dark",
         fullscreen ? "w-full" : "w-[300px] rounded-lg",
         className,
       )}
@@ -167,11 +167,11 @@ export function Calendar({
         <div
           className={twMerge(
             "grid grid-cols-7",
-            fullscreen ? "text-right text-[#666]" : "text-center",
+            fullscreen ? "text-right text-dark-gray" : "text-center",
           )}
         >
           {weekdays.map((day) => (
-            <span key={day} className={fullscreen ? "h-6 pr-3" : "py-1 text-xs text-[#999]"}>
+            <span key={day} className={fullscreen ? "h-6 pr-3" : "py-1 text-xs text-gray"}>
               {day}
             </span>
           ))}
@@ -190,11 +190,11 @@ export function Calendar({
                       type="button"
                       disabled={disabled}
                       className={twMerge(
-                        "relative flex w-full cursor-pointer transition-colors duration-300 disabled:cursor-not-allowed disabled:text-[#bbb] motion-reduce:transition-none",
+                        "relative flex w-full cursor-pointer transition-colors duration-300 disabled:cursor-not-allowed disabled:text-disabled motion-reduce:transition-none",
                         fullscreen
-                          ? "mx-1 h-[90px] w-[calc(100%-8px)] items-start justify-end border-t-2 border-[#f0f0f0] px-2 pt-1 hover:bg-[#f5f5f5]"
-                          : "size-8 items-center justify-center rounded p-0 hover:bg-[#f5f5f5]",
-                        outside && "text-[#bbb]",
+                          ? "mx-1 h-[90px] w-[calc(100%-8px)] items-start justify-end border-t-2 border-hover px-2 pt-1 hover:bg-hover"
+                          : "size-8 items-center justify-center rounded p-0 hover:bg-hover",
+                        outside && "text-disabled",
                         fullscreen && sameDate(date, today) && "border-t-primary",
                         sameDate(date, selected) &&
                           (fullscreen
@@ -205,7 +205,7 @@ export function Calendar({
                           (sameDate(date, selected) ? "hover:bg-selected" : "hover:bg-transparent"),
                         !fullscreen &&
                           disabled &&
-                          "bg-transparent text-[#bfbfbf] hover:bg-transparent [&_*]:text-[#bfbfbf]!",
+                          "bg-transparent text-disabled hover:bg-transparent [&_*]:text-disabled!",
                       )}
                       onClick={() => choose(date)}
                     >
@@ -224,7 +224,7 @@ export function Calendar({
                       key={date.toISOString()}
                       className={twMerge(
                         !fullscreen && "relative my-0.5 flex h-8 items-center justify-center",
-                        !fullscreen && disabled && "bg-[#f5f5f5]",
+                        !fullscreen && disabled && "bg-hover",
                       )}
                     >
                       {fullCellRender?.(dayjs(date), info) ??
@@ -241,7 +241,7 @@ export function Calendar({
                       type="button"
                       data-calendar-event-key={String(event.key)}
                       className={twMerge(
-                        "absolute z-[2] h-[18px] overflow-hidden rounded-full px-2 text-left text-xs leading-[18px] whitespace-nowrap text-white shadow-sm",
+                        "absolute z-[2] h-[18px] overflow-hidden rounded-full px-2 text-left text-xs leading-[18px] whitespace-nowrap text-white shadow-xs",
                         onEventClick ? "cursor-pointer hover:brightness-95" : "pointer-events-none",
                       )}
                       style={{

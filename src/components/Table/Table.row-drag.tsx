@@ -172,7 +172,7 @@ export function SortableTableRow({
       <Component
         ref={setNodeRef}
         {...props}
-        className={twMerge(className, isDragging && "relative z-10 opacity-90 drop-shadow-lg")}
+        className={twMerge(className, isDragging && "relative z-10 opacity-90 drop-shadow-md")}
         style={dragStyle}
       />
     </RowDragContext.Provider>
@@ -221,7 +221,7 @@ export function RowDragHandle() {
       variant="ghost"
       size="sm"
       iconOnly
-      prefixIcon={<Icon icon="drag-handle" color="#999" className="select-none" />}
+      prefixIcon={<Icon icon="drag-handle" color="gray" className="select-none" />}
       {...context.listeners}
       className="inline-grid size-7 cursor-grab place-items-center rounded border-0 bg-transparent p-0 active:cursor-grabbing"
       onClick={(event) => event.stopPropagation()}

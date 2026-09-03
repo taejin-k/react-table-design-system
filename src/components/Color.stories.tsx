@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
+import { colorTokenNames, shadowTokenNames } from "../color-tokens";
 
 type ColorToken = {
   name: string;
@@ -14,191 +15,272 @@ type ColorGroup = {
   colors: ColorToken[];
 };
 
-const repositoryUrl = "https://github.com/taejin-k/react-table-design-system/blob/main";
+type ShadowToken = {
+  name: string;
+  token: string;
+  description: string;
+  className: string;
+};
 
 const colorGroups: ColorGroup[] = [
   {
-    name: "Brand & selection",
-    description: "주요 동작과 선택 상태에 사용하는 파란색 계열이에요.",
+    name: "Functional",
+    description: "selected, hover, disabled 상태를 표시할 때 사용하는 색상이에요.",
     colors: [
-      {
-        name: "Primary",
-        token: "primary",
-        hex: "#0062DF",
-        description: "저장·확인 같은 주요 동작과 선택·포커스 상태를 강조할 때 사용해요.",
-        swatchClass: "bg-primary",
-      },
-      {
-        name: "Primary hover",
-        token: "primary-hover",
-        hex: "#227CEF",
-        description: "Primary 요소에 마우스를 올려 상호작용할 수 있음을 보여줄 때 사용해요.",
-        swatchClass: "bg-primary-hover",
-      },
-      {
-        name: "Primary loading",
-        token: "primary-loading",
-        hex: "#6EA0FA",
-        description: "Primary 버튼이나 활성화된 Toggle이 처리 중임을 나타낼 때 사용해요.",
-        swatchClass: "bg-primary-loading",
-      },
       {
         name: "Selected",
         token: "selected",
         hex: "#E6F4FF",
-        description: "선택된 항목과 드래그 영역처럼 활성화된 면의 배경에 사용해요.",
+        description: "선택된 항목의 배경에 사용해요.",
         swatchClass: "bg-selected",
+      },
+      {
+        name: "Hover",
+        token: "hover",
+        hex: "#F2F2F2",
+        description: "마우스를 올린 항목의 배경에 사용해요.",
+        swatchClass: "border-b border-[#e1e6ed] bg-hover",
+      },
+      {
+        name: "Disabled",
+        token: "disabled",
+        hex: "#BBBBBB",
+        description: "사용할 수 없는 요소를 표시할 때 사용해요.",
+        swatchClass: "bg-disabled",
       },
     ],
   },
   {
     name: "Status",
-    description: "결과와 주의 상태를 빠르게 구분하는 색상이에요.",
+    description: "컴포넌트의 의미를 구분할 때 사용하는 색상이에요.",
     colors: [
+      {
+        name: "Primary",
+        token: "primary",
+        hex: "#0062DF",
+        description: "가장 중요한 동작을 강조할 때 사용해요.",
+        swatchClass: "bg-primary",
+      },
       {
         name: "Success",
         token: "success",
         hex: "#52C41A",
-        description: "작업이 성공했거나 정상적으로 완료된 상태를 알려줄 때 사용해요.",
+        description: "작업이 성공한 상태를 표시할 때 사용해요.",
         swatchClass: "bg-success",
       },
       {
         name: "Warning",
         token: "warning",
         hex: "#FAAD14",
-        description: "사용자의 확인이 필요하거나 주의해야 할 상태를 알려줄 때 사용해요.",
+        description: "주의가 필요한 상태를 표시할 때 사용해요.",
         swatchClass: "bg-warning",
       },
       {
         name: "Danger",
         token: "danger",
         hex: "#FF4D4F",
-        description: "삭제 같은 위험한 동작과 실패·입력 오류 상태를 표시할 때 사용해요.",
+        description: "위험한 상태를 표시할 때 사용해요.",
         swatchClass: "bg-danger",
       },
-      {
-        name: "Danger hover",
-        token: "danger-hover",
-        hex: "#FF7875",
-        description: "Danger 요소에 마우스를 올려 위험 동작을 선택할 수 있음을 보여줘요.",
-        swatchClass: "bg-danger-hover",
-      },
-    ],
-  },
-  {
-    name: "Category",
-    description: "브랜드와 상태 색상 외의 범주를 구분할 때 사용해요.",
-    colors: [
       {
         name: "Navy",
         token: "navy",
         hex: "#023F97",
-        description: "Primary와 구분되는 짙은 파란색 범주나 Navy Tag를 표시할 때 사용해요.",
+        description: "짙은 파란색 범주의 항목을 구분할 때 사용해요.",
         swatchClass: "bg-navy",
       },
       {
         name: "Purple",
         token: "purple",
         hex: "#4F19C4",
-        description: "Primary와 구분되는 보라색 범주나 Purple Tag를 표시할 때 사용해요.",
+        description: "보라색 범주의 항목을 구분할 때 사용해요.",
         swatchClass: "bg-purple",
       },
     ],
   },
   {
     name: "Neutral",
-    description: "기본 글자와 배경에 사용하는 가장 강한 중립 색상이에요.",
+    description: "화면의 기본 구조를 표현할 때 사용하는 색상이에요.",
     colors: [
       {
         name: "Black",
         token: "black",
         hex: "#000000",
-        description: "가장 강한 대비가 필요한 글자와 아이콘에 사용해요.",
+        description: "가장 높은 대비가 필요한 콘텐츠에 사용해요.",
         swatchClass: "bg-black",
+      },
+      {
+        name: "Dark",
+        token: "dark",
+        hex: "#111111",
+        description: "기본 글자색으로 사용해요.",
+        swatchClass: "bg-dark",
+      },
+      {
+        name: "Dark gray",
+        token: "dark-gray",
+        hex: "#666666",
+        description: "보조 설명의 글자색으로 사용해요.",
+        swatchClass: "bg-dark-gray",
+      },
+      {
+        name: "Gray",
+        token: "gray",
+        hex: "#999999",
+        description: "입력 안내 문구의 글자색으로 사용해요.",
+        swatchClass: "bg-gray",
+      },
+      {
+        name: "Border",
+        token: "border",
+        hex: "#DDDDDD",
+        description: "요소의 기본 테두리에 사용해요.",
+        swatchClass: "bg-border",
       },
       {
         name: "White",
         token: "white",
         hex: "#FFFFFF",
-        description: "기본 화면 배경과 어두운 색상 위의 글자·아이콘에 사용해요.",
+        description: "기본 화면 배경에 사용해요.",
         swatchClass: "border-b border-[#e1e6ed] bg-white",
       },
     ],
   },
 ];
 
+const shadowTokens: ShadowToken[] = [
+  {
+    name: "Extra small",
+    token: "shadow-xs",
+    description: "아주 낮게 떠 있는 요소에 사용해요.",
+    className: "shadow-xs",
+  },
+  {
+    name: "Small",
+    token: "shadow-sm",
+    description: "낮게 떠 있는 요소에 사용해요.",
+    className: "shadow-sm",
+  },
+  {
+    name: "Medium",
+    token: "shadow-md",
+    description: "드래그 중인 요소를 강조할 때 사용해요.",
+    className: "shadow-md",
+  },
+  {
+    name: "Large",
+    token: "shadow-lg",
+    description: "주변보다 높게 떠 있는 요소에 사용해요.",
+    className: "shadow-lg",
+  },
+  {
+    name: "Extra large",
+    token: "shadow-xl",
+    description: "입력 요소에서 열리는 선택창에 사용해요.",
+    className: "shadow-xl",
+  },
+  {
+    name: "2X large",
+    token: "shadow-2xl",
+    description: "화면 위에 열리는 팝업에 사용해요.",
+    className: "shadow-2xl",
+  },
+];
+
 function ColorCard({ color }: { color: ColorToken }) {
   return (
-    <article className="overflow-hidden rounded-2xl border border-[#E1E6ED] bg-white shadow-[0_4px_16px_rgba(17,24,39,0.06)]">
+    <article className="overflow-hidden rounded-2xl border border-[#E1E6ED] bg-white shadow-sm">
       <div className={`h-36 ${color.swatchClass}`} />
-      <div className="p-6">
+      <div className="px-6 pt-6 pb-4">
         <div className="flex items-start justify-between gap-6">
           <div>
-            <h3 className="m-0 text-lg font-semibold text-[#111]">{color.name}</h3>
+            <h3 className="m-0 text-lg font-semibold text-dark">{color.name}</h3>
             <code className="mt-2 inline-block rounded-md bg-[#F3F6F9] px-2 py-1 text-xs font-medium text-[#536071]">
               {color.token}
             </code>
           </div>
           <code className="shrink-0 pt-0.5 text-sm font-semibold text-[#596273]">{color.hex}</code>
         </div>
-        <p className="mt-5 mb-0 min-h-12 text-sm leading-6 text-[#626B79]">{color.description}</p>
+        <p className="mt-5 mb-0 text-sm leading-6 text-[#626B79]">{color.description}</p>
       </div>
     </article>
   );
 }
 
+function ShadowCard({ shadow }: { shadow: ShadowToken }) {
+  return (
+    <article className="rounded-2xl border border-border bg-white px-6 pt-6 pb-4">
+      <div className="flex h-36 items-center justify-center rounded-xl bg-hover">
+        <div
+          className={`flex size-24 items-center justify-center rounded-xl bg-white ${shadow.className}`}
+        >
+          <span className="text-xs font-semibold text-gray">{shadow.name}</span>
+        </div>
+      </div>
+      <h3 className="mt-10 mb-0 text-lg font-semibold text-dark" style={{ marginTop: 40 }}>
+        {shadow.name}
+      </h3>
+      <code className="mt-2 inline-block rounded-md bg-hover px-2 py-1 text-xs font-medium text-dark-gray">
+        {shadow.token}
+      </code>
+      <p className="mt-4 mb-0 text-sm leading-6 text-dark-gray">{shadow.description}</p>
+    </article>
+  );
+}
+
+function TokenCode({
+  name,
+}: {
+  name: (typeof colorTokenNames)[number] | (typeof shadowTokenNames)[number];
+}) {
+  return (
+    <code className="rounded-full border border-[#e3e8ef] bg-[#f8fafc] px-3 py-1.5 text-[13px] text-[#4a5667]">
+      {name}
+    </code>
+  );
+}
+
 function ColorGuide() {
   return (
-    <main className="mx-auto w-full max-w-[1440px] bg-[#F8FAFC] px-6 py-10 font-pretendard text-[#111] sm:px-10 sm:py-12">
-      <header className="relative overflow-hidden rounded-3xl bg-[#111] px-6 py-9 text-white sm:px-10 sm:py-12">
-        <div className="absolute top-0 right-0 size-56 translate-x-20 -translate-y-20 rounded-full bg-primary opacity-35 blur-3xl" />
-        <div className="absolute right-40 bottom-0 size-40 translate-y-24 rounded-full bg-purple opacity-25 blur-3xl" />
-        <div className="relative max-w-3xl">
-          <h1 className="mt-5 mb-0 text-3xl font-semibold tracking-tight !text-white sm:text-4xl">
-            Color
-          </h1>
-          <p className="mt-4 mb-0 max-w-2xl text-sm leading-7 !text-white/70 sm:text-base">
-            의미가 정해진 색상을 Tailwind utility로 사용해요. HEX를 직접 입력하지 않고 같은 역할에는
-            같은 token을 적용합니다.
-          </p>
-          <div className="mt-6 flex flex-wrap gap-2">
-            <a
-              className="rounded-lg bg-white px-3 py-2 text-xs font-semibold text-[#111] !no-underline transition-opacity hover:!no-underline hover:opacity-85"
-              href={`${repositoryUrl}/theme.css`}
-              rel="noreferrer"
-              target="_blank"
-            >
-              theme.css 보기 ↗
-            </a>
-            <a
-              className="rounded-lg border border-white/20 px-3 py-2 text-xs font-semibold !text-white !no-underline transition-colors hover:bg-white/10 hover:!no-underline"
-              href="https://tailwindcss.com/docs/colors#customizing-your-colors"
-              rel="noreferrer"
-              target="_blank"
-            >
-              Tailwind color 문서 ↗
-            </a>
-          </div>
-        </div>
+    <main className="color-docs component-docs font-pretendard text-dark">
+      <header>
+        <h1 className="sbdocs-title">Color</h1>
+        <p>
+          컴포넌트에 적용할 공통 색상과 그림자 토큰을 확인할 수 있어요.
+          <br />
+          같은 역할에는 같은 토큰을 사용해 화면을 일관되게 만들어요.
+        </p>
       </header>
 
       <section className="mt-14">
-        <div className="mb-7 flex flex-wrap items-end justify-between gap-5">
+        <div
+          className="flex w-full flex-wrap items-end justify-between gap-5"
+          style={{ marginBottom: 40 }}
+        >
           <div>
             <span className="text-xs font-semibold tracking-[0.12em] text-primary uppercase">
               Palette
             </span>
-            <h2 className="mt-1 mb-0 text-2xl font-semibold tracking-tight">Semantic colors</h2>
-            <p className="mt-2 mb-0 text-sm leading-6 text-[#666]">
-              같은 의미의 색상은 화면 전체에서 동일한 token 이름으로 사용해요.
+            <h2
+              className="mt-1 !mb-0 !border-0 !pb-0 text-2xl font-semibold tracking-tight"
+              style={{ borderBottom: "none", marginBottom: 0, paddingBottom: 0 }}
+            >
+              Semantic colors
+            </h2>
+            <p className="mt-1 mb-0 text-sm leading-6 text-dark-gray" style={{ marginTop: 4 }}>
+              화면에서 표현할 상태에 맞는 색상 토큰을 선택해요.
             </p>
           </div>
         </div>
-        <div className="space-y-12">
+        <div className="grid" style={{ gap: 80 }}>
           {colorGroups.map((group) => (
             <div key={group.name}>
-              <h3 className="m-0 text-lg font-semibold text-[#111]">{group.name}</h3>
-              <p className="mt-1 mb-5 text-sm leading-6 text-[#777]">{group.description}</p>
+              <h3 className="m-0 text-lg font-semibold text-dark" style={{ marginBottom: 0 }}>
+                {group.name}
+              </h3>
+              <p className="mt-0.5 mb-5 text-sm leading-6 text-gray" style={{ marginTop: 2 }}>
+                {group.description}
+              </p>
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
                 {group.colors.map((color) => (
                   <ColorCard key={color.token} color={color} />
@@ -209,30 +291,91 @@ function ColorGuide() {
         </div>
       </section>
 
+      <section className="mt-20">
+        <div className="mb-7">
+          <span className="text-xs font-semibold tracking-[0.12em] text-primary uppercase">
+            Elevation
+          </span>
+          <h2
+            className="mt-1 !mb-0 !border-0 !pb-0 text-2xl font-semibold tracking-tight text-dark"
+            style={{ borderBottom: "none", marginBottom: 0, paddingBottom: 0 }}
+          >
+            Shadow
+          </h2>
+          <p className="!mt-0 mb-0 text-sm leading-6 text-dark-gray" style={{ marginTop: 2 }}>
+            요소가 떠 있는 높이에 맞는 그림자 토큰을 선택해요.
+          </p>
+        </div>
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+          {shadowTokens.map((shadow) => (
+            <ShadowCard key={shadow.token} shadow={shadow} />
+          ))}
+        </div>
+      </section>
+
       <section className="mt-16">
-        <article className="rounded-2xl bg-[#111] p-6 text-white sm:p-8">
-          <span className="text-xs font-semibold tracking-[0.12em] text-primary-loading uppercase">
+        <article className="rounded-2xl border border-border bg-white p-6 shadow-sm sm:p-8">
+          <span className="text-xs font-semibold tracking-[0.12em] text-primary uppercase">
             Usage
           </span>
-          <h2 className="mt-1 mb-0 text-xl font-semibold !text-white">사용 방법</h2>
-          <p className="mt-2 mb-5 text-sm leading-6 !text-white/65">
-            패키지 스타일을 한 번 불러온 다음 일반 Tailwind class처럼 사용합니다.
+          <h2 className="mt-1 mb-0 !border-0 !pb-0 text-xl font-semibold text-dark">사용 방법</h2>
+          <p className="mt-1 mb-0 text-sm leading-6 text-dark-gray">
+            패키지 스타일을 불러온 뒤 Tailwind 클래스처럼 사용해요.
           </p>
-          <pre className="m-0 overflow-hidden overflow-x-auto rounded-xl bg-white/8 p-4 text-xs leading-6 text-white/85">
-            <code>{`import '@taejin-k/wizard-design/style.css';
-
-<button className="bg-primary hover:bg-primary-hover text-white">
-  저장
-</button>
-
-<p className="text-danger">입력값을 확인해 주세요.</p>
-
-<div className="border-success ring-success border ring-1">
-  저장 완료
-</div>`}</code>
+          <div className="mt-4 mb-5 w-full border-t border-border" />
+          <pre
+            className="m-0 overflow-hidden overflow-x-auto !rounded-xl !bg-dark !p-4 text-xs leading-6 !text-[#D1D5DB]"
+            style={{ backgroundColor: "var(--color-dark)", borderRadius: 12, padding: 16 }}
+          >
+            <code className="!text-[#D1D5DB]">
+              <span className="!text-[#C586C0]">import</span>{" "}
+              <span className="!text-[#CE9178]">'@taejin-k/wizard-design/style.css'</span>;{"\n\n"}
+              <span className="!text-[#569CD6]">{"<button"}</span>{" "}
+              <span className="!text-[#9CDCFE]">className</span>=
+              <span className="!text-[#CE9178]">
+                &quot;bg-primary text-white hover:opacity-90&quot;
+              </span>
+              <span className="!text-[#569CD6]">{">"}</span>
+              {"\n  저장\n"}
+              <span className="!text-[#569CD6]">{"</button>"}</span>
+              {"\n\n"}
+              <span className="!text-[#569CD6]">{"<p"}</span>{" "}
+              <span className="!text-[#9CDCFE]">className</span>=
+              <span className="!text-[#CE9178]">&quot;text-danger&quot;</span>
+              <span className="!text-[#569CD6]">{">"}</span>
+              입력값을 확인해 주세요.
+              <span className="!text-[#569CD6]">{"</p>"}</span>
+              {"\n\n"}
+              <span className="!text-[#569CD6]">{"<div"}</span>{" "}
+              <span className="!text-[#9CDCFE]">className</span>=
+              <span className="!text-[#CE9178]">
+                &quot;border-success ring-success border ring-1&quot;
+              </span>
+              <span className="!text-[#569CD6]">{">"}</span>
+              {"\n  저장 완료\n"}
+              <span className="!text-[#569CD6]">{"</div>"}</span>
+            </code>
           </pre>
         </article>
       </section>
+
+      <h2 className="component-docs-types-heading" style={{ marginTop: 80 }}>
+        Types
+      </h2>
+      <h3 id="color-token-type">ColorTokenType</h3>
+      <p>Color에서 제공하는 색상 토큰 이름이에요.</p>
+      <div className="flex flex-wrap gap-2">
+        {colorTokenNames.map((name) => (
+          <TokenCode key={name} name={name} />
+        ))}
+      </div>
+      <h3 id="shadow-token-type">ShadowTokenType</h3>
+      <p>Color에서 제공하는 그림자 토큰 이름이에요.</p>
+      <div className="flex flex-wrap gap-2">
+        {shadowTokenNames.map((name) => (
+          <TokenCode key={name} name={name} />
+        ))}
+      </div>
     </main>
   );
 }
@@ -252,6 +395,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Palette: Story = {
+  tags: ["!dev"],
   parameters: {
     controls: { disable: true },
     docs: { canvas: { sourceState: "none" } },

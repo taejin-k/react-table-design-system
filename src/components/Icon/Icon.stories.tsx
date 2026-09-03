@@ -5,6 +5,9 @@ import { storyDescriptions } from "../../storybook/story-descriptions";
 import { withStoryImports } from "../../storybook/story-source";
 import { Icon, iconGalleryNames } from "./Icon";
 import type { IconNameType, IconProps } from "./Icon.types";
+
+const colorTokenTypeHref = `${typeof window === "undefined" ? "" : window.location.origin}/iframe.html?id=components-color--documentation&viewMode=docs#color-token-type`;
+
 const storyDescription = (id: string) => ({
   docs: { description: { story: storyDescriptions[id] } },
 });
@@ -16,7 +19,7 @@ const meta = {
   argTypes: {
     icon: { name: "아이콘", control: "select", options: iconGalleryNames },
     size: { name: "크기", control: "number" },
-    color: { name: "색상", control: "color" },
+    color: { name: "색상", control: "text" },
     loading: { name: "로딩", control: "boolean" },
     disabled: { name: "비활성", control: "boolean" },
     className: { control: false, table: { disable: true } },
@@ -42,7 +45,7 @@ const meta = {
 | --- | --- | --- | --- |
 | \`icon\` | 표시할 아이콘 이름을 설정해요. | [\`IconNameType\`](#icon-name) | - |
 | \`size\` | 아이콘의 가로와 세로 크기를 설정해요. | \`number\` | \`16\` |
-| \`color\` | 아이콘 색상을 설정해요. 지정하지 않으면 주변 텍스트 색상을 따라요. | \`CSSProperties['color']\` | \`currentColor\` |
+| \`color\` | 색상 토큰 이름이나 CSS 색상을 설정해요. | [\`ColorTokenType\`](${colorTokenTypeHref}) \\| \`CSSProperties['color']\` | \`currentColor\` |
 | \`loading\` | 기존 아이콘 대신 로딩을 표시하고 동작을 막아요. | \`boolean\` | \`false\` |
 | \`disabled\` | 비활성 색상으로 표시하고 동작을 막아요. | \`boolean\` | \`false\` |
 | \`className\` | 최상위 요소에 Tailwind 클래스를 추가해요. | \`string\` | - |
@@ -53,7 +56,7 @@ const meta = {
           <p>표시할 아이콘 이름을 선택해요.</p>
           <div className="flex flex-wrap gap-2">
             {iconGalleryNames.map((name) => (
-              <IconNameCode key={name} name={name} />
+              <TokenNameCode key={name} name={name} />
             ))}
           </div>
         </div>
@@ -65,7 +68,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-function IconNameCode({ name }: { name: IconNameType }) {
+function TokenNameCode({ name }: { name: IconNameType }) {
   return (
     <code className="rounded-full border border-[#e3e8ef] bg-[#f8fafc] px-3 py-1.5 text-[13px] text-[#4a5667]">
       {name}
@@ -87,11 +90,11 @@ function IconGallery({ args }: { args: Partial<IconProps> }) {
         <div className="relative">
           <Icon
             className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2"
-            color="#666"
+            color="dark-gray"
             icon="search"
           />
           <input
-            className="h-10 w-full rounded-md border border-[#d9d9d9] bg-white pr-3 pl-9 text-sm outline-none placeholder:text-[#999] focus:border-primary"
+            className="h-10 w-full rounded-md border border-border bg-white pr-3 pl-9 text-sm outline-none placeholder:text-gray focus:border-primary"
             onChange={(event) => setSearch(event.currentTarget.value)}
             placeholder="아이콘 이름 검색"
             type="search"
@@ -110,14 +113,14 @@ function IconGallery({ args }: { args: Partial<IconProps> }) {
               >
                 <Icon {...args} icon={name} />
               </span>
-              <span className="flex h-8 max-w-full items-start justify-center text-center text-xs leading-4 break-words text-[#666]">
+              <span className="flex h-8 max-w-full items-start justify-center text-center text-xs leading-4 break-words text-dark-gray">
                 {name}
               </span>
             </div>
           ))}
         </div>
       ) : (
-        <p className="py-12 text-center text-sm text-[#666]">검색 결과가 없어요.</p>
+        <p className="py-12 text-center text-sm text-dark-gray">검색 결과가 없어요.</p>
       )}
     </div>
   );
@@ -138,7 +141,7 @@ export const Icons: Story = {
 };
 
 export const SizeAndColor: Story = {
-  args: { icon: "add", size: 24, color: "#0062df" },
+  args: { icon: "add", size: 24, color: "primary" },
   parameters: {
     ...storyDescription("components-icon--size-and-color"),
     controls: { disable: false, include: ["아이콘", "크기", "색상"] },

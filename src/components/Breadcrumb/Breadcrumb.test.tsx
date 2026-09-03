@@ -33,7 +33,7 @@ describe("Breadcrumb", () => {
 
     const link = screen.getByRole("link", { name: "홈" });
     expect(link).toHaveAttribute("href", "/home");
-    expect(link.className).toContain("hover:bg-[#f5f5f5]");
+    expect(link.className).toContain("hover:bg-hover");
     await user.click(link);
     expect(onClick).toHaveBeenCalledOnce();
   });
@@ -45,7 +45,7 @@ describe("Breadcrumb", () => {
 
     const button = screen.getByRole("button", { name: "프로젝트" });
     expect(button).toHaveAttribute("type", "button");
-    expect(button.className).toContain("hover:bg-[#f5f5f5]");
+    expect(button.className).toContain("hover:bg-hover");
     await user.click(button);
     expect(onClick).toHaveBeenCalledOnce();
   });

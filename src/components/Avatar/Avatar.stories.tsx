@@ -57,7 +57,7 @@ const meta = {
 | --- | --- | --- | --- |
 | \`src\` | 아바타 이미지 주소 또는 이미지 노드를 전달해요. | \`ReactNode\` | - |
 | \`icon\` | 이미지 대신 표시할 아이콘이에요. | \`ReactNode\` | - |
-| \`color\` | 아바타 배경색을 설정해요. | \`CSSProperties['backgroundColor']\` | \`#bfbfbf\` |
+| \`color\` | 아바타 배경색을 설정해요. | \`CSSProperties['backgroundColor']\` | \`var(--color-disabled)\` |
 | \`label\` | 아바타 옆에 라벨을 표시해요. | \`boolean\` | \`false\` |
 | \`labelWidth\` | 라벨 너비를 px로 정하고 넘치는 텍스트를 말줄임해요. | \`number\` | 텍스트 너비 |
 | \`size\` | 아바타 크기를 정해요. | [\`AvatarSizeType\`](#avatar-size-type) | \`md\` |
@@ -94,7 +94,7 @@ export const Basic: Story = {
     children: "MD",
     size: "md",
     shape: "circle",
-    color: "#bfbfbf",
+    color: "var(--color-disabled)",
     label: false,
     preview: false,
   },
@@ -115,7 +115,7 @@ export const Basic: Story = {
 };
 
 export const Sizes: Story = {
-  args: { shape: "circle", color: "#bfbfbf", label: false },
+  args: { shape: "circle", color: "var(--color-disabled)", label: false },
   parameters: {
     ...storyDescription("components-avatar--sizes"),
     controls: { disable: false, include: ["모양", "배경색", "라벨"] },
@@ -143,7 +143,7 @@ export const Sizes: Story = {
 };
 
 export const Shapes: Story = {
-  args: { color: "#bfbfbf", label: false },
+  args: { color: "var(--color-disabled)", label: false },
   parameters: {
     ...storyDescription("components-avatar--shapes"),
     controls: { disable: false, include: ["배경색", "라벨"] },
@@ -240,7 +240,7 @@ export const Color: Story = {
 };
 
 export const Text: Story = {
-  args: { size: "md", shape: "circle", color: "#bfbfbf" },
+  args: { size: "md", shape: "circle", color: "var(--color-disabled)" },
   parameters: {
     ...storyDescription("components-avatar--text"),
     controls: { disable: false, include: ["크기", "모양", "배경색"] },
@@ -310,7 +310,7 @@ function AvatarLabelTextExample(args: ComponentProps<typeof Avatar>) {
 }
 
 export const LabelText: Story = {
-  args: { size: "lg", shape: "circle", color: "#bfbfbf", preview: false },
+  args: { size: "lg", shape: "circle", color: "var(--color-disabled)", preview: false },
   parameters: {
     ...storyDescription("components-avatar--label-text"),
     controls: {
@@ -439,7 +439,7 @@ export const ImagePreview: Story = {
 };
 
 export const ImageError: Story = {
-  args: { shape: "circle", color: "#bfbfbf" },
+  args: { shape: "circle", color: "var(--color-disabled)" },
   parameters: {
     ...storyDescription("components-avatar--image-error"),
     controls: { disable: false, include: ["모양", "배경색"] },

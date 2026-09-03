@@ -335,7 +335,7 @@ export const IconsAndCount: Story = {
   return (
     <div className="grid max-w-xl gap-6">
       <div className="grid gap-3">
-        <span className="text-sm font-medium text-[#666]">default</span>
+        <span className="text-sm font-medium text-dark-gray">default</span>
         <Input
           allowClear
           showCount
@@ -355,7 +355,7 @@ export const IconsAndCount: Story = {
         />
       </div>
       <div className="grid gap-3">
-        <span className="text-sm font-medium text-[#666]">filled</span>
+        <span className="text-sm font-medium text-dark-gray">filled</span>
         <Input
           allowClear
           showCount
@@ -377,7 +377,7 @@ export const IconsAndCount: Story = {
         />
       </div>
       <div className="grid gap-3">
-        <span className="text-sm font-medium text-[#666]">borderless</span>
+        <span className="text-sm font-medium text-dark-gray">borderless</span>
         <Input
           allowClear
           showCount
@@ -399,7 +399,7 @@ export const IconsAndCount: Story = {
         />
       </div>
       <div className="grid gap-3">
-        <span className="text-sm font-medium text-[#666]">underlined</span>
+        <span className="text-sm font-medium text-dark-gray">underlined</span>
         <Input
           allowClear
           showCount
@@ -449,7 +449,7 @@ function CountExamples({
   return (
     <div className="grid max-w-xl gap-6">
       <div className="grid gap-3">
-        <span className="text-sm font-medium text-[#666]">default</span>
+        <span className="text-sm font-medium text-dark-gray">default</span>
         <Input
           {...inputProps}
           variant="default"
@@ -471,7 +471,7 @@ function CountExamples({
         />
       </div>
       <div className="grid gap-3">
-        <span className="text-sm font-medium text-[#666]">filled</span>
+        <span className="text-sm font-medium text-dark-gray">filled</span>
         <Input
           {...inputProps}
           variant="filled"
@@ -493,7 +493,7 @@ function CountExamples({
         />
       </div>
       <div className="grid gap-3">
-        <span className="text-sm font-medium text-[#666]">borderless</span>
+        <span className="text-sm font-medium text-dark-gray">borderless</span>
         <Input
           {...inputProps}
           variant="borderless"
@@ -515,7 +515,7 @@ function CountExamples({
         />
       </div>
       <div className="grid gap-3">
-        <span className="text-sm font-medium text-[#666]">underlined</span>
+        <span className="text-sm font-medium text-dark-gray">underlined</span>
         <Input
           {...inputProps}
           variant="underlined"

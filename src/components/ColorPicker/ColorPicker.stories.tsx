@@ -51,7 +51,7 @@ const presetGroups = [
       "#52c41a",
       "#faad14",
       "#ff4d4f",
-      "#8c8c8c",
+      "#999999",
       "#91caff",
       "#b7eb8f",
       "#ffe58f",
@@ -319,7 +319,7 @@ export const Presets: Story = {
       source: {
         type: "code",
         code: withStoryImports(
-          `<ColorPicker\n  defaultValue="#0062df"\n  showLabel\n  presets={[\n    {\n      label: '브랜드',\n      colors: [\n        '#0062df',\n        '#52c41a',\n        '#faad14',\n        '#ff4d4f',\n        '#722ed1',\n        '#13c2c2',\n        '#2f54eb',\n        '#eb2f96',\n      ],\n    },\n    {\n      label: '상태',\n      colors: [\n        '#1677ff',\n        '#52c41a',\n        '#faad14',\n        '#ff4d4f',\n        '#8c8c8c',\n        '#91caff',\n        '#b7eb8f',\n        '#ffe58f',\n      ],\n    },\n  ]}\n/>`,
+          `<ColorPicker\n  defaultValue="#0062df"\n  showLabel\n  presets={[\n    {\n      label: '브랜드',\n      colors: [\n        '#0062df',\n        '#52c41a',\n        '#faad14',\n        '#ff4d4f',\n        '#722ed1',\n        '#13c2c2',\n        '#2f54eb',\n        '#eb2f96',\n      ],\n    },\n    {\n      label: '상태',\n      colors: [\n        '#1677ff',\n        '#52c41a',\n        '#faad14',\n        '#ff4d4f',\n        '#999999',\n        '#91caff',\n        '#b7eb8f',\n        '#ffe58f',\n      ],\n    },\n  ]}\n/>`,
         ),
       },
     },

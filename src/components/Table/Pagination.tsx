@@ -48,7 +48,7 @@ function pageItems(current: number, total: number): PageItem[] {
 }
 
 const navVariants = cva(
-  "flex w-full min-w-0 flex-wrap items-center gap-x-2 gap-y-3 font-pretendard text-[14px] text-[#111]",
+  "flex w-full min-w-0 flex-wrap items-center gap-x-2 gap-y-3 font-pretendard text-[14px] text-dark",
   {
     variants: {
       align: {
@@ -62,7 +62,7 @@ const navVariants = cva(
 );
 
 const itemSizeVariants = cva(
-  "inline-flex cursor-pointer items-center justify-center rounded border border-transparent text-[#111] transition-none duration-0 hover:bg-[#f5f5f5] disabled:pointer-events-none disabled:cursor-not-allowed disabled:!border-transparent disabled:!bg-transparent disabled:opacity-40 disabled:!ring-transparent",
+  "inline-flex cursor-pointer items-center justify-center rounded border border-transparent text-dark transition-none duration-0 hover:bg-hover disabled:pointer-events-none disabled:cursor-not-allowed disabled:!border-transparent disabled:!bg-transparent disabled:opacity-40 disabled:!ring-transparent",
   {
     variants: {
       size: {
@@ -178,7 +178,7 @@ export function Pagination({
       data-pagination-compact={compact ? "" : undefined}
     >
       {config.showTotal && (
-        <span className="shrink-0 text-[#999]">{config.showTotal(total, [start, end])}</span>
+        <span className="shrink-0 text-gray">{config.showTotal(total, [start, end])}</span>
       )}
       <div className="flex shrink-0 items-center gap-1">
         {prev}
@@ -196,7 +196,7 @@ export function Pagination({
               onBlur={simpleBlur}
               className="w-[40px] [&_input]:text-center"
             />
-            <span className="text-[#999]">/</span>
+            <span className="text-gray">/</span>
             <span>{pageCount}</span>
           </span>
         ) : (
@@ -208,7 +208,7 @@ export function Pagination({
                 <Button
                   variant="ghost"
                   size={buttonSize}
-                  className={twMerge(itemClassName, "text-[#999] hover:text-[#111]")}
+                  className={twMerge(itemClassName, "text-gray hover:text-dark")}
                   data-pagination-jump={item}
                   disabled={disabled}
                   onClick={() => jump(target)}
@@ -262,7 +262,7 @@ export function Pagination({
             commitJump();
           }}
         >
-          <label className="flex items-center gap-1 text-[#999]">
+          <label className="flex items-center gap-1 text-gray">
             이동
             <Input
               data-pagination-jumper
@@ -276,7 +276,7 @@ export function Pagination({
               }}
             />
           </label>
-          <span className="text-[#999]">페이지</span>
+          <span className="text-gray">페이지</span>
         </form>
       )}
     </nav>

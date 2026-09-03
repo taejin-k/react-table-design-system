@@ -108,7 +108,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             inputMode={inputMode ?? (allowOnly === "number" ? "numeric" : undefined)}
             className={twMerge(
               inputVariants({ size, disabled }),
-              "min-w-0 flex-1 bg-transparent outline-none placeholder:text-[#999]",
+              "min-w-0 flex-1 bg-transparent outline-none placeholder:text-gray",
             )}
             onBlur={(event) => {
               if (validate) {
@@ -155,7 +155,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             {...rest}
           />
           {showCount && (
-            <span className="shrink-0 font-pretendard text-[12px] whitespace-nowrap text-[#aaa]">
+            <span className="shrink-0 font-pretendard text-[12px] whitespace-nowrap text-disabled">
               {maxLength !== undefined
                 ? `${currentValue.length} / ${maxLength}`
                 : currentValue.length}
@@ -164,7 +164,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           {allowClear && hasValue && !readOnly && !disabled && (
             <Icon
               icon="close"
-              className="shrink-0 text-[#999]"
+              className="shrink-0 text-gray"
               onMouseDown={(event) => event.preventDefault()}
               onClick={() => {
                 validationRequestRef.current += 1;
@@ -184,7 +184,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             <Icon
               icon={passwordVisible ? "eye" : "eye-off"}
               disabled={disabled}
-              className="shrink-0 text-[#999]"
+              className="shrink-0 text-gray"
               onMouseDown={(event) => event.preventDefault()}
               onClick={() => setPasswordVisible((visible) => !visible)}
             />
@@ -211,18 +211,18 @@ const inputRowVariants = cva(
         sm: "h-[20px] px-[8px] py-[1px]",
       },
       variant: {
-        default: "border-[#ddd]",
-        filled: "border-[#f5f5f5] bg-[#f5f5f5]",
+        default: "border-border",
+        filled: "border-hover bg-hover",
         borderless: "border-transparent bg-white focus-within:border-transparent",
         underlined:
-          "rounded-none border-x-transparent border-t-transparent border-b-[#ddd] bg-white focus-within:border-x-transparent focus-within:border-t-transparent focus-within:border-b-primary",
+          "rounded-none border-x-transparent border-t-transparent border-b-border bg-white focus-within:border-x-transparent focus-within:border-t-transparent focus-within:border-b-primary",
       },
       error: {
         true: "",
         false: "",
       },
       disabled: {
-        true: "border-[#ddd] bg-[#f8f8f8]",
+        true: "border-border bg-hover",
         false: "",
       },
     },
@@ -249,13 +249,13 @@ const inputRowVariants = cva(
       {
         variant: "underlined",
         disabled: true,
-        className: "rounded-[4px] border-x-[#ddd] border-t-[#ddd]",
+        className: "rounded-[4px] border-x-border border-t-border",
       },
     ],
   },
 );
 
-const inputVariants = cva("font-pretendard leading-[1.6] font-medium text-[#111]", {
+const inputVariants = cva("font-pretendard leading-[1.6] font-medium text-dark", {
   variants: {
     size: {
       lg: "text-[16px]",
@@ -263,7 +263,7 @@ const inputVariants = cva("font-pretendard leading-[1.6] font-medium text-[#111]
       sm: "text-[12px]",
     },
     disabled: {
-      true: "text-[#999] opacity-100",
+      true: "text-gray opacity-100",
       false: "",
     },
   },

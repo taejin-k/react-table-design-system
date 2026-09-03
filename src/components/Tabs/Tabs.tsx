@@ -255,20 +255,20 @@ export function Tabs(props: TabsProps) {
         centered && !vertical && "justify-center",
         type === "line" &&
           (placement === "start"
-            ? "border-r border-[#f0f0f0]"
+            ? "border-r border-hover"
             : placement === "end"
-              ? "border-l border-[#f0f0f0]"
+              ? "border-l border-hover"
               : placement === "bottom"
-                ? "border-t border-[#f0f0f0]"
-                : "border-b border-[#f0f0f0]"),
+                ? "border-t border-hover"
+                : "border-b border-hover"),
         type !== "line" &&
           (vertical
             ? placement === "start"
-              ? "border-r border-[#d9d9d9]"
-              : "border-l border-[#d9d9d9]"
+              ? "border-r border-border"
+              : "border-l border-border"
             : placement === "bottom"
-              ? "border-t border-[#d9d9d9]"
-              : "border-b border-[#d9d9d9]"),
+              ? "border-t border-border"
+              : "border-b border-border"),
       )}
     >
       <TabsSortContext
@@ -290,11 +290,11 @@ export function Tabs(props: TabsProps) {
               key={item.key}
               active={Object.is(item.key, selected)}
               className={twMerge(
-                "relative inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 whitespace-nowrap text-[#666] hover:text-primary disabled:cursor-not-allowed disabled:text-[#bbb] motion-reduce:transition-none",
+                "relative inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 whitespace-nowrap text-dark-gray hover:text-primary disabled:cursor-not-allowed disabled:text-disabled motion-reduce:transition-none",
                 Object.is(item.key, selected) && "font-medium text-primary",
                 type === "line"
                   ? `${linePadding} transition-colors duration-200`
-                  : `${cardSize} border border-[#d9d9d9] bg-[#fafafa] ${cardEdge} transition-[background-color,border-color,color] duration-300 ease-[cubic-bezier(0.645,0.045,0.355,1)]`,
+                  : `${cardSize} border border-border bg-hover ${cardEdge} transition-[background-color,border-color,color] duration-300 ease-[cubic-bezier(0.645,0.045,0.355,1)]`,
                 type !== "line" && Object.is(item.key, selected) && "z-[1] bg-white",
                 type !== "line" && vertical ? "w-full" : "",
               )}
@@ -334,7 +334,7 @@ export function Tabs(props: TabsProps) {
               type="button"
               data-tabs-add=""
               className={twMerge(
-                "inline-flex shrink-0 cursor-pointer items-center justify-center border border-[#d9d9d9] bg-[#fafafa] text-[#111] transition-[background-color,border-color,color] duration-300 ease-[cubic-bezier(0.645,0.045,0.355,1)] hover:border-primary hover:text-primary motion-reduce:transition-none",
+                "inline-flex shrink-0 cursor-pointer items-center justify-center border border-border bg-hover text-dark transition-[background-color,border-color,color] duration-300 ease-[cubic-bezier(0.645,0.045,0.355,1)] hover:border-primary hover:text-primary motion-reduce:transition-none",
                 cardSize,
                 vertical
                   ? "w-full"
@@ -400,7 +400,7 @@ export function Tabs(props: TabsProps) {
   return (
     <div
       className={twMerge(
-        "flex min-w-0 font-pretendard text-[#111]",
+        "flex min-w-0 font-pretendard text-dark",
         vertical ? "flex-row" : "flex-col",
         placement === "end" && "flex-row-reverse",
         placement === "bottom" && "flex-col-reverse",

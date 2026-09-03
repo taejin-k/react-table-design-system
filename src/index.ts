@@ -2,6 +2,7 @@ export { Button } from "./components/Button";
 export type { ButtonProps, ButtonSizeType, ButtonVariantType } from "./components/Button";
 export { Icon } from "./components/Icon";
 export type { IconProps, IconNameType } from "./components/Icon";
+export type { ColorTokenType, ShadowTokenType } from "./color-tokens";
 export { Tag } from "./components/Tag";
 export type { TagColorType, TagProps, TagVariantType } from "./components/Tag";
 export { Toggle } from "./components/Toggle";

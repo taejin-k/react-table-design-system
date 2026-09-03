@@ -781,7 +781,7 @@ export const MultipleAndSearch: Story = {
 <div className="grid max-w-md gap-6">
   {(['default', 'filled'] as const).map((variant) => (
     <div key={variant} className="grid gap-3">
-      <span className="text-sm font-medium text-[#666]">{variant}</span>
+      <span className="text-sm font-medium text-dark-gray">{variant}</span>
       {(['lg', 'md', 'sm'] as const).map((size) => (
         <Select
           key={size}
@@ -804,7 +804,7 @@ export const MultipleAndSearch: Story = {
     <div className="grid max-w-md gap-6">
       {(["default", "filled"] as const).map((variant) => (
         <div key={variant} className="grid gap-3">
-          <span className="text-sm font-medium text-[#666]">{variant}</span>
+          <span className="text-sm font-medium text-dark-gray">{variant}</span>
           {(["lg", "md", "sm"] as const).map((size) => (
             <Select
               key={size}
@@ -1035,7 +1035,7 @@ export const CustomRendering: Story = {
     labelRender={({ label }) => <>선택: {label}</>}
     popupRender={(menu) => (
       <div>
-        <div className="p-2 text-xs text-[#777]">구성원 목록</div>
+        <div className="p-2 text-xs text-gray">구성원 목록</div>
         {menu}
       </div>
     )}
@@ -1055,7 +1055,7 @@ export const CustomRendering: Story = {
         labelRender={({ label: selectedLabel }) => <>선택: {selectedLabel}</>}
         popupRender={(menu) => (
           <div>
-            <div className="p-2 text-xs text-[#777]">구성원 목록</div>
+            <div className="p-2 text-xs text-gray">구성원 목록</div>
             {menu}
           </div>
         )}
@@ -1132,8 +1132,8 @@ export const ControlledOpenAndSearch: Story = {
         <Button variant="tertiary" onClick={() => setSearch('')}>검색어 초기화</Button>
       </div>
       <div className="grid grid-cols-2 gap-2 text-sm">
-        <div className="rounded bg-[#f5f5f5] px-3 py-2">목록: {open ? '열림' : '닫힘'}</div>
-        <div className="rounded bg-[#f5f5f5] px-3 py-2">검색어: {search || '없음'}</div>
+        <div className="rounded bg-hover px-3 py-2">목록: {open ? '열림' : '닫힘'}</div>
+        <div className="rounded bg-hover px-3 py-2">검색어: {search || '없음'}</div>
       </div>
       <Select
         options={memberOptions}
@@ -1164,8 +1164,8 @@ export const ControlledOpenAndSearch: Story = {
           </Button>
         </div>
         <div className="grid grid-cols-2 gap-2 text-sm">
-          <div className="rounded bg-[#f5f5f5] px-3 py-2">목록: {isOpen ? "열림" : "닫힘"}</div>
-          <div className="rounded bg-[#f5f5f5] px-3 py-2">검색어: {search || "없음"}</div>
+          <div className="rounded bg-hover px-3 py-2">목록: {isOpen ? "열림" : "닫힘"}</div>
+          <div className="rounded bg-hover px-3 py-2">검색어: {search || "없음"}</div>
         </div>
         <Select
           size={args.size}

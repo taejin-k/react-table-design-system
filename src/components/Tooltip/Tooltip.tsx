@@ -26,7 +26,7 @@ export function Tooltip({
   placement = "top",
   trigger = "hover",
   arrow = true,
-  color = "#111",
+  color = "var(--color-dark)",
   open,
   defaultOpen = false,
   autoAdjustOverflow = true,
@@ -264,7 +264,7 @@ export function Tooltip({
                 }}
               >
                 <div
-                  className="relative rounded px-2 py-1 shadow-[0_2px_8px_rgba(0,0,0,0.18)]"
+                  className="relative rounded px-2 py-1 shadow-lg"
                   style={{ backgroundColor: color, color: getTextColor(color) }}
                 >
                   <span className="block min-h-5 [overflow-wrap:anywhere] break-words whitespace-pre-wrap">
@@ -332,5 +332,5 @@ function getTextColor(color: string) {
   const red = Number.parseInt(normalized.slice(0, 2), 16);
   const green = Number.parseInt(normalized.slice(2, 4), 16);
   const blue = Number.parseInt(normalized.slice(4, 6), 16);
-  return red * 0.299 + green * 0.587 + blue * 0.114 > 160 ? "#111111" : "#ffffff";
+  return red * 0.299 + green * 0.587 + blue * 0.114 > 160 ? "var(--color-dark)" : "#ffffff";
 }

@@ -629,7 +629,7 @@ export const Select = forwardRef<SelectRef, SelectProps>(
     const popupContent = visibleOptions.length ? (
       optionList
     ) : (
-      <div className="px-3 py-6 text-center text-[#999]">{notFoundContent}</div>
+      <div className="px-3 py-6 text-center text-gray">{notFoundContent}</div>
     );
 
     const updateSearch = (nextQuery: string) => {
@@ -871,7 +871,7 @@ export const Select = forwardRef<SelectRef, SelectProps>(
                       <span
                         data-select-tag
                         data-select-layout-key="omitted"
-                        className="text-xs text-[#777]"
+                        className="text-xs text-gray"
                       >
                         + {omittedTags.length} ...
                       </span>
@@ -898,12 +898,12 @@ export const Select = forwardRef<SelectRef, SelectProps>(
                             : undefined
                     }
                     className={twMerge(
-                      "font-inherit w-0 max-w-full min-w-8 flex-1 border-0 bg-transparent p-0 text-inherit opacity-100 transition-opacity duration-300 ease-[cubic-bezier(0.645,0.045,0.355,1)] outline-none placeholder:text-[#999] disabled:cursor-not-allowed motion-reduce:transition-none",
+                      "font-inherit w-0 max-w-full min-w-8 flex-1 border-0 bg-transparent p-0 text-inherit opacity-100 transition-opacity duration-300 ease-[cubic-bezier(0.645,0.045,0.355,1)] outline-none placeholder:text-gray disabled:cursor-not-allowed motion-reduce:transition-none",
                       size === "lg" && "h-8",
                       size === "md" && "h-[22px]",
                       size === "sm" && "h-4",
                       loading && "cursor-default",
-                      !mode && singleSelectedLabel !== undefined && "placeholder:text-[#111]",
+                      !mode && singleSelectedLabel !== undefined && "placeholder:text-dark",
                       mode &&
                         values.length > 0 &&
                         isSearchInputWrapped &&
@@ -937,7 +937,7 @@ export const Select = forwardRef<SelectRef, SelectProps>(
                     onChange={(event) => updateSearch(event.currentTarget.value)}
                   />
                 ) : selectedOptions.length ? null : (
-                  <span className="min-w-0 flex-1 text-left text-[#999]">{placeholder}</span>
+                  <span className="min-w-0 flex-1 text-left text-gray">{placeholder}</span>
                 )}
               </span>
               {mode && maxVisibleTagCount === "responsive" && selectedOptions.length ? (
@@ -985,7 +985,7 @@ export const Select = forwardRef<SelectRef, SelectProps>(
                 </span>
               ) : null}
               {loading ? (
-                <Icon icon="loading" color="#999" className="animate-spin self-center" />
+                <Icon icon="loading" color="gray" className="animate-spin self-center" />
               ) : allowClear && values.length && !interactionBlocked && !readOnly ? (
                 <span
                   className="cursor-pointer self-center"
@@ -995,13 +995,13 @@ export const Select = forwardRef<SelectRef, SelectProps>(
                     onClear?.();
                   }}
                 >
-                  <Icon icon="close" color="#999" />
+                  <Icon icon="close" color="gray" />
                 </span>
               ) : (
                 <Icon
                   icon="chevron-down"
                   size={14}
-                  color="#bbb"
+                  color="disabled"
                   className={twMerge(
                     "self-center transition-transform",
                     floating.isOpen && "rotate-180",
@@ -1030,10 +1030,10 @@ export const Select = forwardRef<SelectRef, SelectProps>(
               onKeyDown={handleKeyDown}
             >
               <span className="min-w-0 flex-1 truncate text-left">
-                {singleSelectedLabel ?? <span className="text-[#999]">{placeholder}</span>}
+                {singleSelectedLabel ?? <span className="text-gray">{placeholder}</span>}
               </span>
               {loading ? (
-                <Icon icon="loading" color="#999" className="animate-spin" />
+                <Icon icon="loading" color="gray" className="animate-spin" />
               ) : allowClear && values.length && !interactionBlocked && !readOnly ? (
                 <span
                   className="cursor-pointer"
@@ -1043,13 +1043,13 @@ export const Select = forwardRef<SelectRef, SelectProps>(
                     onClear?.();
                   }}
                 >
-                  <Icon icon="close" color="#999" />
+                  <Icon icon="close" color="gray" />
                 </span>
               ) : (
                 <Icon
                   icon="chevron-down"
                   size={14}
-                  color="#bbb"
+                  color="disabled"
                   className={twMerge("transition-transform", floating.isOpen && "rotate-180")}
                 />
               )}
@@ -1063,7 +1063,7 @@ export const Select = forwardRef<SelectRef, SelectProps>(
                 ref={floating.popupRef}
                 data-select-popup
                 className={twMerge(
-                  "fixed font-pretendard text-sm text-[#111]",
+                  "fixed font-pretendard text-sm text-dark",
                   !floating.isMotionVisible && "pointer-events-none",
                 )}
                 style={{
@@ -1083,7 +1083,7 @@ export const Select = forwardRef<SelectRef, SelectProps>(
               >
                 <div
                   data-select-motion
-                  className="overflow-hidden rounded-lg bg-white p-1 shadow-[0_6px_16px_rgba(0,0,0,0.06),0_3px_6px_-4px_rgba(0,0,0,0.08),0_9px_28px_8px_rgba(0,0,0,0.03)] motion-reduce:transition-none"
+                  className="overflow-hidden rounded-lg bg-white p-1 shadow-xl motion-reduce:transition-none"
                   style={getPopupMotionStyle(
                     floating.position?.placement ?? placement,
                     floating.isMotionVisible && Boolean(floating.position),
@@ -1159,7 +1159,7 @@ function OptionList({
             return (
               <Fragment key={`${String(option.value)}-${index}`}>
                 {startsGroup ? (
-                  <div className="px-3 pt-2 pb-1 text-xs font-medium text-[#999]">
+                  <div className="px-3 pt-2 pb-1 text-xs font-medium text-gray">
                     {option.__groupLabel as ReactNode}
                   </div>
                 ) : null}
@@ -1170,9 +1170,9 @@ function OptionList({
                     "flex h-8 w-full cursor-pointer items-center gap-2 rounded px-3 text-left transition-colors",
                     selected && "bg-selected",
                     selected && "font-medium text-primary",
-                    !selected && index === activeIndex && "bg-[#f5f5f5]",
-                    !selected && index !== activeIndex && "hover:bg-[#f5f5f5]",
-                    disabled && "cursor-not-allowed text-[#bbb] hover:bg-transparent",
+                    !selected && index === activeIndex && "bg-hover",
+                    !selected && index !== activeIndex && "hover:bg-hover",
+                    disabled && "cursor-not-allowed text-disabled hover:bg-transparent",
                   )}
                   onMouseDown={(event) => event.preventDefault()}
                   onClick={() => onSelect(option)}
@@ -1180,7 +1180,7 @@ function OptionList({
                   <span className="min-w-0 flex-1 truncate">
                     {optionRender ? optionRender(option, { index }) : option.label}
                   </span>
-                  {selected ? <Icon icon="check" color="var(--color-primary)" /> : null}
+                  {selected ? <Icon icon="check" color="primary" /> : null}
                 </button>
               </Fragment>
             );
@@ -1192,13 +1192,13 @@ function OptionList({
 }
 
 const selectRootVariants = cva(
-  "relative flex w-full cursor-pointer items-center gap-2 rounded border border-solid bg-white px-2.5 text-left font-pretendard font-medium text-[#111] transition-colors focus:border-primary focus:outline-none",
+  "relative flex w-full cursor-pointer items-center gap-2 rounded border border-solid bg-white px-2.5 text-left font-pretendard font-medium text-dark transition-colors focus:border-primary focus:outline-none",
   {
     variants: {
       size: { lg: "min-h-10 text-base", md: "min-h-[30px] text-sm", sm: "min-h-5 text-xs" },
       variant: {
-        default: "border-[#ddd]",
-        filled: "border-[#f5f5f5] bg-[#f5f5f5]",
+        default: "border-border",
+        filled: "border-hover bg-hover",
       },
       error: {
         true: "border-danger",
@@ -1213,7 +1213,7 @@ const selectRootVariants = cva(
         false: "",
       },
       disabled: {
-        true: "cursor-not-allowed border-[#ddd] bg-[#f8f8f8] text-[#999] hover:border-[#ddd]",
+        true: "cursor-not-allowed border-border bg-hover text-gray hover:border-border",
         false: "",
       },
     },

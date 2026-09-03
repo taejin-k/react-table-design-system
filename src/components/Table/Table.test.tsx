@@ -67,7 +67,7 @@ describe("Table regressions", () => {
     const illustration = container.querySelector('svg[viewBox="0 0 128 128"]');
     expect(illustration).toBeInTheDocument();
     expect(illustration?.parentElement).toHaveClass("size-24");
-    expect(container.querySelector("tbody td")).toHaveClass("border-b", "border-[#f0f0f0]");
+    expect(container.querySelector("tbody td")).toHaveClass("border-b", "border-hover");
   });
 
   it("bordered 빈 상태에서는 외곽 하단선만 표시한다", () => {
@@ -81,10 +81,7 @@ describe("Table regressions", () => {
     );
 
     expect(container.querySelector("tbody td")).toHaveClass("border-b", "border-transparent");
-    expect(container.querySelector(".rounded-lg.bg-white")).toHaveClass(
-      "border",
-      "border-[#f0f0f0]",
-    );
+    expect(container.querySelector(".rounded-lg.bg-white")).toHaveClass("border", "border-hover");
   });
 
   it("always uses fixed table layout", () => {
@@ -404,7 +401,7 @@ describe("Table regressions", () => {
     const row = container.querySelector<HTMLTableRowElement>("tbody tr[data-row-key]");
     expect(row).toHaveAttribute("data-row-key", "김민준");
     expect(row).toHaveClass("custom-row");
-    expect(row).not.toHaveClass("hover:[&>td]:bg-[#f5f5f5]");
+    expect(row).not.toHaveClass("hover:[&>td]:bg-hover");
     expect(container.querySelector("thead tr")).toHaveClass("custom-header-row");
     expect(container.querySelector("thead th")).toHaveClass("custom-header-cell");
     expect(screen.getByText("김민준").closest("td")).toHaveAttribute("colspan", "2");
@@ -822,7 +819,7 @@ describe("Table regressions", () => {
     await user.click(trigger);
     const detail = screen.getByText("김민준 상세 정보");
     expect(detail).toBeInTheDocument();
-    expect(detail.closest("td")).toHaveClass("!bg-[#fafafa]");
+    expect(detail.closest("td")).toHaveClass("!bg-hover");
     await user.click(requiredElement("[data-table-expand]"));
     expect(screen.queryByText("김민준 상세 정보")).not.toBeInTheDocument();
   });
@@ -910,8 +907,8 @@ describe("Table regressions", () => {
       />,
     );
 
-    expect(screen.getByText("하위 구성원").closest("tr")).toHaveClass("[&>td]:bg-[#fafafa]");
-    expect(screen.getByText("상위 구성원").closest("tr")).not.toHaveClass("[&>td]:bg-[#fafafa]");
+    expect(screen.getByText("하위 구성원").closest("tr")).toHaveClass("[&>td]:bg-hover");
+    expect(screen.getByText("상위 구성원").closest("tr")).not.toHaveClass("[&>td]:bg-hover");
   });
 
   it("uses radio selection as a single controlled choice", async () => {
@@ -932,7 +929,7 @@ describe("Table regressions", () => {
     expect(radios[0]).not.toBeChecked();
     expect(radios[1]).toBeChecked();
     expect(screen.getByText("이서연").closest("tr")).toHaveClass(
-      "[&>td]:bg-[#eef0f8]",
+      "[&>td]:bg-selected",
       "hover:[&>td]:bg-selected",
     );
     expect(onChange).toHaveBeenLastCalledWith(["2"], [rows[1]]);
@@ -1361,10 +1358,10 @@ describe("Table regressions", () => {
     const mergedCell = screen.getByText("Design").closest("td");
 
     fireEvent.mouseEnter(renderedRows[1]);
-    expect(mergedCell).toHaveClass("bg-[#f5f5f5]");
+    expect(mergedCell).toHaveClass("bg-hover");
 
     fireEvent.mouseLeave(renderedRows[1]);
-    expect(mergedCell).not.toHaveClass("bg-[#f5f5f5]");
+    expect(mergedCell).not.toHaveClass("bg-hover");
   });
 
   it("uses compact pagination in a narrow table container", () => {

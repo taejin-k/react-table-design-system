@@ -15,7 +15,7 @@ describe("Tag", () => {
     const tag = screen.getByTestId("tag");
     expect(tag).toHaveTextContent("활성");
     expect(tag).toHaveAttribute("title", "상태");
-    expect(tag).toHaveClass("bg-[#f5f5f5]", "text-[#111111]");
+    expect(tag).toHaveClass("bg-hover", "text-dark");
     expect(ref.current).toBe(tag);
   });
 

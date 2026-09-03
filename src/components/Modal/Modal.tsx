@@ -188,7 +188,7 @@ function ModalBase({
       data-modal-panel
       tabIndex={-1}
       className={twMerge(
-        "wizard-modal-panel relative max-h-[calc(100vh-48px)] overflow-hidden rounded-lg bg-white px-6 py-5 font-pretendard text-sm leading-[22px] text-[#111] shadow-[0_6px_16px_rgba(0,0,0,0.08),0_3px_6px_-4px_rgba(0,0,0,0.12),0_9px_28px_8px_rgba(0,0,0,0.05)] outline-none",
+        "wizard-modal-panel relative max-h-[calc(100vh-48px)] overflow-hidden rounded-lg bg-white px-6 py-5 font-pretendard text-sm leading-[22px] text-dark shadow-2xl outline-none",
         "pointer-events-auto min-w-0",
       )}
       style={{
@@ -389,12 +389,12 @@ function ConfirmModal({
           : "info-circle-filled";
   const iconColor =
     config.type === "success"
-      ? "var(--color-success)"
+      ? "success"
       : config.type === "error"
-        ? "var(--color-danger)"
+        ? "danger"
         : config.type === "warning"
-          ? "var(--color-warning)"
-          : "var(--color-primary)";
+          ? "warning"
+          : "primary";
   const run = async (
     action: ModalFuncConfig["onConfirm"] | ModalFuncConfig["onCancel"],
     value: boolean,

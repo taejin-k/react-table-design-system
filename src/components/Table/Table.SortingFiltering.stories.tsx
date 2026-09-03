@@ -170,7 +170,7 @@ function ServerTableStory(args: TableProps<Member>) {
 
   return (
     <>
-      <pre className="mb-4 overflow-x-auto rounded-lg bg-[#f5f5f5] p-4 text-[13px] text-[#333]">
+      <pre className="mb-4 overflow-x-auto rounded-lg bg-hover p-4 text-[13px] text-[#333]">
         {JSON.stringify(requestParams, null, 2)}
       </pre>
       <Table<Member>

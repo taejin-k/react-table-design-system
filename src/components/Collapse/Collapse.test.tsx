@@ -122,7 +122,7 @@ describe("Collapse", () => {
     );
 
     expect(container.firstChild).toHaveClass("rounded-lg", "border", "border-transparent");
-    expect(container.firstChild).not.toHaveClass("border-[#ddd]");
+    expect(container.firstChild).not.toHaveClass("border-border");
   });
 
   it("reserves transparent panel dividers when bordered is false", () => {
@@ -145,7 +145,7 @@ describe("Collapse", () => {
     );
 
     expect(container.firstElementChild).toHaveClass("collapse-root", "rounded-none", "bg-red-500");
-    expect(container.firstElementChild).not.toHaveClass("rounded-lg", "bg-[#fafafa]");
+    expect(container.firstElementChild).not.toHaveClass("rounded-lg", "bg-hover");
   });
 
   it("supports controlled active keys without updating itself", async () => {
@@ -238,6 +238,6 @@ describe("Collapse", () => {
     const { container } = render(<Collapse ghost items={[{ key: "one", label: "제목" }]} />);
 
     expect(container.firstElementChild).toHaveClass("bg-transparent");
-    expect(container.firstElementChild).not.toHaveClass("rounded-lg", "border", "bg-[#fafafa]");
+    expect(container.firstElementChild).not.toHaveClass("rounded-lg", "border", "bg-hover");
   });
 });

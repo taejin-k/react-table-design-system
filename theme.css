@@ -3,15 +3,27 @@
     "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue",
     "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
   --color-primary: #0062df;
-  --color-primary-hover: #227cef;
-  --color-primary-loading: #6ea0fa;
   --color-selected: #e6f4ff;
   --color-success: #52c41a;
   --color-warning: #faad14;
   --color-danger: #ff4d4f;
-  --color-danger-hover: #ff7875;
   --color-navy: #023f97;
   --color-purple: #4f19c4;
+  --color-dark: #111111;
+  --color-dark-gray: #666666;
+  --color-gray: #999999;
+  --color-disabled: #bbbbbb;
+  --color-border: #dddddd;
+  --color-hover: #f2f2f2;
   --color-black: #000000;
   --color-white: #ffffff;
+  --shadow-xs: 0 1px 2px rgb(0 0 0 / 0.12);
+  --shadow-sm: 0 2px 4px rgb(0 0 0 / 0.16);
+  --shadow-md: 0 3px 8px rgb(0 0 0 / 0.12);
+  --shadow-lg: 0 3px 6px rgb(0 0 0 / 0.2);
+  --shadow-xl:
+    0 6px 16px rgb(0 0 0 / 0.06), 0 3px 6px -4px rgb(0 0 0 / 0.08), 0 9px 28px 8px rgb(0 0 0 / 0.03);
+  --shadow-2xl:
+    0 6px 16px rgb(0 0 0 / 0.08), 0 3px 6px -4px rgb(0 0 0 / 0.12), 0 9px 28px 8px rgb(0 0 0 / 0.05);
+  --drop-shadow-md: 0 3px 8px rgb(0 0 0 / 0.12);
 }

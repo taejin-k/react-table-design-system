@@ -29,7 +29,7 @@ export const Toggle = forwardRef<HTMLButtonElement, ToggleProps>(
         <span key={size} className={knobVariants({ size, checked })}>
           {loading ? (
             <Icon
-              color={checked ? "var(--color-primary-loading)" : "#999"}
+              color={checked ? "#6ea0fa" : "gray"}
               icon="loading"
               size={loadingIconSizes[size]}
             />
@@ -59,7 +59,7 @@ const trackVariants = cva(
       },
       checked: {
         true: "bg-primary",
-        false: "bg-[#ddd]",
+        false: "bg-border",
       },
       loading: {
         true: "cursor-default",
@@ -67,7 +67,7 @@ const trackVariants = cva(
       },
     },
     compoundVariants: [
-      { checked: true, loading: true, className: "bg-primary-loading" },
+      { checked: true, loading: true, className: "bg-[#6ea0fa]" },
       { size: "lg", className: "w-[50px]" },
       { size: "md", className: "w-[40px]" },
       { size: "sm", className: "w-[32px]" },

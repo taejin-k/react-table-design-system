@@ -9,7 +9,7 @@
 @source not "../components/Table/Table.docs.tsx";
 @source not "../components/Table/Table.playground-data.tsx";
 @source inline(
-  "{hover:,focus:,focus-visible:,active:,disabled:,}{bg,text,border,outline,ring,shadow,fill,stroke,caret,accent,decoration,divide,from,via,to}-{primary,primary-hover,primary-loading,selected,success,warning,danger,danger-hover,navy,purple,black,white}"
+  "{hover:,focus:,focus-visible:,active:,disabled:,}{bg,text,border,outline,ring,shadow,fill,stroke,caret,accent,decoration,divide,from,via,to}-{primary,selected,success,warning,danger,navy,purple,dark,dark-gray,gray,disabled,border,hover,black,white}"
 );
 @import "./table-scrollbar.css";
 @import "./motion.css";

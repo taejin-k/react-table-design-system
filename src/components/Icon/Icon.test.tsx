@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
+import { colorTokenNames } from "../../color-tokens";
 import { Icon, iconGalleryNames, iconNames } from "./Icon";
 
 describe("Icon", () => {
@@ -49,6 +50,18 @@ describe("Icon", () => {
     const { container } = render(<Icon icon="check" />);
 
     expect(container.querySelector("path")).toHaveAttribute("fill", "currentColor");
+  });
+
+  it.each(colorTokenNames)("resolves the %s color token", (color) => {
+    const { container } = render(<Icon color={color} icon="check" />);
+
+    expect(container.querySelector("path")).toHaveAttribute("fill", `var(--color-${color})`);
+  });
+
+  it("keeps custom CSS colors", () => {
+    const { container } = render(<Icon color="#123456" icon="check" />);
+
+    expect(container.querySelector("path")).toHaveAttribute("fill", "#123456");
   });
 
   it("renders the paperclip with a rounded outlined stroke", () => {
@@ -194,7 +207,7 @@ describe("Icon", () => {
     expect(icon).not.toHaveClass("opacity-40");
     expect(icon).not.toHaveClass("cursor-pointer", "hover:opacity-75");
     expect(icon).not.toHaveAttribute("tabindex");
-    expect(container.querySelector("path")).toHaveAttribute("fill", "#aaa");
+    expect(container.querySelector("path")).toHaveAttribute("fill", "var(--color-disabled)");
 
     await user.click(icon);
     expect(onClick).not.toHaveBeenCalled();

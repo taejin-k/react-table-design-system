@@ -124,7 +124,7 @@ export const Cover: Story = {
 
 <div className="flex flex-wrap gap-4">
   <div>
-    <p className="mb-2 text-sm text-[#666]">Default</p>
+    <p className="mb-2 text-sm text-dark-gray">Default</p>
     <Image
       src={picture}
       alt="기본 Cover"
@@ -134,7 +134,7 @@ export const Cover: Story = {
     />
   </div>
   <div>
-    <p className="mb-2 text-sm text-[#666]">Hidden</p>
+    <p className="mb-2 text-sm text-dark-gray">Hidden</p>
     <Image
       src={picture}
       alt="Cover 없음"
@@ -151,11 +151,11 @@ export const Cover: Story = {
   render: (args) => (
     <div className="flex flex-wrap gap-4">
       <div>
-        <p className="mb-2 text-sm text-[#666]">Default</p>
+        <p className="mb-2 text-sm text-dark-gray">Default</p>
         <Image {...args} src={picture} preview={{ cover: true }} />
       </div>
       <div>
-        <p className="mb-2 text-sm text-[#666]">Hidden</p>
+        <p className="mb-2 text-sm text-dark-gray">Hidden</p>
         <Image {...args} src={picture} preview={{ cover: false }} />
       </div>
     </div>
@@ -336,11 +336,11 @@ export const PreviewMask: Story = {
 
 <div className="flex flex-wrap gap-4">
   <div>
-    <p className="mb-2 text-sm text-[#666]">Default</p>
+    <p className="mb-2 text-sm text-dark-gray">Default</p>
     <Image src={picture} alt="기본 마스크" width={200} height={125} />
   </div>
   <div>
-    <p className="mb-2 text-sm text-[#666]">Hidden</p>
+    <p className="mb-2 text-sm text-dark-gray">Hidden</p>
     <Image
       src={picture}
       alt="마스크 없음"
@@ -357,11 +357,11 @@ export const PreviewMask: Story = {
   render: (args) => (
     <div className="flex flex-wrap gap-4">
       <div>
-        <p className="mb-2 text-sm text-[#666]">Default</p>
+        <p className="mb-2 text-sm text-dark-gray">Default</p>
         <Image {...args} src={picture} alt="기본 마스크" />
       </div>
       <div>
-        <p className="mb-2 text-sm text-[#666]">Hidden</p>
+        <p className="mb-2 text-sm text-dark-gray">Hidden</p>
         <Image {...args} src={picture} alt="마스크 없음" preview={{ mask: false }} />
       </div>
     </div>
@@ -441,7 +441,7 @@ const fallbackImage = ${JSON.stringify(secondPicture)};
 
 <div className="flex flex-wrap gap-4">
   <div>
-    <p className="mb-2 text-sm text-[#666]">정상 원본 이미지</p>
+    <p className="mb-2 text-sm text-dark-gray">정상 원본 이미지</p>
     <Image
       src={originalImage}
       alt="정상 원본 이미지"
@@ -451,7 +451,7 @@ const fallbackImage = ${JSON.stringify(secondPicture)};
     />
   </div>
   <div>
-    <p className="mb-2 text-sm text-[#666]">원본 로드 실패 → 대체 이미지</p>
+    <p className="mb-2 text-sm text-dark-gray">원본 로드 실패 → 대체 이미지</p>
     <Image
       src="invalid-image.png"
       fallback={fallbackImage}
@@ -469,11 +469,11 @@ const fallbackImage = ${JSON.stringify(secondPicture)};
   render: (args) => (
     <div className="flex flex-wrap gap-4">
       <div>
-        <p className="mb-2 text-sm text-[#666]">정상 원본 이미지</p>
+        <p className="mb-2 text-sm text-dark-gray">정상 원본 이미지</p>
         <Image {...args} src={picture} alt="정상 원본 이미지" />
       </div>
       <div>
-        <p className="mb-2 text-sm text-[#666]">원본 로드 실패 → 대체 이미지</p>
+        <p className="mb-2 text-sm text-dark-gray">원본 로드 실패 → 대체 이미지</p>
         <Image
           {...args}
           src="invalid-image.png"

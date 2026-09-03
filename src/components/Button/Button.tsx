@@ -105,16 +105,16 @@ const buttonVariants = cva(
     variants: {
       variant: {
         primary:
-          "bg-primary text-white ring-1 ring-transparent ring-inset hover:bg-primary-hover disabled:bg-[#f5f5f5] disabled:text-[#999999] disabled:ring-[#dddddd]",
+          "bg-primary text-white ring-1 ring-transparent ring-inset hover:bg-[#227cef] disabled:bg-hover disabled:text-gray disabled:ring-border",
         danger:
-          "bg-danger text-white ring-1 ring-transparent ring-inset hover:bg-danger-hover disabled:bg-[#f5f5f5] disabled:text-[#999999] disabled:ring-[#dddddd]",
+          "bg-danger text-white ring-1 ring-transparent ring-inset hover:bg-[#ff7875] disabled:bg-hover disabled:text-gray disabled:ring-border",
         secondary:
-          "bg-white text-[#111111] ring-1 ring-[#ddd] ring-inset hover:bg-[#f5f5f5] disabled:bg-[#f5f5f5] disabled:text-[#999999] disabled:ring-[#dddddd]",
+          "bg-white text-dark ring-1 ring-border ring-inset hover:bg-hover disabled:bg-hover disabled:text-gray disabled:ring-border",
         tertiary:
-          "bg-[#f5f5f5] text-[#111111] ring-1 ring-transparent ring-inset hover:ring-[#ddd] disabled:text-[#999999] disabled:ring-[#dddddd]",
-        dark: "bg-[#111111] text-white ring-1 ring-transparent ring-inset hover:bg-[#303030] disabled:bg-[#f5f5f5] disabled:text-[#999999] disabled:ring-[#dddddd]",
+          "bg-hover text-dark ring-1 ring-transparent ring-inset hover:ring-border disabled:text-gray disabled:ring-border",
+        dark: "bg-dark text-white ring-1 ring-transparent ring-inset hover:bg-[#303030] disabled:bg-hover disabled:text-gray disabled:ring-border",
         ghost:
-          "bg-transparent text-[#111111] ring-1 ring-transparent ring-inset hover:bg-[#f5f5f5] disabled:bg-[#f5f5f5] disabled:text-[#999999] disabled:ring-[#dddddd]",
+          "bg-transparent text-dark ring-1 ring-transparent ring-inset hover:bg-hover disabled:bg-hover disabled:text-gray disabled:ring-border",
       },
       size: {
         lg: "h-10 px-3.5 text-base",
@@ -152,22 +152,22 @@ const buttonVariants = cva(
       {
         shadow: true,
         size: "sm",
-        className: "shadow-[0_1px_2px_rgba(0,0,0,0.12)]",
+        className: "shadow-xs",
       },
       {
         shadow: true,
         size: "md",
-        className: "shadow-[0_2px_4px_rgba(0,0,0,0.16)]",
+        className: "shadow-sm",
       },
       {
         shadow: true,
         size: "lg",
-        className: "shadow-[0_3px_6px_rgba(0,0,0,0.20)]",
+        className: "shadow-lg",
       },
       {
         loading: true,
         variant: "primary",
-        className: "bg-primary-loading opacity-100 hover:bg-primary-loading",
+        className: "bg-[#6ea0fa] opacity-100 hover:bg-[#6ea0fa]",
       },
       {
         loading: true,
@@ -176,7 +176,7 @@ const buttonVariants = cva(
       },
       { loading: true, variant: "secondary", className: "hover:bg-white" },
       { loading: true, variant: "tertiary", className: "hover:ring-transparent" },
-      { loading: true, variant: "dark", className: "hover:bg-[#111111]" },
+      { loading: true, variant: "dark", className: "hover:bg-dark" },
       { loading: true, variant: "ghost", className: "hover:bg-transparent" },
     ],
     defaultVariants: {

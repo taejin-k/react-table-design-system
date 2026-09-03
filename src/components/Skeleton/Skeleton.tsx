@@ -2,7 +2,7 @@ import { twMerge } from "tailwind-merge";
 import type { SkeletonComponent, SkeletonElementProps } from "./Skeleton.types";
 
 function base(active?: boolean) {
-  return twMerge("bg-[#f0f0f0]", active && "wizard-skeleton-active");
+  return twMerge("bg-hover", active && "wizard-skeleton-active");
 }
 function shapeClass(shape: SkeletonElementProps["shape"]) {
   return shape === "circle" || shape === "round"
@@ -78,7 +78,7 @@ function ImageSkeleton({
   return (
     <span
       className={twMerge(
-        "inline-flex h-24 w-24 items-center justify-center text-[#bfbfbf]",
+        "inline-flex h-24 w-24 items-center justify-center text-disabled",
         base(active),
         shapeClass(shape),
         className,

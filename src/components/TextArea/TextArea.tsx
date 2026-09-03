@@ -168,7 +168,7 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
           </div>
           {showCount ? (
             <div className="pointer-events-none absolute top-full right-0 mt-1 flex items-center justify-end">
-              <span className="font-pretendard text-xs whitespace-nowrap text-[#999]">
+              <span className="font-pretendard text-xs whitespace-nowrap text-gray">
                 {maxLength === undefined
                   ? currentValue.length
                   : `${currentValue.length} / ${maxLength}`}
@@ -192,18 +192,18 @@ const textAreaRootVariants = cva(
   {
     variants: {
       variant: {
-        default: "ring-[#ddd]",
-        filled: "bg-[#f5f5f5] ring-[#f5f5f5]",
+        default: "ring-border",
+        filled: "bg-hover ring-hover",
       },
       error: { true: "ring-danger", false: "" },
-      disabled: { true: "bg-[#f8f8f8] ring-[#ddd]", false: "" },
+      disabled: { true: "bg-hover ring-border", false: "" },
     },
     defaultVariants: { variant: "default", error: false, disabled: false },
   },
 );
 
 const textAreaVariants = cva(
-  "block w-full resize-y border-0 bg-transparent font-pretendard leading-[1.6] font-medium text-[#111] outline-none placeholder:text-[#999]",
+  "block w-full resize-y border-0 bg-transparent font-pretendard leading-[1.6] font-medium text-dark outline-none placeholder:text-gray",
   {
     variants: {
       size: {
@@ -211,7 +211,7 @@ const textAreaVariants = cva(
         md: "px-2.5 text-sm",
         sm: "px-2 text-xs",
       },
-      disabled: { true: "resize-none font-normal text-[#999]", false: "" },
+      disabled: { true: "resize-none font-normal text-gray", false: "" },
       autoSize: { true: "resize-none", false: "" },
     },
     compoundVariants: [

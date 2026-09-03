@@ -159,8 +159,8 @@ describe("TextArea", () => {
   it("applies the filled variant used by Input", () => {
     const { container } = render(<TextArea variant="filled" />);
     const root = container.querySelector("textarea")?.parentElement;
-    expect(root).toHaveClass("bg-[#f5f5f5]");
-    expect(root).toHaveClass("ring-[#f5f5f5]");
+    expect(root).toHaveClass("bg-hover");
+    expect(root).toHaveClass("ring-hover");
     expect(root).not.toHaveClass("bg-white");
   });
 

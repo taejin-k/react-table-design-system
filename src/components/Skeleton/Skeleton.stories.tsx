@@ -238,7 +238,7 @@ function Element({ children, label }: { children: ReactNode; label: string }) {
   return (
     <div className="grid justify-items-center gap-2">
       {children}
-      <span className="text-xs text-[#666]">{label}</span>
+      <span className="text-xs text-dark-gray">{label}</span>
     </div>
   );
 }

@@ -4,7 +4,7 @@ import type { BadgeProps, BadgeStatusType } from "./Badge.types";
 const statusColors: Record<BadgeStatusType, string> = {
   success: "var(--color-success)",
   processing: "var(--color-primary)",
-  default: "#bfbfbf",
+  default: "var(--color-disabled)",
   error: "var(--color-danger)",
   warning: "var(--color-warning)",
 };
@@ -15,7 +15,7 @@ export function Badge({ status, process = false, text, color, className, style }
   return (
     <span
       className={twMerge(
-        "inline-flex items-start gap-2 font-pretendard text-sm text-[#666]",
+        "inline-flex items-start gap-2 font-pretendard text-sm text-dark-gray",
         className,
       )}
       style={style}

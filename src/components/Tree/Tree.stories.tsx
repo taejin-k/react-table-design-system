@@ -693,7 +693,7 @@ function ControlledTreeExample(args: Partial<TreeProps>) {
 
   return (
     <div className="grid gap-4">
-      <div className="flex flex-wrap gap-3 text-sm text-[#666]">
+      <div className="flex flex-wrap gap-3 text-sm text-dark-gray">
         <span>선택: {selectedKeys.join(", ") || "-"}</span>
         <span>체크: {checkedKeys.join(", ") || "-"}</span>
       </div>
@@ -734,7 +734,7 @@ export const CustomTitles: Story = {
     <span className="flex items-center gap-2">
       <span>{node.title}</span>
       {node.isLeaf ? (
-        <span className="rounded bg-[#f5f5f5] px-1.5 text-xs text-[#666]">파일</span>
+        <span className="rounded bg-hover px-1.5 text-xs text-dark-gray">파일</span>
       ) : null}
     </span>
   )}
@@ -750,7 +750,7 @@ export const CustomTitles: Story = {
         <span className="flex items-center gap-2">
           <span>{node.title}</span>
           {node.isLeaf ? (
-            <span className="rounded bg-[#f5f5f5] px-1.5 text-xs text-[#666]">파일</span>
+            <span className="rounded bg-hover px-1.5 text-xs text-dark-gray">파일</span>
           ) : null}
         </span>
       )}

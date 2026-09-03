@@ -242,18 +242,17 @@ export function Menu({
         level === 0 && mode === "inline" && "overflow-hidden",
         level === 0 && (mode === "inline" && inlineCollapsed ? "w-16" : "w-64"),
         level > 0 && mode === "inline" && !popup && "pb-0",
-        popup &&
-          "min-w-40 rounded-lg bg-white shadow-[0_6px_16px_rgba(0,0,0,0.08),0_3px_6px_-4px_rgba(0,0,0,0.12),0_9px_28px_8px_rgba(0,0,0,0.05)]",
+        popup && "min-w-40 rounded-lg bg-white shadow-2xl",
       )}
     >
       {data.map((item) => {
         const key = item.key;
-        if (item.type === "divider") return <li key={key} className="border-t border-[#f0f0f0]" />;
+        if (item.type === "divider") return <li key={key} className="border-t border-hover" />;
         if (item.type === "group")
           return (
             <li key={key} className="py-1">
               {item.label != null ? (
-                <div className="px-3 py-1 text-xs text-[#999]">{item.label}</div>
+                <div className="px-3 py-1 text-xs text-gray">{item.label}</div>
               ) : null}
               {renderItems(item.children ?? [], level, popup)}
             </li>
@@ -274,7 +273,7 @@ export function Menu({
             }
             disabled={item.disabled}
             className={twMerge(
-              "relative block h-10 w-full cursor-pointer overflow-hidden rounded-md px-3 text-left text-sm text-[#111] transition-colors duration-200 outline-none hover:bg-[#f5f5f5] motion-reduce:transition-none",
+              "relative block h-10 w-full cursor-pointer overflow-hidden rounded-md px-3 text-left text-sm text-dark transition-colors duration-200 outline-none hover:bg-hover motion-reduce:transition-none",
               active && "bg-selected text-primary",
               item.disabled && "cursor-not-allowed opacity-40 hover:bg-transparent",
             )}
@@ -312,7 +311,7 @@ export function Menu({
             >
               <span className="min-w-0 flex-1 truncate">{item.label}</span>
               {item.extra ? (
-                <span className="shrink-0 text-xs whitespace-nowrap text-[#999]">{item.extra}</span>
+                <span className="shrink-0 text-xs whitespace-nowrap text-gray">{item.extra}</span>
               ) : null}
               {hasChildren ? (
                 <span

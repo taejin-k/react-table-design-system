@@ -111,10 +111,7 @@ export function getSortableUploadItemClassName(listType: "text" | "picture", isD
   return twMerge(
     "relative shadow-none",
     listType === "picture" && "rounded-lg",
-    isDragging && [
-      listType === "picture" ? "z-[1000]" : "z-10",
-      "shadow-[0_3px_8px_rgba(0,0,0,0.12)]",
-    ],
+    isDragging && [listType === "picture" ? "z-[1000]" : "z-10", "shadow-md"],
   );
 }
 
@@ -160,7 +157,7 @@ function SortableUploadItem({
           ref={setActivatorNodeRef}
           data-upload-drag-handle={id}
           className={twMerge(
-            "inline-flex h-6 shrink-0 cursor-grab items-center justify-center text-[#999] active:cursor-grabbing",
+            "inline-flex h-6 shrink-0 cursor-grab items-center justify-center text-gray active:cursor-grabbing",
             listType === "text" ? "mr-1 w-6" : "w-4",
           )}
           {...listeners}
@@ -184,9 +181,9 @@ function UploadDragHandle({
     <span
       data-upload-drag-handle-disabled={disabled ? "true" : undefined}
       className={twMerge(
-        "inline-flex h-6 shrink-0 items-center justify-center text-[#999]",
+        "inline-flex h-6 shrink-0 items-center justify-center text-gray",
         listType === "text" ? "mr-1 w-6" : "w-4",
-        disabled ? "cursor-not-allowed text-[#bbb]" : "cursor-grab",
+        disabled ? "cursor-not-allowed text-disabled" : "cursor-grab",
       )}
     >
       <Icon icon="drag-handle" size={12} className="select-none" />
@@ -222,7 +219,7 @@ function UploadPictureThumbnail({
       <span
         data-upload-picture-fallback
         className={twMerge(
-          "inline-flex size-12 shrink-0 items-center justify-center rounded bg-[#f5f5f5] text-[#bfbfbf]",
+          "inline-flex size-12 shrink-0 items-center justify-center rounded bg-hover text-disabled",
         )}
       >
         {fallback}
@@ -430,13 +427,13 @@ function UploadBase({
           listType === "text" && [
             "h-[22px] px-1",
             dragState?.isDragging
-              ? "bg-[#f5f5f5]"
+              ? "bg-hover"
               : dragState?.isSorting
                 ? "pointer-events-none bg-transparent hover:bg-transparent"
-                : "hover:bg-[#f5f5f5]",
+                : "hover:bg-hover",
           ],
           listType === "picture" &&
-            "min-h-[66px] rounded-lg border border-[#d9d9d9] bg-white p-2 hover:bg-white",
+            "min-h-[66px] rounded-lg border border-border bg-white p-2 hover:bg-white",
         )}
       >
         <div className={twMerge("flex min-w-0 items-center", listType === "picture" && "gap-2")}>
@@ -449,7 +446,7 @@ function UploadBase({
               fallback={<Icon icon={imageFile ? "image-outlined" : "file-outlined"} size={22} />}
             />
           ) : (
-            <span className={twMerge("inline-flex shrink-0 text-[#8c8c8c]", "w-3")}>
+            <span className={twMerge("inline-flex shrink-0 text-gray", "w-3")}>
               <Icon icon="paperclip" size={12} />
             </span>
           )}
@@ -480,9 +477,9 @@ function UploadBase({
                 data-upload-download-loading={downloading || undefined}
                 disabled={downloadActive}
                 className={twMerge(
-                  "inline-flex shrink-0 cursor-pointer items-center justify-center text-[#8c8c8c] transition-colors hover:text-primary",
+                  "inline-flex shrink-0 cursor-pointer items-center justify-center text-gray transition-colors hover:text-primary",
                   listType === "text" ? "size-5" : "size-6",
-                  downloadActive && "cursor-default hover:text-[#8c8c8c]",
+                  downloadActive && "cursor-default hover:text-gray",
                   downloading && "cursor-wait",
                 )}
                 onClick={() => void download(file)}
@@ -495,7 +492,7 @@ function UploadBase({
                 type="button"
                 data-upload-remove-action
                 className={twMerge(
-                  "inline-flex shrink-0 cursor-pointer items-center justify-center text-[#8c8c8c] transition-colors hover:text-danger",
+                  "inline-flex shrink-0 cursor-pointer items-center justify-center text-gray transition-colors hover:text-danger",
                   listType === "text" ? "size-5" : "size-6",
                 )}
                 onClick={() => void remove(file)}
@@ -650,7 +647,7 @@ function Dragger(props: UploadProps) {
         <span
           data-upload-dragger-area
           className={twMerge(
-            "flex min-h-44 w-full cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-[#d9d9d9] bg-[rgba(0,0,0,0.02)] p-4 text-center text-sm text-[#666] transition-colors hover:border-primary",
+            "flex min-h-44 w-full cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-border bg-black/[0.02] p-4 text-center text-sm text-dark-gray transition-colors hover:border-primary",
             dragging && "border-primary bg-selected",
             disabled && "cursor-not-allowed",
           )}
@@ -669,11 +666,11 @@ function Dragger(props: UploadProps) {
         >
           {children ?? (
             <>
-              <Icon icon="upload" size={40} color="var(--color-primary)" />
-              <span className="mt-2 text-base text-[#111]">
+              <Icon icon="upload" size={40} color="primary" />
+              <span className="mt-2 text-base text-dark">
                 클릭하거나 파일을 이 영역으로 드래그하세요
               </span>
-              <span className="text-sm text-[#8c8c8c]">
+              <span className="text-sm text-gray">
                 {multiple ? "여러 파일을 선택할 수 있어요." : "단일 파일만 선택할 수 있어요."}
               </span>
             </>

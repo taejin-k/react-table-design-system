@@ -188,7 +188,7 @@ describe("Input", () => {
     const { container } = render(<Input variant="filled" />);
     const inputRow = container.querySelector("input")?.parentElement;
 
-    expect(inputRow).toHaveClass("bg-[#f5f5f5]");
+    expect(inputRow).toHaveClass("bg-hover");
     expect(inputRow).not.toHaveClass("bg-white");
   });
 
@@ -205,7 +205,7 @@ describe("Input", () => {
       "rounded-none",
       "border-x-transparent",
       "border-t-transparent",
-      "border-b-[#ddd]",
+      "border-b-border",
     );
     expect(inputRow).not.toHaveClass("border-x-0", "border-t-0");
   });
@@ -216,10 +216,10 @@ describe("Input", () => {
 
     expect(inputRow).toHaveClass(
       "rounded-[4px]",
-      "border-[#ddd]",
-      "border-x-[#ddd]",
-      "border-t-[#ddd]",
-      "bg-[#f8f8f8]",
+      "border-border",
+      "border-x-border",
+      "border-t-border",
+      "bg-hover",
     );
     expect(inputRow).not.toHaveClass("rounded-none");
   });

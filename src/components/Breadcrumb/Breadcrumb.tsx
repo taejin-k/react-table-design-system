@@ -33,7 +33,7 @@ export const Breadcrumb = forwardRef<HTMLElement, BreadcrumbProps>(
             return (
               <li key={index} className="inline-flex min-w-0 items-center">
                 {index > 0 ? (
-                  <span className="mx-2 inline-flex shrink-0 items-center text-[#aaa] max-[575px]:mx-1.5">
+                  <span className="mx-2 inline-flex shrink-0 items-center text-disabled max-[575px]:mx-1.5">
                     /
                   </span>
                 ) : null}
@@ -83,15 +83,15 @@ export const Breadcrumb = forwardRef<HTMLElement, BreadcrumbProps>(
 Breadcrumb.displayName = "Breadcrumb";
 
 const contentVariants = cva(
-  "inline-flex min-w-0 items-center gap-1 rounded px-1 py-0.5 text-[#999]",
+  "inline-flex min-w-0 items-center gap-1 rounded px-1 py-0.5 text-gray",
   {
     variants: {
       interactive: {
-        true: "cursor-pointer no-underline transition-[color,background-color] hover:bg-[#f5f5f5] hover:text-[#111] focus-visible:bg-[#f5f5f5] focus-visible:text-[#111] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary motion-reduce:transition-none",
+        true: "cursor-pointer no-underline transition-[color,background-color] hover:bg-hover hover:text-dark focus-visible:bg-hover focus-visible:text-dark focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary motion-reduce:transition-none",
         false: "",
       },
       current: {
-        true: "font-medium text-[#111]",
+        true: "font-medium text-dark",
         false: "",
       },
     },

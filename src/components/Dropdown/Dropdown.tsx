@@ -76,7 +76,7 @@ export function Dropdown({
               data-dropdown
               data-placement={floating.position?.placement ?? placement}
               className={twMerge(
-                "fixed min-w-32 font-pretendard text-sm text-[#111]",
+                "fixed min-w-32 font-pretendard text-sm text-dark",
                 !floating.isMotionVisible && "pointer-events-none",
               )}
               style={{
@@ -95,7 +95,7 @@ export function Dropdown({
                   floating.isMotionVisible && Boolean(floating.position),
                 )}
               >
-                <div className="relative rounded-lg bg-white p-1 shadow-[0_6px_16px_rgba(0,0,0,0.08),0_3px_6px_-4px_rgba(0,0,0,0.12),0_9px_28px_8px_rgba(0,0,0,0.05)]">
+                <div className="relative rounded-lg bg-white p-1 shadow-2xl">
                   <MenuItems
                     items={menu.items}
                     selectedValues={selectedValues}
@@ -144,14 +144,13 @@ function MenuItems({
     <div className="grid gap-0.5">
       {items.map((item) => {
         const nextValuePath = [item.value, ...valuePath];
-        if (item.type === "divider")
-          return <div key={item.value} className="my-1 h-px bg-[#f0f0f0]" />;
+        if (item.type === "divider") return <div key={item.value} className="my-1 h-px bg-hover" />;
 
         if (item.type === "group") {
           return (
             <div key={item.value}>
               {item.label ? (
-                <div className="px-3 py-1 text-xs leading-5 text-[#999]">{item.label}</div>
+                <div className="px-3 py-1 text-xs leading-5 text-gray">{item.label}</div>
               ) : null}
               {item.children?.length ? (
                 <MenuItems
@@ -173,8 +172,8 @@ function MenuItems({
             disabled={item.disabled}
             className={twMerge(
               "flex h-8 w-full cursor-pointer items-center gap-2 rounded px-3 text-left whitespace-nowrap transition-colors",
-              selected ? "bg-selected text-primary" : "hover:bg-[#f5f5f5]",
-              item.disabled && "cursor-not-allowed text-[#bbb] hover:bg-transparent",
+              selected ? "bg-selected text-primary" : "hover:bg-hover",
+              item.disabled && "cursor-not-allowed text-disabled hover:bg-transparent",
             )}
             onClick={(event) => {
               if (item.children?.length) {
@@ -186,8 +185,8 @@ function MenuItems({
           >
             {item.icon ? <span className="inline-flex shrink-0">{item.icon}</span> : null}
             <span className="min-w-0 flex-1">{item.label}</span>
-            {item.extra ? <span className="shrink-0 text-xs text-[#999]">{item.extra}</span> : null}
-            {item.children?.length ? <Icon icon="chevron-right" color="#999" /> : null}
+            {item.extra ? <span className="shrink-0 text-xs text-gray">{item.extra}</span> : null}
+            {item.children?.length ? <Icon icon="chevron-right" color="gray" /> : null}
           </button>
         );
 
@@ -198,7 +197,7 @@ function MenuItems({
             {content}
             <div
               className={twMerge(
-                "invisible absolute top-0 left-full z-10 ml-2 min-w-32 rounded-lg bg-white p-1 opacity-0 shadow-[0_6px_16px_rgba(0,0,0,0.08),0_3px_6px_-4px_rgba(0,0,0,0.12),0_9px_28px_8px_rgba(0,0,0,0.05)] transition-opacity group-hover/submenu:visible group-hover/submenu:opacity-100 before:absolute before:top-0 before:right-full before:h-full before:w-2 before:content-['']",
+                "invisible absolute top-0 left-full z-10 ml-2 min-w-32 rounded-lg bg-white p-1 opacity-0 shadow-2xl transition-opacity group-hover/submenu:visible group-hover/submenu:opacity-100 before:absolute before:top-0 before:right-full before:h-full before:w-2 before:content-['']",
                 openSubmenuValue === item.value && "visible opacity-100",
               )}
             >

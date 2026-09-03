@@ -154,7 +154,7 @@ describe("Tree", () => {
     const selectionContent = document.querySelector('[data-tree-selection-content="item"]');
 
     expect(selectionContent).not.toHaveClass("cursor-pointer");
-    expect(selectionContent).not.toHaveClass("hover:bg-[#f5f5f5]");
+    expect(selectionContent).not.toHaveClass("hover:bg-hover");
     expect(selectionContent).toHaveClass("bg-selected");
 
     rerender(
@@ -165,7 +165,7 @@ describe("Tree", () => {
     );
     const nodeSelectionContent = document.querySelector('[data-tree-selection-content="item"]');
     expect(nodeSelectionContent).not.toHaveClass("cursor-pointer");
-    expect(nodeSelectionContent).not.toHaveClass("hover:bg-[#f5f5f5]");
+    expect(nodeSelectionContent).not.toHaveClass("hover:bg-hover");
   });
 
   it("hides selection styling while the tree is disabled", () => {

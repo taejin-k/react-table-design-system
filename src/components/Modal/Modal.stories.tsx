@@ -325,7 +325,7 @@ export const Footer: Story = {
         title="Footer 구성"
         footer={(origin) => (
           <div className="flex items-center justify-between">
-            <span className="text-[#666]">자동 저장</span>
+            <span className="text-dark-gray">자동 저장</span>
             {origin}
           </div>
         )}
@@ -354,7 +354,7 @@ function FooterExample(args: Partial<ModalProps>) {
         open={open}
         footer={(origin) => (
           <div className="flex items-center justify-between">
-            <span className="text-[#666]">자동 저장</span>
+            <span className="text-dark-gray">자동 저장</span>
             {origin}
           </div>
         )}

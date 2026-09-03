@@ -46,7 +46,7 @@ const illustrationComponents: Record<IllustrationType, ComponentType> = {
 function IllustrationCanvas({ children }: { children: ReactNode }) {
   return (
     <svg className="size-full" viewBox="0 0 128 128" fill="none">
-      <rect width="128" height="128" rx="20" fill="#F5F5F5" />
+      <rect width="128" height="128" rx="20" fill="var(--color-hover)" />
       {children}
     </svg>
   );
@@ -255,7 +255,7 @@ const illustrationSizeVariants = cva("shrink-0", {
 });
 
 const illustrationDescriptionVariants = cva(
-  "text-center font-pretendard font-medium whitespace-pre-line text-[#677589]",
+  "text-center font-pretendard font-medium whitespace-pre-line text-dark-gray",
   {
     variants: {
       size: {

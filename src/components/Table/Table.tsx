@@ -118,16 +118,15 @@ const cellSizePad: Record<NonNullable<TableProps<object>["size"]>, string> = {
   sm: "p-2",
 };
 
-const cellBaseClass =
-  "relative z-0 border-b border-[#f0f0f0] bg-white align-middle transition-colors";
-const headerCellBaseClass = "bg-[#f5f5f5] text-left text-[14px] font-semibold text-[#111]";
-const nestedHeaderBorderClass = "border-r border-r-[#f0f0f0]";
-const headerCellSortedClass = "bg-[#eee]";
+const cellBaseClass = "relative z-0 border-b border-hover bg-white align-middle transition-colors";
+const headerCellBaseClass = "bg-hover text-left text-[14px] font-semibold text-dark";
+const nestedHeaderBorderClass = "border-r border-r-hover";
+const headerCellSortedClass = "bg-border";
 const cellLastNoRightBorder = "border-r-0";
 const gridBorderLayoutClass =
   "[&>thead>tr>th:not(:last-child)]:border-r [&>thead>tr>th:not(:last-child)]:border-r-transparent [&>tbody>tr>td:not(:last-child)]:border-r [&>tbody>tr>td:not(:last-child)]:border-r-transparent [&>tfoot>tr>td:not(:last-child)]:border-r [&>tfoot>tr>td:not(:last-child)]:border-r-transparent";
 const borderedGridClass =
-  "[&>thead>tr>th:not(:last-child)]:border-r-[#f0f0f0] [&>tbody>tr>td:not(:last-child)]:border-r-[#f0f0f0] [&>tfoot>tr>td:not(:last-child)]:border-r-[#f0f0f0]";
+  "[&>thead>tr>th:not(:last-child)]:border-r-hover [&>tbody>tr>td:not(:last-child)]:border-r-hover [&>tfoot>tr>td:not(:last-child)]:border-r-hover";
 
 const headerContentClass = "inline-flex min-w-0 items-center gap-0.5";
 const dragCellClass = "!px-2 text-center";
@@ -138,39 +137,40 @@ const expandIndentClass = "flex min-h-[17px] items-center";
 const selectionHeadClass = "relative inline-flex -translate-y-px items-center align-middle";
 
 const iconButtonClass =
-  "inline-grid size-6 cursor-pointer place-items-center rounded border-0 bg-transparent p-0 text-[#999] transition-colors hover:text-[#111] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary";
+  "inline-grid size-6 cursor-pointer place-items-center rounded border-0 bg-transparent p-0 text-gray transition-colors hover:text-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary";
 const iconButtonActiveClass = "text-primary";
 const expandButtonClass =
-  "inline-grid size-[17px] cursor-pointer place-items-center rounded-sm border border-[#ddd] bg-white text-[#999]";
+  "inline-grid size-[17px] cursor-pointer place-items-center rounded-sm border border-border bg-white text-gray";
 const expandPlaceholderClass = "inline-block size-[17px]";
 const filterWrapClass = "relative";
 
-const menuShadow =
-  "shadow-[0_6px_16px_rgba(0,0,0,0.08),0_3px_6px_-4px_rgba(0,0,0,0.12),0_9px_28px_8px_rgba(0,0,0,0.05)]";
+const menuShadow = "shadow-2xl";
 
-const filterMenuClass = `absolute z-[1050] top-7 left-[-12px] min-w-[196px] rounded-lg border border-[#eee] bg-white p-2 font-pretendard text-[14px] text-[#111] ${menuShadow}`;
+const filterMenuClass = `absolute z-[1050] top-7 left-[-12px] min-w-[196px] rounded-lg border border-border bg-white p-2 font-pretendard text-[14px] text-dark ${menuShadow}`;
 const filterOptionsClass = "max-h-[264px] overflow-auto";
 const filterOptionLabelClass =
-  "flex min-h-9 items-center gap-2 rounded px-2 py-[7px] cursor-pointer hover:bg-[#f5f5f5]";
-const filterGroupClass = "py-2 pb-1 text-[12px] font-semibold text-[#999]";
-const filterEmptyClass = "px-2 py-4 text-center text-[#999]";
+  "flex min-h-9 items-center gap-2 rounded px-2 py-[7px] cursor-pointer hover:bg-hover";
+const filterGroupClass = "py-2 pb-1 text-[12px] font-semibold text-gray";
+const filterEmptyClass = "px-2 py-4 text-center text-gray";
 const filterSearchClass = "mb-1.5";
 const filterActionsClass =
-  "mt-1.5 flex items-center justify-between gap-2 border-t border-[#f0f0f0] pt-2";
+  "mt-1.5 flex items-center justify-between gap-2 border-t border-hover pt-2";
 
 const ellipsisClass = "block w-full overflow-hidden text-ellipsis whitespace-nowrap";
 const ellipsisTooltipTriggerClass = "block w-full min-w-0 overflow-hidden";
-const emptyClass = "h-[184px] text-center text-[#999]";
+const emptyClass = "h-[184px] text-center text-gray";
 
 const loadingOverlayClass =
   "absolute inset-0 z-10 grid place-items-center rounded-[inherit] bg-white/75 backdrop-blur-[1px]";
 const loadingContentClass = "text-primary inline-flex items-center gap-2.5";
 const fixedLeftLastShadowBaseClass =
-  "after:pointer-events-none after:absolute after:right-0 after:top-0 after:bottom-[-1px] after:z-[1] after:w-[30px] after:translate-x-full after:content-[''] after:shadow-[inset_10px_0_8px_-8px_rgba(5,5,5,0)] after:transition-shadow";
-const fixedLeftLastShadowVisibleClass = "after:shadow-[inset_10px_0_8px_-8px_rgba(5,5,5,0.12)]";
+  "after:pointer-events-none after:absolute after:right-0 after:top-0 after:bottom-[-1px] after:z-[1] after:w-[30px] after:translate-x-full after:content-[''] after:shadow-[inset_10px_0_8px_-8px_color-mix(in_srgb,var(--color-black)_0%,transparent)] after:transition-shadow";
+const fixedLeftLastShadowVisibleClass =
+  "after:shadow-[inset_10px_0_8px_-8px_color-mix(in_srgb,var(--color-black)_12%,transparent)]";
 const fixedRightFirstShadowBaseClass =
-  "before:pointer-events-none before:absolute before:left-0 before:top-0 before:bottom-[-1px] before:z-[1] before:w-[30px] before:-translate-x-full before:content-[''] before:shadow-[inset_-10px_0_8px_-8px_rgba(5,5,5,0)] before:transition-shadow";
-const fixedRightFirstShadowVisibleClass = "before:shadow-[inset_-10px_0_8px_-8px_rgba(5,5,5,0.12)]";
+  "before:pointer-events-none before:absolute before:left-0 before:top-0 before:bottom-[-1px] before:z-[1] before:w-[30px] before:-translate-x-full before:content-[''] before:shadow-[inset_-10px_0_8px_-8px_color-mix(in_srgb,var(--color-black)_0%,transparent)] before:transition-shadow";
+const fixedRightFirstShadowVisibleClass =
+  "before:shadow-[inset_-10px_0_8px_-8px_color-mix(in_srgb,var(--color-black)_12%,transparent)]";
 
 function fixedSide(fixed?: ColumnFixedType) {
   if (fixed === "left") return "left";
@@ -1103,7 +1103,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
                   <Icon
                     icon="sorter"
                     size={12}
-                    color="#ccc"
+                    color="disabled"
                     className={
                       order === "ascend"
                         ? "[&>path:first-child]:fill-primary"
@@ -1296,10 +1296,10 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
     const expanded = controlledExpanded.has(key);
     const rowProps = onRow?.(record, actualIndex) ?? {};
     const rowClass = twMerge(
-      depth > 0 && "[&>td]:bg-[#fafafa]",
-      rowHoverable && "hover:[&>td]:bg-[#f5f5f5]",
+      depth > 0 && "[&>td]:bg-hover",
+      rowHoverable && "hover:[&>td]:bg-hover",
       expandable?.expandRowByClick && canExpand && "cursor-pointer",
-      controlledSelected.has(key) && "[&>td]:bg-[#eef0f8] hover:[&>td]:bg-selected",
+      controlledSelected.has(key) && "[&>td]:bg-selected hover:[&>td]:bg-selected",
       rowProps.className,
     );
     const checkboxProps = rowSelection?.getCheckboxProps?.(record) ?? {};
@@ -1442,13 +1442,13 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
           ))}
         </RenderedRowComponent>
         {expandable?.expandedRowRender && expanded && (
-          <tr className="bg-[#fafafa]">
+          <tr className="bg-hover">
             <td
               className={twMerge(
                 cellBaseClass,
                 cellSizePad[size],
                 cellLastNoRightBorder,
-                "!bg-[#fafafa]",
+                "!bg-hover",
               )}
               colSpan={fullColSpan}
             >
@@ -1747,7 +1747,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
                   emptyClass,
                   cellLastNoRightBorder,
                   "border-b",
-                  bordered ? "border-transparent" : "border-[#f0f0f0]",
+                  bordered ? "border-transparent" : "border-hover",
                 )}
                 colSpan={fullColSpan}
               >
@@ -1925,7 +1925,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
     >
       <div
         data-table-horizontal-scrollbar-thumb
-        className="absolute inset-y-0 h-2 cursor-grab touch-none rounded-full border border-transparent bg-[#a8a8a8] bg-clip-padding transition-colors hover:bg-[#8f8f8f] active:cursor-grabbing"
+        className="absolute inset-y-0 h-2 cursor-grab touch-none rounded-full border border-transparent bg-disabled bg-clip-padding transition-colors duration-200 ease-out hover:bg-gray active:cursor-grabbing motion-reduce:transition-none"
         style={{
           width: horizontalScrollbar.width,
           transform: `translateX(${horizontalScrollbar.left}px)`,
@@ -1954,7 +1954,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
           >
             <div
               data-table-sticky-scrollbar-thumb
-              className="absolute inset-y-0 h-2 cursor-grab touch-none rounded-full border border-transparent bg-[#a8a8a8] bg-clip-padding transition-colors hover:bg-[#8f8f8f] active:cursor-grabbing"
+              className="absolute inset-y-0 h-2 cursor-grab touch-none rounded-full border border-transparent bg-disabled bg-clip-padding transition-colors duration-200 ease-out hover:bg-gray active:cursor-grabbing motion-reduce:transition-none"
               style={{
                 width: stickyScrollbar.thumbWidth,
                 transform: `translateX(${stickyScrollbar.thumbLeft}px)`,
@@ -1973,7 +1973,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
       ref={headerScrollRef}
       data-table-header-scroll
       data-table-sticky-header={stickyHeader ? "" : undefined}
-      className="box-border w-full overflow-hidden rounded-t-[inherit] bg-white font-pretendard text-[14px] leading-[1.5715] text-[#111]"
+      className="box-border w-full overflow-hidden rounded-t-[inherit] bg-white font-pretendard text-[14px] leading-[1.5715] text-dark"
       style={{
         paddingRight: verticalScrollbarWidth,
         position: stickyHeader ? "sticky" : undefined,
@@ -2000,7 +2000,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
       {...rootProps}
       ref={rootRef}
       className={twMerge(
-        "relative w-full min-w-0 font-pretendard text-[14px] leading-[1.5715] text-[#111] [overflow-anchor:none]",
+        "relative w-full min-w-0 font-pretendard text-[14px] leading-[1.5715] text-dark [overflow-anchor:none]",
         className,
         !textSelectable && "select-none",
       )}
@@ -2010,7 +2010,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
       <div
         className={twMerge(
           "w-full min-w-0 rounded-lg border border-transparent bg-white",
-          bordered && "border-[#f0f0f0]",
+          bordered && "border-hover",
         )}
       >
         <TableDragProvider
@@ -2058,7 +2058,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
                   >
                     <div
                       data-table-overlay-scrollbar-thumb
-                      className="absolute right-px w-1.5 cursor-grab touch-none rounded-full bg-[#a8a8a8] hover:bg-[#8f8f8f] active:cursor-grabbing"
+                      className="absolute right-px w-1.5 cursor-grab touch-none rounded-full bg-disabled transition-colors duration-200 ease-out hover:bg-gray active:cursor-grabbing motion-reduce:transition-none"
                       style={{
                         height: verticalScrollbar.height,
                         transform: `translateY(${verticalScrollbar.top}px)`,
@@ -2149,7 +2149,7 @@ function BodyCell<T extends object>({
       title={mergedProps.title}
       className={twMerge(
         className,
-        mergedCellHovered && "bg-[#f5f5f5]",
+        mergedCellHovered && "bg-hover",
         item.ellipsis && "overflow-hidden",
         item.className,
         mergedProps.className,

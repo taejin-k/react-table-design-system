@@ -34,8 +34,8 @@ describe("Calendar", () => {
     const compactDisabledDate = screen
       .getAllByRole("button", { name: "21" })
       .find((button) => button.hasAttribute("disabled"))!;
-    expect(compactDisabledDate).toHaveClass("text-[#bfbfbf]", "hover:bg-transparent");
-    expect(compactDisabledDate.parentElement).toHaveClass("bg-[#f5f5f5]");
+    expect(compactDisabledDate).toHaveClass("text-disabled", "hover:bg-transparent");
+    expect(compactDisabledDate.parentElement).toHaveClass("bg-hover");
   });
 
   it("passes Dayjs values to a custom header", async () => {
@@ -72,7 +72,7 @@ describe("Calendar", () => {
       "text-primary",
       "hover:bg-selected",
     );
-    expect(screen.getByRole("button", { name: "21" })).toHaveClass("hover:bg-[#f5f5f5]");
+    expect(screen.getByRole("button", { name: "21" })).toHaveClass("hover:bg-hover");
   });
 
   it("renders the monthly calendar without a year mode switch", () => {
@@ -86,7 +86,7 @@ describe("Calendar", () => {
   it("uses the Menu hover color in the fullscreen layout", () => {
     render(<Calendar defaultValue={dayjs("2026-08-20")} />);
 
-    expect(screen.getByRole("button", { name: "21" })).toHaveClass("hover:bg-[#f5f5f5]");
+    expect(screen.getByRole("button", { name: "21" })).toHaveClass("hover:bg-hover");
     expect(screen.getByRole("button", { name: "20" })).toHaveClass("hover:bg-selected");
   });
 

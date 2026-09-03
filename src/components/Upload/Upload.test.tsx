@@ -164,9 +164,7 @@ describe("Upload", () => {
   it("styles sortable items by list type and disables hover on inactive text rows", () => {
     expect(getSortableUploadItemClassName("text", true)).toContain("z-10");
     expect(getSortableUploadItemClassName("picture", true)).toContain("z-[1000]");
-    expect(getSortableUploadItemClassName("picture", true)).toContain(
-      "shadow-[0_3px_8px_rgba(0,0,0,0.12)]",
-    );
+    expect(getSortableUploadItemClassName("picture", true)).toContain("shadow-md");
     expect(getSortableUploadItemClassName("picture", false)).toContain("shadow-none");
     expect(getSortableUploadItemTransition("transform 200ms ease")).toBe(
       "transform 200ms ease, box-shadow 180ms ease-out",

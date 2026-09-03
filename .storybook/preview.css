@@ -536,11 +536,11 @@ body.sb-show-main {
 }
 
 .icon-docs table :is(th, td):nth-child(2) {
-  width: 41%;
+  width: 32%;
 }
 
 .icon-docs table :is(th, td):nth-child(3) {
-  width: 32%;
+  width: 41%;
 }
 
 .icon-docs table :is(th, td):nth-child(4) {

@@ -530,14 +530,14 @@ function BaseDatePicker({
             <span
               className={twMerge(
                 "flex min-w-0 flex-1 flex-wrap gap-1",
-                !selectedValues.length && "text-[#999]",
+                !selectedValues.length && "text-gray",
               )}
             >
               {selectedValues.length ? (
                 <Tag
                   className={twMerge(
                     "h-auto bg-transparent p-0 text-sm",
-                    disabled ? "text-[#999]" : "text-[#111]",
+                    disabled ? "text-gray" : "text-dark",
                   )}
                 >
                   {formatDisplayValue(selectedValues[0], format)}
@@ -555,10 +555,10 @@ function BaseDatePicker({
                 clear();
               }}
             >
-              <Icon icon="close" color="#999" />
+              <Icon icon="close" color="gray" />
             </span>
           ) : (
-            <Icon icon="calendar" color="#999" className="self-center" />
+            <Icon icon="calendar" color="gray" className="self-center" />
           )}
         </button>
       </span>
@@ -569,7 +569,7 @@ function BaseDatePicker({
               ref={floating.popupRef}
               data-datepicker-popup
               className={twMerge(
-                "fixed rounded-lg bg-white p-3 font-pretendard text-sm text-[#111] shadow-[0_6px_16px_rgba(0,0,0,0.06),0_3px_6px_-4px_rgba(0,0,0,0.08),0_9px_28px_8px_rgba(0,0,0,0.03)]",
+                "fixed rounded-lg bg-white p-3 font-pretendard text-sm text-dark shadow-xl",
                 !showTime && "w-[296px]",
                 showTime && "pr-2",
                 !floating.isMotionVisible && "pointer-events-none",
@@ -584,7 +584,7 @@ function BaseDatePicker({
               }}
               {...floating.popupProps}
             >
-              <div className={twMerge(showTime && "flex divide-x divide-[#f0f0f0]")}>
+              <div className={twMerge(showTime && "flex divide-x divide-hover")}>
                 <div className={twMerge(showTime && "min-w-[272px] pr-3")}>
                   <PickerPanel
                     picker={picker}
@@ -600,7 +600,7 @@ function BaseDatePicker({
                 </div>
                 {showTime ? (
                   <div>
-                    <div className="mb-1 pl-3 text-xs font-medium text-[#777]">시간</div>
+                    <div className="mb-1 pl-3 text-xs font-medium text-gray">시간</div>
                     <TimePanel
                       key={timePanelResetKey}
                       value={selectedTime}
@@ -719,19 +719,19 @@ function PickerPanel({
             <button
               type="button"
               data-datepicker-previous-year
-              className="inline-flex size-8 cursor-pointer items-center justify-center rounded hover:bg-[#f5f5f5]"
+              className="inline-flex size-8 cursor-pointer items-center justify-center rounded hover:bg-hover"
               onClick={() => changeYear(-1)}
             >
-              <Icon icon="double-left" color="#999" />
+              <Icon icon="double-left" color="gray" />
             </button>
           ) : null}
           {previousButton ? (
             <button
               type="button"
-              className="inline-flex size-8 cursor-pointer items-center justify-center rounded hover:bg-[#f5f5f5]"
+              className="inline-flex size-8 cursor-pointer items-center justify-center rounded hover:bg-hover"
               onClick={() => changePanel(-1)}
             >
-              <Icon icon="chevron-left" color="#999" />
+              <Icon icon="chevron-left" color="gray" />
             </button>
           ) : null}
         </div>
@@ -740,20 +740,20 @@ function PickerPanel({
           {nextButton ? (
             <button
               type="button"
-              className="inline-flex size-8 cursor-pointer items-center justify-center rounded hover:bg-[#f5f5f5]"
+              className="inline-flex size-8 cursor-pointer items-center justify-center rounded hover:bg-hover"
               onClick={() => changePanel(1)}
             >
-              <Icon icon="chevron-right" color="#999" />
+              <Icon icon="chevron-right" color="gray" />
             </button>
           ) : null}
           {nextButton && showYearNavigation ? (
             <button
               type="button"
               data-datepicker-next-year
-              className="inline-flex size-8 cursor-pointer items-center justify-center rounded hover:bg-[#f5f5f5]"
+              className="inline-flex size-8 cursor-pointer items-center justify-center rounded hover:bg-hover"
               onClick={() => changeYear(1)}
             >
-              <Icon icon="double-right" color="#999" />
+              <Icon icon="double-right" color="gray" />
             </button>
           ) : null}
         </div>
@@ -807,7 +807,7 @@ function PickerFooter({
   const hasPresets = Boolean(presets?.length);
 
   return (
-    <div className="mt-2 flex items-center justify-between border-t border-[#f0f0f0] pt-2">
+    <div className="mt-2 flex items-center justify-between border-t border-hover pt-2">
       {hasPresets ? (
         <Dropdown
           menu={{
@@ -855,7 +855,7 @@ function DateGrid({
   return (
     <div className="grid grid-cols-7 text-center">
       {weekdays.map((weekday) => (
-        <span key={weekday} className="py-1 text-xs text-[#999]">
+        <span key={weekday} className="py-1 text-xs text-gray">
           {weekday}
         </span>
       ))}
@@ -888,18 +888,18 @@ function DateGrid({
                   isRangeEnd &&
                   !isRangeStart &&
                   "before:pointer-events-none before:absolute before:inset-y-0 before:right-1/2 before:left-0 before:bg-selected",
-                dateDisabled && "bg-[#f5f5f5]",
+                dateDisabled && "bg-hover",
               )}
             >
               <button
                 type="button"
                 disabled={dateDisabled}
                 className={twMerge(
-                  "relative z-[1] flex size-8 cursor-pointer items-center justify-center rounded hover:bg-[#f5f5f5]",
-                  muted && "text-[#bbb] [&_*]:text-[#bbb]!",
+                  "relative z-[1] flex size-8 cursor-pointer items-center justify-center rounded hover:bg-hover",
+                  muted && "text-disabled [&_*]:text-disabled!",
                   selected && "bg-selected text-primary hover:bg-selected",
                   dateDisabled &&
-                    "cursor-not-allowed bg-transparent text-[#bfbfbf] hover:bg-transparent [&_*]:text-[#bfbfbf]!",
+                    "cursor-not-allowed bg-transparent text-disabled hover:bg-transparent [&_*]:text-disabled!",
                 )}
                 onClick={() => onSelect(date)}
               >
@@ -950,9 +950,9 @@ function MonthGrid({
             type="button"
             disabled={disabled}
             className={twMerge(
-              "h-10 cursor-pointer rounded hover:bg-[#f5f5f5]",
+              "h-10 cursor-pointer rounded hover:bg-hover",
               selected && "bg-selected text-primary hover:bg-selected",
-              disabled && "cursor-not-allowed bg-[#f5f5f5] text-[#bfbfbf] hover:bg-[#f5f5f5]",
+              disabled && "cursor-not-allowed bg-hover text-disabled hover:bg-hover",
             )}
             onClick={() => onSelect(date)}
           >
@@ -986,9 +986,9 @@ function YearGrid({
             type="button"
             disabled={disabled}
             className={twMerge(
-              "h-10 cursor-pointer rounded hover:bg-[#f5f5f5]",
+              "h-10 cursor-pointer rounded hover:bg-hover",
               selected && "bg-selected text-primary hover:bg-selected",
-              disabled && "cursor-not-allowed bg-[#f5f5f5] text-[#bfbfbf] hover:bg-[#f5f5f5]",
+              disabled && "cursor-not-allowed bg-hover text-disabled hover:bg-hover",
             )}
             onClick={() => onSelect(date)}
           >
@@ -1145,13 +1145,13 @@ function DateRangePicker({
             interactive: !disabled && !readOnly,
           })}
         >
-          <span className={twMerge("min-w-0 flex-1 truncate", !selectedValue[0] && "text-[#999]")}>
+          <span className={twMerge("min-w-0 flex-1 truncate", !selectedValue[0] && "text-gray")}>
             {selectedValue[0] ? formatDisplayValue(selectedValue[0], format) : placeholder[0]}
           </span>
           <span data-datepicker-range-separator className="shrink-0">
-            <Icon icon="arrow-right" size={12} color="#999" />
+            <Icon icon="arrow-right" size={12} color="gray" />
           </span>
-          <span className={twMerge("min-w-0 flex-1 truncate", !selectedValue[1] && "text-[#999]")}>
+          <span className={twMerge("min-w-0 flex-1 truncate", !selectedValue[1] && "text-gray")}>
             {selectedValue[1] ? formatDisplayValue(selectedValue[1], format) : placeholder[1]}
           </span>
           {allowClear && (selectedValue[0] || selectedValue[1]) && !disabled && !readOnly ? (
@@ -1168,10 +1168,10 @@ function DateRangePicker({
                 onClear?.();
               }}
             >
-              <Icon icon="close" color="#999" />
+              <Icon icon="close" color="gray" />
             </span>
           ) : (
-            <Icon icon="calendar" color="#999" />
+            <Icon icon="calendar" color="gray" />
           )}
         </button>
       </span>
@@ -1182,7 +1182,7 @@ function DateRangePicker({
               ref={floating.popupRef}
               data-datepicker-range-popup
               className={twMerge(
-                "fixed overflow-hidden rounded-lg bg-white font-pretendard text-sm text-[#111] shadow-[0_6px_16px_rgba(0,0,0,0.06),0_3px_6px_-4px_rgba(0,0,0,0.08),0_9px_28px_8px_rgba(0,0,0,0.03)]",
+                "fixed overflow-hidden rounded-lg bg-white font-pretendard text-sm text-dark shadow-xl",
                 !floating.isMotionVisible && "pointer-events-none",
               )}
               style={{
@@ -1283,13 +1283,13 @@ export const DatePicker = Object.assign(BaseDatePicker, {
 }) as DatePickerComponent;
 
 const pickerRootVariants = cva(
-  "flex w-full cursor-pointer items-center gap-2 rounded border border-solid px-2.5 text-left font-pretendard font-medium text-[#111] transition-colors focus:border-primary focus:outline-none",
+  "flex w-full cursor-pointer items-center gap-2 rounded border border-solid px-2.5 text-left font-pretendard font-medium text-dark transition-colors focus:border-primary focus:outline-none",
   {
     variants: {
       size: { lg: "min-h-10 text-base", md: "min-h-[30px] text-sm" },
       variant: {
-        default: "border-[#ddd] bg-white",
-        filled: "border-[#f5f5f5] bg-[#f5f5f5]",
+        default: "border-border bg-white",
+        filled: "border-hover bg-hover",
       },
       error: { true: "border-danger", false: "" },
       readOnly: {
@@ -1298,7 +1298,7 @@ const pickerRootVariants = cva(
       },
       interactive: { true: "hover:border-primary", false: "" },
       disabled: {
-        true: "cursor-not-allowed border-[#ddd] bg-[#f8f8f8] text-[#999] hover:border-[#ddd]",
+        true: "cursor-not-allowed border-border bg-hover text-gray hover:border-border",
         false: "",
       },
     },

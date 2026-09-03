@@ -73,9 +73,9 @@ describe("DatePicker", () => {
     const date12 = within(popup).getByRole("button", { name: "12" });
     const date13 = within(popup).getByRole("button", { name: "13" });
 
-    expect(date12).toHaveClass("bg-transparent", "text-[#bfbfbf]");
-    expect(date12.parentElement).toHaveClass("bg-[#f5f5f5]");
-    expect(date13.parentElement).toHaveClass("bg-[#f5f5f5]");
+    expect(date12).toHaveClass("bg-transparent", "text-disabled");
+    expect(date12.parentElement).toHaveClass("bg-hover");
+    expect(date13.parentElement).toHaveClass("bg-hover");
     expect(date12.parentElement?.parentElement).toHaveClass("contents");
     expect(date12.parentElement?.parentElement?.nextElementSibling?.firstElementChild).toBe(
       date13.parentElement,
@@ -95,7 +95,7 @@ describe("DatePicker", () => {
     const popup = document.querySelector("[data-datepicker-popup]") as HTMLElement;
     const adjacentJuly26 = within(popup).getAllByRole("button", { name: "26" })[0];
 
-    expect(adjacentJuly26).toHaveClass("text-[#bbb]", "[&_*]:text-[#bbb]!");
+    expect(adjacentJuly26).toHaveClass("text-disabled", "[&_*]:text-disabled!");
     expect(adjacentJuly26.firstElementChild).toHaveClass("text-danger");
   });
 
@@ -119,15 +119,15 @@ describe("DatePicker", () => {
     render(<DatePicker variant="filled" readOnly defaultValue={dayjs("2026-08-11")} />);
 
     expect(screen.getByRole("button", { name: /2026-08-11/ })).toHaveClass(
-      "border-[#f5f5f5]",
-      "bg-[#f5f5f5]",
+      "border-hover",
+      "bg-hover",
     );
   });
 
   it("uses the disabled text color for a selected value", () => {
     render(<DatePicker disabled defaultValue={dayjs("2026-08-11")} />);
 
-    expect(screen.getByText("2026-08-11").parentElement).toHaveClass("text-[#999]");
+    expect(screen.getByText("2026-08-11").parentElement).toHaveClass("text-gray");
   });
 
   it("moves the date panel by one year with the outer header buttons", async () => {

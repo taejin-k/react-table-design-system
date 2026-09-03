@@ -1,5 +1,6 @@
 import type { IconNameType, IconProps } from "./Icon.types";
 import { twMerge } from "tailwind-merge";
+import { resolveColorToken } from "../../color-tokens";
 import { iconGalleryNames } from "./Icon.names";
 
 type IconPath =
@@ -345,7 +346,7 @@ export function Icon({
   const resolvedIcon = loading ? "loading" : icon;
   const isInteractive = Boolean(onClick) && !disabled && !loading;
   const iconPaths = paths[resolvedIcon];
-  const effectiveColor = disabled ? "#aaa" : color;
+  const effectiveColor = disabled ? "var(--color-disabled)" : resolveColorToken(color);
   const usesAntdViewBox = [
     "flip-vertical",
     "flip-horizontal",

@@ -491,7 +491,7 @@ function NotificationCard({
       ref={combinedRef}
       data-notification-index={notificationIndex}
       className={twMerge(
-        "wizard-notification-card wizard-notification-motion pointer-events-auto absolute w-full min-w-0 overflow-visible rounded-lg bg-white px-6 py-4 text-sm leading-[1.5715] text-[#111] shadow-[0_6px_16px_rgba(0,0,0,0.08),0_3px_6px_-4px_rgba(0,0,0,0.12),0_9px_28px_8px_rgba(0,0,0,0.05)]",
+        "wizard-notification-card wizard-notification-motion pointer-events-auto absolute w-full min-w-0 overflow-visible rounded-lg bg-white px-6 py-4 text-sm leading-[1.5715] text-dark shadow-2xl",
         motionClassName,
         visible === false && "pointer-events-none",
         hiddenInStack && "wizard-notification-stack-hidden",
@@ -554,7 +554,7 @@ function NotificationCard({
           {description != null ? (
             <div
               className={twMerge(
-                "text-sm whitespace-pre-wrap text-[#111]",
+                "text-sm whitespace-pre-wrap text-dark",
                 closable && title == null && "pr-6",
               )}
             >
@@ -588,45 +588,30 @@ function NotificationCard({
 
 function NotificationIcon({ type }: { type: NotificationStatusType }) {
   if (type === "loading") {
-    return <Icon icon="loading" color="var(--color-primary)" size={28} data-icon="loading" />;
+    return <Icon icon="loading" color="primary" size={28} data-icon="loading" />;
   }
   if (type === "success") {
     return (
-      <Icon
-        icon="check-circle-filled"
-        color="var(--color-success)"
-        size={28}
-        data-icon="check-circle-filled"
-      />
+      <Icon icon="check-circle-filled" color="success" size={28} data-icon="check-circle-filled" />
     );
   }
   if (type === "error") {
     return (
-      <Icon
-        icon="close-circle-filled"
-        color="var(--color-danger)"
-        size={28}
-        data-icon="close-circle-filled"
-      />
+      <Icon icon="close-circle-filled" color="danger" size={28} data-icon="close-circle-filled" />
     );
   }
   if (type === "warning") {
     return (
       <Icon
         icon="warning-circle-filled"
-        color="var(--color-warning)"
+        color="warning"
         size={28}
         data-icon="warning-circle-filled"
       />
     );
   }
   return (
-    <Icon
-      icon="info-circle-filled"
-      color="var(--color-primary)"
-      size={28}
-      data-icon="info-circle-filled"
-    />
+    <Icon icon="info-circle-filled" color="primary" size={28} data-icon="info-circle-filled" />
   );
 }
 

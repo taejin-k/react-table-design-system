@@ -12,11 +12,11 @@
 .wizard-skeleton-active {
   background-image: linear-gradient(
     90deg,
-    #f0f0f0 0%,
-    #f0f0f0 38%,
-    #e7e7e7 50%,
-    #f0f0f0 62%,
-    #f0f0f0 100%
+    var(--color-hover) 0%,
+    var(--color-hover) 38%,
+    color-mix(in srgb, var(--color-white) 50%, transparent) 50%,
+    var(--color-hover) 62%,
+    var(--color-hover) 100%
   );
   background-size: 300% 100%;
   animation: wizard-skeleton-loading 1.5s ease-in-out infinite;
@@ -30,10 +30,10 @@
   background-color: #fff;
   background-image:
     linear-gradient(to right, transparent, var(--wizard-color-alpha-color, var(--color-primary))),
-    linear-gradient(45deg, #ccc 25%, transparent 25%),
-    linear-gradient(-45deg, #ccc 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, #ccc 75%),
-    linear-gradient(-45deg, transparent 75%, #ccc 75%);
+    linear-gradient(45deg, var(--color-disabled) 25%, transparent 25%),
+    linear-gradient(-45deg, var(--color-disabled) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, var(--color-disabled) 75%),
+    linear-gradient(-45deg, transparent 75%, var(--color-disabled) 75%);
   background-position:
     0 0,
     0 0,
@@ -56,7 +56,7 @@
   border: 2px solid #fff;
   border-radius: 9999px;
   background: transparent;
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-black) 25%, transparent);
 }
 
 @keyframes wizard-tab-pane-in {
