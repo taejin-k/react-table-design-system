@@ -234,9 +234,9 @@ describe("Input", () => {
       "rounded-none",
       "border-x-transparent",
       "border-t-transparent",
-      "border-b-[#ff4d4f]",
+      "border-b-danger",
     );
-    expect(inputRow).not.toHaveClass("border-[#ff4d4f]");
+    expect(inputRow).not.toHaveClass("border-danger");
   });
 
   it("calls onEnter when Enter is pressed", async () => {

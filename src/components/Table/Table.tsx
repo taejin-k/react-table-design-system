@@ -138,8 +138,8 @@ const expandIndentClass = "flex min-h-[17px] items-center";
 const selectionHeadClass = "relative inline-flex -translate-y-px items-center align-middle";
 
 const iconButtonClass =
-  "inline-grid size-6 cursor-pointer place-items-center rounded border-0 bg-transparent p-0 text-[#999] transition-colors hover:text-[#111] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#0062df]";
-const iconButtonActiveClass = "text-[#0062df]";
+  "inline-grid size-6 cursor-pointer place-items-center rounded border-0 bg-transparent p-0 text-[#999] transition-colors hover:text-[#111] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary";
+const iconButtonActiveClass = "text-primary";
 const expandButtonClass =
   "inline-grid size-[17px] cursor-pointer place-items-center rounded-sm border border-[#ddd] bg-white text-[#999]";
 const expandPlaceholderClass = "inline-block size-[17px]";
@@ -164,7 +164,7 @@ const emptyClass = "h-[184px] text-center text-[#999]";
 
 const loadingOverlayClass =
   "absolute inset-0 z-10 grid place-items-center rounded-[inherit] bg-white/75 backdrop-blur-[1px]";
-const loadingContentClass = "inline-flex items-center gap-2.5 text-[#0062df]";
+const loadingContentClass = "text-primary inline-flex items-center gap-2.5";
 const fixedLeftLastShadowBaseClass =
   "after:pointer-events-none after:absolute after:right-0 after:top-0 after:bottom-[-1px] after:z-[1] after:w-[30px] after:translate-x-full after:content-[''] after:shadow-[inset_10px_0_8px_-8px_rgba(5,5,5,0)] after:transition-shadow";
 const fixedLeftLastShadowVisibleClass = "after:shadow-[inset_10px_0_8px_-8px_rgba(5,5,5,0.12)]";
@@ -1106,9 +1106,9 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
                     color="#ccc"
                     className={
                       order === "ascend"
-                        ? "[&>path:first-child]:fill-[#0062df]"
+                        ? "[&>path:first-child]:fill-primary"
                         : order === "descend"
-                          ? "[&>path:last-child]:fill-[#0062df]"
+                          ? "[&>path:last-child]:fill-primary"
                           : undefined
                     }
                   />
@@ -1720,9 +1720,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
         enabled={rowDragEnabled}
         items={allFlatRows.map(({ record }) => `row:${String(keyOf(record))}`)}
       >
-        <tbody
-          className={twMerge(bordered && "[&>tr:last-child>td]:border-b-transparent")}
-        >
+        <tbody className={twMerge(bordered && "[&>tr:last-child>td]:border-b-transparent")}>
           {topPad > 0 && (
             <tr>
               <td
@@ -2028,7 +2026,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
                   data-table-scroll-container
                   data-table-overlay-scrollbar={overlayScrollbarSupported ? "" : undefined}
                   className={twMerge(
-                    "relative w-full overflow-x-auto rounded-b-[inherit] bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0062df]",
+                    "relative w-full overflow-x-auto rounded-b-[inherit] bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
                     hasVerticalViewport ? "overflow-y-auto" : "overflow-y-hidden",
                     !showHeader && "rounded-t-[inherit]",
                   )}
@@ -2080,7 +2078,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
                 ref={scrollRef}
                 data-table-scroll-container
                 data-table-overlay-scrollbar={overlayScrollbarSupported ? "" : undefined}
-                className="relative w-full overflow-x-auto overflow-y-hidden rounded-[inherit] bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0062df]"
+                className="relative w-full overflow-x-auto overflow-y-hidden rounded-[inherit] bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                 tabIndex={hasHorizontalOverflow ? 0 : undefined}
                 onKeyDown={handleScrollKeyDown}
                 onScroll={handleTableScroll}
@@ -2273,7 +2271,7 @@ function FilterMenu<T extends object>({
         <Button
           variant="ghost"
           size="sm"
-          className="h-6 bg-transparent px-2 text-[#0062df] hover:bg-transparent"
+          className="h-6 bg-transparent px-2 text-primary hover:bg-transparent"
           onClick={clearFilters}
         >
           {locale.filterReset ?? "초기화"}

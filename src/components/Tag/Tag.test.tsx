@@ -40,11 +40,7 @@ describe("Tag", () => {
       </Tag>,
     );
 
-    expect(screen.getByTestId("tag")).toHaveClass(
-      "custom-tag",
-      "text-[#ff4d4f]",
-      "shadow-[inset_0_0_0_1px_#ff4d4f]",
-    );
+    expect(screen.getByTestId("tag")).toHaveClass("custom-tag", "text-danger", "ring-danger");
   });
 
   it("renders a solid tag with a saturated background", () => {
@@ -54,7 +50,7 @@ describe("Tag", () => {
       </Tag>,
     );
 
-    expect(screen.getByTestId("tag")).toHaveClass("bg-[#0062df]", "text-white");
+    expect(screen.getByTestId("tag")).toHaveClass("bg-primary", "text-white");
   });
 
   it("uses the dedicated navy color", () => {
@@ -64,10 +60,7 @@ describe("Tag", () => {
       </Tag>,
     );
 
-    expect(screen.getByTestId("tag")).toHaveClass(
-      "text-[#023f97]",
-      "shadow-[inset_0_0_0_1px_#023f97]",
-    );
+    expect(screen.getByTestId("tag")).toHaveClass("text-navy", "ring-navy");
   });
 
   it("renders a soft outlined tag with a tinted border and background", () => {
@@ -79,7 +72,7 @@ describe("Tag", () => {
 
     expect(screen.getByTestId("tag")).toHaveClass(
       "bg-[#f5f2fd]",
-      "text-[#4f19c4]",
+      "text-purple",
       "shadow-[inset_0_0_0_1px_#d7c8f4]",
     );
   });

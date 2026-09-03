@@ -441,7 +441,7 @@ describe("Table regressions", () => {
 
     expect(screen.queryByText("Platform")).not.toBeInTheDocument();
     expect(screen.getAllByRole("row")[1]).toHaveTextContent("박지호");
-    expect(requiredElement("[data-table-filter]")).toHaveClass("text-[#0062df]");
+    expect(requiredElement("[data-table-filter]")).toHaveClass("text-primary");
   });
 
   it("renders filter popups in document.body", async () => {

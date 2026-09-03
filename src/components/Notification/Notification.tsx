@@ -575,7 +575,7 @@ function NotificationCard({
       ) : null}
       {item.showProgress && item.duration ? (
         <div
-          className="absolute right-2 bottom-0 left-2 h-0.5 origin-left rounded-lg bg-[#0062df]"
+          className="absolute right-2 bottom-0 left-2 h-0.5 origin-left rounded-lg bg-primary"
           style={{
             animation: `wizard-notification-progress ${item.duration}s linear forwards`,
             animationPlayState: paused ? "paused" : "running",
@@ -588,30 +588,45 @@ function NotificationCard({
 
 function NotificationIcon({ type }: { type: NotificationStatusType }) {
   if (type === "loading") {
-    return <Icon icon="loading" color="#0062df" size={28} data-icon="loading" />;
+    return <Icon icon="loading" color="var(--color-primary)" size={28} data-icon="loading" />;
   }
   if (type === "success") {
     return (
-      <Icon icon="check-circle-filled" color="#52c41a" size={28} data-icon="check-circle-filled" />
+      <Icon
+        icon="check-circle-filled"
+        color="var(--color-success)"
+        size={28}
+        data-icon="check-circle-filled"
+      />
     );
   }
   if (type === "error") {
     return (
-      <Icon icon="close-circle-filled" color="#ff4d4f" size={28} data-icon="close-circle-filled" />
+      <Icon
+        icon="close-circle-filled"
+        color="var(--color-danger)"
+        size={28}
+        data-icon="close-circle-filled"
+      />
     );
   }
   if (type === "warning") {
     return (
       <Icon
         icon="warning-circle-filled"
-        color="#faad14"
+        color="var(--color-warning)"
         size={28}
         data-icon="warning-circle-filled"
       />
     );
   }
   return (
-    <Icon icon="info-circle-filled" color="#0062df" size={28} data-icon="info-circle-filled" />
+    <Icon
+      icon="info-circle-filled"
+      color="var(--color-primary)"
+      size={28}
+      data-icon="info-circle-filled"
+    />
   );
 }
 

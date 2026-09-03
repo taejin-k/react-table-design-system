@@ -2,11 +2,11 @@ import { twMerge } from "tailwind-merge";
 import type { BadgeProps, BadgeStatusType } from "./Badge.types";
 
 const statusColors: Record<BadgeStatusType, string> = {
-  success: "#52c41a",
-  processing: "#0062df",
+  success: "var(--color-success)",
+  processing: "var(--color-primary)",
   default: "#bfbfbf",
-  error: "#ff4d4f",
-  warning: "#faad14",
+  error: "var(--color-danger)",
+  warning: "var(--color-warning)",
 };
 
 export function Badge({ status, process = false, text, color, className, style }: BadgeProps) {

@@ -290,8 +290,8 @@ export function Tabs(props: TabsProps) {
               key={item.key}
               active={Object.is(item.key, selected)}
               className={twMerge(
-                "relative inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 whitespace-nowrap text-[#666] hover:text-[#0062df] disabled:cursor-not-allowed disabled:text-[#bbb] motion-reduce:transition-none",
-                Object.is(item.key, selected) && "font-medium text-[#0062df]",
+                "relative inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 whitespace-nowrap text-[#666] hover:text-primary disabled:cursor-not-allowed disabled:text-[#bbb] motion-reduce:transition-none",
+                Object.is(item.key, selected) && "font-medium text-primary",
                 type === "line"
                   ? `${linePadding} transition-colors duration-200`
                   : `${cardSize} border border-[#d9d9d9] bg-[#fafafa] ${cardEdge} transition-[background-color,border-color,color] duration-300 ease-[cubic-bezier(0.645,0.045,0.355,1)]`,
@@ -334,7 +334,7 @@ export function Tabs(props: TabsProps) {
               type="button"
               data-tabs-add=""
               className={twMerge(
-                "inline-flex shrink-0 cursor-pointer items-center justify-center border border-[#d9d9d9] bg-[#fafafa] text-[#111] transition-[background-color,border-color,color] duration-300 ease-[cubic-bezier(0.645,0.045,0.355,1)] hover:border-[#0062df] hover:text-[#0062df] motion-reduce:transition-none",
+                "inline-flex shrink-0 cursor-pointer items-center justify-center border border-[#d9d9d9] bg-[#fafafa] text-[#111] transition-[background-color,border-color,color] duration-300 ease-[cubic-bezier(0.645,0.045,0.355,1)] hover:border-primary hover:text-primary motion-reduce:transition-none",
                 cardSize,
                 vertical
                   ? "w-full"
@@ -356,7 +356,7 @@ export function Tabs(props: TabsProps) {
         <span
           data-tabs-indicator=""
           className={twMerge(
-            "pointer-events-none absolute top-0 left-0 bg-[#0062df] will-change-transform",
+            "pointer-events-none absolute top-0 left-0 bg-primary will-change-transform",
           )}
           style={{
             width: ink.width,

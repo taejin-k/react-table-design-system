@@ -202,7 +202,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
 Input.displayName = "Input";
 
 const inputRowVariants = cva(
-  "flex w-full items-center gap-[6px] rounded-[4px] border border-solid bg-white transition-colors focus-within:border-[#0062df]",
+  "flex w-full items-center gap-[6px] rounded-[4px] border border-solid bg-white transition-colors focus-within:border-primary",
   {
     variants: {
       size: {
@@ -215,7 +215,7 @@ const inputRowVariants = cva(
         filled: "border-[#f5f5f5] bg-[#f5f5f5]",
         borderless: "border-transparent bg-white focus-within:border-transparent",
         underlined:
-          "rounded-none border-x-transparent border-t-transparent border-b-[#ddd] bg-white focus-within:border-x-transparent focus-within:border-t-transparent focus-within:border-b-[#0062df]",
+          "rounded-none border-x-transparent border-t-transparent border-b-[#ddd] bg-white focus-within:border-x-transparent focus-within:border-t-transparent focus-within:border-b-primary",
       },
       error: {
         true: "",
@@ -237,14 +237,14 @@ const inputRowVariants = cva(
         variant: ["default", "filled", "borderless"],
         error: true,
         disabled: false,
-        className: "border-[#ff4d4f] focus-within:border-[#ff4d4f]",
+        className: "border-danger focus-within:border-danger",
       },
       {
         variant: "underlined",
         error: true,
         disabled: false,
         className:
-          "border-x-transparent border-t-transparent border-b-[#ff4d4f] focus-within:border-x-transparent focus-within:border-t-transparent focus-within:border-b-[#ff4d4f]",
+          "border-x-transparent border-t-transparent border-b-danger focus-within:border-x-transparent focus-within:border-t-transparent focus-within:border-b-danger",
       },
       {
         variant: "underlined",

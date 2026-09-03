@@ -173,8 +173,8 @@ function MenuItems({
             disabled={item.disabled}
             className={twMerge(
               "flex h-8 w-full cursor-pointer items-center gap-2 rounded px-3 text-left whitespace-nowrap transition-colors",
-              selected ? "bg-[#e6f4ff] text-[#0062df]" : "hover:bg-[#f5f5f5]",
-              item.danger && "text-[#ff4d4f] hover:bg-[#fff2f0]",
+              selected ? "bg-[#e6f4ff] text-primary" : "hover:bg-[#f5f5f5]",
+              item.danger && "text-danger hover:bg-[#fff2f0]",
               item.disabled && "cursor-not-allowed text-[#bbb] hover:bg-transparent",
             )}
             onClick={(event) => {

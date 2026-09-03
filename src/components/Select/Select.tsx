@@ -779,8 +779,8 @@ export const Select = forwardRef<SelectRef, SelectProps>(
                 }),
                 loading && "cursor-default",
                 isSearchable
-                  ? "cursor-text focus-within:border-[#0062df]"
-                  : "cursor-pointer focus:border-[#0062df] focus:outline-none",
+                  ? "cursor-text focus-within:border-primary"
+                  : "cursor-pointer focus:border-primary focus:outline-none",
                 mode &&
                   values.length > 0 && [
                     "items-start",
@@ -1169,7 +1169,7 @@ function OptionList({
                   className={twMerge(
                     "flex h-8 w-full cursor-pointer items-center gap-2 rounded px-3 text-left transition-colors",
                     selected && "bg-[#e6f4ff]",
-                    selected && "font-medium text-[#0062df]",
+                    selected && "font-medium text-primary",
                     !selected && index === activeIndex && "bg-[#f5f5f5]",
                     !selected && index !== activeIndex && "hover:bg-[#f5f5f5]",
                     disabled && "cursor-not-allowed text-[#bbb] hover:bg-transparent",
@@ -1180,7 +1180,7 @@ function OptionList({
                   <span className="min-w-0 flex-1 truncate">
                     {optionRender ? optionRender(option, { index }) : option.label}
                   </span>
-                  {selected ? <Icon icon="check" color="#0062df" /> : null}
+                  {selected ? <Icon icon="check" color="var(--color-primary)" /> : null}
                 </button>
               </Fragment>
             );
@@ -1192,7 +1192,7 @@ function OptionList({
 }
 
 const selectRootVariants = cva(
-  "relative flex w-full cursor-pointer items-center gap-2 rounded border border-solid bg-white px-2.5 text-left font-pretendard font-medium text-[#111] transition-colors focus:border-[#0062df] focus:outline-none",
+  "relative flex w-full cursor-pointer items-center gap-2 rounded border border-solid bg-white px-2.5 text-left font-pretendard font-medium text-[#111] transition-colors focus:border-primary focus:outline-none",
   {
     variants: {
       size: { lg: "min-h-10 text-base", md: "min-h-[30px] text-sm", sm: "min-h-5 text-xs" },
@@ -1201,7 +1201,7 @@ const selectRootVariants = cva(
         filled: "border-[#f5f5f5] bg-[#f5f5f5]",
       },
       error: {
-        true: "border-[#ff4d4f]",
+        true: "border-danger",
         false: "",
       },
       readOnly: {
@@ -1209,7 +1209,7 @@ const selectRootVariants = cva(
         false: "",
       },
       interactive: {
-        true: "hover:border-[#0062df]",
+        true: "hover:border-primary",
         false: "",
       },
       disabled: {

@@ -87,7 +87,7 @@ const contentVariants = cva(
   {
     variants: {
       interactive: {
-        true: "cursor-pointer no-underline transition-[color,background-color] hover:bg-[#f5f5f5] hover:text-[#111] focus-visible:bg-[#f5f5f5] focus-visible:text-[#111] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#0062df] motion-reduce:transition-none",
+        true: "cursor-pointer no-underline transition-[color,background-color] hover:bg-[#f5f5f5] hover:text-[#111] focus-visible:bg-[#f5f5f5] focus-visible:text-[#111] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary motion-reduce:transition-none",
         false: "",
       },
       current: {

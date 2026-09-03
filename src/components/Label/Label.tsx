@@ -8,7 +8,7 @@ export const Label = forwardRef<HTMLLabelElement, LabelProps>(
     return (
       <label ref={ref} className={twMerge(labelVariants({ size }), className)} {...rest}>
         {label}
-        {required && <span className="text-[#ff4d4f]">*</span>}
+        {required && <span className="text-danger">*</span>}
       </label>
     );
   },

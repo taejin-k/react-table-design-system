@@ -873,7 +873,7 @@ export const CustomCell: Story = {
 
       return (
         <span
-          className={day === 0 ? 'text-[#ff4d4f]' : day === 6 ? 'text-[#0062df]' : ''}
+          className={day === 0 ? 'text-danger' : day === 6 ? 'text-primary' : ''}
         >
           {origin}
         </span>
@@ -894,7 +894,7 @@ export const CustomCell: Story = {
           const day = dayjs(date).day();
 
           return (
-            <span className={day === 0 ? "text-[#ff4d4f]" : day === 6 ? "text-[#0062df]" : ""}>
+            <span className={day === 0 ? "text-danger" : day === 6 ? "text-primary" : ""}>
               {origin}
             </span>
           );

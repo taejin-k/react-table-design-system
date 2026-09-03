@@ -437,8 +437,8 @@ export function ColorPicker({
         type="button"
         disabled={disabled}
         className={twMerge(
-          "inline-flex items-center gap-2 rounded-md border border-[#d9d9d9] bg-white py-[3px] pr-2 pl-[3px] font-pretendard text-sm text-[#111] transition-colors focus:border-[#0062df] focus:outline-none disabled:cursor-not-allowed disabled:bg-[#f5f5f5] disabled:text-[#bbb]",
-          !disabled && !readOnly && "cursor-pointer hover:border-[#0062df]",
+          "inline-flex items-center gap-2 rounded-md border border-[#d9d9d9] bg-white py-[3px] pr-2 pl-[3px] font-pretendard text-sm text-[#111] transition-colors focus:border-primary focus:outline-none disabled:cursor-not-allowed disabled:bg-[#f5f5f5] disabled:text-[#bbb]",
+          !disabled && !readOnly && "cursor-pointer hover:border-primary",
           readOnly && "cursor-default",
           size === "lg" ? "h-10" : size === "sm" ? "h-6" : "h-8",
           className,

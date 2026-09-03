@@ -29,7 +29,7 @@
 .wizard-color-alpha {
   background-color: #fff;
   background-image:
-    linear-gradient(to right, transparent, var(--wizard-color-alpha-color, #0062df)),
+    linear-gradient(to right, transparent, var(--wizard-color-alpha-color, var(--color-primary))),
     linear-gradient(45deg, #ccc 25%, transparent 25%),
     linear-gradient(-45deg, #ccc 25%, transparent 25%),
     linear-gradient(45deg, transparent 75%, #ccc 75%),

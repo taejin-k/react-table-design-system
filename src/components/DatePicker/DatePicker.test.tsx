@@ -87,7 +87,7 @@ describe("DatePicker", () => {
     render(
       <DatePicker
         defaultPickerValue={dayjs("2026-08-01")}
-        cellRender={(_, origin) => <span className="text-[#ff4d4f]">{origin}</span>}
+        cellRender={(_, origin) => <span className="text-danger">{origin}</span>}
       />,
     );
 
@@ -96,7 +96,7 @@ describe("DatePicker", () => {
     const adjacentJuly26 = within(popup).getAllByRole("button", { name: "26" })[0];
 
     expect(adjacentJuly26).toHaveClass("text-[#bbb]", "[&_*]:text-[#bbb]!");
-    expect(adjacentJuly26.firstElementChild).toHaveClass("text-[#ff4d4f]");
+    expect(adjacentJuly26.firstElementChild).toHaveClass("text-danger");
   });
 
   it("keeps the trigger focusable without opening while read only", async () => {
@@ -106,7 +106,7 @@ describe("DatePicker", () => {
 
     const trigger = screen.getByRole("button", { name: /2026-08-11/ });
     expect(trigger).not.toBeDisabled();
-    expect(trigger).toHaveClass("focus:border-[#0062df]", "focus:outline-none");
+    expect(trigger).toHaveClass("focus:border-primary", "focus:outline-none");
 
     await user.click(trigger);
 
@@ -446,7 +446,7 @@ describe("DatePicker", () => {
     const popup = document.querySelector("[data-datepicker-range-popup]") as HTMLElement;
     const septemberThirdButtons = within(popup).getAllByRole("button", { name: "3" });
     const selectedSeptemberThirdButtons = septemberThirdButtons.filter((button) =>
-      button.className.includes("text-[#0062df]"),
+      button.className.includes("text-primary"),
     );
 
     expect(selectedSeptemberThirdButtons).toHaveLength(1);

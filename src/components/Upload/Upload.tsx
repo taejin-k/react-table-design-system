@@ -480,7 +480,7 @@ function UploadBase({
                 data-upload-download-loading={downloading || undefined}
                 disabled={downloadActive}
                 className={twMerge(
-                  "inline-flex shrink-0 cursor-pointer items-center justify-center text-[#8c8c8c] transition-colors hover:text-[#0062df]",
+                  "inline-flex shrink-0 cursor-pointer items-center justify-center text-[#8c8c8c] transition-colors hover:text-primary",
                   listType === "text" ? "size-5" : "size-6",
                   downloadActive && "cursor-default hover:text-[#8c8c8c]",
                   downloading && "cursor-wait",
@@ -495,7 +495,7 @@ function UploadBase({
                 type="button"
                 data-upload-remove-action
                 className={twMerge(
-                  "inline-flex shrink-0 cursor-pointer items-center justify-center text-[#8c8c8c] transition-colors hover:text-[#ff4d4f]",
+                  "inline-flex shrink-0 cursor-pointer items-center justify-center text-[#8c8c8c] transition-colors hover:text-danger",
                   listType === "text" ? "size-5" : "size-6",
                 )}
                 onClick={() => void remove(file)}
@@ -650,8 +650,8 @@ function Dragger(props: UploadProps) {
         <span
           data-upload-dragger-area
           className={twMerge(
-            "flex min-h-44 w-full cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-[#d9d9d9] bg-[rgba(0,0,0,0.02)] p-4 text-center text-sm text-[#666] transition-colors hover:border-[#0062df]",
-            dragging && "border-[#0062df] bg-[#e6f4ff]",
+            "flex min-h-44 w-full cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-[#d9d9d9] bg-[rgba(0,0,0,0.02)] p-4 text-center text-sm text-[#666] transition-colors hover:border-primary",
+            dragging && "border-primary bg-[#e6f4ff]",
             disabled && "cursor-not-allowed",
           )}
           onDragEnter={(event) => {
@@ -669,7 +669,7 @@ function Dragger(props: UploadProps) {
         >
           {children ?? (
             <>
-              <Icon icon="upload" size={40} color="#0062df" />
+              <Icon icon="upload" size={40} color="var(--color-primary)" />
               <span className="mt-2 text-base text-[#111]">
                 클릭하거나 파일을 이 영역으로 드래그하세요
               </span>

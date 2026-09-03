@@ -174,7 +174,7 @@ describe("Tree", () => {
     );
     const selectionContent = document.querySelector('[data-tree-selection-content="item"]');
 
-    expect(selectionContent).toHaveClass("bg-[#e6f4ff]", "text-[#0062df]");
+    expect(selectionContent).toHaveClass("bg-[#e6f4ff]", "text-primary");
 
     rerender(
       <Tree
@@ -185,7 +185,7 @@ describe("Tree", () => {
     );
     const disabledSelectionContent = document.querySelector('[data-tree-selection-content="item"]');
     expect(disabledSelectionContent).not.toHaveClass("bg-[#e6f4ff]");
-    expect(disabledSelectionContent).not.toHaveClass("text-[#0062df]");
+    expect(disabledSelectionContent).not.toHaveClass("text-primary");
     expect(disabledSelectionContent).toHaveClass("cursor-not-allowed");
   });
 
@@ -582,7 +582,7 @@ describe("Tree", () => {
     expect(childBoundaryIndicator?.firstElementChild).toHaveClass(
       "size-1.5",
       "rounded-full",
-      "bg-[#0062df]",
+      "bg-primary",
       "left-0",
     );
     expect(childBoundaryIndicator?.firstElementChild).not.toHaveClass("-left-[3px]");

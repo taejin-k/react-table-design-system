@@ -636,7 +636,7 @@ export function Tree({
               {dragOverIndicatorPosition !== undefined ? (
                 <span
                   data-tree-drop-indicator={dragOverIndicatorPosition === -1 ? "top" : "bottom"}
-                  className="pointer-events-none absolute right-0 z-10 h-0.5 bg-[#0062df]"
+                  className="pointer-events-none absolute right-0 z-10 h-0.5 bg-primary"
                   style={{
                     top:
                       dragOverIndicatorPosition === -1
@@ -647,7 +647,7 @@ export function Tree({
                     left: (dragOverLevel ?? level) * 24,
                   }}
                 >
-                  <span className="absolute top-1/2 left-0 size-1.5 -translate-y-1/2 rounded-full bg-[#0062df]" />
+                  <span className="absolute top-1/2 left-0 size-1.5 -translate-y-1/2 rounded-full bg-primary" />
                 </span>
               ) : null}
               {hasChildren ? (
@@ -689,7 +689,7 @@ export function Tree({
                   "inline-flex min-h-6 min-w-0 items-center rounded-md transition-colors",
                   fullWidth && "flex-1",
                   nodeSelectable && "cursor-pointer hover:bg-[#f5f5f5]",
-                  isSelected && !nodeDisabled && "bg-[#e6f4ff] text-[#0062df]",
+                  isSelected && !nodeDisabled && "bg-[#e6f4ff] text-primary",
                   isSelected && nodeSelectable && "hover:bg-[#e6f4ff]",
                   nodeDisabled && "cursor-not-allowed",
                 )}

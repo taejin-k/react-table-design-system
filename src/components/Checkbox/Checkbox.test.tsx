@@ -31,7 +31,7 @@ describe("Checkbox", () => {
     render(<Checkbox className="custom-checkbox" error />);
 
     const checkbox = screen.getByRole("checkbox");
-    expect(checkbox.className).toContain("border-[#ff4d4f]");
+    expect(checkbox.className).toContain("border-danger");
     expect(checkbox).not.toHaveClass("custom-checkbox");
     expect(checkbox.closest("label")).toHaveClass("custom-checkbox");
   });

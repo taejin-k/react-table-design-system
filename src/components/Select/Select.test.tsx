@@ -118,7 +118,7 @@ describe("Select", () => {
     const platformOption = within(popup).getByRole("button", { name: "Platform" });
 
     expect(designOption).not.toHaveClass("bg-[#e6f4ff]");
-    expect(platformOption).toHaveClass("bg-[#e6f4ff]", "text-[#0062df]");
+    expect(platformOption).toHaveClass("bg-[#e6f4ff]", "text-primary");
   });
 
   it("searches and selects multiple options", async () => {
@@ -694,7 +694,7 @@ describe("Select", () => {
 
     const trigger = screen.getByRole("button", { name: "Design" });
     expect(trigger).not.toBeDisabled();
-    expect(trigger).toHaveClass("focus:border-[#0062df]", "focus:outline-none");
+    expect(trigger).toHaveClass("focus:border-primary", "focus:outline-none");
 
     await user.click(trigger);
 
@@ -813,7 +813,7 @@ describe("Select", () => {
 
     const tag = document.querySelector<HTMLElement>("[data-select-tag]");
     expect(tag).not.toBeNull();
-    expect(tag).toHaveClass("bg-[#eff5ee]", "text-[#52c41a]");
+    expect(tag).toHaveClass("bg-[#eff5ee]", "text-success");
 
     const closeIcon = (tag as HTMLElement).querySelector("svg") as SVGSVGElement;
     expect(closeIcon).toHaveClass("cursor-pointer", "hover:opacity-75");
@@ -835,7 +835,7 @@ describe("Select", () => {
         />,
       );
 
-      expect(document.querySelector("[data-select-tag]")).toHaveClass("bg-white", "text-[#52c41a]");
+      expect(document.querySelector("[data-select-tag]")).toHaveClass("bg-white", "text-success");
     },
   );
 

@@ -195,11 +195,11 @@ export function Calendar({
                           ? "mx-1 h-[90px] w-[calc(100%-8px)] items-start justify-end border-t-2 border-[#f0f0f0] px-2 pt-1 hover:bg-[#f5f5f5]"
                           : "size-8 items-center justify-center rounded p-0 hover:bg-[#f5f5f5]",
                         outside && "text-[#bbb]",
-                        fullscreen && sameDate(date, today) && "border-t-[#0062df]",
+                        fullscreen && sameDate(date, today) && "border-t-primary",
                         sameDate(date, selected) &&
                           (fullscreen
                             ? "bg-[#e6f4ff] hover:bg-[#e6f4ff]"
-                            : "bg-[#e6f4ff] text-[#0062df] hover:bg-[#e6f4ff]"),
+                            : "bg-[#e6f4ff] text-primary hover:bg-[#e6f4ff]"),
                         fullscreen &&
                           disabled &&
                           (sameDate(date, selected)
@@ -250,7 +250,7 @@ export function Calendar({
                         top: 32 + lane * 20,
                         left: `calc(${(startIndex * 100) / 7}% + 8px)`,
                         width: `calc(${(span * 100) / 7}% - 16px)`,
-                        backgroundColor: event.color ?? "#0062df",
+                        backgroundColor: event.color ?? "var(--color-primary)",
                       }}
                       onClick={onEventClick ? () => onEventClick(event) : undefined}
                     >

@@ -567,7 +567,7 @@ export function TimePanel({
                 disabled={disabled}
                 className={twMerge(
                   "h-8 w-full shrink-0 cursor-pointer rounded hover:bg-[#f5f5f5]",
-                  isSelected && "bg-[#e6f4ff] text-[#0062df] hover:bg-[#e6f4ff]",
+                  isSelected && "bg-[#e6f4ff] text-primary hover:bg-[#e6f4ff]",
                   disabled && "cursor-not-allowed text-[#ccc] hover:bg-transparent",
                 )}
                 onClick={() =>
@@ -652,7 +652,7 @@ function TimeColumn({
             disabled={valueDisabled}
             className={twMerge(
               "h-8 w-full shrink-0 cursor-pointer rounded hover:bg-[#f5f5f5]",
-              selected === value && "bg-[#e6f4ff] font-medium text-[#0062df] hover:bg-[#e6f4ff]",
+              selected === value && "bg-[#e6f4ff] font-medium text-primary hover:bg-[#e6f4ff]",
               valueDisabled && "cursor-not-allowed text-[#ccc] hover:bg-transparent",
             )}
             onMouseEnter={() => onPreview?.(value)}
@@ -689,7 +689,7 @@ function formatTwelveHours(value: string | Dayjs, showSecond: boolean) {
 export const TimePicker = BaseTimePicker;
 
 const timePickerRootVariants = cva(
-  "flex w-full items-center gap-2 rounded border border-solid px-2.5 text-left font-pretendard font-medium text-[#111] transition-colors hover:border-[#0062df] focus:border-[#0062df] focus:outline-none",
+  "flex w-full items-center gap-2 rounded border border-solid px-2.5 text-left font-pretendard font-medium text-[#111] transition-colors hover:border-primary focus:border-primary focus:outline-none",
   {
     variants: {
       size: { lg: "h-10 text-base", md: "h-[30px] text-sm", sm: "h-5 text-xs" },
@@ -697,7 +697,7 @@ const timePickerRootVariants = cva(
         default: "border-[#ddd] bg-white",
         filled: "border-[#f5f5f5] bg-[#f5f5f5]",
       },
-      error: { true: "border-[#ff4d4f]", false: "" },
+      error: { true: "border-danger", false: "" },
       readOnly: {
         true: "cursor-default hover:border-[#ddd]",
         false: "",

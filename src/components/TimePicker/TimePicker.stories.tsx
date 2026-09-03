@@ -512,7 +512,7 @@ export const CustomCell: Story = {
   width={320}
   minuteStep={10}
   cellRender={(current, { originNode, subType }) => (
-    <strong className={subType === 'minute' && current === 30 ? 'text-[#ff4d4f]' : ''}>
+    <strong className={subType === 'minute' && current === 30 ? 'text-danger' : ''}>
       {originNode}
     </strong>
   )}
@@ -526,7 +526,7 @@ export const CustomCell: Story = {
       width={320}
       minuteStep={10}
       cellRender={(current, { originNode, subType }) => (
-        <strong className={subType === "minute" && current === 30 ? "text-[#ff4d4f]" : ""}>
+        <strong className={subType === "minute" && current === 30 ? "text-danger" : ""}>
           {originNode}
         </strong>
       )}

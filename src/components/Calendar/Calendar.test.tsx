@@ -69,7 +69,7 @@ describe("Calendar", () => {
       "size-8",
       "rounded",
       "bg-[#e6f4ff]",
-      "text-[#0062df]",
+      "text-primary",
       "hover:bg-[#e6f4ff]",
     );
     expect(screen.getByRole("button", { name: "21" })).toHaveClass("hover:bg-[#f5f5f5]");

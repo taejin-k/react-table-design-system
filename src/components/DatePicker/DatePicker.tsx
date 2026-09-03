@@ -897,7 +897,7 @@ function DateGrid({
                 className={twMerge(
                   "relative z-[1] flex size-8 cursor-pointer items-center justify-center rounded hover:bg-[#f5f5f5]",
                   muted && "text-[#bbb] [&_*]:text-[#bbb]!",
-                  selected && "bg-[#e6f4ff] text-[#0062df] hover:bg-[#e6f4ff]",
+                  selected && "bg-[#e6f4ff] text-primary hover:bg-[#e6f4ff]",
                   dateDisabled &&
                     "cursor-not-allowed bg-transparent text-[#bfbfbf] hover:bg-transparent [&_*]:text-[#bfbfbf]!",
                 )}
@@ -951,7 +951,7 @@ function MonthGrid({
             disabled={disabled}
             className={twMerge(
               "h-10 cursor-pointer rounded hover:bg-[#f5f5f5]",
-              selected && "bg-[#e6f4ff] text-[#0062df] hover:bg-[#e6f4ff]",
+              selected && "bg-[#e6f4ff] text-primary hover:bg-[#e6f4ff]",
               disabled && "cursor-not-allowed bg-[#f5f5f5] text-[#bfbfbf] hover:bg-[#f5f5f5]",
             )}
             onClick={() => onSelect(date)}
@@ -987,7 +987,7 @@ function YearGrid({
             disabled={disabled}
             className={twMerge(
               "h-10 cursor-pointer rounded hover:bg-[#f5f5f5]",
-              selected && "bg-[#e6f4ff] text-[#0062df] hover:bg-[#e6f4ff]",
+              selected && "bg-[#e6f4ff] text-primary hover:bg-[#e6f4ff]",
               disabled && "cursor-not-allowed bg-[#f5f5f5] text-[#bfbfbf] hover:bg-[#f5f5f5]",
             )}
             onClick={() => onSelect(date)}
@@ -1283,7 +1283,7 @@ export const DatePicker = Object.assign(BaseDatePicker, {
 }) as DatePickerComponent;
 
 const pickerRootVariants = cva(
-  "flex w-full cursor-pointer items-center gap-2 rounded border border-solid px-2.5 text-left font-pretendard font-medium text-[#111] transition-colors focus:border-[#0062df] focus:outline-none",
+  "flex w-full cursor-pointer items-center gap-2 rounded border border-solid px-2.5 text-left font-pretendard font-medium text-[#111] transition-colors focus:border-primary focus:outline-none",
   {
     variants: {
       size: { lg: "min-h-10 text-base", md: "min-h-[30px] text-sm" },
@@ -1291,12 +1291,12 @@ const pickerRootVariants = cva(
         default: "border-[#ddd] bg-white",
         filled: "border-[#f5f5f5] bg-[#f5f5f5]",
       },
-      error: { true: "border-[#ff4d4f]", false: "" },
+      error: { true: "border-danger", false: "" },
       readOnly: {
         true: "cursor-default",
         false: "",
       },
-      interactive: { true: "hover:border-[#0062df]", false: "" },
+      interactive: { true: "hover:border-primary", false: "" },
       disabled: {
         true: "cursor-not-allowed border-[#ddd] bg-[#f8f8f8] text-[#999] hover:border-[#ddd]",
         false: "",

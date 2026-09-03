@@ -188,14 +188,14 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
 TextArea.displayName = "TextArea";
 
 const textAreaRootVariants = cva(
-  "relative overflow-hidden rounded bg-white ring-1 transition-[box-shadow,background-color] ring-inset focus-within:ring-[#0062df]",
+  "relative overflow-hidden rounded bg-white ring-1 transition-[box-shadow,background-color] ring-inset focus-within:ring-primary",
   {
     variants: {
       variant: {
         default: "ring-[#ddd]",
         filled: "bg-[#f5f5f5] ring-[#f5f5f5]",
       },
-      error: { true: "ring-[#ff4d4f]", false: "" },
+      error: { true: "ring-danger", false: "" },
       disabled: { true: "bg-[#f8f8f8] ring-[#ddd]", false: "" },
     },
     defaultVariants: { variant: "default", error: false, disabled: false },

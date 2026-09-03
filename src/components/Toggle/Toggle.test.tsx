@@ -36,11 +36,14 @@ describe("Toggle", () => {
 
     const toggle = screen.getByRole("button");
     const loadingIcon = container.querySelector("svg");
-    expect(toggle).toHaveClass("cursor-default", "bg-[#6ea0fa]");
+    expect(toggle).toHaveClass("cursor-default", "bg-primary-loading");
     expect(loadingIcon).toHaveAttribute("width", "20");
     expect(loadingIcon).toHaveAttribute("height", "20");
     expect(loadingIcon).toHaveClass("animate-spin");
-    expect(loadingIcon?.querySelector("path")).toHaveAttribute("fill", "#6ea0fa");
+    expect(loadingIcon?.querySelector("path")).toHaveAttribute(
+      "fill",
+      "var(--color-primary-loading)",
+    );
 
     await user.click(toggle);
     expect(onClick).not.toHaveBeenCalled();

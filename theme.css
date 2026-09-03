@@ -1,5 +1,14 @@
-@theme {
+@theme static {
   --font-pretendard:
     "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue",
     "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
+  --color-primary: #0062df;
+  --color-primary-hover: #227cef;
+  --color-primary-loading: #6ea0fa;
+  --color-success: #52c41a;
+  --color-warning: #faad14;
+  --color-danger: #ff4d4f;
+  --color-danger-hover: #ff7875;
+  --color-navy: #023f97;
+  --color-purple: #4f19c4;
 }

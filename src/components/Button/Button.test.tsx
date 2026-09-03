@@ -16,7 +16,7 @@ describe("Button", () => {
     const button = screen.getByRole("button", { name: "저장" });
     expect(button).toHaveAttribute("type", "button");
     expect(button).toHaveAttribute("name", "save");
-    expect(button).toHaveClass("bg-[#0062df]", "h-[30px]", "whitespace-nowrap");
+    expect(button).toHaveClass("bg-primary", "h-[30px]", "whitespace-nowrap");
     expect(ref.current).toBe(button);
   });
 
@@ -70,7 +70,7 @@ describe("Button", () => {
     const { rerender } = render(<Button variant="danger">삭제</Button>);
 
     const button = screen.getByRole("button", { name: "삭제" });
-    expect(button).toHaveClass("bg-[#ff4d4f]", "text-white", "hover:bg-[#ff7875]");
+    expect(button).toHaveClass("bg-danger", "text-white", "hover:bg-danger-hover");
     expect(button).not.toHaveClass("active:bg-[#d9363e]");
 
     rerender(
@@ -78,7 +78,7 @@ describe("Button", () => {
         삭제
       </Button>,
     );
-    expect(button).toHaveClass("hover:bg-[#ff4d4f]");
+    expect(button).toHaveClass("hover:bg-danger");
     expect(button.className).not.toContain("active:bg");
 
     rerender(
@@ -175,9 +175,9 @@ describe("Button", () => {
     const button = screen.getByRole("button", { name: "저장" });
     expect(button).toHaveClass(
       "cursor-default",
-      "bg-[#6ea0fa]",
+      "bg-primary-loading",
       "opacity-100",
-      "hover:bg-[#6ea0fa]",
+      "hover:bg-primary-loading",
     );
     expect(screen.getByTestId("prefix")).toBeInTheDocument();
     expect(screen.queryByTestId("suffix")).not.toBeInTheDocument();

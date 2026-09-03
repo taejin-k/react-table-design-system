@@ -76,7 +76,7 @@ const itemSizeVariants = cva(
 );
 
 const activeItemClassName =
-  "border-[#0062df] bg-[#0062df] text-white hover:bg-[#0062df] disabled:!bg-[#0062df] disabled:!opacity-60";
+  "border-primary bg-primary text-white hover:bg-primary disabled:!bg-primary disabled:!opacity-60";
 
 export function Pagination({
   config,

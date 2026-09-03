@@ -306,7 +306,7 @@ function ResizeHandle({
     <div
       data-drawer-resize-handle
       className={twMerge(
-        "absolute z-10 transition-colors duration-200 hover:bg-[#0062df]/20",
+        "absolute z-10 transition-colors duration-200 hover:bg-primary/20",
         (placement === "left" || placement === "right") && "inset-y-0 w-2 cursor-col-resize",
         (placement === "top" || placement === "bottom") && "inset-x-0 h-2 cursor-row-resize",
         placement === "left" && "right-0",

@@ -19,125 +19,6 @@ const repositoryUrl = "https://github.com/taejin-k/react-table-design-system/blo
 
 const solidGroups: ColorGroup[] = [
   {
-    title: "Brand & Status",
-    description: "브랜드 상호작용과 성공·경고·오류처럼 의미가 명확한 상태 색상이에요.",
-    colors: [
-      {
-        hex: "#0062DF",
-        name: "Primary",
-        description: "기본 브랜드, 선택, 포커스, 로딩과 드래그 위치를 표시해요.",
-        components: [
-          "Button",
-          "Checkbox",
-          "Radio",
-          "Toggle",
-          "Input",
-          "TextArea",
-          "Select",
-          "DatePicker",
-          "TimePicker",
-          "Calendar",
-          "Menu",
-          "Dropdown",
-          "Tree",
-          "Tabs",
-          "Table",
-          "Upload",
-          "Badge",
-          "Modal",
-          "Message",
-          "Notification",
-          "ColorPicker",
-          "Tag",
-        ],
-        source: "src/components/Button/Button.tsx",
-        line: 108,
-      },
-      {
-        hex: "#227CEF",
-        name: "Primary hover",
-        description: "Primary 버튼에 마우스를 올렸을 때 사용해요.",
-        components: ["Button"],
-        source: "src/components/Button/Button.tsx",
-        line: 108,
-      },
-      {
-        hex: "#6EA0FA",
-        name: "Primary loading",
-        description: "Primary 버튼과 켜진 Toggle이 로딩 중일 때 사용해요.",
-        components: ["Button", "Toggle"],
-        source: "src/components/Button/Button.tsx",
-        line: 170,
-      },
-      {
-        hex: "#52C41A",
-        name: "Success",
-        description: "작업 성공과 정상 완료 상태를 표시해요.",
-        components: ["Badge", "Modal", "Message", "Notification", "Tag"],
-        source: "src/components/Badge/Badge.tsx",
-        line: 5,
-      },
-      {
-        hex: "#FAAD14",
-        name: "Warning",
-        description: "주의가 필요한 상태를 표시해요.",
-        components: ["Badge", "Modal", "Message", "Notification"],
-        source: "src/components/Badge/Badge.tsx",
-        line: 9,
-      },
-      {
-        hex: "#FF4D4F",
-        name: "Danger",
-        description: "삭제·실패·입력 검증과 Red Tag 등 위험·오류 상태에 사용해요.",
-        components: [
-          "Button",
-          "Badge",
-          "Upload",
-          "Dropdown",
-          "Modal",
-          "Message",
-          "Notification",
-          "Label",
-          "ErrorMessage",
-          "Input",
-          "TextArea",
-          "Select",
-          "DatePicker",
-          "TimePicker",
-          "Checkbox",
-          "Radio",
-          "Tag",
-        ],
-        source: "src/components/Button/Button.tsx",
-        line: 110,
-      },
-      {
-        hex: "#FF7875",
-        name: "Danger hover",
-        description: "Danger 버튼에 마우스를 올렸을 때 사용해요.",
-        components: ["Button"],
-        source: "src/components/Button/Button.tsx",
-        line: 110,
-      },
-      {
-        hex: "#023F97",
-        name: "Tag navy",
-        description: "Navy Tag의 글자, 테두리와 solid 배경이에요.",
-        components: ["Tag"],
-        source: "src/components/Tag/Tag.tsx",
-        line: 72,
-      },
-      {
-        hex: "#4F19C4",
-        name: "Tag purple",
-        description: "Purple Tag의 글자, 테두리와 solid 배경이에요.",
-        components: ["Tag"],
-        source: "src/components/Tag/Tag.tsx",
-        line: 120,
-      },
-    ],
-  },
-  {
     title: "Selection & Tinted Surface",
     description: "선택 배경과 Tag의 옅은 배경·테두리에 사용되는 색상이에요.",
     colors: [
@@ -618,7 +499,6 @@ const effects = [
   ["rgba(255, 255, 255, 0.70)", "ScrollFade gradient의 중심"],
   ["rgba(255, 255, 255, 0.75)", "Table loading overlay"],
   ["rgba(255, 255, 255, 0.85)", "Image preview action hover"],
-  ["rgba(0, 98, 223, 0.20)", "Drawer resize handle hover (#0062DF/20)"],
   ["rgba(0, 0, 0, 0)", "Image hover cover의 초기 상태"],
   ["transparent", "ghost·borderless·scrollbar track·gradient 끝점"],
 ] as const;
@@ -650,7 +530,6 @@ const consolidationGroups = [
   ["Disabled / muted", "#999999", "#AAAAAA", "#BBBBBB", "#BFBFBF", "#CCCCCC"],
   ["Light surface", "#F0F0F0", "#F2F2F2", "#F5F5F5", "#F8F8F8", "#FAFAFA"],
   ["Selected surface", "#E6F4FF", "#EEF0F8", "#E3E7F5"],
-  ["Blue strong", "#0062DF", "#023F97"],
 ] as const;
 
 function contrastColor(color: string) {
@@ -665,7 +544,7 @@ function contrastColor(color: string) {
 function SourceLink({ path, line, children }: { path: string; line: number; children?: string }) {
   return (
     <a
-      className="text-xs font-medium text-[#0062df] no-underline hover:underline"
+      className="text-xs font-medium text-primary no-underline hover:underline"
       href={`${repositoryUrl}/${path}#L${line}`}
       rel="noreferrer"
       target="_blank"
@@ -733,7 +612,7 @@ function SectionHeading({
 }) {
   return (
     <div className="mb-5">
-      <span className="text-xs font-semibold tracking-[0.12em] text-[#0062df] uppercase">
+      <span className="text-xs font-semibold tracking-[0.12em] text-primary uppercase">
         {eyebrow}
       </span>
       <h2 className="mt-1 mb-0 text-2xl font-semibold tracking-tight text-[#111]">{title}</h2>
@@ -786,7 +665,7 @@ function ColorInventory() {
         ].map(([href, label]) => (
           <a
             key={href}
-            className="rounded-full border border-[#d9d9d9] bg-white px-3 py-1.5 text-xs font-medium text-[#555] no-underline transition-colors hover:border-[#0062df] hover:text-[#0062df]"
+            className="rounded-full border border-[#d9d9d9] bg-white px-3 py-1.5 text-xs font-medium text-[#555] no-underline transition-colors hover:border-primary hover:text-primary"
             href={href}
           >
             {label}

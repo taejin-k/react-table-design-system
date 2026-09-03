@@ -39,7 +39,7 @@ describe("ColorPicker", () => {
 
     const trigger = screen.getByRole("button", { name: /#0062DF/ });
     expect(trigger).not.toBeDisabled();
-    expect(trigger).toHaveClass("cursor-default", "focus:border-[#0062df]", "focus:outline-none");
+    expect(trigger).toHaveClass("cursor-default", "focus:border-primary", "focus:outline-none");
 
     await userEvent.click(trigger);
 

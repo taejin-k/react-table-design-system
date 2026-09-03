@@ -389,12 +389,12 @@ function ConfirmModal({
           : "info-circle-filled";
   const iconColor =
     config.type === "success"
-      ? "#52c41a"
+      ? "var(--color-success)"
       : config.type === "error"
-        ? "#ff4d4f"
+        ? "var(--color-danger)"
         : config.type === "warning"
-          ? "#faad14"
-          : "#0062df";
+          ? "var(--color-warning)"
+          : "var(--color-primary)";
   const run = async (
     action: ModalFuncConfig["onConfirm"] | ModalFuncConfig["onCancel"],
     value: boolean,

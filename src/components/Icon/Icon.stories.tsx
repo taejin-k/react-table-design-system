@@ -91,7 +91,7 @@ function IconGallery({ args }: { args: Partial<IconProps> }) {
             icon="search"
           />
           <input
-            className="h-10 w-full rounded-md border border-[#d9d9d9] bg-white pr-3 pl-9 text-sm outline-none placeholder:text-[#999] focus:border-[#0062df]"
+            className="h-10 w-full rounded-md border border-[#d9d9d9] bg-white pr-3 pl-9 text-sm outline-none placeholder:text-[#999] focus:border-primary"
             onChange={(event) => setSearch(event.currentTarget.value)}
             placeholder="아이콘 이름 검색"
             type="search"

@@ -175,7 +175,7 @@ describe("TimePicker", () => {
     const selectedHour = within(hourColumn).getByRole("button", { name: "09" });
     const unselectedHour = within(hourColumn).getByRole("button", { name: "10" });
 
-    expect(selectedHour).toHaveClass("bg-[#e6f4ff]", "text-[#0062df]", "hover:bg-[#e6f4ff]");
+    expect(selectedHour).toHaveClass("bg-[#e6f4ff]", "text-primary", "hover:bg-[#e6f4ff]");
     expect(unselectedHour).toHaveClass("hover:bg-[#f5f5f5]");
   });
 
@@ -188,7 +188,7 @@ describe("TimePicker", () => {
     expect(trigger).toHaveClass(
       "border-[#f5f5f5]",
       "bg-[#f5f5f5]",
-      "focus:border-[#0062df]",
+      "focus:border-primary",
       "focus:outline-none",
     );
 

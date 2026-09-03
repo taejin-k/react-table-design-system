@@ -299,11 +299,17 @@ function MessageCard({
 }
 
 function TypeIcon({ type }: { type: MessageStatusType }) {
-  if (type === "loading") return <Icon icon="loading" color="#0062df" size={20} />;
-  if (type === "success") return <Icon icon="check-circle-filled" color="#52c41a" size={20} />;
-  if (type === "error") return <Icon icon="close-circle-filled" color="#ff4d4f" size={20} />;
-  if (type === "warning") return <Icon icon="warning-circle-filled" color="#faad14" size={20} />;
-  return <Icon icon="info-circle-filled" color="#0062df" size={20} />;
+  if (type === "loading") return <Icon icon="loading" color="var(--color-primary)" size={20} />;
+  if (type === "success") {
+    return <Icon icon="check-circle-filled" color="var(--color-success)" size={20} />;
+  }
+  if (type === "error") {
+    return <Icon icon="close-circle-filled" color="var(--color-danger)" size={20} />;
+  }
+  if (type === "warning") {
+    return <Icon icon="warning-circle-filled" color="var(--color-warning)" size={20} />;
+  }
+  return <Icon icon="info-circle-filled" color="var(--color-primary)" size={20} />;
 }
 
 let root: Root | null = null;

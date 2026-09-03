@@ -29,7 +29,7 @@ export const Toggle = forwardRef<HTMLButtonElement, ToggleProps>(
         <span key={size} className={knobVariants({ size, checked })}>
           {loading ? (
             <Icon
-              color={checked ? "#6ea0fa" : "#999"}
+              color={checked ? "var(--color-primary-loading)" : "#999"}
               icon="loading"
               size={loadingIconSizes[size]}
             />
@@ -49,7 +49,7 @@ const loadingIconSizes = {
 } as const;
 
 const trackVariants = cva(
-  "relative inline-flex shrink-0 cursor-pointer items-center rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0062df] disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none",
+  "relative inline-flex shrink-0 cursor-pointer items-center rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none",
   {
     variants: {
       size: {
@@ -58,7 +58,7 @@ const trackVariants = cva(
         sm: "h-[20px]",
       },
       checked: {
-        true: "bg-[#0062df]",
+        true: "bg-primary",
         false: "bg-[#ddd]",
       },
       loading: {
@@ -67,7 +67,7 @@ const trackVariants = cva(
       },
     },
     compoundVariants: [
-      { checked: true, loading: true, className: "bg-[#6ea0fa]" },
+      { checked: true, loading: true, className: "bg-primary-loading" },
       { size: "lg", className: "w-[50px]" },
       { size: "md", className: "w-[40px]" },
       { size: "sm", className: "w-[32px]" },

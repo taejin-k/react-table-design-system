@@ -95,7 +95,7 @@ describe("notification", () => {
     document
       .querySelectorAll<HTMLElement>(".wizard-notification-card [style*='animation']")
       .forEach((progress) => {
-        expect(progress).toHaveClass("bg-[#0062df]");
+        expect(progress).toHaveClass("bg-primary");
         expect(progress.style.animationPlayState).toBe("paused");
       });
   });
