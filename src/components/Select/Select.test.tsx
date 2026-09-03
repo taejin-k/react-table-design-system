@@ -117,8 +117,8 @@ describe("Select", () => {
     const designOption = within(popup).getByRole("button", { name: "Design" });
     const platformOption = within(popup).getByRole("button", { name: "Platform" });
 
-    expect(designOption).not.toHaveClass("bg-[#e6f4ff]");
-    expect(platformOption).toHaveClass("bg-[#e6f4ff]", "text-primary");
+    expect(designOption).not.toHaveClass("bg-selected");
+    expect(platformOption).toHaveClass("bg-selected", "text-primary");
   });
 
   it("searches and selects multiple options", async () => {

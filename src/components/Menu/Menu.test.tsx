@@ -14,7 +14,7 @@ describe("Menu", () => {
         event: expect.anything(),
       }),
     );
-    expect(screen.getByRole("button", { name: "대시보드" })).toHaveClass("bg-[#e6f4ff]");
+    expect(screen.getByRole("button", { name: "대시보드" })).toHaveClass("bg-selected");
   });
 
   it("preserves numeric keys in selection callbacks", async () => {

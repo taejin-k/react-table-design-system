@@ -5,10 +5,13 @@
   --color-primary: #0062df;
   --color-primary-hover: #227cef;
   --color-primary-loading: #6ea0fa;
+  --color-selected: #e6f4ff;
   --color-success: #52c41a;
   --color-warning: #faad14;
   --color-danger: #ff4d4f;
   --color-danger-hover: #ff7875;
   --color-navy: #023f97;
   --color-purple: #4f19c4;
+  --color-black: #000000;
+  --color-white: #ffffff;
 }

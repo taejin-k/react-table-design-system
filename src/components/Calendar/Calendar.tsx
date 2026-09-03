@@ -198,13 +198,11 @@ export function Calendar({
                         fullscreen && sameDate(date, today) && "border-t-primary",
                         sameDate(date, selected) &&
                           (fullscreen
-                            ? "bg-[#e6f4ff] hover:bg-[#e6f4ff]"
-                            : "bg-[#e6f4ff] text-primary hover:bg-[#e6f4ff]"),
+                            ? "bg-selected hover:bg-selected"
+                            : "bg-selected text-primary hover:bg-selected"),
                         fullscreen &&
                           disabled &&
-                          (sameDate(date, selected)
-                            ? "hover:bg-[#e6f4ff]"
-                            : "hover:bg-transparent"),
+                          (sameDate(date, selected) ? "hover:bg-selected" : "hover:bg-transparent"),
                         !fullscreen &&
                           disabled &&
                           "bg-transparent text-[#bfbfbf] hover:bg-transparent [&_*]:text-[#bfbfbf]!",

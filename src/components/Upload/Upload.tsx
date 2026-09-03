@@ -651,7 +651,7 @@ function Dragger(props: UploadProps) {
           data-upload-dragger-area
           className={twMerge(
             "flex min-h-44 w-full cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-[#d9d9d9] bg-[rgba(0,0,0,0.02)] p-4 text-center text-sm text-[#666] transition-colors hover:border-primary",
-            dragging && "border-primary bg-[#e6f4ff]",
+            dragging && "border-primary bg-selected",
             disabled && "cursor-not-allowed",
           )}
           onDragEnter={(event) => {

@@ -190,9 +190,9 @@ describe("DatePicker", () => {
     const hourColumn = document.querySelector('[data-time-column="hour"]') as HTMLElement;
     const minuteColumn = document.querySelector('[data-time-column="minute"]') as HTMLElement;
     const secondColumn = document.querySelector('[data-time-column="second"]') as HTMLElement;
-    expect(within(hourColumn).getByRole("button", { name: "03" })).toHaveClass("bg-[#e6f4ff]");
-    expect(within(minuteColumn).getByRole("button", { name: "00" })).toHaveClass("bg-[#e6f4ff]");
-    expect(within(secondColumn).getByRole("button", { name: "00" })).toHaveClass("bg-[#e6f4ff]");
+    expect(within(hourColumn).getByRole("button", { name: "03" })).toHaveClass("bg-selected");
+    expect(within(minuteColumn).getByRole("button", { name: "00" })).toHaveClass("bg-selected");
+    expect(within(secondColumn).getByRole("button", { name: "00" })).toHaveClass("bg-selected");
   });
 
   it("selects a date and time with confirmation", async () => {
@@ -259,7 +259,7 @@ describe("DatePicker", () => {
       const popup = document.querySelector("[data-datepicker-popup]") as HTMLElement;
       const selectedButton = within(popup)
         .getAllByRole("button", { name: selectedLabel })
-        .find((button) => button.classList.contains("bg-[#e6f4ff]"));
+        .find((button) => button.classList.contains("bg-selected"));
 
       expect(selectedButton).toBeDefined();
     },
@@ -284,10 +284,10 @@ describe("DatePicker", () => {
     const minuteColumn = popup.querySelector('[data-time-column="minute"]') as HTMLElement;
     const secondColumn = popup.querySelector('[data-time-column="second"]') as HTMLElement;
 
-    expect(within(hourColumn).getByRole("button", { name: "01" })).toHaveClass("bg-[#e6f4ff]");
-    expect(within(minuteColumn).getByRole("button", { name: "00" })).toHaveClass("bg-[#e6f4ff]");
-    expect(within(secondColumn).getByRole("button", { name: "00" })).toHaveClass("bg-[#e6f4ff]");
-    expect(within(popup).getByRole("button", { name: "AM" })).toHaveClass("bg-[#e6f4ff]");
+    expect(within(hourColumn).getByRole("button", { name: "01" })).toHaveClass("bg-selected");
+    expect(within(minuteColumn).getByRole("button", { name: "00" })).toHaveClass("bg-selected");
+    expect(within(secondColumn).getByRole("button", { name: "00" })).toHaveClass("bg-selected");
+    expect(within(popup).getByRole("button", { name: "AM" })).toHaveClass("bg-selected");
 
     await user.click(within(popup).getByRole("button", { name: "확인" }));
     expect(onChange.mock.calls[0]?.[0].format("YYYY-MM-DD HH:mm:ss")).toBe(

@@ -1168,7 +1168,7 @@ function OptionList({
                   disabled={disabled}
                   className={twMerge(
                     "flex h-8 w-full cursor-pointer items-center gap-2 rounded px-3 text-left transition-colors",
-                    selected && "bg-[#e6f4ff]",
+                    selected && "bg-selected",
                     selected && "font-medium text-primary",
                     !selected && index === activeIndex && "bg-[#f5f5f5]",
                     !selected && index !== activeIndex && "hover:bg-[#f5f5f5]",

@@ -879,15 +879,15 @@ function DateGrid({
             <div
               className={twMerge(
                 "relative my-0.5 flex h-8 items-center justify-center",
-                inRange && !isRangeStart && !isRangeEnd && "bg-[#e6f4ff]",
+                inRange && !isRangeStart && !isRangeEnd && "bg-selected",
                 inRange &&
                   isRangeStart &&
                   !isRangeEnd &&
-                  "after:pointer-events-none after:absolute after:inset-y-0 after:right-0 after:left-1/2 after:bg-[#e6f4ff]",
+                  "after:pointer-events-none after:absolute after:inset-y-0 after:right-0 after:left-1/2 after:bg-selected",
                 inRange &&
                   isRangeEnd &&
                   !isRangeStart &&
-                  "before:pointer-events-none before:absolute before:inset-y-0 before:right-1/2 before:left-0 before:bg-[#e6f4ff]",
+                  "before:pointer-events-none before:absolute before:inset-y-0 before:right-1/2 before:left-0 before:bg-selected",
                 dateDisabled && "bg-[#f5f5f5]",
               )}
             >
@@ -897,7 +897,7 @@ function DateGrid({
                 className={twMerge(
                   "relative z-[1] flex size-8 cursor-pointer items-center justify-center rounded hover:bg-[#f5f5f5]",
                   muted && "text-[#bbb] [&_*]:text-[#bbb]!",
-                  selected && "bg-[#e6f4ff] text-primary hover:bg-[#e6f4ff]",
+                  selected && "bg-selected text-primary hover:bg-selected",
                   dateDisabled &&
                     "cursor-not-allowed bg-transparent text-[#bfbfbf] hover:bg-transparent [&_*]:text-[#bfbfbf]!",
                 )}
@@ -951,7 +951,7 @@ function MonthGrid({
             disabled={disabled}
             className={twMerge(
               "h-10 cursor-pointer rounded hover:bg-[#f5f5f5]",
-              selected && "bg-[#e6f4ff] text-primary hover:bg-[#e6f4ff]",
+              selected && "bg-selected text-primary hover:bg-selected",
               disabled && "cursor-not-allowed bg-[#f5f5f5] text-[#bfbfbf] hover:bg-[#f5f5f5]",
             )}
             onClick={() => onSelect(date)}
@@ -987,7 +987,7 @@ function YearGrid({
             disabled={disabled}
             className={twMerge(
               "h-10 cursor-pointer rounded hover:bg-[#f5f5f5]",
-              selected && "bg-[#e6f4ff] text-primary hover:bg-[#e6f4ff]",
+              selected && "bg-selected text-primary hover:bg-selected",
               disabled && "cursor-not-allowed bg-[#f5f5f5] text-[#bfbfbf] hover:bg-[#f5f5f5]",
             )}
             onClick={() => onSelect(date)}

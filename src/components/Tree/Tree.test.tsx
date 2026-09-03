@@ -117,8 +117,8 @@ describe("Tree", () => {
       <Tree treeData={treeData} defaultExpandedKeys={["parent"]} defaultSelectedKeys={["child"]} />,
     );
     const title = screen.getByText("하위");
-    expect(title.parentElement).toHaveClass("bg-[#e6f4ff]");
-    expect(title).not.toHaveClass("bg-[#e6f4ff]");
+    expect(title.parentElement).toHaveClass("bg-selected");
+    expect(title).not.toHaveClass("bg-selected");
     expect(title).toHaveClass("relative", "-top-px");
 
     rerender(
@@ -155,7 +155,7 @@ describe("Tree", () => {
 
     expect(selectionContent).not.toHaveClass("cursor-pointer");
     expect(selectionContent).not.toHaveClass("hover:bg-[#f5f5f5]");
-    expect(selectionContent).toHaveClass("bg-[#e6f4ff]");
+    expect(selectionContent).toHaveClass("bg-selected");
 
     rerender(
       <Tree
@@ -174,7 +174,7 @@ describe("Tree", () => {
     );
     const selectionContent = document.querySelector('[data-tree-selection-content="item"]');
 
-    expect(selectionContent).toHaveClass("bg-[#e6f4ff]", "text-primary");
+    expect(selectionContent).toHaveClass("bg-selected", "text-primary");
 
     rerender(
       <Tree
@@ -184,7 +184,7 @@ describe("Tree", () => {
       />,
     );
     const disabledSelectionContent = document.querySelector('[data-tree-selection-content="item"]');
-    expect(disabledSelectionContent).not.toHaveClass("bg-[#e6f4ff]");
+    expect(disabledSelectionContent).not.toHaveClass("bg-selected");
     expect(disabledSelectionContent).not.toHaveClass("text-primary");
     expect(disabledSelectionContent).toHaveClass("cursor-not-allowed");
   });
@@ -209,7 +209,7 @@ describe("Tree", () => {
     const selectionContent = document.querySelector('[data-tree-selection-content="icon-node"]');
     expect(icon).toHaveClass("w-4");
     expect(icon).not.toHaveClass("mr-1");
-    expect(selectionContent).toHaveClass("bg-[#e6f4ff]");
+    expect(selectionContent).toHaveClass("bg-selected");
     expect(selectionContent).toContainElement(icon as HTMLElement);
   });
 

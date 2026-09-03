@@ -23,7 +23,6 @@ export interface DropdownItem {
   icon?: ReactNode;
   extra?: ReactNode;
   disabled?: boolean;
-  danger?: boolean;
   type?: DropdownItemType;
   children?: DropdownItem[];
   onClick?: (info: DropdownClickInfo) => void;

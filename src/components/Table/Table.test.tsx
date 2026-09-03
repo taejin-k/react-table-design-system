@@ -931,6 +931,10 @@ describe("Table regressions", () => {
     await user.click(radios[1]);
     expect(radios[0]).not.toBeChecked();
     expect(radios[1]).toBeChecked();
+    expect(screen.getByText("이서연").closest("tr")).toHaveClass(
+      "[&>td]:bg-[#eef0f8]",
+      "hover:[&>td]:bg-selected",
+    );
     expect(onChange).toHaveBeenLastCalledWith(["2"], [rows[1]]);
   });
 

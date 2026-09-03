@@ -8,7 +8,7 @@ describe("Calendar", () => {
   it("normalizes a serialized legacy value without crashing", () => {
     render(<Calendar fullscreen={false} defaultValue={"2026-08-20" as never} />);
 
-    expect(screen.getByRole("button", { name: "20" })).toHaveClass("bg-[#e6f4ff]");
+    expect(screen.getByRole("button", { name: "20" })).toHaveClass("bg-selected");
   });
 
   it("selects a date", async () => {
@@ -68,9 +68,9 @@ describe("Calendar", () => {
     expect(selectedDate).toHaveClass(
       "size-8",
       "rounded",
-      "bg-[#e6f4ff]",
+      "bg-selected",
       "text-primary",
-      "hover:bg-[#e6f4ff]",
+      "hover:bg-selected",
     );
     expect(screen.getByRole("button", { name: "21" })).toHaveClass("hover:bg-[#f5f5f5]");
   });
@@ -87,7 +87,7 @@ describe("Calendar", () => {
     render(<Calendar defaultValue={dayjs("2026-08-20")} />);
 
     expect(screen.getByRole("button", { name: "21" })).toHaveClass("hover:bg-[#f5f5f5]");
-    expect(screen.getByRole("button", { name: "20" })).toHaveClass("hover:bg-[#e6f4ff]");
+    expect(screen.getByRole("button", { name: "20" })).toHaveClass("hover:bg-selected");
   });
 
   it("does not show a hover background on disabled fullscreen dates", () => {

@@ -689,8 +689,8 @@ export function Tree({
                   "inline-flex min-h-6 min-w-0 items-center rounded-md transition-colors",
                   fullWidth && "flex-1",
                   nodeSelectable && "cursor-pointer hover:bg-[#f5f5f5]",
-                  isSelected && !nodeDisabled && "bg-[#e6f4ff] text-primary",
-                  isSelected && nodeSelectable && "hover:bg-[#e6f4ff]",
+                  isSelected && !nodeDisabled && "bg-selected text-primary",
+                  isSelected && nodeSelectable && "hover:bg-selected",
                   nodeDisabled && "cursor-not-allowed",
                 )}
                 onClick={() => select(node)}

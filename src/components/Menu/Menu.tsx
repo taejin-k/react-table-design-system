@@ -275,7 +275,7 @@ export function Menu({
             disabled={item.disabled}
             className={twMerge(
               "relative block h-10 w-full cursor-pointer overflow-hidden rounded-md px-3 text-left text-sm text-[#111] transition-colors duration-200 outline-none hover:bg-[#f5f5f5] motion-reduce:transition-none",
-              active && "bg-[#e6f4ff] text-primary",
+              active && "bg-selected text-primary",
               item.disabled && "cursor-not-allowed opacity-40 hover:bg-transparent",
             )}
             style={{

@@ -8,71 +8,122 @@ type ColorToken = {
   swatchClass: string;
 };
 
+type ColorGroup = {
+  name: string;
+  description: string;
+  colors: ColorToken[];
+};
+
 const repositoryUrl = "https://github.com/taejin-k/react-table-design-system/blob/main";
 
-const colorTokens: ColorToken[] = [
+const colorGroups: ColorGroup[] = [
   {
-    name: "Primary",
-    token: "primary",
-    hex: "#0062DF",
-    description: "저장·확인 같은 주요 동작과 선택·포커스 상태를 강조할 때 사용해요.",
-    swatchClass: "bg-primary",
+    name: "Brand & selection",
+    description: "주요 동작과 선택 상태에 사용하는 파란색 계열이에요.",
+    colors: [
+      {
+        name: "Primary",
+        token: "primary",
+        hex: "#0062DF",
+        description: "저장·확인 같은 주요 동작과 선택·포커스 상태를 강조할 때 사용해요.",
+        swatchClass: "bg-primary",
+      },
+      {
+        name: "Primary hover",
+        token: "primary-hover",
+        hex: "#227CEF",
+        description: "Primary 요소에 마우스를 올려 상호작용할 수 있음을 보여줄 때 사용해요.",
+        swatchClass: "bg-primary-hover",
+      },
+      {
+        name: "Primary loading",
+        token: "primary-loading",
+        hex: "#6EA0FA",
+        description: "Primary 버튼이나 활성화된 Toggle이 처리 중임을 나타낼 때 사용해요.",
+        swatchClass: "bg-primary-loading",
+      },
+      {
+        name: "Selected",
+        token: "selected",
+        hex: "#E6F4FF",
+        description: "선택된 항목과 드래그 영역처럼 활성화된 면의 배경에 사용해요.",
+        swatchClass: "bg-selected",
+      },
+    ],
   },
   {
-    name: "Primary hover",
-    token: "primary-hover",
-    hex: "#227CEF",
-    description: "Primary 요소에 마우스를 올려 상호작용할 수 있음을 보여줄 때 사용해요.",
-    swatchClass: "bg-primary-hover",
+    name: "Status",
+    description: "결과와 주의 상태를 빠르게 구분하는 색상이에요.",
+    colors: [
+      {
+        name: "Success",
+        token: "success",
+        hex: "#52C41A",
+        description: "작업이 성공했거나 정상적으로 완료된 상태를 알려줄 때 사용해요.",
+        swatchClass: "bg-success",
+      },
+      {
+        name: "Warning",
+        token: "warning",
+        hex: "#FAAD14",
+        description: "사용자의 확인이 필요하거나 주의해야 할 상태를 알려줄 때 사용해요.",
+        swatchClass: "bg-warning",
+      },
+      {
+        name: "Danger",
+        token: "danger",
+        hex: "#FF4D4F",
+        description: "삭제 같은 위험한 동작과 실패·입력 오류 상태를 표시할 때 사용해요.",
+        swatchClass: "bg-danger",
+      },
+      {
+        name: "Danger hover",
+        token: "danger-hover",
+        hex: "#FF7875",
+        description: "Danger 요소에 마우스를 올려 위험 동작을 선택할 수 있음을 보여줘요.",
+        swatchClass: "bg-danger-hover",
+      },
+    ],
   },
   {
-    name: "Primary loading",
-    token: "primary-loading",
-    hex: "#6EA0FA",
-    description: "Primary 버튼이나 활성화된 Toggle이 처리 중임을 나타낼 때 사용해요.",
-    swatchClass: "bg-primary-loading",
+    name: "Category",
+    description: "브랜드와 상태 색상 외의 범주를 구분할 때 사용해요.",
+    colors: [
+      {
+        name: "Navy",
+        token: "navy",
+        hex: "#023F97",
+        description: "Primary와 구분되는 짙은 파란색 범주나 Navy Tag를 표시할 때 사용해요.",
+        swatchClass: "bg-navy",
+      },
+      {
+        name: "Purple",
+        token: "purple",
+        hex: "#4F19C4",
+        description: "Primary와 구분되는 보라색 범주나 Purple Tag를 표시할 때 사용해요.",
+        swatchClass: "bg-purple",
+      },
+    ],
   },
   {
-    name: "Success",
-    token: "success",
-    hex: "#52C41A",
-    description: "작업이 성공했거나 정상적으로 완료된 상태를 알려줄 때 사용해요.",
-    swatchClass: "bg-success",
-  },
-  {
-    name: "Warning",
-    token: "warning",
-    hex: "#FAAD14",
-    description: "사용자의 확인이 필요하거나 주의해야 할 상태를 알려줄 때 사용해요.",
-    swatchClass: "bg-warning",
-  },
-  {
-    name: "Danger",
-    token: "danger",
-    hex: "#FF4D4F",
-    description: "삭제 같은 위험한 동작과 실패·입력 오류 상태를 표시할 때 사용해요.",
-    swatchClass: "bg-danger",
-  },
-  {
-    name: "Danger hover",
-    token: "danger-hover",
-    hex: "#FF7875",
-    description: "Danger 요소에 마우스를 올려 위험 동작을 선택할 수 있음을 보여줘요.",
-    swatchClass: "bg-danger-hover",
-  },
-  {
-    name: "Navy",
-    token: "navy",
-    hex: "#023F97",
-    description: "Primary와 구분되는 짙은 파란색 범주나 Navy Tag를 표시할 때 사용해요.",
-    swatchClass: "bg-navy",
-  },
-  {
-    name: "Purple",
-    token: "purple",
-    hex: "#4F19C4",
-    description: "Primary와 구분되는 보라색 범주나 Purple Tag를 표시할 때 사용해요.",
-    swatchClass: "bg-purple",
+    name: "Neutral",
+    description: "기본 글자와 배경에 사용하는 가장 강한 중립 색상이에요.",
+    colors: [
+      {
+        name: "Black",
+        token: "black",
+        hex: "#000000",
+        description: "가장 강한 대비가 필요한 글자와 아이콘에 사용해요.",
+        swatchClass: "bg-black",
+      },
+      {
+        name: "White",
+        token: "white",
+        hex: "#FFFFFF",
+        description: "기본 화면 배경과 어두운 색상 위의 글자·아이콘에 사용해요.",
+        swatchClass: "border-b border-[#e1e6ed] bg-white",
+      },
+    ],
   },
 ];
 
@@ -143,9 +194,17 @@ function ColorGuide() {
             </p>
           </div>
         </div>
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-          {colorTokens.map((color) => (
-            <ColorCard key={color.token} color={color} />
+        <div className="space-y-12">
+          {colorGroups.map((group) => (
+            <div key={group.name}>
+              <h3 className="m-0 text-lg font-semibold text-[#111]">{group.name}</h3>
+              <p className="mt-1 mb-5 text-sm leading-6 text-[#777]">{group.description}</p>
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+                {group.colors.map((color) => (
+                  <ColorCard key={color.token} color={color} />
+                ))}
+              </div>
+            </div>
           ))}
         </div>
       </section>

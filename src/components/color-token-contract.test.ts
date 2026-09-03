@@ -13,18 +13,25 @@ const tokens = {
   primary: "#0062df",
   "primary-hover": "#227cef",
   "primary-loading": "#6ea0fa",
+  selected: "#e6f4ff",
   success: "#52c41a",
   warning: "#faad14",
   danger: "#ff4d4f",
   "danger-hover": "#ff7875",
   navy: "#023f97",
   purple: "#4f19c4",
+  black: "#000000",
+  white: "#ffffff",
 } as const;
 
 const presentationSources = import.meta.glob<string>(
   ["./**/*.tsx", "!./**/*.stories.tsx", "!./**/*.test.tsx", "!./ColorPicker/ColorPicker.tsx"],
   { eager: true, import: "default", query: "?raw" },
 );
+
+const presentationTokenValues = Object.entries(tokens)
+  .filter(([name]) => name !== "black" && name !== "white")
+  .map(([, value]) => value);
 
 describe("semantic color token contract", () => {
   it("defines every semantic color as a static Tailwind theme token", () => {
@@ -37,7 +44,7 @@ describe("semantic color token contract", () => {
   });
 
   it("keeps semantic presentation colors out of component implementations", () => {
-    const hardcodedToken = new RegExp(Object.values(tokens).join("|"), "i");
+    const hardcodedToken = new RegExp(presentationTokenValues.join("|"), "i");
 
     for (const [path, source] of Object.entries(presentationSources)) {
       expect(source, path).not.toMatch(hardcodedToken);

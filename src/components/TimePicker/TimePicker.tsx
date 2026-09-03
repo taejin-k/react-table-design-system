@@ -567,7 +567,7 @@ export function TimePanel({
                 disabled={disabled}
                 className={twMerge(
                   "h-8 w-full shrink-0 cursor-pointer rounded hover:bg-[#f5f5f5]",
-                  isSelected && "bg-[#e6f4ff] text-primary hover:bg-[#e6f4ff]",
+                  isSelected && "bg-selected text-primary hover:bg-selected",
                   disabled && "cursor-not-allowed text-[#ccc] hover:bg-transparent",
                 )}
                 onClick={() =>
@@ -652,7 +652,7 @@ function TimeColumn({
             disabled={valueDisabled}
             className={twMerge(
               "h-8 w-full shrink-0 cursor-pointer rounded hover:bg-[#f5f5f5]",
-              selected === value && "bg-[#e6f4ff] font-medium text-primary hover:bg-[#e6f4ff]",
+              selected === value && "bg-selected font-medium text-primary hover:bg-selected",
               valueDisabled && "cursor-not-allowed text-[#ccc] hover:bg-transparent",
             )}
             onMouseEnter={() => onPreview?.(value)}

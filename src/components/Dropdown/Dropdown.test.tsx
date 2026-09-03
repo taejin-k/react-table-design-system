@@ -6,7 +6,7 @@ import { Dropdown } from "./Dropdown";
 const items = [
   { value: "edit", label: "수정" },
   { value: "disabled", label: "이동", disabled: true },
-  { value: "delete", label: "삭제", danger: true },
+  { value: "delete", label: "삭제" },
 ];
 
 describe("Dropdown", () => {

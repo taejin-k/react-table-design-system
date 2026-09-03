@@ -53,7 +53,7 @@ describe("TimePicker", () => {
     const popup = document.querySelector("[data-timepicker-popup]") as HTMLElement;
     const hourColumn = popup.querySelector('[data-time-column="hour"]') as HTMLElement;
 
-    expect(within(hourColumn).getByRole("button", { name: "00" })).toHaveClass("bg-[#e6f4ff]");
+    expect(within(hourColumn).getByRole("button", { name: "00" })).toHaveClass("bg-selected");
   });
 
   it("uses 01 AM as the initial 12-hour option", async () => {
@@ -64,8 +64,8 @@ describe("TimePicker", () => {
     const popup = document.querySelector("[data-timepicker-popup]") as HTMLElement;
     const hourColumn = popup.querySelector('[data-time-column="hour"]') as HTMLElement;
 
-    expect(within(hourColumn).getByRole("button", { name: "01" })).toHaveClass("bg-[#e6f4ff]");
-    expect(within(popup).getByRole("button", { name: "AM" })).toHaveClass("bg-[#e6f4ff]");
+    expect(within(hourColumn).getByRole("button", { name: "01" })).toHaveClass("bg-selected");
+    expect(within(popup).getByRole("button", { name: "AM" })).toHaveClass("bg-selected");
   });
 
   it("resets the open time panel when the value is cleared", async () => {
@@ -79,9 +79,9 @@ describe("TimePicker", () => {
     const hourColumn = document.querySelector('[data-time-column="hour"]') as HTMLElement;
     const minuteColumn = document.querySelector('[data-time-column="minute"]') as HTMLElement;
     const secondColumn = document.querySelector('[data-time-column="second"]') as HTMLElement;
-    expect(within(hourColumn).getByRole("button", { name: "00" })).toHaveClass("bg-[#e6f4ff]");
-    expect(within(minuteColumn).getByRole("button", { name: "00" })).toHaveClass("bg-[#e6f4ff]");
-    expect(within(secondColumn).getByRole("button", { name: "00" })).toHaveClass("bg-[#e6f4ff]");
+    expect(within(hourColumn).getByRole("button", { name: "00" })).toHaveClass("bg-selected");
+    expect(within(minuteColumn).getByRole("button", { name: "00" })).toHaveClass("bg-selected");
+    expect(within(secondColumn).getByRole("button", { name: "00" })).toHaveClass("bg-selected");
     expect(screen.getByRole("button", { name: "시간을 선택하세요" })).toBeInTheDocument();
   });
 
@@ -99,7 +99,7 @@ describe("TimePicker", () => {
     await user.click(trigger.querySelector("svg") as Element);
 
     const hourColumn = document.querySelector('[data-time-column="hour"]') as HTMLElement;
-    expect(within(hourColumn).getByRole("button", { name: "03" })).toHaveClass("bg-[#e6f4ff]");
+    expect(within(hourColumn).getByRole("button", { name: "03" })).toHaveClass("bg-selected");
   });
 
   it("selects time values", async () => {
@@ -175,7 +175,7 @@ describe("TimePicker", () => {
     const selectedHour = within(hourColumn).getByRole("button", { name: "09" });
     const unselectedHour = within(hourColumn).getByRole("button", { name: "10" });
 
-    expect(selectedHour).toHaveClass("bg-[#e6f4ff]", "text-primary", "hover:bg-[#e6f4ff]");
+    expect(selectedHour).toHaveClass("bg-selected", "text-primary", "hover:bg-selected");
     expect(unselectedHour).toHaveClass("hover:bg-[#f5f5f5]");
   });
 

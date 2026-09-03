@@ -10,10 +10,10 @@ const storyDescription = (id: string) => ({
   docs: { description: { story: storyDescriptions[id] } },
 });
 const item =
-  "flex h-12 min-w-20 items-center justify-center rounded bg-[#e6f4ff] px-4 text-center text-sm text-primary";
-const flexItem = "h-12 min-w-20 rounded bg-[#e6f4ff] px-4 text-center text-sm text-primary";
+  "flex h-12 min-w-20 items-center justify-center rounded bg-selected px-4 text-center text-sm text-primary";
+const flexItem = "h-12 min-w-20 rounded bg-selected px-4 text-center text-sm text-primary";
 const alignItem =
-  "flex h-12 w-20 min-w-0 items-center justify-center rounded bg-[#e6f4ff] px-2 text-center text-sm text-primary";
+  "flex h-12 w-20 min-w-0 items-center justify-center rounded bg-selected px-2 text-center text-sm text-primary";
 const label = "m-0 text-sm font-medium text-[#555]";
 const flexWrapOptions = [false, true, "nowrap", "wrap", "wrap-reverse"];
 const flexJustifyOptions = [
@@ -292,7 +292,7 @@ export const Justify: Story = {
     docs: {
       ...storyDescription("components-flex--justify").docs,
       source: {
-        code: withStoryImports(`const itemClass = "flex h-12 min-w-20 items-center justify-center rounded bg-[#e6f4ff] px-4 text-sm text-primary";
+        code: withStoryImports(`const itemClass = "flex h-12 min-w-20 items-center justify-center rounded bg-selected px-4 text-sm text-primary";
 const rowClass = "rounded border border-[#ddd] p-3";
 const labelClass = "m-0 text-sm font-medium text-[#555]";
 
@@ -373,7 +373,7 @@ export const Align: Story = {
     docs: {
       ...storyDescription("components-flex--align").docs,
       source: {
-        code: withStoryImports(`const itemClass = "flex h-12 w-20 min-w-0 items-center justify-center rounded bg-[#e6f4ff] px-2 text-center text-sm text-primary";
+        code: withStoryImports(`const itemClass = "flex h-12 w-20 min-w-0 items-center justify-center rounded bg-selected px-2 text-center text-sm text-primary";
 const labelClass = "m-0 text-sm font-medium text-[#555]";
 
 function FlexAlign() {
@@ -499,7 +499,7 @@ export const FlexValue: Story = {
     docs: {
       ...storyDescription("components-flex--flex").docs,
       source: {
-        code: withStoryImports(`const itemClass = "h-12 min-w-20 rounded bg-[#e6f4ff] px-4 text-sm text-primary";
+        code: withStoryImports(`const itemClass = "h-12 min-w-20 rounded bg-selected px-4 text-sm text-primary";
 
 function FlexValue() {
   return (

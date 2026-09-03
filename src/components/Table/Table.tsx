@@ -1299,7 +1299,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
       depth > 0 && "[&>td]:bg-[#fafafa]",
       rowHoverable && "hover:[&>td]:bg-[#f5f5f5]",
       expandable?.expandRowByClick && canExpand && "cursor-pointer",
-      controlledSelected.has(key) && "[&>td]:bg-[#eef0f8] hover:[&>td]:bg-[#e3e7f5]",
+      controlledSelected.has(key) && "[&>td]:bg-[#eef0f8] hover:[&>td]:bg-selected",
       rowProps.className,
     );
     const checkboxProps = rowSelection?.getCheckboxProps?.(record) ?? {};

@@ -55,7 +55,7 @@ const richItems: DropdownItem[] = [
       { value: "mail", label: "메일로 보내기" },
     ],
   },
-  { value: "delete", label: "삭제", danger: true, icon: <Icon icon="delete-outlined" /> },
+  { value: "delete", label: "삭제", icon: <Icon icon="delete-outlined" /> },
 ];
 
 const storyDescription = (id: string) => ({
@@ -133,7 +133,6 @@ const meta = {
 | \`icon\` | 메뉴 이름 앞에 아이콘을 표시해요. | \`ReactNode\` | - |
 | \`extra\` | 메뉴 이름 뒤에 보조 내용을 표시해요. | \`ReactNode\` | - |
 | \`disabled\` | 메뉴 항목을 선택할 수 없게 해요. | \`boolean\` | \`false\` |
-| \`danger\` | 위험 작업의 색상을 적용해요. | \`boolean\` | \`false\` |
 | \`type\` | 일반 항목, 구분선, 그룹을 설정해요. | [\`DropdownItemType\`](#dropdown-item-type) | \`item\` |
 | \`children\` | 오른쪽에 열리는 하위 메뉴를 설정해요. | [\`DropdownItem[]\`](#dropdownitem) | - |
 | \`onClick\` | 해당 항목을 클릭할 때 실행할 함수예요. | (info: [\`DropdownClickInfo\`](#dropdownclickinfo)) => void | - |
@@ -406,7 +405,7 @@ export const MenuItems: Story = {
       { value: 'mail', label: '메일로 보내기' },
     ],
   },
-  { value: 'delete', label: '삭제', danger: true, icon: <Icon icon="delete-outlined" /> },
+  { value: 'delete', label: '삭제', icon: <Icon icon="delete-outlined" /> },
 ];
 
 function DropdownMenuItems() {
