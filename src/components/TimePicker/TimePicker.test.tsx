@@ -25,7 +25,23 @@ describe("TimePicker", () => {
     );
     // @ts-expect-error A single picker does not accept an array.
     const invalid = <TimePicker value={[dayjs()]} />;
-    expect([single, multiple, invalid]).toHaveLength(3);
+    // @ts-expect-error TimePicker only supports md and lg.
+    const invalidSize = <TimePicker size="sm" />;
+    // @ts-expect-error allowClear only accepts a boolean.
+    const invalidClear = <TimePicker allowClear={{ clearIcon: <span /> }} />;
+    // @ts-expect-error changeOnScroll is not a TimePicker API.
+    const invalidScroll = <TimePicker changeOnScroll />;
+    // @ts-expect-error previewValue is not a TimePicker API.
+    const invalidPreview = <TimePicker previewValue="hover" />;
+    expect([
+      single,
+      multiple,
+      invalid,
+      invalidSize,
+      invalidClear,
+      invalidScroll,
+      invalidPreview,
+    ]).toHaveLength(7);
   });
 
   it("emits undefined on clear and clears a controlled undefined value", () => {
@@ -222,6 +238,39 @@ describe("TimePicker", () => {
     expect(onChange.mock.calls[0]?.[1]).toEqual(["09:00:00", "10:00:00", "13:30:00"]);
   });
 
+  it("allows multiple selection to opt out of its default confirmation", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(
+      <TimePicker
+        multiple
+        needConfirm={false}
+        defaultValue={[dayjs("2026-08-20 09:00:00")]}
+        onChange={onChange}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: /09:00:00/ }));
+    const hourColumn = document.querySelector('[data-time-column="hour"]') as HTMLElement;
+    await user.click(within(hourColumn).getByRole("button", { name: "10" }));
+
+    expect(onChange).toHaveBeenCalledOnce();
+    expect(screen.queryByRole("button", { name: "확인" })).not.toBeInTheDocument();
+  });
+
+  it("marks multiple tags for the same layout animation used by date and select pickers", () => {
+    render(
+      <TimePicker
+        multiple
+        defaultValue={[dayjs("2026-08-20 09:00:00"), dayjs("2026-08-20 13:30:00")]}
+      />,
+    );
+
+    const tags = document.querySelectorAll("[data-timepicker-tag]");
+    expect(tags[0]).toHaveAttribute("data-timepicker-layout-key", "tag:09:00:00");
+    expect(tags[1]).toHaveAttribute("data-timepicker-layout-key", "tag:13:30:00");
+  });
+
   it("removes one multiple time from its tag", async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
@@ -321,6 +370,29 @@ describe("TimePicker", () => {
     await user.click(screen.getByRole("button", { name: "시간을 선택하세요" }));
     const popup = document.querySelector("[data-timepicker-popup]") as HTMLElement;
     expect(within(popup).getAllByRole("button", { name: "01" })[0]).toBeDisabled();
+  });
+
+  it("moves disabled dependent minute and second values to the earliest available values", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(
+      <TimePicker
+        defaultValue={dayjs("2026-08-20 06:00:00")}
+        disabledTime={() => ({
+          disabledMinutes: (hour) => (hour === 9 ? [0, 1, 2] : []),
+          disabledSeconds: (hour, minute) => (hour === 9 && minute === 3 ? [0, 1] : []),
+        })}
+        onChange={onChange}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: /06:00:00/ }));
+    const hourColumn = document.querySelector('[data-time-column="hour"]') as HTMLElement;
+    await user.click(within(hourColumn).getByRole("button", { name: "09" }));
+
+    expect(onChange.mock.calls[0]?.[0].format("HH:mm:ss")).toBe("09:03:02");
+    expect(onChange.mock.calls[0]?.[1]).toBe("09:03:02");
+    expect(screen.getByRole("button", { name: /09:03:02/ })).toBeInTheDocument();
   });
 
   it("does not allow the current-time shortcut when that time is disabled", async () => {

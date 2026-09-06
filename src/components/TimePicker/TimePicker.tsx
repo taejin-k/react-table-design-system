@@ -1,5 +1,5 @@
 import { createPortal } from "react-dom";
-import { useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { cva } from "class-variance-authority";
 import dayjs, { type Dayjs } from "dayjs";
 import { twMerge } from "tailwind-merge";
@@ -23,8 +23,8 @@ interface TimeParts {
 const multipleTagSizeClasses = {
   lg: "h-8",
   md: "h-[22px]",
-  sm: "h-4 px-1 text-[10px]",
 } as const;
+type TimePickerLayoutPosition = { left: number; top: number };
 
 function pad(value: number) {
   return String(value).padStart(2, "0");
@@ -143,6 +143,59 @@ function isTimeDisabled(
   );
 }
 
+function resolveSelectableTime(
+  preferred: TimeParts,
+  {
+    use12Hours,
+    showSecond,
+    hourStep,
+    minuteStep,
+    secondStep,
+    disabledTime,
+  }: Pick<
+    TimePickerProps,
+    "use12Hours" | "showSecond" | "hourStep" | "minuteStep" | "secondStep" | "disabledTime"
+  >,
+): TimeParts {
+  const disabled = disabledTime?.(dayjs()) ?? {};
+  const displayedHours = numberSteps(use12Hours ? 13 : 24, hourStep ?? 1, use12Hours ? 1 : 0);
+  const availableHours = use12Hours
+    ? [
+        ...displayedHours.map((hour) => toTwentyFourHour(hour, false)),
+        ...displayedHours.map((hour) => toTwentyFourHour(hour, true)),
+      ]
+    : displayedHours;
+  const allowedHours = Array.from(new Set(availableHours))
+    .filter((hour) => !(disabled.disabledHours?.() ?? []).includes(hour))
+    .sort((first, second) => first - second);
+  const hours = allowedHours.includes(preferred.hour)
+    ? [preferred.hour, ...allowedHours.filter((hour) => hour !== preferred.hour)]
+    : allowedHours;
+  const minuteValues = numberSteps(60, minuteStep ?? 1);
+  const secondValues = numberSteps(60, secondStep ?? 1);
+
+  for (const hour of hours) {
+    const allowedMinutes = minuteValues.filter(
+      (minute) => !(disabled.disabledMinutes?.(hour) ?? []).includes(minute),
+    );
+    const minutes = allowedMinutes.includes(preferred.minute)
+      ? [preferred.minute, ...allowedMinutes.filter((minute) => minute !== preferred.minute)]
+      : allowedMinutes;
+    for (const minute of minutes) {
+      if (!showSecond) return { hour, minute, second: 0 };
+      const allowedSeconds = secondValues.filter(
+        (second) => !(disabled.disabledSeconds?.(hour, minute) ?? []).includes(second),
+      );
+      const second = allowedSeconds.includes(preferred.second)
+        ? preferred.second
+        : allowedSeconds[0];
+      if (second !== undefined) return { hour, minute, second };
+    }
+  }
+
+  return preferred;
+}
+
 function BaseTimePicker(props: TimePickerProps<boolean>) {
   const {
     value,
@@ -164,12 +217,10 @@ function BaseTimePicker(props: TimePickerProps<boolean>) {
     hourStep = 1,
     minuteStep = 1,
     secondStep = 1,
-    needConfirm = false,
-    changeOnScroll = false,
+    needConfirm = multiple,
     disabledTime,
     hideDisabled = false,
     showNow = true,
-    previewValue = false,
     cellRender,
     format,
     open,
@@ -188,6 +239,7 @@ function BaseTimePicker(props: TimePickerProps<boolean>) {
         timeValueKey(first, true).localeCompare(timeValueKey(second, true)),
       )
     : sourceValues;
+  const selectedValuesKey = selectedValues.map((item) => timeValueKey(item, true)).join("\u0000");
   const initialValidationValue = multiple ? selectedValues : selectedValues[0];
   const { displayedErrorMessage, hasError, validateErrorMessage } = useErrorMessageValidation(
     errorMessage,
@@ -195,7 +247,15 @@ function BaseTimePicker(props: TimePickerProps<boolean>) {
   );
   const selectedValue = sourceValues[multiple ? sourceValues.length - 1 : 0] ?? null;
   const resolvedShowSecond = showSecond && (!format || format.includes("s"));
-  const resolvedNeedConfirm = needConfirm || multiple;
+  const resolvedNeedConfirm = needConfirm;
+  const multipleTriggerRef = useRef<HTMLButtonElement>(null);
+  const multipleTagContainerRef = useRef<HTMLSpanElement>(null);
+  const previousMultipleHeightRef = useRef<number | null>(null);
+  const multipleHeightAnimationRef = useRef<Animation | null>(null);
+  const previousMultipleLayoutRectsRef = useRef(new Map<string, TimePickerLayoutPosition>());
+  const multipleLayoutAnimationsRef = useRef(
+    new Map<string, { element: HTMLElement; animation: Animation }>(),
+  );
   const initialPanelTime = () =>
     selectedValue
       ? parseTime(selectedValue)
@@ -208,7 +268,6 @@ function BaseTimePicker(props: TimePickerProps<boolean>) {
           disabledTime,
         });
   const [pending, setPending] = useState<TimeParts>(initialPanelTime);
-  const [preview, setPreview] = useState<TimeParts | null>(null);
   const [panelResetKey, setPanelResetKey] = useState(0);
   const floating = useFloatingLayer({
     placement,
@@ -276,8 +335,16 @@ function BaseTimePicker(props: TimePickerProps<boolean>) {
   };
 
   const selectParts = (nextParts: TimeParts) => {
-    setPending(nextParts);
-    if (!resolvedNeedConfirm) commitTime(nextParts);
+    const resolvedParts = resolveSelectableTime(nextParts, {
+      use12Hours,
+      showSecond: resolvedShowSecond,
+      hourStep,
+      minuteStep,
+      secondStep,
+      disabledTime,
+    });
+    setPending(resolvedParts);
+    if (!resolvedNeedConfirm) commitTime(resolvedParts);
   };
 
   const displayedValue = selectedValue
@@ -291,6 +358,142 @@ function BaseTimePicker(props: TimePickerProps<boolean>) {
   };
   const nowDisabled = isTimeDisabled(nowParts, disabledTime, resolvedShowSecond);
 
+  useLayoutEffect(() => {
+    if (!multiple) {
+      previousMultipleHeightRef.current = null;
+      multipleHeightAnimationRef.current?.cancel();
+      multipleHeightAnimationRef.current = null;
+      return;
+    }
+    const trigger = multipleTriggerRef.current;
+    if (!trigger) return;
+    const runningAnimation = multipleHeightAnimationRef.current;
+    const renderedHeight = runningAnimation ? trigger.getBoundingClientRect().height : null;
+    runningAnimation?.cancel();
+    multipleHeightAnimationRef.current = null;
+    const nextHeight = trigger.getBoundingClientRect().height;
+    const previousHeight = previousMultipleHeightRef.current;
+    previousMultipleHeightRef.current = nextHeight;
+    if (
+      previousHeight === null ||
+      Math.abs(previousHeight - nextHeight) < 0.5 ||
+      typeof trigger.animate !== "function" ||
+      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
+    )
+      return;
+    const animation = trigger.animate(
+      [
+        { height: `${renderedHeight ?? previousHeight}px`, overflow: "clip" },
+        { height: `${nextHeight}px`, overflow: "clip" },
+      ],
+      { duration: 300, easing: "cubic-bezier(0.645, 0.045, 0.355, 1)" },
+    );
+    multipleHeightAnimationRef.current = animation;
+    animation.addEventListener("finish", () => {
+      if (multipleHeightAnimationRef.current === animation)
+        multipleHeightAnimationRef.current = null;
+    });
+  }, [multiple, selectedValuesKey, size]);
+
+  useLayoutEffect(() => {
+    if (!multiple) {
+      previousMultipleLayoutRectsRef.current.clear();
+      multipleLayoutAnimationsRef.current.forEach(({ animation }) => animation.cancel());
+      multipleLayoutAnimationsRef.current.clear();
+      return;
+    }
+    const container = multipleTagContainerRef.current;
+    if (!container) return;
+    const elements = Array.from(
+      container.querySelectorAll<HTMLElement>("[data-timepicker-layout-key]"),
+    );
+    const renderedRects = new Map<string, TimePickerLayoutPosition>();
+    const renderedContainerRect = container.getBoundingClientRect();
+    multipleLayoutAnimationsRef.current.forEach(({ element, animation }, key) => {
+      if (element.isConnected) {
+        const rect = element.getBoundingClientRect();
+        renderedRects.set(key, {
+          left: rect.left - renderedContainerRect.left,
+          top: rect.top - renderedContainerRect.top,
+        });
+      }
+      animation.cancel();
+    });
+    multipleLayoutAnimationsRef.current.clear();
+    const nextRects = new Map<string, TimePickerLayoutPosition>();
+    const nextContainerRect = container.getBoundingClientRect();
+    elements.forEach((element) => {
+      const key = element.dataset.timepickerLayoutKey;
+      if (!key) return;
+      const rect = element.getBoundingClientRect();
+      nextRects.set(key, {
+        left: rect.left - nextContainerRect.left,
+        top: rect.top - nextContainerRect.top,
+      });
+    });
+    const previousRects = previousMultipleLayoutRectsRef.current;
+    previousMultipleLayoutRectsRef.current = nextRects;
+    if (previousRects.size === 0 || window.matchMedia?.("(prefers-reduced-motion: reduce)").matches)
+      return;
+    elements.forEach((element) => {
+      const key = element.dataset.timepickerLayoutKey;
+      const nextRect = key ? nextRects.get(key) : undefined;
+      const previousRect = key ? (renderedRects.get(key) ?? previousRects.get(key)) : undefined;
+      if (!key || !nextRect || !previousRect || typeof element.animate !== "function") return;
+      const translateX = previousRect.left - nextRect.left;
+      const translateY = previousRect.top - nextRect.top;
+      if (Math.abs(translateX) < 0.5 && Math.abs(translateY) < 0.5) return;
+      const animation = element.animate(
+        [
+          { transform: `translate(${translateX}px, ${translateY}px)` },
+          { transform: "translate(0, 0)" },
+        ],
+        { duration: 300, easing: "cubic-bezier(0.645, 0.045, 0.355, 1)" },
+      );
+      multipleLayoutAnimationsRef.current.set(key, { element, animation });
+      animation.addEventListener("finish", () => {
+        if (multipleLayoutAnimationsRef.current.get(key)?.animation === animation)
+          multipleLayoutAnimationsRef.current.delete(key);
+      });
+    });
+  }, [multiple, selectedValuesKey]);
+
+  useLayoutEffect(() => {
+    if (!multiple) return;
+    const container = multipleTagContainerRef.current;
+    if (!container || typeof ResizeObserver === "undefined") return;
+    let previousWidth = container.getBoundingClientRect().width;
+    const syncLayoutAfterWidthChange = () => {
+      const containerRect = container.getBoundingClientRect();
+      if (Math.abs(previousWidth - containerRect.width) < 0.5) return;
+      previousWidth = containerRect.width;
+      multipleLayoutAnimationsRef.current.forEach(({ animation }) => animation.cancel());
+      multipleLayoutAnimationsRef.current.clear();
+      const nextRects = new Map<string, TimePickerLayoutPosition>();
+      container.querySelectorAll<HTMLElement>("[data-timepicker-layout-key]").forEach((element) => {
+        const key = element.dataset.timepickerLayoutKey;
+        if (!key) return;
+        const rect = element.getBoundingClientRect();
+        nextRects.set(key, {
+          left: rect.left - containerRect.left,
+          top: rect.top - containerRect.top,
+        });
+      });
+      previousMultipleLayoutRectsRef.current = nextRects;
+    };
+    const observer = new ResizeObserver(syncLayoutAfterWidthChange);
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, [multiple]);
+
+  useEffect(
+    () => () => {
+      multipleHeightAnimationRef.current?.cancel();
+      multipleLayoutAnimationsRef.current.forEach(({ animation }) => animation.cancel());
+    },
+    [],
+  );
+
   return (
     <div className={twMerge("flex w-full flex-col gap-1", className)}>
       {label ? <Label label={label} required={required} size={size} /> : null}
@@ -301,6 +504,7 @@ function BaseTimePicker(props: TimePickerProps<boolean>) {
         {...floating.triggerProps}
       >
         <button
+          ref={multipleTriggerRef}
           type="button"
           disabled={disabled}
           className={twMerge(
@@ -317,7 +521,6 @@ function BaseTimePicker(props: TimePickerProps<boolean>) {
                 "h-auto items-start",
                 size === "lg" && "min-h-10 py-[3px] pl-[3px]",
                 size === "md" && "min-h-[30px] py-[3px] pl-[3px]",
-                size === "sm" && "min-h-5 py-0.5 pl-0.5",
               ],
           )}
           onMouseDown={(event) => {
@@ -325,13 +528,17 @@ function BaseTimePicker(props: TimePickerProps<boolean>) {
           }}
         >
           {multiple && selectedValues.length > 0 ? (
-            <span className="flex min-w-0 flex-1 flex-wrap items-center gap-[5px]">
+            <span
+              ref={multipleTagContainerRef}
+              className="flex min-w-0 flex-1 flex-wrap items-center gap-[5px]"
+            >
               {selectedValues.map((item) => {
                 const itemKey = timeValueKey(item, resolvedShowSecond);
                 return (
                   <Tag
                     key={itemKey}
                     data-timepicker-tag
+                    data-timepicker-layout-key={`tag:${itemKey}`}
                     color="gray"
                     variant="filled"
                     className={twMerge(
@@ -368,14 +575,7 @@ function BaseTimePicker(props: TimePickerProps<boolean>) {
             <span
               className={twMerge("min-w-0 flex-1 truncate", !displayedValue && "text-disabled")}
             >
-              {preview && previewValue === "hover"
-                ? formatDisplayTime(
-                    dayjs().hour(preview.hour).minute(preview.minute).second(preview.second),
-                    format,
-                    use12Hours,
-                    resolvedShowSecond,
-                  )
-                : (displayedValue ?? placeholder)}
+              {displayedValue ?? placeholder}
             </span>
           )}
           {allowClear && selectedValues.length > 0 && !disabled && !readOnly ? (
@@ -394,16 +594,11 @@ function BaseTimePicker(props: TimePickerProps<boolean>) {
                     disabledTime,
                   }),
                 );
-                setPreview(null);
                 setPanelResetKey((current) => current + 1);
                 onClear?.();
               }}
             >
-              {typeof allowClear === "object" && allowClear.clearIcon ? (
-                allowClear.clearIcon
-              ) : (
-                <Icon icon="close" color="gray" />
-              )}
+              <Icon icon="close" color="gray" />
             </span>
           ) : (
             <Icon icon="clock-outlined" color="disabled" />
@@ -440,11 +635,9 @@ function BaseTimePicker(props: TimePickerProps<boolean>) {
                 hourStep={hourStep}
                 minuteStep={minuteStep}
                 secondStep={secondStep}
-                changeOnScroll={changeOnScroll}
                 disabledTime={disabledTime}
                 hideDisabled={hideDisabled}
                 cellRender={cellRender}
-                onPreview={setPreview}
                 onChange={selectParts}
               />
               {showNow || resolvedNeedConfirm ? (
@@ -497,7 +690,6 @@ interface TimePanelProps {
   disabledTime?: TimePickerProps["disabledTime"];
   hideDisabled?: boolean;
   cellRender?: TimePickerProps["cellRender"];
-  onPreview?: (value: TimeParts | null) => void;
   onChange: (value: TimeParts) => void;
 }
 
@@ -513,7 +705,6 @@ export function TimePanel({
   disabledTime,
   hideDisabled = false,
   cellRender,
-  onPreview,
   onChange,
 }: TimePanelProps) {
   const selected = parseTime(value);
@@ -537,16 +728,6 @@ export function TimePanel({
         changeOnScroll={changeOnScroll}
         cellRender={cellRender}
         subType="hour"
-        onPreview={(hour) =>
-          onPreview?.(
-            hour === null
-              ? null
-              : {
-                  ...selected,
-                  hour: use12Hours ? toTwentyFourHour(hour, selected.hour >= 12) : hour,
-                },
-          )
-        }
         onSelect={(hour) =>
           onChange({
             ...selected,
@@ -562,7 +743,6 @@ export function TimePanel({
         changeOnScroll={changeOnScroll}
         cellRender={cellRender}
         subType="minute"
-        onPreview={(minute) => onPreview?.(minute === null ? null : { ...selected, minute })}
         onSelect={(minute) => onChange({ ...selected, minute })}
       />
       {showSecond ? (
@@ -574,7 +754,6 @@ export function TimePanel({
           changeOnScroll={changeOnScroll}
           cellRender={cellRender}
           subType="second"
-          onPreview={(second) => onPreview?.(second === null ? null : { ...selected, second })}
           onSelect={(second) => onChange({ ...selected, second })}
         />
       ) : null}
@@ -619,7 +798,6 @@ function TimeColumn({
   changeOnScroll = false,
   cellRender,
   subType,
-  onPreview,
   onSelect,
 }: {
   values: number[];
@@ -629,7 +807,6 @@ function TimeColumn({
   changeOnScroll?: boolean;
   cellRender?: TimePickerProps["cellRender"];
   subType: "hour" | "minute" | "second";
-  onPreview?: (value: number | null) => void;
   onSelect: (value: number) => void;
 }) {
   const visibleValues = hideDisabled
@@ -664,7 +841,6 @@ function TimeColumn({
         const nextValue = visibleValues[index];
         if (nextValue !== undefined && !disabledValues.includes(nextValue)) onSelect(nextValue);
       }}
-      onMouseLeave={() => onPreview?.(null)}
     >
       {visibleValues.map((value) => {
         const valueDisabled = disabledValues.includes(value);
@@ -679,7 +855,6 @@ function TimeColumn({
               selected === value && "bg-selected font-medium text-primary hover:bg-selected",
               valueDisabled && "cursor-not-allowed text-disabled hover:bg-transparent",
             )}
-            onMouseEnter={() => onPreview?.(value)}
             onClick={() => onSelect(value)}
           >
             {cellRender ? cellRender(value, { originNode, subType }) : originNode}
@@ -718,7 +893,7 @@ const timePickerRootVariants = cva(
   "flex w-full items-center gap-2 rounded border border-solid px-2.5 text-left font-pretendard font-medium text-dark transition-colors duration-200 ease-out outline-none hover:border-primary focus:border-primary motion-reduce:transition-none",
   {
     variants: {
-      size: { lg: "h-10 text-base", md: "h-[30px] text-sm", sm: "h-5 text-xs" },
+      size: { lg: "h-10 text-base", md: "h-[30px] text-sm" },
       variant: {
         default: "border-border bg-white",
         filled: "border-hover bg-hover",

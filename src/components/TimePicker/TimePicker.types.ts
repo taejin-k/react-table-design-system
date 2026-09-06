@@ -1,9 +1,8 @@
 import type { ReactNode } from "react";
 import type { Dayjs } from "dayjs";
-import type { InputSizeType } from "../Input";
 import type { ValidatableErrorMessage } from "../_internal/useErrorMessageValidation";
 
-export type TimePickerSizeType = InputSizeType;
+export type TimePickerSizeType = "lg" | "md";
 export type TimePickerPlacementType = "bottomLeft" | "bottomRight" | "topLeft" | "topRight";
 export type TimePickerVariantType = "default" | "filled";
 export type TimePickerErrorMessage<Multiple extends boolean = false> = ValidatableErrorMessage<
@@ -34,7 +33,7 @@ export interface TimePickerProps<Multiple extends boolean = false> {
   disabled?: boolean;
   readOnly?: boolean;
   width?: number;
-  allowClear?: boolean | { clearIcon?: ReactNode };
+  allowClear?: boolean;
   multiple?: Multiple;
   order?: boolean;
   use12Hours?: boolean;
@@ -43,11 +42,9 @@ export interface TimePickerProps<Multiple extends boolean = false> {
   minuteStep?: number;
   secondStep?: number;
   needConfirm?: boolean;
-  changeOnScroll?: boolean;
   disabledTime?: (now: Dayjs) => DisabledTime;
   hideDisabled?: boolean;
   showNow?: boolean;
-  previewValue?: false | "hover";
   cellRender?: (current: number, info: TimePickerCellInfo) => ReactNode;
   open?: boolean;
   defaultOpen?: boolean;

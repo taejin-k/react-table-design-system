@@ -23,19 +23,34 @@ describe("error message validation lifecycle", () => {
     expect(result.current.displayedErrorMessage).toBe("새 오류");
   });
 
-  it("ignores a pending response after the validator changes", async () => {
+  it("keeps a pending response when an inline validator gets a new reference", async () => {
     let resolve!: (message: string) => void;
-    const oldValidator = async () =>
-      new Promise<string>((r) => {
+    const createValidator = () => async () =>
+      await new Promise<string>((r) => {
         resolve = r;
       });
     const { result, rerender } = renderHook(({ error }) => useErrorMessageValidation(error, ""), {
-      initialProps: { error: oldValidator },
+      initialProps: { error: createValidator() },
     });
     act(() => result.current.validateErrorMessage("old"));
-    rerender({ error: async () => "새 오류" });
+    rerender({ error: createValidator() });
     await act(async () => resolve("오래된 응답"));
+    expect(result.current.displayedErrorMessage).toBe("오래된 응답");
+  });
+
+  it("ignores an older response after a newer validation request", async () => {
+    const resolvers: Array<(message: string) => void> = [];
+    const validator = async () =>
+      await new Promise<string>((resolve) => {
+        resolvers.push(resolve);
+      });
+    const { result } = renderHook(() => useErrorMessageValidation(validator, ""));
+    act(() => result.current.validateErrorMessage("old"));
+    act(() => result.current.validateErrorMessage("new"));
+    await act(async () => resolvers[0]("오래된 응답"));
     expect(result.current.hasError).toBe(false);
+    await act(async () => resolvers[1]("최신 응답"));
+    expect(result.current.displayedErrorMessage).toBe("최신 응답");
   });
 
   it("handles rejected Promises returned by non-async functions on mount", async () => {

@@ -12,7 +12,7 @@ import type {
   TimePickerVariantType,
 } from "./TimePicker.types";
 
-const timePickerSizes: TimePickerSizeType[] = ["lg", "md", "sm"];
+const timePickerSizes: TimePickerSizeType[] = ["lg", "md"];
 const timePickerVariants: TimePickerVariantType[] = ["default", "filled"];
 const timePickerPlacements: TimePickerPlacementType[] = [
   "topLeft",
@@ -39,7 +39,7 @@ const meta = {
   argTypes: {
     value: { control: false },
     defaultValue: { control: false },
-    size: { name: "크기", control: "select", options: ["lg", "md", "sm"] },
+    size: { name: "크기", control: "select", options: timePickerSizes },
     variant: {
       name: "표현 방식",
       control: "select",
@@ -93,18 +93,16 @@ TimePicker는 시간을 선택하고 입력값으로 표시해요.
 | \`hourStep\` | 시 선택 간격을 설정해요. | \`number\` | \`1\` |
 | \`minuteStep\` | 분 선택 간격을 설정해요. | \`number\` | \`1\` |
 | \`secondStep\` | 초 선택 간격을 설정해요. | \`number\` | \`1\` |
-| \`needConfirm\` | 확인을 눌러야 선택값을 반영해요. | \`boolean\` | 다중 선택은 \`true\`, 그 외 \`false\` |
-| \`changeOnScroll\` | 시간 목록을 스크롤할 때 값을 변경해요. | \`boolean\` | \`false\` |
-| \`disabledTime\` | 선택할 수 없는 시·분·초를 설정해요. | \`(now: Dayjs) => DisabledTime\` | - |
+| \`needConfirm\` | 확인을 눌러야 선택값을 반영해요. | \`boolean\` | 다중 선택은 \`true\` |
+| \`disabledTime\` | 선택할 수 없는 시·분·초를 설정해요. | <code>(now: Dayjs) =&gt; <a href="#disabled-time">DisabledTime</a></code> | - |
 | \`hideDisabled\` | 비활성 시간 항목을 목록에서 숨겨요. | \`boolean\` | \`false\` |
 | \`showNow\` | 현재 시간 버튼을 표시해요. | \`boolean\` | \`true\` |
-| \`allowClear\` | 선택값을 지우는 버튼을 표시해요. | \`boolean \\| { clearIcon }\` | \`true\` |
+| \`allowClear\` | 선택값을 지우는 버튼을 표시해요. | \`boolean\` | \`true\` |
 | \`multiple\` | 여러 시간을 선택해요. | \`boolean\` | \`false\` |
 | \`order\` | 여러 선택값을 시간순으로 정렬해요. | \`boolean\` | \`true\` |
 | \`disabled\` | 시간 선택과 열기 동작을 비활성화해요. | \`boolean\` | \`false\` |
 | \`readOnly\` | 선택값을 읽기 전용으로 표시해요. | \`boolean\` | \`false\` |
 | \`width\` | TimePicker의 가로 길이를 설정해요. | \`number\` | \`100%\` |
-| \`previewValue\` | 항목 hover 중 선택 전 값을 미리 보여줘요. | \`false \\| hover\` | \`false\` |
 | \`cellRender\` | 시간 항목의 내용을 직접 구성해요. | <code>(current: number, info: <a href="#time-picker-cell-info">TimePickerCellInfo</a>) =&gt; ReactNode</code> | - |
 | \`open\` | 목록 표시 상태를 외부에서 관리해요. | \`boolean\` | - |
 | \`defaultOpen\` | 처음 시간 목록을 표시할지 설정해요. | \`boolean\` | \`false\` |
@@ -117,7 +115,7 @@ TimePicker는 시간을 선택하고 입력값으로 표시해요.
 | \`onClear\` | 선택값을 지울 때 실행할 함수예요. | \`() => void\` | - |
 | \`onOpenChange\` | 목록 표시 상태가 바뀔 때 실행할 함수예요. | \`(open: boolean) => void\` | - |
 
-### DisabledTime
+### <span id="disabled-time">DisabledTime</span>
 
 DisabledTime은 TimePicker에서 선택할 수 없는 시, 분과 초를 정의해요.
 
@@ -134,7 +132,7 @@ TimePickerCellInfo는 시간 셀을 직접 렌더링할 때 받는 정보예요.
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
 | \`originNode\` | 기본 시간 항목이에요. | \`ReactNode\` | - |
-| \`subType\` | 항목이 시·분·초 중 무엇인지 알려줘요. | <code>hour &#124; minute &#124; second</code> | - |
+| \`subType\` | 항목이 시·분·초 중 무엇인지 알려줘요. | \`hour \\| minute \\| second\` | - |
 
           `}</Markdown>
           <h2 className="component-docs-types-heading">Types</h2>
@@ -169,13 +167,16 @@ export const Basic: Story = {
     order: true,
     use12Hours: false,
     showSecond: true,
-    needConfirm: false,
     readOnly: false,
     disabled: false,
-    width: 320,
   },
   parameters: {
-    ...storySource("components-timepicker--basic", "<TimePicker width={320} />"),
+    ...storySource(
+      "components-timepicker--basic",
+      `<div className="max-w-xs">
+  <TimePicker />
+</div>`,
+    ),
     controls: {
       include: [
         "크기",
@@ -192,11 +193,14 @@ export const Basic: Story = {
         "확인 버튼",
         "읽기 전용",
         "비활성",
-        "가로 길이",
       ],
     },
   },
-  render: (args) => <TimePicker {...args} />,
+  render: (args) => (
+    <div className="max-w-xs">
+      <TimePicker {...args} />
+    </div>
+  ),
 };
 
 export const Sizes: Story = {
@@ -232,7 +236,6 @@ export const Sizes: Story = {
         code: withStoryImports(`<div className="grid max-w-xs gap-3">
   <TimePicker size="lg" />
   <TimePicker size="md" />
-  <TimePicker size="sm" />
 </div>`),
       },
     },
@@ -241,7 +244,6 @@ export const Sizes: Story = {
     <div className="grid max-w-xs gap-3">
       <TimePicker {...args} size="lg" />
       <TimePicker {...args} size="md" />
-      <TimePicker {...args} size="sm" />
     </div>
   ),
 };
@@ -296,7 +298,6 @@ export const States: Story = {
   args: {
     size: "md",
     variant: "default",
-    width: 320,
     label: "",
     errorMessage: "",
     required: false,
@@ -305,15 +306,15 @@ export const States: Story = {
     ...storyDescription("components-timepicker--states"),
     controls: {
       disable: false,
-      include: ["크기", "표현 방식", "가로 길이", "레이블", "오류 문구", "필수 표시"],
+      include: ["크기", "표현 방식", "레이블", "오류 문구", "필수 표시"],
     },
     docs: {
       ...storyDescription("components-timepicker--states").docs,
       source: {
         code: withStoryImports(`<div className="grid max-w-xs gap-3">
-  <TimePicker width={320} placeholder="기본" />
-  <TimePicker width={320} readOnly defaultValue={dayjs('2026-08-20 08:30:00')} />
-  <TimePicker width={320} disabled defaultValue={dayjs('2026-08-20 09:00:00')} />
+  <TimePicker placeholder="기본" />
+  <TimePicker readOnly defaultValue={dayjs('2026-08-20 08:30:00')} />
+  <TimePicker disabled defaultValue={dayjs('2026-08-20 09:00:00')} />
 </div>`),
       },
     },
@@ -336,7 +337,6 @@ export const Variants: Story = {
     needConfirm: false,
     readOnly: false,
     disabled: false,
-    width: 320,
     label: "",
     errorMessage: "",
     required: false,
@@ -353,7 +353,6 @@ export const Variants: Story = {
         "확인 버튼",
         "읽기 전용",
         "비활성",
-        "가로 길이",
         "레이블",
         "오류 문구",
         "필수 표시",
@@ -363,8 +362,8 @@ export const Variants: Story = {
       ...storyDescription("components-timepicker--variants").docs,
       source: {
         code: withStoryImports(`<div className="grid max-w-xs gap-3">
-  <TimePicker width={320} placeholder="기본" />
-  <TimePicker width={320} variant="filled" placeholder="채움" />
+  <TimePicker placeholder="기본" />
+  <TimePicker variant="filled" placeholder="채움" />
 </div>`),
       },
     },
@@ -392,7 +391,6 @@ export const StaticError: Story = {
     label: { control: false, table: { disable: true } },
     errorMessage: { control: false, table: { disable: true } },
     required: { control: false, table: { disable: true } },
-    width: { control: false, table: { disable: true } },
   },
   parameters: {
     ...storyDescription("components-timepicker--static-error"),
@@ -411,23 +409,20 @@ export const StaticError: Story = {
     docs: {
       ...storyDescription("components-timepicker--static-error").docs,
       source: {
-        code: withStoryImports(`<TimePicker
-  label="업무 시작"
-  required
-  width={320}
-  errorMessage="시간을 선택해 주세요."
-/>`),
+        code: withStoryImports(`<div className="max-w-xs">
+  <TimePicker
+    label="업무 시작"
+    required
+    errorMessage="시간을 선택해 주세요."
+  />
+</div>`),
       },
     },
   },
   render: (args) => (
-    <TimePicker
-      {...args}
-      label="업무 시작"
-      required
-      width={320}
-      errorMessage="시간을 선택해 주세요."
-    />
+    <div className="max-w-xs">
+      <TimePicker {...args} label="업무 시작" required errorMessage="시간을 선택해 주세요." />
+    </div>
   ),
 };
 
@@ -459,83 +454,89 @@ export const Multiple: Story = {
   parameters: {
     ...storySource(
       "components-timepicker--multiple",
-      `<TimePicker
-  multiple
-  width={420}
-  defaultValue={[
-    dayjs('2026-08-20 09:00:00'),
-    dayjs('2026-08-20 13:30:00'),
-    dayjs('2026-08-20 18:15:00'),
-  ]}
-/>`,
+      `<div className="max-w-md">
+  <TimePicker
+    multiple
+    defaultValue={[
+      dayjs('2026-08-20 09:00:00'),
+      dayjs('2026-08-20 13:30:00'),
+      dayjs('2026-08-20 18:15:00'),
+    ]}
+  />
+</div>`,
     ),
     controls: { disable: true },
   },
   render: () => (
-    <TimePicker
-      multiple
-      width={420}
-      defaultValue={[
-        dayjs("2026-08-20 09:00:00"),
-        dayjs("2026-08-20 13:30:00"),
-        dayjs("2026-08-20 18:15:00"),
-      ]}
-    />
+    <div className="max-w-md">
+      <TimePicker
+        multiple
+        defaultValue={[
+          dayjs("2026-08-20 09:00:00"),
+          dayjs("2026-08-20 13:30:00"),
+          dayjs("2026-08-20 18:15:00"),
+        ]}
+      />
+    </div>
   ),
 };
 
 export const DisabledTime: Story = {
-  argTypes: { width: { control: false, table: { disable: true } } },
   parameters: {
     ...storyDescription("components-timepicker--disabled-time"),
     controls: { disable: true },
     docs: {
       ...storyDescription("components-timepicker--disabled-time").docs,
       source: {
-        code: withStoryImports(`<TimePicker
-  width={320}
-  disabledTime={() => ({
-    disabledHours: () => [0, 1, 2, 3, 4, 5, 22, 23],
-    disabledMinutes: (hour) => (hour === 9 ? [0, 10, 20] : []),
-  })}
-/>`),
+        code: withStoryImports(`<div className="max-w-xs">
+  <TimePicker
+    disabledTime={() => ({
+      disabledHours: () => [0, 1, 2, 3, 4, 5, 22, 23],
+      disabledMinutes: (hour) => (hour === 9 ? [0, 10, 20] : []),
+    })}
+  />
+</div>`),
       },
     },
   },
   render: (args) => (
-    <TimePicker
-      {...args}
-      width={320}
-      disabledTime={() => ({
-        disabledHours: () => [0, 1, 2, 3, 4, 5, 22, 23],
-        disabledMinutes: (hour) => (hour === 9 ? [0, 10, 20] : []),
-      })}
-    />
+    <div className="max-w-xs">
+      <TimePicker
+        {...args}
+        disabledTime={() => ({
+          disabledHours: () => [0, 1, 2, 3, 4, 5, 22, 23],
+          disabledMinutes: (hour) => (hour === 9 ? [0, 10, 20] : []),
+        })}
+      />
+    </div>
   ),
 };
 
 export const HideDisabled: Story = {
-  argTypes: { width: { control: false, table: { disable: true } } },
   parameters: {
     ...storySource(
       "components-timepicker--hide-disabled",
-      `<TimePicker
-  width={320}
-  hideDisabled
-  disabledTime={() => ({
-    disabledHours: () => Array.from({ length: 9 }, (_, index) => index),
-  })}
-/>`,
+      `<div className="max-w-xs">
+  <TimePicker
+    hideDisabled
+    disabledTime={() => ({
+      disabledHours: () => Array.from({ length: 9 }, (_, index) => index),
+    })}
+  />
+</div>`,
     ),
     controls: { disable: true },
   },
   render: (args) => (
-    <TimePicker
-      {...args}
-      width={320}
-      hideDisabled
-      disabledTime={() => ({ disabledHours: () => Array.from({ length: 9 }, (_, index) => index) })}
-    />
+    <div className="max-w-xs">
+      <TimePicker
+        {...args}
+        hideDisabled
+        disabledTime={() => ({
+          disabledHours: () => Array.from({ length: 9 }, (_, index) => index),
+        })}
+      />
+    </div>
   ),
 };
 
@@ -559,58 +560,35 @@ export const ShowNow: Story = {
 };
 
 export const CustomCell: Story = {
-  argTypes: { width: { control: false, table: { disable: true } } },
   parameters: {
     ...storySource(
       "components-timepicker--custom-cell",
-      `<TimePicker
-  width={320}
-  minuteStep={10}
-  cellRender={(current, { originNode, subType }) => (
-    <strong className={subType === 'minute' && current === 30 ? 'text-danger' : ''}>
-      {originNode}
-    </strong>
-  )}
-/>`,
+      `<div className="max-w-xs">
+  <TimePicker
+    minuteStep={10}
+    cellRender={(current, { originNode, subType }) => (
+      <strong className={subType === 'minute' && current === 30 ? 'text-danger' : ''}>
+        {originNode}
+      </strong>
+    )}
+  />
+</div>`,
     ),
     controls: { disable: true },
   },
   render: (args) => (
-    <TimePicker
-      {...args}
-      width={320}
-      minuteStep={10}
-      cellRender={(current, { originNode, subType }) => (
-        <strong className={subType === "minute" && current === 30 ? "text-danger" : ""}>
-          {originNode}
-        </strong>
-      )}
-    />
+    <div className="max-w-xs">
+      <TimePicker
+        {...args}
+        minuteStep={10}
+        cellRender={(current, { originNode, subType }) => (
+          <strong className={subType === "minute" && current === 30 ? "text-danger" : ""}>
+            {originNode}
+          </strong>
+        )}
+      />
+    </div>
   ),
-};
-
-export const PreviewOnHover: Story = {
-  argTypes: { width: { control: false, table: { disable: true } } },
-  parameters: {
-    ...storySource(
-      "components-timepicker--preview-on-hover",
-      '<TimePicker width={320} previewValue="hover" />',
-    ),
-    controls: { disable: true },
-  },
-  render: (args) => <TimePicker {...args} width={320} previewValue="hover" />,
-};
-
-export const ChangeOnScroll: Story = {
-  argTypes: { width: { control: false, table: { disable: true } } },
-  parameters: {
-    ...storySource(
-      "components-timepicker--change-on-scroll",
-      "<TimePicker width={320} changeOnScroll minuteStep={5} />",
-    ),
-    controls: { disable: true },
-  },
-  render: (args) => <TimePicker {...args} width={320} changeOnScroll minuteStep={5} />,
 };
 
 export const Controlled: Story = {
@@ -623,7 +601,6 @@ export const Controlled: Story = {
     use12Hours: false,
     showSecond: true,
     needConfirm: false,
-    width: 320,
   },
   parameters: {
     ...storySource(
@@ -631,7 +608,11 @@ export const Controlled: Story = {
       `function ControlledTimePicker() {
   const [time, setTime] = useState<Dayjs | undefined>(dayjs('2026-08-20 09:00:00'));
 
-  return <TimePicker width={320} value={time} onChange={setTime} />;
+  return (
+    <div className="max-w-xs">
+      <TimePicker value={time} onChange={setTime} />
+    </div>
+  );
 }`,
     ),
     controls: {
@@ -644,20 +625,21 @@ export const Controlled: Story = {
         "확인 버튼",
         "읽기 전용",
         "비활성",
-        "가로 길이",
       ],
     },
   },
   render: function ControlledTimeStory(args) {
     const [time, setTime] = useState<Dayjs | undefined>(dayjs("2026-08-20 09:00:00"));
     return (
-      <TimePicker<false>
-        {...args}
-        multiple={false}
-        defaultValue={undefined}
-        value={time}
-        onChange={setTime}
-      />
+      <div className="max-w-xs">
+        <TimePicker<false>
+          {...args}
+          multiple={false}
+          defaultValue={undefined}
+          value={time}
+          onChange={setTime}
+        />
+      </div>
     );
   },
 };

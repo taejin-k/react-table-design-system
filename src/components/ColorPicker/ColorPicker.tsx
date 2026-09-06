@@ -126,10 +126,10 @@ function parseColor(value: string | RgbColor | HsbColor = "#0062df"): RgbColor {
       a: rgb[4] ? Number(rgb[4]) / (input.includes("%") ? 100 : 1) : 1,
     };
   const hsb = input.match(
-    /^hs[bg]\(\s*([\d.]+)[,\s]+([\d.]+)%[,\s]+([\d.]+)%(?:[,/\s]+([\d.]+)%?)?\s*\)$/,
+    /^hs[bg]\(\s*([\d.]+)[,\s]+([\d.]+)%[,\s]+([\d.]+)%(?:[,/\s]+([\d.]+)(%)?)?\s*\)$/,
   );
   if (hsb) {
-    const alphaDivisor = input.endsWith("%)") ? 100 : 1;
+    const alphaDivisor = hsb[5] ? 100 : 1;
     return hsbToRgb({
       h: Number(hsb[1]),
       s: Number(hsb[2]) / 100,

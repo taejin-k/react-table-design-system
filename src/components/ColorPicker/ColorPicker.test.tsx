@@ -90,6 +90,18 @@ describe("ColorPicker", () => {
     expect(onFormatChange.mock.calls[0]).toHaveLength(1);
   });
 
+  it("parses percentage alpha with whitespace before the closing parenthesis", async () => {
+    const onChange = vi.fn();
+    render(<ColorPicker defaultOpen defaultValue="#ff0000" format="hsb" onChange={onChange} />);
+
+    const input = screen.getByRole("textbox");
+    await userEvent.click(input);
+    await userEvent.clear(input);
+    await userEvent.type(input, "hsb(0, 100%, 100%, 50% )");
+
+    expect(onChange).toHaveBeenLastCalledWith("rgba(255, 0, 0, 0.5)");
+  });
+
   it("uses sm, md, and lg trigger sizes", () => {
     const { container } = render(
       <>

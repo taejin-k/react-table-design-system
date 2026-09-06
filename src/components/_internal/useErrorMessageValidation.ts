@@ -20,22 +20,25 @@ function getInitialValidationError<Value>(
   return "";
 }
 
+function validatorKey<Value>(validator: ErrorMessageValidator<Value> | undefined) {
+  return validator?.toString() ?? "";
+}
+
 export function useErrorMessageValidation<Value>(
   errorMessage: ValidatableErrorMessage<Value> | undefined,
   initialValue: Value,
 ) {
   const validator = typeof errorMessage === "function" ? errorMessage : undefined;
+  const currentValidatorKey = validatorKey(validator);
   const validationRequestRef = useRef(0);
   const [validation, setValidation] = useState(() => ({
-    validator,
+    validatorKey: currentValidatorKey,
     message: getInitialValidationError(validator, initialValue),
   }));
   const displayedErrorMessage = validator
-    ? validation.validator === validator
+    ? validation.validatorKey === currentValidatorKey
       ? validation.message
-      : validation.message
-        ? getInitialValidationError(validator, initialValue)
-        : ""
+      : getInitialValidationError(validator, initialValue)
     : typeof errorMessage === "function"
       ? undefined
       : errorMessage;
@@ -44,10 +47,11 @@ export function useErrorMessageValidation<Value>(
     () => () => {
       validationRequestRef.current += 1;
     },
-    [validator],
+    [],
   );
 
-  const setValidationError = (message: string) => setValidation({ validator, message });
+  const setValidationError = (message: string) =>
+    setValidation({ validatorKey: currentValidatorKey, message });
 
   const clearValidationError = () => {
     validationRequestRef.current += 1;

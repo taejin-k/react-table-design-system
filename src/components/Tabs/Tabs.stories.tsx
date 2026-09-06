@@ -132,7 +132,7 @@ Tabs는 여러 콘텐츠 영역을 탭으로 나누어 전환하게 해요.
 | \`onDelete\` | 닫기 버튼을 표시하고 삭제된 목록을 전달해요. | <code>(items: <a href="#tab-item-type">TabItemType[]</a>) =&gt; void</code> | - |
 | \`onDrag\` | card 탭을 드래그해 정렬하고 변경된 목록을 전달해요. | <code>(items: <a href="#tab-item-type">TabItemType[]</a>) =&gt; void</code> | - |
 | \`onTabClick\` | 탭을 누를 때 실행해요. | \`(key: Key, event: MouseEvent<HTMLElement>) => void\` | - |
-| \`renderTabBar\` | 탭 목록 전체를 사용자 정의해요. | \`(props: TabsProps, DefaultTabBar: () => ReactElement) => ReactElement\` | - |
+| \`renderTabBar\` | 탭 목록 전체를 사용자 정의해요. | <code>(props: <a href="#tabs">TabsProps</a>, DefaultTabBar: () =&gt; ReactElement) =&gt; ReactElement</code> | - |
 
 ### <span id="tab-item-type">TabItemType</span>
 

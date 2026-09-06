@@ -139,7 +139,7 @@ export const storyDescriptions: Record<string, string> = {
     "입력창을 기준으로 달력 패널이 열릴 네 가지 위치를 선택할 수 있어요.",
 
   "components-timepicker--sizes":
-    "화면과 시간 선택 환경에 맞게 세 가지 TimePicker 크기를 선택할 수 있어요.",
+    "화면과 시간 선택 환경에 맞게 두 가지 TimePicker 크기를 선택할 수 있어요.",
   "components-timepicker--widths":
     "width를 생략하면 부모 너비를 채우고, 숫자를 전달하면 px 단위로 고정해요.",
   "components-timepicker--states":
@@ -161,10 +161,6 @@ export const storyDescriptions: Record<string, string> = {
   "components-timepicker--show-now": "현재 시간 선택 버튼을 표시하거나 숨길 수 있어요.",
   "components-timepicker--custom-cell":
     "cellRender로 시간 항목의 내용과 상태 표현을 목적에 맞게 구성할 수 있어요.",
-  "components-timepicker--preview-on-hover":
-    "시간 항목에 마우스를 올려 확정 전의 선택값을 입력창에서 미리 확인할 수 있어요.",
-  "components-timepicker--change-on-scroll":
-    "시간 목록을 스크롤하는 즉시 선택값이 함께 변경되도록 설정할 수 있어요.",
   "components-timepicker--controlled":
     "value와 onChange로 선택 시간을 외부 상태에서 직접 관리할 수 있어요.",
   "components-timepicker--placements":
