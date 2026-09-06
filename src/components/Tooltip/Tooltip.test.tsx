@@ -21,13 +21,13 @@ describe("Tooltip", () => {
   it("opens and closes on hover", async () => {
     const user = userEvent.setup();
     render(
-      <Tooltip mouseEnterDelay={0} mouseLeaveDelay={0} title="도움말">
+      <Tooltip title="도움말">
         <button type="button">대상</button>
       </Tooltip>,
     );
 
     await user.hover(screen.getByRole("button", { name: "대상" }));
-    expect(screen.getByText("도움말")).toBeInTheDocument();
+    expect(await screen.findByText("도움말")).toBeInTheDocument();
 
     await user.unhover(screen.getByRole("button", { name: "대상" }));
     await waitFor(() => expect(screen.queryByText("도움말")).not.toBeInTheDocument());
@@ -95,13 +95,7 @@ describe("Tooltip", () => {
 
   it("supports controlled open state, placement, color, and arrow", () => {
     render(
-      <Tooltip
-        autoAdjustOverflow={false}
-        color="#ffffff"
-        open
-        placement="rightBottom"
-        title="도움말"
-      >
+      <Tooltip color="#ffffff" open placement="rightBottom" title="도움말">
         <button type="button">대상</button>
       </Tooltip>,
     );
@@ -110,6 +104,19 @@ describe("Tooltip", () => {
     expect(popup).toHaveAttribute("data-placement", "rightBottom");
     expect(screen.getByText("도움말").parentElement).toHaveStyle({ backgroundColor: "#ffffff" });
     expect(popup?.querySelector("[data-tooltip-arrow]")).toBeInTheDocument();
+  });
+
+  it("resolves design tokens and keeps light backgrounds readable", () => {
+    render(
+      <Tooltip color="white" open title="밝은 도움말">
+        <button type="button">대상</button>
+      </Tooltip>,
+    );
+
+    expect(screen.getByText("밝은 도움말").parentElement).toHaveStyle({
+      backgroundColor: "var(--color-white)",
+      color: "var(--color-dark)",
+    });
   });
 
   it("preserves line breaks in string content", () => {
@@ -121,8 +128,22 @@ describe("Tooltip", () => {
 
     const content = document.querySelector("[data-tooltip] span");
     expect(content).toHaveTextContent("첫 번째 줄 두 번째 줄");
-    expect(content).toHaveClass("whitespace-pre-wrap", "[overflow-wrap:anywhere]");
+    expect(content).toHaveClass("whitespace-pre-wrap", "break-all");
     expect(content?.textContent).toBe("첫 번째 줄\n두 번째 줄");
+  });
+
+  it("wraps long numeric content inside the maximum width", () => {
+    render(
+      <Tooltip open title="11111111111111111111111111111111111111111111111111">
+        <button type="button">대상</button>
+      </Tooltip>,
+    );
+
+    const popup = document.querySelector("[data-tooltip]");
+    const content = popup?.querySelector("span");
+
+    expect(popup).toHaveClass("min-w-0", "max-w-[min(250px,calc(100vw-16px))]");
+    expect(content).toHaveClass("min-w-0", "max-w-full", "break-all");
   });
 
   it("aligns the start, center, and end placements differently", () => {
@@ -210,13 +231,13 @@ describe("Tooltip", () => {
   it("closes when the page or a scrollable ancestor scrolls", async () => {
     const user = userEvent.setup();
     render(
-      <Tooltip mouseEnterDelay={0} title="도움말">
+      <Tooltip title="도움말">
         <button type="button">대상</button>
       </Tooltip>,
     );
 
     await user.hover(screen.getByRole("button", { name: "대상" }));
-    expect(screen.getByText("도움말")).toBeInTheDocument();
+    expect(await screen.findByText("도움말")).toBeInTheDocument();
 
     fireEvent.scroll(window);
     await waitFor(() => expect(screen.queryByText("도움말")).not.toBeInTheDocument());
@@ -225,7 +246,7 @@ describe("Tooltip", () => {
   it("does not render when title is empty", async () => {
     const user = userEvent.setup();
     render(
-      <Tooltip mouseEnterDelay={0} title="">
+      <Tooltip title="">
         <button type="button">대상</button>
       </Tooltip>,
     );

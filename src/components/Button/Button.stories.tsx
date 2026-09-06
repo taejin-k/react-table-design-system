@@ -56,7 +56,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "클릭해서 특정 동작을 실행해요.  \n종류와 크기를 선택하고 아이콘·로딩·비활성 상태·둥근 모양·그림자·전체 너비를 설정할 수 있어요.",
+          "Button은 저장이나 이동 같은 작업을 실행할 때 사용해요.  \n종류·크기·아이콘과 로딩·비활성 상태를 목적에 맞게 표현할 수 있어요.",
       },
       page: () => (
         <div className="button-docs component-docs">
@@ -66,6 +66,8 @@ const meta = {
           <h2>API</h2>
           <Markdown>{`
 ### Button
+
+Button은 사용자가 클릭해 작업이나 이동을 실행하게 해요.
 
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
@@ -84,14 +86,14 @@ const meta = {
           `}</Markdown>
           <h2 className="component-docs-types-heading">Types</h2>
           <h3 id="button-variant">ButtonVariantType</h3>
-          <p>버튼의 시각적 우선순위를 선택해요.</p>
+          <p>ButtonVariantType은 버튼의 목적과 시각적 우선순위를 구분해요.</p>
           <div className="flex flex-wrap gap-2">
             {buttonVariants.map((variant) => (
               <ButtonVariantCode key={variant} variant={variant} />
             ))}
           </div>
           <h3 id="button-size">ButtonSizeType</h3>
-          <p>버튼의 높이와 내부 여백을 선택해요.</p>
+          <p>ButtonSizeType은 버튼의 높이·글자 크기와 내부 여백을 구분해요.</p>
           <div className="flex flex-wrap gap-2">
             {buttonSizes.map((size) => (
               <ButtonSizeCode key={size} size={size} />
@@ -223,6 +225,21 @@ export const States: Story = {
       disable: false,
       include: ["종류", "크기", "그림자", "둥근 모양", "로딩"],
     },
+    docs: {
+      ...storyDescription("components-button--states").docs,
+      source: {
+        code: withStoryImports(`<div className="grid gap-3">
+  <div className="flex flex-wrap items-center gap-2">
+    <Button>기본</Button>
+    <Button shadow>그림자</Button>
+    <Button disabled>비활성</Button>
+  </div>
+  <div className="w-80 max-w-full">
+    <Button fullWidth>전체 너비</Button>
+  </div>
+</div>`),
+      },
+    },
   },
   render: ({ iconMode: _iconMode, ...args }) => (
     <div className="grid gap-3">
@@ -240,6 +257,49 @@ export const States: Story = {
           전체 너비
         </Button>
       </div>
+    </div>
+  ),
+};
+
+export const Icons: Story = {
+  args: { disabled: false, rounded: false, shadow: false },
+  argTypes: {
+    variant: { control: false, table: { disable: true } },
+    size: { control: false, table: { disable: true } },
+    children: { control: false, table: { disable: true } },
+    fullWidth: { control: false, table: { disable: true } },
+    loading: { control: false, table: { disable: true } },
+    iconMode: { control: false, table: { disable: true } },
+  },
+  parameters: {
+    ...storyDescription("components-button--icons"),
+    controls: {
+      disable: false,
+      include: ["비활성", "그림자", "둥근 모양"],
+    },
+    docs: {
+      ...storyDescription("components-button--icons").docs,
+      source: {
+        code: withStoryImports(`<div className="flex flex-wrap items-center gap-2">
+  <Button>Button</Button>
+  <Button prefixIcon={<Icon icon="add" />}>Button</Button>
+  <Button suffixIcon={<Icon icon="add" />}>Button</Button>
+  <Button
+    prefixIcon={<Icon icon="add" />}
+    suffixIcon={<Icon icon="add" />}
+  >
+    Button
+  </Button>
+  <Button iconOnly prefixIcon={<Icon icon="add" />} />
+</div>`),
+      },
+    },
+  },
+  render: (args) => (
+    <div className="flex flex-wrap items-center gap-2">
+      {(["default", "prefix", "suffix", "both", "iconOnly"] as const).map((mode) =>
+        renderIconButton(args, mode),
+      )}
     </div>
   ),
 };
@@ -304,49 +364,6 @@ export const Rounded: Story = {
         Button
       </Button>
       <Button {...args} rounded iconOnly prefixIcon={<Icon icon="add" />} />
-    </div>
-  ),
-};
-
-export const Icons: Story = {
-  args: { disabled: false, rounded: false, shadow: false },
-  argTypes: {
-    variant: { control: false, table: { disable: true } },
-    size: { control: false, table: { disable: true } },
-    children: { control: false, table: { disable: true } },
-    fullWidth: { control: false, table: { disable: true } },
-    loading: { control: false, table: { disable: true } },
-    iconMode: { control: false, table: { disable: true } },
-  },
-  parameters: {
-    ...storyDescription("components-button--icons"),
-    controls: {
-      disable: false,
-      include: ["비활성", "그림자", "둥근 모양"],
-    },
-    docs: {
-      ...storyDescription("components-button--icons").docs,
-      source: {
-        code: withStoryImports(`<div className="flex flex-wrap items-center gap-2">
-  <Button>Button</Button>
-  <Button prefixIcon={<Icon icon="add" />}>Button</Button>
-  <Button suffixIcon={<Icon icon="arrow-right" />}>Button</Button>
-  <Button
-    prefixIcon={<Icon icon="add" />}
-    suffixIcon={<Icon icon="arrow-right" />}
-  >
-    Button
-  </Button>
-  <Button iconOnly prefixIcon={<Icon icon="add" />} />
-</div>`),
-      },
-    },
-  },
-  render: (args) => (
-    <div className="flex flex-wrap items-center gap-2">
-      {(["default", "prefix", "suffix", "both", "iconOnly"] as const).map((mode) =>
-        renderIconButton(args, mode),
-      )}
     </div>
   ),
 };

@@ -2,6 +2,7 @@ import {
   createElement,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -18,13 +19,13 @@ import { Icon } from "../Icon";
 import { MOTION_DURATION_MID } from "../_internal/motion";
 import type {
   MessageApi,
-  MessageArgsProps,
+  MessageConfig,
   MessageInstance,
   MessageType,
   MessageStatusType,
 } from "./Message.types";
 
-interface MessageItem extends MessageArgsProps {
+interface MessageItem extends MessageConfig {
   key: Key;
   resolve: (value: boolean) => void;
 }
@@ -46,7 +47,7 @@ function useMessageHolder(): [MessageInstance, ReactNode] {
     resolvers.current.delete(key);
   }, []);
   const open = useCallback(
-    (input: MessageArgsProps) => {
+    (input: MessageConfig) => {
       const key = input.key ?? `message-${Date.now()}-${Math.random()}`;
       let resolvePromise: (value: boolean) => void = () => undefined;
       const promise = new Promise<boolean>((resolve) => {
@@ -240,6 +241,24 @@ function MessageCard({
   const onCloseRef = useRef(onClose);
   const remainingRef = useRef(0);
   const startedAtRef = useRef(0);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [contentWidth, setContentWidth] = useState<number>();
+  useLayoutEffect(() => {
+    const content = contentRef.current;
+    if (!content) return;
+    const measure = () => {
+      const width = content.offsetWidth;
+      if (width > 0) setContentWidth(width);
+    };
+    measure();
+    const observer = typeof ResizeObserver !== "undefined" ? new ResizeObserver(measure) : null;
+    observer?.observe(content);
+    window.addEventListener("resize", measure);
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener("resize", measure);
+    };
+  }, [item.content, item.icon, item.type]);
   const combinedRef = useCallback(
     (node: HTMLDivElement | null) => {
       if (typeof motionRef === "function") motionRef(node);
@@ -261,12 +280,12 @@ function MessageCard({
     resumeTimer();
     return () => window.clearTimeout(timer.current);
   }, [item.duration, item.key, resumeTimer]);
-  const icon = item.icon ?? <TypeIcon type={item.type ?? "info"} />;
+  const icon = item.icon ?? <TypeIcon key={item.type ?? "info"} type={item.type ?? "info"} />;
   return (
     <div
       ref={combinedRef}
       className={twMerge(
-        "wizard-message-card pointer-events-auto absolute left-1/2 flex min-h-10 max-w-[calc(100vw-32px)] items-start gap-1.5 rounded-lg bg-white px-3 py-2.5 text-sm text-dark shadow-2xl",
+        "wizard-message-card pointer-events-auto absolute left-1/2 min-h-10 max-w-[calc(100vw-32px)] overflow-hidden rounded-lg bg-white text-sm text-dark shadow-2xl motion-reduce:transition-none",
         motionClassName,
         visible === false && "pointer-events-none",
       )}
@@ -275,6 +294,7 @@ function MessageCard({
           "--wizard-message-hidden-transform": "translate3d(-50%, -64px, 0)",
           "--wizard-message-visible-transform": "translate3d(-50%, 0, 0)",
           top: offset,
+          width: contentWidth,
           transformOrigin: "center top",
           ...motionStyle,
         } as CSSProperties
@@ -290,10 +310,15 @@ function MessageCard({
       }}
       onMouseLeave={() => item.pauseOnHover !== false && resumeTimer()}
     >
-      <span className="inline-flex shrink-0">{icon}</span>
-      <span className="min-w-0 leading-5 [overflow-wrap:anywhere] break-words whitespace-pre-wrap">
-        {item.content}
-      </span>
+      <div
+        ref={contentRef}
+        className="wizard-message-content flex w-max max-w-[calc(100vw-32px)] items-start gap-1.5 px-3 py-2.5"
+      >
+        <span className="inline-flex shrink-0 leading-none">{icon}</span>
+        <span className="min-w-0 leading-5 [overflow-wrap:anywhere] break-all whitespace-pre-wrap">
+          {item.content}
+        </span>
+      </div>
     </div>
   );
 }
@@ -316,6 +341,7 @@ let root: Root | null = null;
 let container: HTMLDivElement | null = null;
 let staticInstance: MessageInstance | null = null;
 const queue: Array<(api: MessageInstance) => void> = [];
+const pendingCalls = new Set<{ key: MessageConfig["key"]; cancel: () => void }>();
 
 function StaticMessageHost() {
   const [api, holder] = useMessageHolder();
@@ -334,7 +360,7 @@ function ensureHost() {
   root.render(createElement(StaticMessageHost));
 }
 
-function invoke(method: keyof Omit<MessageInstance, "destroy">, config: MessageArgsProps) {
+function invoke(method: keyof Omit<MessageInstance, "destroy">, config: MessageConfig) {
   ensureHost();
   if (staticInstance) return staticInstance[method](config);
 
@@ -346,11 +372,18 @@ function invoke(method: keyof Omit<MessageInstance, "destroy">, config: MessageA
   });
   const handle = (() => {
     if (result) result();
-    else closeRequested = true;
+    else {
+      closeRequested = true;
+      resolvePending(false);
+    }
   }) as MessageType;
   // oxlint-disable-next-line unicorn/no-thenable -- Ant Design-compatible awaitable message API.
   handle.then = pending.then.bind(pending);
+  const pendingCall = { key: config.key, cancel: handle };
+  pendingCalls.add(pendingCall);
   queue.push((api) => {
+    pendingCalls.delete(pendingCall);
+    if (closeRequested) return;
     result = api[method](config);
     result.then(resolvePending);
     if (closeRequested) result();
@@ -365,5 +398,10 @@ export const message: MessageApi = {
   info: (config) => invoke("info", config),
   warning: (config) => invoke("warning", config),
   loading: (config) => invoke("loading", config),
-  destroy: (key) => staticInstance?.destroy(key),
+  destroy: (key) => {
+    for (const pending of pendingCalls) {
+      if (key === undefined || pending.key === key) pending.cancel();
+    }
+    staticInstance?.destroy(key);
+  },
 };

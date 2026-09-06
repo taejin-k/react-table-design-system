@@ -21,10 +21,33 @@ export interface FloatingPosition {
   arrowStyle: CSSProperties;
 }
 
+export function getFloatingTransformOrigin(
+  placement: FloatingPlacement,
+  arrowStyle?: CSSProperties,
+  arrowSize = 8,
+) {
+  const halfArrow = arrowSize / 2;
+  const horizontalArrowCenter =
+    typeof arrowStyle?.left === "number" ? `${arrowStyle.left + halfArrow}px` : null;
+  const verticalArrowCenter =
+    typeof arrowStyle?.top === "number" ? `${arrowStyle.top + halfArrow}px` : null;
+
+  if (placement.startsWith("top"))
+    return `${horizontalArrowCenter ?? getHorizontalFallback(placement)} bottom`;
+  if (placement.startsWith("bottom"))
+    return `${horizontalArrowCenter ?? getHorizontalFallback(placement)} top`;
+  if (placement.startsWith("left"))
+    return `right ${verticalArrowCenter ?? getVerticalFallback(placement)}`;
+  return `left ${verticalArrowCenter ?? getVerticalFallback(placement)}`;
+}
+
 interface FloatingPositionOptions {
   autoAdjustOverflow?: boolean;
   arrowSize?: number;
   edgeArrowCenter?: number;
+  currentPlacement?: FloatingPlacement;
+  recoverPreferredAxis?: boolean;
+  placementHysteresis?: number;
   targetGap?: number;
   viewportGap?: number;
 }
@@ -37,6 +60,9 @@ export function calculateFloatingPosition(
     autoAdjustOverflow = true,
     arrowSize = 8,
     edgeArrowCenter = 16,
+    currentPlacement,
+    recoverPreferredAxis = true,
+    placementHysteresis = 12,
     targetGap = 9,
     viewportGap = 8,
   }: FloatingPositionOptions = {},
@@ -45,22 +71,53 @@ export function calculateFloatingPosition(
   const placements = autoAdjustOverflow
     ? getPlacementCandidates(target, requestedPlacement, boundary)
     : [requestedPlacement];
-  const best = placements
-    .map((placement, priority) => {
-      const point = getPlacementPoint(target, popup, placement, targetGap);
-      return {
-        placement,
-        point,
-        priority,
-        overflow: getOverflow(point, popup, boundary),
-      };
-    })
-    .reduce((current, candidate) => {
-      if (candidate.overflow < current.overflow) return candidate;
-      if (candidate.overflow === current.overflow && candidate.priority < current.priority)
-        return candidate;
-      return current;
-    });
+  const candidates = placements.map((placement, priority) => {
+    const point = getPlacementPoint(target, popup, placement, targetGap);
+    return {
+      placement,
+      point,
+      priority,
+      overflow: getOverflow(point, popup, boundary),
+    };
+  });
+  const bestCandidate = candidates.reduce((current, candidate) => {
+    if (candidate.overflow < current.overflow) return candidate;
+    if (candidate.overflow === current.overflow && candidate.priority < current.priority)
+      return candidate;
+    return current;
+  });
+  const currentCandidate = currentPlacement
+    ? candidates.find((candidate) => candidate.placement === currentPlacement)
+    : undefined;
+  const isVertical = (value: FloatingPlacement) =>
+    value.startsWith("top") || value.startsWith("bottom");
+  // A perpendicular fallback must be able to return to the requested axis.
+  // Require spare room before returning, so edge-sized changes don't chatter.
+  const recoveredCandidate =
+    recoverPreferredAxis &&
+    currentCandidate &&
+    isVertical(currentCandidate.placement) !== isVertical(requestedPlacement)
+      ? candidates.find((candidate) => {
+          if (
+            isVertical(candidate.placement) !== isVertical(requestedPlacement) ||
+            candidate.overflow > 0
+          )
+            return false;
+          const clearance = candidate.placement.startsWith("top")
+            ? candidate.point.top - boundary.top
+            : candidate.placement.startsWith("bottom")
+              ? boundary.bottom - candidate.point.top - popup.height
+              : candidate.placement.startsWith("left")
+                ? candidate.point.left - boundary.left
+                : boundary.right - candidate.point.left - popup.width;
+          return clearance >= placementHysteresis;
+        })
+      : undefined;
+  const best =
+    recoveredCandidate ??
+    (currentCandidate && currentCandidate.overflow <= bestCandidate.overflow + placementHysteresis
+      ? currentCandidate
+      : bestCandidate);
 
   const placement = best.placement;
   const point = best.point;
@@ -73,7 +130,16 @@ export function calculateFloatingPosition(
     left,
     top,
     placement,
-    arrowStyle: getArrowStyle(target, popup, placement, left, top, arrowSize, edgeArrowCenter),
+    arrowStyle: getArrowStyle(
+      target,
+      popup,
+      placement,
+      point,
+      left,
+      top,
+      arrowSize,
+      edgeArrowCenter,
+    ),
   };
 }
 
@@ -108,13 +174,12 @@ function getPlacementCandidates(
   const alignedPlacement = flipAlignment(requestedPlacement);
   const flippedAlignedPlacement = flipAlignment(flippedPlacement);
   const vertical = requestedPlacement.startsWith("top") || requestedPlacement.startsWith("bottom");
-  const perpendicularPlacements: FloatingPlacement[] = vertical
-    ? boundary.right - target.right >= target.left - boundary.left
-      ? ["right", "left"]
-      : ["left", "right"]
-    : boundary.bottom - target.bottom >= target.top - boundary.top
-      ? ["bottom", "top"]
-      : ["top", "bottom"];
+  const perpendicularPlacements = getPerpendicularPlacements(
+    target,
+    requestedPlacement,
+    boundary,
+    vertical,
+  );
 
   return [
     ...new Set([
@@ -125,6 +190,27 @@ function getPlacementCandidates(
       ...perpendicularPlacements,
     ]),
   ];
+}
+
+function getPerpendicularPlacements(
+  target: DOMRect,
+  requestedPlacement: FloatingPlacement,
+  boundary: FloatingBoundary,
+  vertical: boolean,
+): FloatingPlacement[] {
+  if (vertical) {
+    if (requestedPlacement.endsWith("Left")) return ["left", "right"];
+    if (requestedPlacement.endsWith("Right")) return ["right", "left"];
+    return boundary.right - target.right >= target.left - boundary.left
+      ? ["right", "left"]
+      : ["left", "right"];
+  }
+
+  if (requestedPlacement.endsWith("Top")) return ["top", "bottom"];
+  if (requestedPlacement.endsWith("Bottom")) return ["bottom", "top"];
+  return boundary.bottom - target.bottom >= target.top - boundary.top
+    ? ["bottom", "top"]
+    : ["top", "bottom"];
 }
 
 function getPlacementPoint(
@@ -194,6 +280,7 @@ function getArrowStyle(
   target: DOMRect,
   popup: DOMRect,
   placement: FloatingPlacement,
+  idealPoint: { left: number; top: number },
   left: number,
   top: number,
   arrowSize: number,
@@ -202,16 +289,22 @@ function getArrowStyle(
   const halfArrow = arrowSize / 2;
   const targetCenterX = target.left + target.width / 2 - left - halfArrow;
   const targetCenterY = target.top + target.height / 2 - top - halfArrow;
-  const horizontalArrowPosition = placement.endsWith("Left")
-    ? edgeArrowCenter - halfArrow
-    : placement.endsWith("Right")
-      ? popup.width - edgeArrowCenter - halfArrow
-      : targetCenterX;
-  const verticalArrowPosition = placement.endsWith("Top")
-    ? edgeArrowCenter - halfArrow
-    : placement.endsWith("Bottom")
-      ? popup.height - edgeArrowCenter - halfArrow
-      : targetCenterY;
+  const shiftedHorizontally = Math.abs(left - idealPoint.left) > 0.5;
+  const shiftedVertically = Math.abs(top - idealPoint.top) > 0.5;
+  const horizontalArrowPosition = shiftedHorizontally
+    ? targetCenterX
+    : placement.endsWith("Left")
+      ? edgeArrowCenter - halfArrow
+      : placement.endsWith("Right")
+        ? popup.width - edgeArrowCenter - halfArrow
+        : targetCenterX;
+  const verticalArrowPosition = shiftedVertically
+    ? targetCenterY
+    : placement.endsWith("Top")
+      ? edgeArrowCenter - halfArrow
+      : placement.endsWith("Bottom")
+        ? popup.height - edgeArrowCenter - halfArrow
+        : targetCenterY;
 
   if (placement.startsWith("top")) {
     return {
@@ -239,4 +332,16 @@ function getArrowStyle(
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
+}
+
+function getHorizontalFallback(placement: FloatingPlacement) {
+  if (placement.endsWith("Left")) return "16px";
+  if (placement.endsWith("Right")) return "calc(100% - 16px)";
+  return "center";
+}
+
+function getVerticalFallback(placement: FloatingPlacement) {
+  if (placement.endsWith("Top")) return "16px";
+  if (placement.endsWith("Bottom")) return "calc(100% - 16px)";
+  return "center";
 }

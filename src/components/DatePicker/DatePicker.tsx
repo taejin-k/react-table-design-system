@@ -1,7 +1,7 @@
 import { createPortal } from "react-dom";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { cva } from "class-variance-authority";
-import dayjs from "dayjs";
+import dayjs, { type Dayjs } from "dayjs";
 import { twMerge } from "tailwind-merge";
 import { Button } from "../Button";
 import { Tag } from "../Tag";
@@ -11,13 +11,13 @@ import { Icon } from "../Icon";
 import { Label } from "../Label";
 import { TimePanel } from "../TimePicker/TimePicker";
 import { getPopupMotionStyle } from "../_internal/motion";
+import { useErrorMessageValidation } from "../_internal/useErrorMessageValidation";
 import { useFloatingLayer } from "../_internal/use-floating-layer";
 import type {
   DatePickerModeType,
   DatePickerProps,
   DatePickerShowTime,
   DateRangePickerProps,
-  DateRangeValueType,
 } from "./DatePicker.types";
 
 const weekdays = ["일", "월", "화", "수", "목", "금", "토"];
@@ -30,6 +30,16 @@ type InternalDateRangeValue = [string | null, string | null];
 
 function pad(value: number) {
   return String(value).padStart(2, "0");
+}
+
+function isAllowedTime(value: Dayjs, config: DatePickerShowTime, showSecond: boolean) {
+  const disabled = config.disabledTime?.() ?? {};
+  return (
+    !(disabled.disabledHours?.() ?? []).includes(value.hour()) &&
+    !(disabled.disabledMinutes?.(value.hour()) ?? []).includes(value.minute()) &&
+    (!showSecond ||
+      !(disabled.disabledSeconds?.(value.hour(), value.minute()) ?? []).includes(value.second()))
+  );
 }
 
 function resolveAvailableTime(value: string, config: DatePickerShowTime, showSecond: boolean) {
@@ -130,44 +140,45 @@ function formatDisplayValue(value: string, format?: DatePickerProps["format"]) {
   return normalizedValue.isValid() ? normalizedValue.format(format) : value;
 }
 
-function BaseDatePicker({
-  value,
-  defaultValue,
-  defaultPickerValue,
-  pickerValue,
-  picker = "date",
-  placeholder,
-  format,
-  size = "md",
-  variant = "default",
-  label,
-  errorMessage,
-  required = false,
-  disabled = false,
-  readOnly = false,
-  width,
-  allowClear = true,
-  multiple = false,
-  order = true,
-  minDate,
-  maxDate,
-  showNow = picker === "date",
-  showTime = false,
-  needConfirm = Boolean(showTime),
-  open,
-  defaultOpen = false,
-  placement = "bottomLeft",
-  disabledDate,
-  cellRender,
-  presets,
-  className,
-  onChange,
-  onCalendarChange,
-  onClear,
-  onConfirm,
-  onPanelChange,
-  onOpenChange,
-}: DatePickerProps) {
+function BaseDatePicker(props: DatePickerProps<boolean>) {
+  const {
+    value,
+    defaultValue,
+    defaultPickerValue,
+    pickerValue,
+    picker = "date",
+    placeholder,
+    format,
+    size = "md",
+    variant = "default",
+    label,
+    errorMessage,
+    required = false,
+    disabled = false,
+    readOnly = false,
+    width,
+    allowClear = true,
+    multiple = false,
+    order = true,
+    minDate,
+    maxDate,
+    showNow = picker === "date",
+    showTime = false,
+    needConfirm = Boolean(showTime),
+    open,
+    defaultOpen = false,
+    placement = "bottomLeft",
+    disabledDate,
+    cellRender,
+    presets,
+    className,
+    onChange,
+    onCalendarChange,
+    onClear,
+    onPanelChange,
+    onOpenChange,
+  } = props;
+  const isControlled = Object.prototype.hasOwnProperty.call(props, "value");
   const showTimeConfig = typeof showTime === "object" ? showTime : {};
   const showTimeSecond =
     showTimeConfig.showSecond ??
@@ -180,15 +191,23 @@ function BaseDatePicker({
       ? [serializeValue(defaultValue)].filter((item): item is string => item !== null)
       : [];
   const [innerValues, setInnerValues] = useState<string[]>(initialValues);
-  const sourceValues =
-    value === undefined
-      ? innerValues
-      : Array.isArray(value)
-        ? value.map(serializeValue).filter((item): item is string => item !== null)
-        : value
-          ? [serializeValue(value)].filter((item): item is string => item !== null)
-          : [];
+  const sourceValues = !isControlled
+    ? innerValues
+    : Array.isArray(value)
+      ? value.map(serializeValue).filter((item): item is string => item !== null)
+      : value
+        ? [serializeValue(value)].filter((item): item is string => item !== null)
+        : [];
   const selectedValues = order ? [...sourceValues].sort() : sourceValues;
+  const initialValidationValue = multiple
+    ? toDayjsValues(selectedValues)
+    : selectedValues[0]
+      ? dayjs(selectedValues[0])
+      : undefined;
+  const { displayedErrorMessage, hasError, validateErrorMessage } = useErrorMessageValidation(
+    errorMessage,
+    initialValidationValue,
+  );
   const selectedValuesKey = selectedValues.join("\u0000");
   const isDateDisabled = (date: Date) => {
     const min = parseDate(minDate);
@@ -235,6 +254,7 @@ function BaseDatePicker({
   const panelDate = parseDate(pickerValue) ?? innerPanelDate;
   const floating = useFloatingLayer({
     placement,
+    recoverOnPopupResize: true,
     trigger: "click",
     targetGap: 2,
     disabled: disabled || readOnly,
@@ -257,10 +277,22 @@ function BaseDatePicker({
   });
 
   const emitValues = (nextValues: string[], close = false) => {
+    if (
+      nextValues.some((value) => {
+        const date = dayjs(value);
+        return (
+          !date.isValid() ||
+          isDateDisabled(date.startOf("day").toDate()) ||
+          (showTime && !isAllowedTime(date, showTimeConfig, showTimeSecond))
+        );
+      })
+    )
+      return;
     const sorted = order ? [...nextValues].sort() : nextValues;
-    if (value === undefined) setInnerValues(sorted);
-    const outputValue = multiple ? toDayjsValues(sorted) : sorted[0] ? dayjs(sorted[0]) : null;
+    if (!isControlled) setInnerValues(sorted);
+    const outputValue = multiple ? toDayjsValues(sorted) : sorted[0] ? dayjs(sorted[0]) : undefined;
     onChange?.(outputValue);
+    validateErrorMessage(outputValue);
     if (close) floating.changeOpen(false, "menu");
   };
 
@@ -274,7 +306,7 @@ function BaseDatePicker({
         : [...currentValues, rawValue]
       : [rawValue];
     onCalendarChange?.(
-      multiple ? toDayjsValues(nextValues) : nextValues[0] ? dayjs(nextValues[0]) : null,
+      multiple ? toDayjsValues(nextValues) : nextValues[0] ? dayjs(nextValues[0]) : undefined,
     );
     if (needConfirm) {
       setPendingValues(nextValues);
@@ -334,8 +366,8 @@ function BaseDatePicker({
 
     const animation = trigger.animate(
       [
-        { height: `${renderedHeight ?? previousHeight}px`, overflow: "hidden" },
-        { height: `${nextHeight}px`, overflow: "hidden" },
+        { height: `${renderedHeight ?? previousHeight}px`, overflow: "clip" },
+        { height: `${nextHeight}px`, overflow: "clip" },
       ],
       {
         duration: 300,
@@ -471,9 +503,14 @@ function BaseDatePicker({
   );
 
   return (
-    <div className={twMerge("flex w-full flex-col gap-1", className)} style={{ width }}>
+    <div className={twMerge("flex w-full flex-col gap-1", className)}>
       {label ? <Label label={label} required={required} size={size} /> : null}
-      <span ref={floating.triggerRef} className="block w-full" {...floating.triggerProps}>
+      <span
+        ref={floating.triggerRef}
+        className="block w-full"
+        style={{ width }}
+        {...floating.triggerProps}
+      >
         <button
           ref={multipleTriggerRef}
           type="button"
@@ -482,13 +519,16 @@ function BaseDatePicker({
             pickerRootVariants({
               size,
               variant,
-              error: Boolean(errorMessage),
+              error: hasError,
               disabled,
               readOnly,
               interactive: !disabled && !readOnly,
             }),
             multiple && selectedValues.length > 0 && ["items-start", "py-[3px] pl-[3px]"],
           )}
+          onMouseDown={(event) => {
+            if (readOnly) event.preventDefault();
+          }}
         >
           {multiple && selectedValues.length ? (
             <span
@@ -500,12 +540,13 @@ function BaseDatePicker({
                   key={item}
                   data-datepicker-tag
                   data-datepicker-layout-key={`tag:${item}`}
-                  color="grey"
+                  color="gray"
                   variant="filled"
                   className={twMerge(
                     multipleTagSizeClasses[size],
                     "tabular-nums",
                     variant === "filled" && "bg-white",
+                    disabled && "bg-white text-disabled",
                   )}
                   suffixIcon={
                     disabled || readOnly ? undefined : (
@@ -530,14 +571,14 @@ function BaseDatePicker({
             <span
               className={twMerge(
                 "flex min-w-0 flex-1 flex-wrap gap-1",
-                !selectedValues.length && "text-gray",
+                !selectedValues.length && "block truncate text-disabled",
               )}
             >
               {selectedValues.length ? (
                 <Tag
                   className={twMerge(
                     "h-auto bg-transparent p-0 text-sm",
-                    disabled ? "text-gray" : "text-dark",
+                    disabled ? "text-disabled" : "text-dark",
                   )}
                 >
                   {formatDisplayValue(selectedValues[0], format)}
@@ -549,7 +590,7 @@ function BaseDatePicker({
           )}
           {allowClear && selectedValues.length && !disabled && !readOnly ? (
             <span
-              className="cursor-pointer self-center"
+              className="cursor-pointer self-center transition-opacity duration-200 ease-out hover:opacity-75 motion-reduce:transition-none"
               onClick={(event) => {
                 event.stopPropagation();
                 clear();
@@ -558,11 +599,11 @@ function BaseDatePicker({
               <Icon icon="close" color="gray" />
             </span>
           ) : (
-            <Icon icon="calendar" color="gray" className="self-center" />
+            <Icon icon="calendar" color="disabled" className="self-center" />
           )}
         </button>
       </span>
-      <ErrorMessage errorMessage={errorMessage} />
+      <ErrorMessage errorMessage={displayedErrorMessage} />
       {floating.isRendered && typeof document !== "undefined"
         ? createPortal(
             <div
@@ -580,7 +621,10 @@ function BaseDatePicker({
                 width: showTimePopupWidth,
                 zIndex: 1050,
                 visibility: floating.position ? "visible" : "hidden",
-                ...getPopupMotionStyle(floating.position?.placement, floating.isMotionVisible),
+                ...getPopupMotionStyle(
+                  floating.position?.placement ?? placement,
+                  floating.isMotionVisible && Boolean(floating.position),
+                ),
               }}
               {...floating.popupProps}
             >
@@ -629,6 +673,13 @@ function BaseDatePicker({
                   presets={presets}
                   showNow={showNow}
                   showConfirm={needConfirm}
+                  confirmDisabled={pendingValues.some((value) => {
+                    const date = dayjs(value);
+                    return (
+                      isDateDisabled(date.startOf("day").toDate()) ||
+                      Boolean(showTime && !isAllowedTime(date, showTimeConfig, showTimeSecond))
+                    );
+                  })}
                   onPresetSelect={(index) => {
                     const preset = presets?.[index];
                     if (!preset) return;
@@ -636,6 +687,12 @@ function BaseDatePicker({
                       typeof preset.value === "function" ? preset.value() : preset.value;
                     const serializedPresetValue = serializeValue(presetValue);
                     if (!serializedPresetValue) return;
+                    if (
+                      isDateDisabled(presetValue.startOf("day").toDate()) ||
+                      (showTime && !isAllowedTime(presetValue, showTimeConfig, showTimeSecond))
+                    )
+                      return;
+                    changePanelDate(presetValue.toDate());
                     const nextValues = multiple
                       ? [...selectedValues, serializedPresetValue]
                       : [serializedPresetValue];
@@ -647,16 +704,7 @@ function BaseDatePicker({
                     emitValues(uniqueValues, !multiple);
                   }}
                   onNow={() => selectDate(new Date())}
-                  onConfirm={() => {
-                    emitValues(pendingValues, true);
-                    onConfirm?.(
-                      multiple
-                        ? toDayjsValues(pendingValues)
-                        : pendingValues[0]
-                          ? dayjs(pendingValues[0])
-                          : null,
-                    );
-                  }}
+                  onConfirm={() => emitValues(pendingValues, true)}
                 />
               ) : null}
             </div>,
@@ -691,15 +739,12 @@ function PickerPanel({
   onSelect: (date: Date) => void;
 }) {
   const changePanel = (amount: number) => {
-    const next = new Date(panelDate);
-    if (picker === "year") next.setFullYear(next.getFullYear() + amount * 12);
-    else if (picker === "month") next.setFullYear(next.getFullYear() + amount);
-    else next.setMonth(next.getMonth() + amount);
-    onPanelDateChange(next);
+    onPanelDateChange(offsetPanelDate(panelDate, picker, amount));
   };
 
   const changeYear = (amount: number) => {
     const next = new Date(panelDate);
+    next.setDate(1);
     next.setFullYear(next.getFullYear() + amount);
     onPanelDateChange(next);
   };
@@ -719,7 +764,7 @@ function PickerPanel({
             <button
               type="button"
               data-datepicker-previous-year
-              className="inline-flex size-8 cursor-pointer items-center justify-center rounded hover:bg-hover"
+              className="inline-flex size-8 cursor-pointer items-center justify-center rounded transition-colors duration-200 ease-out outline-none hover:bg-hover motion-reduce:transition-none"
               onClick={() => changeYear(-1)}
             >
               <Icon icon="double-left" color="gray" />
@@ -728,7 +773,7 @@ function PickerPanel({
           {previousButton ? (
             <button
               type="button"
-              className="inline-flex size-8 cursor-pointer items-center justify-center rounded hover:bg-hover"
+              className="inline-flex size-8 cursor-pointer items-center justify-center rounded transition-colors duration-200 ease-out outline-none hover:bg-hover motion-reduce:transition-none"
               onClick={() => changePanel(-1)}
             >
               <Icon icon="chevron-left" color="gray" />
@@ -740,7 +785,7 @@ function PickerPanel({
           {nextButton ? (
             <button
               type="button"
-              className="inline-flex size-8 cursor-pointer items-center justify-center rounded hover:bg-hover"
+              className="inline-flex size-8 cursor-pointer items-center justify-center rounded transition-colors duration-200 ease-out outline-none hover:bg-hover motion-reduce:transition-none"
               onClick={() => changePanel(1)}
             >
               <Icon icon="chevron-right" color="gray" />
@@ -750,7 +795,7 @@ function PickerPanel({
             <button
               type="button"
               data-datepicker-next-year
-              className="inline-flex size-8 cursor-pointer items-center justify-center rounded hover:bg-hover"
+              className="inline-flex size-8 cursor-pointer items-center justify-center rounded transition-colors duration-200 ease-out outline-none hover:bg-hover motion-reduce:transition-none"
               onClick={() => changeYear(1)}
             >
               <Icon icon="double-right" color="gray" />
@@ -793,6 +838,7 @@ function PickerFooter({
   presets,
   showNow,
   showConfirm = false,
+  confirmDisabled = false,
   onPresetSelect,
   onNow,
   onConfirm,
@@ -800,6 +846,7 @@ function PickerFooter({
   presets?: Array<{ label: ReactNode }>;
   showNow: boolean;
   showConfirm?: boolean;
+  confirmDisabled?: boolean;
   onPresetSelect: (index: number) => void;
   onNow: () => void;
   onConfirm?: () => void;
@@ -829,7 +876,11 @@ function PickerFooter({
       ) : (
         <span />
       )}
-      {showConfirm ? <Button onClick={onConfirm}>확인</Button> : null}
+      {showConfirm ? (
+        <Button disabled={confirmDisabled} onClick={onConfirm}>
+          확인
+        </Button>
+      ) : null}
     </div>
   );
 }
@@ -895,7 +946,7 @@ function DateGrid({
                 type="button"
                 disabled={dateDisabled}
                 className={twMerge(
-                  "relative z-[1] flex size-8 cursor-pointer items-center justify-center rounded hover:bg-hover",
+                  "relative z-[1] flex size-8 cursor-pointer items-center justify-center rounded transition-colors duration-200 ease-out outline-none hover:bg-hover motion-reduce:transition-none",
                   muted && "text-disabled [&_*]:text-disabled!",
                   selected && "bg-selected text-primary hover:bg-selected",
                   dateDisabled &&
@@ -950,7 +1001,7 @@ function MonthGrid({
             type="button"
             disabled={disabled}
             className={twMerge(
-              "h-10 cursor-pointer rounded hover:bg-hover",
+              "h-10 cursor-pointer rounded transition-colors duration-200 ease-out outline-none hover:bg-hover motion-reduce:transition-none",
               selected && "bg-selected text-primary hover:bg-selected",
               disabled && "cursor-not-allowed bg-hover text-disabled hover:bg-hover",
             )}
@@ -986,7 +1037,7 @@ function YearGrid({
             type="button"
             disabled={disabled}
             className={twMerge(
-              "h-10 cursor-pointer rounded hover:bg-hover",
+              "h-10 cursor-pointer rounded transition-colors duration-200 ease-out outline-none hover:bg-hover motion-reduce:transition-none",
               selected && "bg-selected text-primary hover:bg-selected",
               disabled && "cursor-not-allowed bg-hover text-disabled hover:bg-hover",
             )}
@@ -1017,55 +1068,66 @@ function panelTitle(date: Date, picker: DatePickerModeType) {
 
 function offsetPanelDate(date: Date, picker: DatePickerModeType, amount: number) {
   const next = new Date(date);
+  // Panel navigation tracks months/years, not a selected day such as January 31.
+  next.setDate(1);
   if (picker === "year") next.setFullYear(next.getFullYear() + amount * 12);
   else if (picker === "month") next.setFullYear(next.getFullYear() + amount);
   else next.setMonth(next.getMonth() + amount);
   return next;
 }
 
-function DateRangePicker({
-  value,
-  defaultValue = [null, null],
-  defaultPickerValue,
-  pickerValue,
-  picker = "date",
-  placeholder = ["시작 날짜", "종료 날짜"],
-  format,
-  label,
-  errorMessage,
-  required = false,
-  size = "md",
-  variant = "default",
-  presets,
-  disabled = false,
-  readOnly = false,
-  allowClear = true,
-  open,
-  defaultOpen = false,
-  placement = "bottomLeft",
-  minDate,
-  maxDate,
-  showNow = false,
-  disabledDate,
-  cellRender,
-  onChange,
-  onCalendarChange,
-  onClear,
-  onPanelChange,
-  className,
-  width,
-  onOpenChange,
-}: DateRangePickerProps) {
-  const serializeRange = (range: DateRangeValueType): InternalDateRangeValue => [
-    range[0] ? toInternalValue(range[0], picker, false, false) : null,
-    range[1] ? toInternalValue(range[1], picker, false, false) : null,
+function DateRangePicker(props: DateRangePickerProps) {
+  const {
+    value,
+    defaultValue,
+    defaultPickerValue,
+    pickerValue,
+    picker = "date",
+    placeholder,
+    format,
+    label,
+    errorMessage,
+    required = false,
+    size = "md",
+    variant = "default",
+    presets,
+    disabled = false,
+    readOnly = false,
+    allowClear = true,
+    open,
+    defaultOpen = false,
+    placement = "bottomLeft",
+    minDate,
+    maxDate,
+    showNow = false,
+    disabledDate,
+    cellRender,
+    onChange,
+    onCalendarChange,
+    onClear,
+    onPanelChange,
+    className,
+    width,
+    onOpenChange,
+  } = props;
+  const isControlled = Object.prototype.hasOwnProperty.call(props, "value");
+  const serializeRange = (range: [Dayjs, Dayjs] | undefined): InternalDateRangeValue => [
+    range?.[0] ? toInternalValue(range[0], picker, false, false) : null,
+    range?.[1] ? toInternalValue(range[1], picker, false, false) : null,
   ];
   const [innerValue, setInnerValue] = useState<InternalDateRangeValue>(() =>
     serializeRange(defaultValue),
   );
   const [selectionDraft, setSelectionDraft] = useState<InternalDateRangeValue | null>(null);
-  const selectedValue =
-    selectionDraft ?? (value === undefined ? innerValue : serializeRange(value));
+  const selectedValue = selectionDraft ?? (isControlled ? serializeRange(value) : innerValue);
+  const initialValidationValue: [Dayjs, Dayjs] | undefined =
+    selectedValue[0] && selectedValue[1]
+      ? [dayjs(selectedValue[0]), dayjs(selectedValue[1])]
+      : undefined;
+  const { displayedErrorMessage, hasError, validateErrorMessage } = useErrorMessageValidation(
+    errorMessage,
+    initialValidationValue,
+  );
   const initialPanel =
     parseDate(pickerValue) ??
     parseDate(defaultPickerValue) ??
@@ -1073,11 +1135,19 @@ function DateRangePicker({
     new Date();
   const [leftPanel, setLeftPanel] = useState(initialPanel);
   const [rightPanel, setRightPanel] = useState(() => offsetPanelDate(initialPanel, picker, 1));
+  const controlledPanelTime = parseDate(pickerValue)?.getTime();
+  useLayoutEffect(() => {
+    if (controlledPanelTime === undefined) return;
+    const next = new Date(controlledPanelTime);
+    setLeftPanel(next);
+    setRightPanel(offsetPanelDate(next, picker, 1));
+  }, [controlledPanelTime, picker]);
   const [selecting, setSelecting] = useState<"start" | "end">(
     selectedValue[0] && !selectedValue[1] ? "end" : "start",
   );
   const floating = useFloatingLayer({
     placement,
+    recoverOnPopupResize: true,
     trigger: "click",
     targetGap: 2,
     disabled: disabled || readOnly,
@@ -1099,12 +1169,25 @@ function DateRangePicker({
     },
   });
   const emitRange = (nextRange: InternalDateRangeValue) => {
+    if (
+      nextRange.some((value) => {
+        if (!value) return false;
+        const date = dayjs(value);
+        return (
+          !date.isValid() ||
+          Boolean(minDate && date.isBefore(minDate, "day")) ||
+          Boolean(maxDate && date.isAfter(maxDate, "day")) ||
+          Boolean(disabledDate?.(date))
+        );
+      })
+    )
+      return;
     setSelectionDraft(null);
-    if (value === undefined) setInnerValue(nextRange);
-    onChange?.([
-      nextRange[0] ? dayjs(nextRange[0]) : null,
-      nextRange[1] ? dayjs(nextRange[1]) : null,
-    ]);
+    if (!isControlled) setInnerValue(nextRange);
+    const outputValue: [Dayjs, Dayjs] | undefined =
+      nextRange[0] && nextRange[1] ? [dayjs(nextRange[0]), dayjs(nextRange[1])] : undefined;
+    onChange?.(outputValue);
+    validateErrorMessage(outputValue);
   };
   const selectRangeDate = (date: Date) => {
     const min = parseDate(minDate);
@@ -1114,9 +1197,9 @@ function DateRangePicker({
     const nextDate = formatDate(date, picker);
     if (selecting === "start" || !selectedValue[0] || selectedValue[1]) {
       const next: InternalDateRangeValue = [nextDate, null];
-      if (value === undefined) setInnerValue(next);
+      if (!isControlled) setInnerValue(next);
       else setSelectionDraft(next);
-      onCalendarChange?.([dayjs(nextDate), null], { range: "start" });
+      onCalendarChange?.([dayjs(nextDate), undefined], { range: "start" });
       setSelecting("end");
       return;
     }
@@ -1130,33 +1213,47 @@ function DateRangePicker({
   };
 
   return (
-    <div className={twMerge("flex w-full flex-col gap-1", className)} style={{ width }}>
+    <div className={twMerge("flex w-full flex-col gap-1", className)}>
       {label ? <Label label={label} required={required} size={size} /> : null}
-      <span ref={floating.triggerRef} className="block w-full" {...floating.triggerProps}>
+      <span
+        ref={floating.triggerRef}
+        className="block w-full"
+        style={{ width }}
+        {...floating.triggerProps}
+      >
         <button
           type="button"
           disabled={disabled}
-          className={pickerRootVariants({
-            size,
-            variant,
-            error: Boolean(errorMessage),
-            disabled,
-            readOnly,
-            interactive: !disabled && !readOnly,
-          })}
+          className={twMerge(
+            pickerRootVariants({
+              size,
+              variant,
+              error: hasError,
+              disabled,
+              readOnly,
+              interactive: !disabled && !readOnly,
+            }),
+          )}
+          onMouseDown={(event) => {
+            if (readOnly) event.preventDefault();
+          }}
         >
-          <span className={twMerge("min-w-0 flex-1 truncate", !selectedValue[0] && "text-gray")}>
-            {selectedValue[0] ? formatDisplayValue(selectedValue[0], format) : placeholder[0]}
+          <span
+            className={twMerge("min-w-0 flex-1 truncate", !selectedValue[0] && "text-disabled")}
+          >
+            {selectedValue[0] ? formatDisplayValue(selectedValue[0], format) : placeholder?.[0]}
           </span>
           <span data-datepicker-range-separator className="shrink-0">
             <Icon icon="arrow-right" size={12} color="gray" />
           </span>
-          <span className={twMerge("min-w-0 flex-1 truncate", !selectedValue[1] && "text-gray")}>
-            {selectedValue[1] ? formatDisplayValue(selectedValue[1], format) : placeholder[1]}
+          <span
+            className={twMerge("min-w-0 flex-1 truncate", !selectedValue[1] && "text-disabled")}
+          >
+            {selectedValue[1] ? formatDisplayValue(selectedValue[1], format) : placeholder?.[1]}
           </span>
           {allowClear && (selectedValue[0] || selectedValue[1]) && !disabled && !readOnly ? (
             <span
-              className="cursor-pointer"
+              className="cursor-pointer transition-opacity duration-200 ease-out hover:opacity-75 motion-reduce:transition-none"
               onClick={(event) => {
                 event.stopPropagation();
                 emitRange([null, null]);
@@ -1171,11 +1268,11 @@ function DateRangePicker({
               <Icon icon="close" color="gray" />
             </span>
           ) : (
-            <Icon icon="calendar" color="gray" />
+            <Icon icon="calendar" color="disabled" />
           )}
         </button>
       </span>
-      <ErrorMessage errorMessage={errorMessage} />
+      <ErrorMessage errorMessage={displayedErrorMessage} />
       {floating.isRendered && typeof document !== "undefined"
         ? createPortal(
             <div
@@ -1276,14 +1373,17 @@ function DateRangePicker({
   );
 }
 
-type DatePickerComponent = typeof BaseDatePicker & { RangePicker: typeof DateRangePicker };
+type DatePickerComponent = {
+  <Multiple extends boolean = false>(props: DatePickerProps<Multiple>): React.ReactNode;
+  RangePicker: typeof DateRangePicker;
+};
 
 export const DatePicker = Object.assign(BaseDatePicker, {
   RangePicker: DateRangePicker,
 }) as DatePickerComponent;
 
 const pickerRootVariants = cva(
-  "flex w-full cursor-pointer items-center gap-2 rounded border border-solid px-2.5 text-left font-pretendard font-medium text-dark transition-colors focus:border-primary focus:outline-none",
+  "flex w-full cursor-pointer items-center gap-2 rounded border border-solid px-2.5 text-left font-pretendard font-medium text-dark transition-colors duration-200 ease-out outline-none focus:border-primary motion-reduce:transition-none",
   {
     variants: {
       size: { lg: "min-h-10 text-base", md: "min-h-[30px] text-sm" },
@@ -1298,7 +1398,7 @@ const pickerRootVariants = cva(
       },
       interactive: { true: "hover:border-primary", false: "" },
       disabled: {
-        true: "cursor-not-allowed border-border bg-hover text-gray hover:border-border",
+        true: "cursor-not-allowed border-border bg-hover text-disabled hover:border-border",
         false: "",
       },
     },

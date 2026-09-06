@@ -86,6 +86,18 @@ import "@taejin-k/wizard-design/style.css";
 허용하지 않는 환경에서는 앱에서 Pretendard를 직접 호스팅하고 같은
 `font-family`를 제공해야 합니다.
 
+Show code 안의 `className`도 그대로 사용하려면 앱에 Tailwind CSS 4를 설정하고,
+앱의 Tailwind 진입 CSS에서 디자인 토큰을 함께 불러옵니다.
+
+```css
+@import "tailwindcss";
+@import "@taejin-k/wizard-design/theme.css";
+```
+
+컴포넌트 자체 스타일은 `style.css`에 포함되어 있습니다. 예시에 직접 작성한
+레이아웃 클래스와 사용자 지정 Tailwind 클래스는 앱에서 생성해야 합니다.
+`className`은 컴포넌트의 최상위 요소에 적용되며, 팝업 컴포넌트에서는 트리거를 감싼 요소에 적용됩니다.
+
 ```tsx
 import { Button, Icon } from '@taejin-k/wizard-design';
 
@@ -102,20 +114,19 @@ import { Button, Icon } from '@taejin-k/wizard-design';
 
 ### Button
 
-| prop         | 타입                                                        | 필수  | 기본값    | 설명                        |
-| ------------ | ----------------------------------------------------------- | ----- | --------- | --------------------------- |
-| `variant`    | `primary` \| `secondary` \| `tertiary` \| `dark` \| `ghost` | false | `primary` | 버튼 종류                   |
-| `size`       | `lg` \| `md` \| `sm`                                        | false | `md`      | 버튼 크기                   |
-| `iconOnly`   | `boolean`                                                   | false | `false`   | 아이콘만 표시(정사각형)     |
-| `shadow`     | `boolean`                                                   | false | `false`   | 그림자 표시                 |
-| `fullWidth`  | `boolean`                                                   | false | `false`   | 부모 너비 100%              |
-| `prefixIcon` | `ReactElement`                                              | false | -         | 앞쪽에 표시할 단일 아이콘   |
-| `suffixIcon` | `ReactElement`                                              | false | -         | 뒤쪽에 표시할 단일 아이콘   |
-| `loading`    | `boolean`                                                   | false | `false`   | 로딩을 표시하고 클릭을 막음 |
-| `onClick`    | `MouseEventHandler<HTMLButtonElement>`                      | false | -         | 클릭할 때 실행할 함수       |
+| prop         | 타입                                                                    | 필수  | 기본값    | 설명                        |
+| ------------ | ----------------------------------------------------------------------- | ----- | --------- | --------------------------- |
+| `variant`    | `primary` \| `danger` \| `secondary` \| `tertiary` \| `dark` \| `ghost` | false | `primary` | 버튼 종류                   |
+| `size`       | `lg` \| `md` \| `sm`                                                    | false | `md`      | 버튼 크기                   |
+| `iconOnly`   | `boolean`                                                               | false | `false`   | 아이콘만 표시(정사각형)     |
+| `shadow`     | `boolean`                                                               | false | `false`   | 그림자 표시                 |
+| `fullWidth`  | `boolean`                                                               | false | `false`   | 부모 너비 100%              |
+| `prefixIcon` | `ReactElement`                                                          | false | -         | 앞쪽에 표시할 단일 아이콘   |
+| `suffixIcon` | `ReactElement`                                                          | false | -         | 뒤쪽에 표시할 단일 아이콘   |
+| `loading`    | `boolean`                                                               | false | `false`   | 로딩을 표시하고 클릭을 막음 |
+| `onClick`    | `MouseEventHandler<HTMLButtonElement>`                                  | false | -         | 클릭할 때 실행할 함수       |
 
 `disabled`, `onClick` 등 나머지 네이티브 `<button>` props는 그대로 지원합니다.
-`iconOnly`를 사용할 때는 동작을 설명하는 `aria-label`을 반드시 함께 전달합니다.
 
 ### Icon
 
@@ -134,21 +145,21 @@ Figma Icon 라이브러리 아이콘입니다.
 | `color`   | `string`                                      | false | `currentColor` | 색상(기본: 부모 텍스트 색) |
 | `loading` | `boolean`                                     | false | `false`        | 로딩 표시 및 동작 차단     |
 
-장식용 아이콘은 기본적으로 접근성 트리에서 제외됩니다. `onClick`으로 직접 상호작용하게 만들 때는 `aria-label`을 함께 전달해야 하며 Enter와 Space 키로도 실행됩니다. 일반적인 작업은 Icon 단독보다 `Button iconOnly` 조합을 권장합니다.
+`onClick`이 있으면 hover 효과가 적용되며 Enter와 Space 키로도 실행됩니다. `disabled` 또는 `loading`이면 클릭과 키보드 실행을 막습니다.
 
 ### Tag
 
 ```tsx
-<Tag color="green" variant="filled">텍스트</Tag>
+<Tag color="success" variant="filled">텍스트</Tag>
 <Tag prefixIcon={<Icon icon="edit" />} suffixIcon={<Icon icon="close" />}>텍스트</Tag>
 ```
 
-| prop         | 타입                                                                  | 필수  | 기본값   | 설명                                         |
-| ------------ | --------------------------------------------------------------------- | ----- | -------- | -------------------------------------------- |
-| `color`      | `black` \| `green` \| `navy` \| `red` \| `grey` \| `purple` \| `blue` | false | `black`  | 색상                                         |
-| `variant`    | `filled` \| `outlined` \| `solid` \| `soft-outlined`                  | false | `filled` | 스타일                                       |
-| `prefixIcon` | `ReactNode`                                                           | false | -        | 앞쪽 아이콘. 16x16 소켓, hover 시 opacity-75 |
-| `suffixIcon` | `ReactNode`                                                           | false | -        | 뒤쪽 아이콘. 16x16 소켓, hover 시 opacity-75 |
+| prop         | 타입                                                                         | 필수  | 기본값   | 설명                           |
+| ------------ | ---------------------------------------------------------------------------- | ----- | -------- | ------------------------------ |
+| `color`      | `dark` \| `success` \| `navy` \| `danger` \| `gray` \| `purple` \| `primary` | false | `dark`   | 색상                           |
+| `variant`    | `filled` \| `outlined` \| `solid` \| `soft-outlined`                         | false | `filled` | 스타일                         |
+| `prefixIcon` | `ReactNode`                                                                  | false | -        | 앞쪽 아이콘. 16x16 영역에 표시 |
+| `suffixIcon` | `ReactNode`                                                                  | false | -        | 뒤쪽 아이콘. 16x16 영역에 표시 |
 
 Button과 달리 아이콘의 `onClick`을 무시하지 않습니다(닫기 버튼처럼 상호작용 가능해야 하는 경우가 있어서).
 
@@ -157,7 +168,7 @@ Button과 달리 아이콘의 `onClick`을 무시하지 않습니다(닫기 버�
 ```tsx
 const [checked, setChecked] = useState(false);
 
-<Toggle aria-label="알림 사용" checked={checked} onChange={setChecked} />;
+<Toggle checked={checked} onChange={setChecked} />;
 ```
 
 | prop       | 타입                         | 필수  | 기본값  | 설명                                 |
@@ -192,7 +203,7 @@ const [checked, setChecked] = useState(false);
 | -------------- | ----------- | ----- | ------ | ------------------------------------------------------- |
 | `errorMessage` | `ReactNode` | false | -      | 에러 메시지. 없으면(`undefined`/`false`) 접혀서 안 보임 |
 
-`errorMessage`가 생기면 위→아래로 슬라이드하며 나타나고, 없어지면 반대로 슬라이드업하며 사라집니다. 긴 문장은 줄바꿈되며 `role="alert"`/`aria-live="polite"`로 보조기기에 전달됩니다. Label과 마찬가지로 Input 전용이 아닌 독립 컴포넌트입니다.
+`errorMessage`가 생기면 위→아래로 슬라이드하며 나타나고, 없어지면 반대로 슬라이드업하며 사라집니다. 긴 문장은 줄바꿈됩니다. Label과 마찬가지로 Input 전용이 아닌 독립 컴포넌트입니다.
 
 ### Input
 
@@ -205,34 +216,33 @@ const validateEmail = (value: string) => (value.includes("@") ? "" : "형식이 
   label="이메일"
   required
   value={value}
-  validate={validateEmail}
+  errorMessage={validateEmail}
   onChange={setValue}
   allowClear
   maxLength={30}
 />;
 ```
 
-| prop           | 타입                                                  | 필수  | 기본값    | 설명                                                                        |
-| -------------- | ----------------------------------------------------- | ----- | --------- | --------------------------------------------------------------------------- |
-| `size`         | `lg` \| `md` \| `sm`                                  | false | `md`      | 크기                                                                        |
-| `variant`      | `default` \| `filled` \| `borderless` \| `underlined` | false | `default` | 스타일                                                                      |
-| `label`        | `ReactNode`                                           | false | -         | 있으면 위에 [Label](#label) 렌더링                                          |
-| `required`     | `boolean`                                             | false | `false`   | 실제 input에 required 적용 + Label이 있으면 `*` 표시                        |
-| `password`     | `boolean`                                             | false | `false`   | 입력값을 가리고 눈 아이콘으로 표시 상태 전환                                |
-| `errorMessage` | `ReactNode`                                           | false | -         | 있으면 아래에 [ErrorMessage](#errormessage) 렌더링 + 테두리 warning 색      |
-| `disabled`     | `boolean`                                             | false | `false`   | 비활성화                                                                    |
-| `allowClear`   | `boolean`                                             | false | `false`   | 값 있을 때 지우기 버튼. 지운 뒤 input으로 포커스 복귀                       |
-| `showCount`    | `boolean`                                             | false | `false`   | 글자 수 표시. `maxLength`가 있으면 `n / maxLength` 형식                     |
-| `maxLength`    | `number`                                              | false | -         | 최대 글자수. 한글 IME 조합 중에도 자체 검증해서 강제함                      |
-| `prefixIcon`   | `ReactNode`                                           | false | -         | 앞쪽 아이콘                                                                 |
-| `suffixIcon`   | `ReactNode`                                           | false | -         | 뒤쪽 아이콘                                                                 |
-| `validate`     | `(value: string) => string \| Promise<string>`        | false | -         | 동기 검사는 최초 렌더링과 포커스 해제 시, 비동기 검사는 포커스 해제 시 실행 |
-| `className`    | `string`                                              | false | -         | 최상위 요소 클래스                                                          |
-| `onChange`     | `(value: string) => void`                             | false | -         | 입력값이 바뀔 때 변경된 입력값과 함께 호출                                  |
-| `onBlur`       | `() => void`                                          | false | -         | 포커스가 빠질 때 호출                                                       |
-| `onEnter`      | `() => void`                                          | false | -         | Enter를 누를 때 호출                                                        |
+| prop           | 타입                                                          | 필수  | 기본값    | 설명                                                          |
+| -------------- | ------------------------------------------------------------- | ----- | --------- | ------------------------------------------------------------- |
+| `size`         | `lg` \| `md` \| `sm`                                          | false | `md`      | 크기                                                          |
+| `variant`      | `default` \| `filled` \| `borderless` \| `underlined`         | false | `default` | 스타일                                                        |
+| `label`        | `ReactNode`                                                   | false | -         | 있으면 위에 [Label](#label) 렌더링                            |
+| `required`     | `boolean`                                                     | false | `false`   | 실제 input에 required 적용 + Label이 있으면 `*` 표시          |
+| `password`     | `boolean`                                                     | false | `false`   | 입력값을 가리고 눈 아이콘으로 표시 상태 전환                  |
+| `errorMessage` | `ReactNode` \| `(value: string) => string \| Promise<string>` | false | -         | 오류를 바로 표시하거나 동기·비동기 검증 후 반환된 오류를 표시 |
+| `disabled`     | `boolean`                                                     | false | `false`   | 비활성화                                                      |
+| `allowClear`   | `boolean`                                                     | false | `false`   | 값 있을 때 지우기 버튼. 지운 뒤 input으로 포커스 복귀         |
+| `showCount`    | `boolean`                                                     | false | `false`   | 글자 수 표시. `maxLength`가 있으면 `n / maxLength` 형식       |
+| `maxLength`    | `number`                                                      | false | -         | 최대 글자수. 한글 IME 조합 중에도 자체 검증해서 강제함        |
+| `prefixIcon`   | `ReactNode`                                                   | false | -         | 앞쪽 아이콘                                                   |
+| `suffixIcon`   | `ReactNode`                                                   | false | -         | 뒤쪽 아이콘                                                   |
+| `className`    | `string`                                                      | false | -         | 최상위 요소 클래스                                            |
+| `onChange`     | `(value: string) => void`                                     | false | -         | 입력값이 바뀔 때 변경된 입력값과 함께 호출                    |
+| `onBlur`       | `FocusEventHandler<HTMLInputElement>`                         | false | -         | 포커스가 빠질 때 이벤트와 함께 호출                           |
+| `onEnter`      | `() => void`                                                  | false | -         | Enter를 누를 때 호출                                          |
 
-`placeholder`, `disabled` 등 나머지 네이티브 `<input>` props도 지원합니다. `errorMessage`가 있으면 `aria-invalid`와 `aria-describedby`가 자동으로 연결됩니다.
+`placeholder`, `disabled` 등 나머지 네이티브 `<input>` props도 지원합니다.
 
 ### Checkbox
 
@@ -243,7 +253,7 @@ const validateEmail = (value: string) => (value.includes("@") ? "" : "형식이 
 | prop      | 타입        | 필수  | 기본값  | 설명                                                                                              |
 | --------- | ----------- | ----- | ------- | ------------------------------------------------------------------------------------------------- |
 | `label`   | `ReactNode` | false | -       | 있으면 오른쪽에 라벨 텍스트 렌더링                                                                |
-| `error`   | `boolean`   | false | `false` | 테두리/체크 색이 warning(red) 색으로 바뀜                                                         |
+| `error`   | `boolean`   | false | `false` | 테두리/체크 색이 danger 색으로 바뀜                                                               |
 | `checked` | `boolean`   | false | -       | 나머지 네이티브 `<input type="checkbox">` props(`checked`/`onChange`/`disabled` 등)도 그대로 지원 |
 
 ### Radio
@@ -252,10 +262,10 @@ const validateEmail = (value: string) => (value.includes("@") ? "" : "형식이 
 <Radio name="group" label="옵션 A" checked={value === "a"} onChange={() => setValue("a")} />
 ```
 
-| prop    | 타입        | 필수  | 기본값  | 설명                                      |
-| ------- | ----------- | ----- | ------- | ----------------------------------------- |
-| `label` | `ReactNode` | false | -       | 있으면 오른쪽에 라벨 텍스트 렌더링        |
-| `error` | `boolean`   | false | `false` | 테두리/선택 색이 warning(red) 색으로 바뀜 |
+| prop    | 타입        | 필수  | 기본값  | 설명                                |
+| ------- | ----------- | ----- | ------- | ----------------------------------- |
+| `label` | `ReactNode` | false | -       | 있으면 오른쪽에 라벨 텍스트 렌더링  |
+| `error` | `boolean`   | false | `false` | 테두리/선택 색이 danger 색으로 바뀜 |
 
 나머지 네이티브 `<input type="radio">` props(`name`/`checked`/`onChange`/`disabled` 등)도 그대로 지원합니다. 같은 그룹은 `name`으로 묶습니다.
 
@@ -273,7 +283,7 @@ const validateEmail = (value: string) => (value.includes("@") ? "" : "형식이 
 />
 ```
 
-`href`가 있는 항목에만 마우스 호버와 키보드 포커스 디자인이 적용돼요. `title`, `href`, `icon`, `color` 외에도 `target`, `rel`, `onClick`, `className`, `style` 같은 링크 속성을 전달할 수 있어요.
+`href` 또는 `onClick`이 있는 항목에 마우스 호버와 키보드 포커스 디자인이 적용돼요. 링크에는 `target`, `rel` 등을 전달할 수 있고, 각 항목에 `className`, `style`을 지정할 수 있어요.
 
 ### Illustrations
 
@@ -311,20 +321,30 @@ import { Button, Flex } from "@taejin-k/wizard-design";
 
 ### Segmented
 
-여러 선택지 중 하나를 빠르게 전환합니다. 문자열·숫자 배열 또는 아이콘, 비활성화, Tooltip을 포함한 객체 배열을 전달할 수 있습니다.
+여러 선택지 중 하나를 빠르게 전환합니다. `value`, `label`과 선택적인 아이콘·비활성화·Tooltip을 포함한 객체 배열을 전달합니다.
 
 ```tsx
-import { useState } from "react";
+import { useState, type Key } from "react";
 import { Segmented } from "@taejin-k/wizard-design";
 
 function PeriodSegmented() {
-  const [period, setPeriod] = useState<string | number>("주간");
+  const [period, setPeriod] = useState<Key>("week");
 
-  return <Segmented options={["일간", "주간", "월간"]} value={period} onChange={setPeriod} />;
+  return (
+    <Segmented
+      options={[
+        { value: "day", label: "일간" },
+        { value: "week", label: "주간" },
+        { value: "month", label: "월간" },
+      ]}
+      value={period}
+      onChange={setPeriod}
+    />
+  );
 }
 ```
 
-`size`, `block`, `disabled`, `vertical`을 지원하며 각 객체 옵션에는 `label`, `icon`, `disabled`, `tooltip`을 설정할 수 있습니다.
+`size`, `fullWidth`, `disabled`, `vertical`을 지원하며 각 객체 옵션에는 `label`, `icon`, `disabled`, `tooltip`을 설정할 수 있습니다.
 
 ### Modal
 
@@ -344,7 +364,7 @@ function BasicModal() {
         open={open}
         title="구성원 삭제"
         onCancel={() => setOpen(false)}
-        onOk={() => setOpen(false)}
+        onConfirm={() => setOpen(false)}
       >
         선택한 구성원을 삭제할까요?
       </Modal>
@@ -359,26 +379,13 @@ function BasicModal() {
 Modal.confirm({
   title: "구성원 삭제",
   content: "삭제한 구성원은 복구할 수 없어요.",
-  onOk: async () => {
+  onConfirm: async () => {
     await fetch("/api/members/1", { method: "DELETE" });
   },
 });
 ```
 
-Context 안에서 Modal을 열어야 한다면 `useModal`이 반환하는 `contextHolder`를 함께 렌더링합니다.
-
-```tsx
-function ContextModal() {
-  const [modal, contextHolder] = Modal.useModal();
-
-  return (
-    <>
-      {contextHolder}
-      <Button onClick={() => modal.success({ title: "저장했어요." })}>저장</Button>
-    </>
-  );
-}
-```
+앱의 Context가 필요한 내용은 선언형 `<Modal>` 안에 렌더링하세요. 정적 메서드는 별도 React 루트에서 실행되며 `useModal` Hook API는 제공하지 않습니다.
 
 `Modal.info`, `Modal.success`, `Modal.error`, `Modal.warning`, `Modal.confirm`, `Modal.destroyAll`을 제공하며 반환값의 `update`, `destroy`와 `await`도 지원합니다.
 
@@ -404,7 +411,9 @@ function BasicDrawer() {
 }
 ```
 
-`placement`, `size`, `width`, `height`, `extra`, `footer`, `loading`, `push`, `resizable`, `mask`, `getContainer`를 지원합니다.
+`placement`, `size`, `extra`, `footer`, `push`, `resizable`, `mask`, `keyboard`, `scrollLock`, `forceRender`, `destroyOnHidden`을 지원합니다. 가로·세로 크기는 방향에 따라 `size`로 지정합니다.
+
+Modal과 Drawer의 `mask={false}`는 dimmed를 숨기지 않고 배경 클릭 닫기만 막습니다. `keyboard={false}`는 Escape 닫기만 막으며 키보드 포커스는 패널 안에 유지합니다.
 
 ### Message
 
@@ -413,25 +422,10 @@ function BasicDrawer() {
 ```tsx
 import { Button, message } from "@taejin-k/wizard-design";
 
-<Button onClick={() => message.success("저장했어요.")}>저장</Button>;
+<Button onClick={() => message.success({ content: "저장했어요." })}>저장</Button>;
 ```
 
-Provider의 Context가 필요한 경우 Hook API를 사용합니다.
-
-```tsx
-function ContextMessage() {
-  const [messageApi, contextHolder] = message.useMessage();
-
-  return (
-    <>
-      {contextHolder}
-      <Button onClick={() => messageApi.info("새 소식이 있어요.")}>알림</Button>
-    </>
-  );
-}
-```
-
-`message.success`, `message.error`, `message.info`, `message.warning`, `message.loading`, `message.open`, `message.destroy`, `message.config`를 제공합니다. 각 호출이 반환하는 함수로 직접 닫거나 닫힘을 `await`할 수 있습니다.
+`message.success`, `message.error`, `message.info`, `message.warning`, `message.loading`, `message.open`, `message.destroy`를 제공합니다. 각 호출은 `MessageConfig` 객체를 받으며 반환하는 함수로 직접 닫거나 닫힘을 `await`할 수 있습니다. `duration`은 초 단위이고 `0`은 자동 닫힘을 끕니다. 동일한 `key`로 다시 호출하면 내용을 갱신합니다. `useMessage`와 전역 `config` API는 제공하지 않습니다.
 
 ### Notification
 
@@ -453,7 +447,14 @@ import { Button, notification } from "@taejin-k/wizard-design";
 </Button>;
 ```
 
-Context가 필요한 경우 `notification.useNotification()`이 반환하는 `contextHolder`를 렌더링합니다. `notification.open`, 상태별 메서드, `destroy`, `config`를 지원하며 `actions`, `duration`, `showProgress`, `pauseOnHover`, `placement`, `closable`을 설정할 수 있습니다.
+`notification.open`, 상태별 메서드와 `destroy`를 지원하며 `actions`, `duration`, `showProgress`, `pauseOnHover`, `placement`, `closable`을 설정할 수 있습니다. `duration`은 초 단위이고 `0`은 자동 닫힘을 끕니다. 동일한 `key`로 내용을 갱신하며 `useNotification`과 전역 `config` API는 제공하지 않습니다.
+
+### 입력값 검증과 호환성
+
+- DatePicker·RangePicker의 빠른 선택에도 날짜 제한이 적용됩니다. 시간 선택은 비활성 시·분·초를 확정할 수 없습니다.
+- ColorPicker는 범위를 벗어난 RGB·HSB·alpha 입력을 확정하지 않습니다. 올바른 값으로 수정하면 `onChange`가 호출됩니다.
+- 날짜·시간 입출력은 Dayjs를 사용하고, 빈 단일 값·빈 범위는 `undefined`, 다중 선택의 빈 값은 `[]`입니다.
+- React 18과 19를 지원합니다. SSR에서는 ESM/CJS 양쪽으로 import할 수 있으며, 정적 알림 메서드는 브라우저 이벤트에서 호출하세요.
 
 <br />
 

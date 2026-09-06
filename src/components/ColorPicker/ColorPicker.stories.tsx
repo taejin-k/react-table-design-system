@@ -93,7 +93,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "색상 패널과 입력값으로 색상을 선택해요.  \nHEX·RGB·HSB 형식, 투명도, 프리셋, 제어 상태와 클릭·호버 트리거를 지원해요.",
+          "ColorPicker는 색상 패널이나 값 입력으로 색상을 선택할 때 사용해요.  \nHEX·RGB·HSB 형식, 투명도, 프리셋과 클릭·호버 열기를 지원해요.",
       },
       page: () => (
         <div className="color-picker-docs component-docs">
@@ -103,6 +103,8 @@ const meta = {
           <h2>API</h2>
           <Markdown>{`
 ### ColorPicker
+
+ColorPicker는 사용자가 색상을 선택하거나 직접 입력하게 해요.
 
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
@@ -129,6 +131,8 @@ const meta = {
 
 ### ColorPresetType
 
+ColorPresetType은 빠르게 선택할 색상의 이름과 값을 정의해요.
+
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
 | \`label\` | 프리셋 그룹 이름을 표시해요. | \`ReactNode\` | - |
@@ -137,16 +141,16 @@ const meta = {
           `}</Markdown>
           <h2 className="component-docs-types-heading">Types</h2>
           <h3 id="color-format-type">ColorFormatType</h3>
-          <p>색상 입력 형식을 선택해요.</p>
+          <p>ColorFormatType은 색상 값을 입력하고 표시할 형식을 구분해요.</p>
           <TypeTokens values={colorFormats} />
           <h3 id="color-picker-size-type">ColorPickerSizeType</h3>
-          <p>트리거 크기를 선택해요.</p>
+          <p>ColorPickerSizeType은 색상 선택 버튼의 크기를 구분해요.</p>
           <TypeTokens values={colorPickerSizes} />
           <h3 id="color-picker-trigger-type">ColorPickerTriggerType</h3>
-          <p>패널을 여는 동작을 선택해요.</p>
+          <p>ColorPickerTriggerType은 색상 패널을 여는 사용자 동작을 구분해요.</p>
           <TypeTokens values={colorPickerTriggers} />
           <h3 id="color-picker-placement-type">ColorPickerPlacementType</h3>
-          <p>패널 위치를 선택해요.</p>
+          <p>ColorPickerPlacementType은 선택 버튼을 기준으로 패널이 열릴 위치를 구분해요.</p>
           <TypeTokens values={colorPickerPlacements} />
         </div>
       ),
@@ -192,7 +196,7 @@ export const Basic: Story = {
       },
     },
   },
-  render: (args) => <ColorPicker {...args} key={args.defaultValue} />,
+  render: (args) => <ColorPicker {...args} key={`${args.defaultValue}:${args.defaultFormat}`} />,
 };
 
 export const States: Story = {

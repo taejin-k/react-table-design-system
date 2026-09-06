@@ -4,6 +4,21 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { Image } from "./Image";
 
 describe("Image", () => {
+  it("runs the native onClick even when preview is disabled", () => {
+    const onClick = vi.fn();
+    render(<Image src="photo.png" alt="native click" preview={false} onClick={onClick} />);
+    fireEvent.click(screen.getByAltText("native click"));
+    expect(onClick).toHaveBeenCalledTimes(1);
+    expect(document.querySelector("[data-image-preview-root]")).not.toBeInTheDocument();
+  });
+
+  it("lets onClick prevent opening the preview", () => {
+    render(
+      <Image src="photo.png" alt="prevent preview" onClick={(event) => event.preventDefault()} />,
+    );
+    fireEvent.click(screen.getByAltText("prevent preview"));
+    expect(document.querySelector("[data-image-preview-root]")).not.toBeInTheDocument();
+  });
   afterEach(() => {
     vi.restoreAllMocks();
   });
@@ -92,13 +107,22 @@ describe("Image", () => {
 
     expect(document.querySelector(".wizard-image-preview-mask")).toBeInTheDocument();
     expect(document.querySelector("[data-image-preview-root]")).toBeInTheDocument();
+    await userEvent.click(document.querySelector(".wizard-image-preview-mask")!);
+    await waitFor(() =>
+      expect(document.querySelector("[data-image-preview-root]")).not.toBeInTheDocument(),
+    );
   });
 
-  it("hides the preview mask when mask is false", async () => {
+  it("keeps dimmed but ignores background clicks when mask is false", async () => {
     render(<Image src="photo.png" alt="마스크 없음" preview={{ mask: false }} />);
     fireEvent.load(screen.getByRole("img", { name: "마스크 없음" }));
     await userEvent.click(screen.getByRole("img", { name: "마스크 없음" }));
-    expect(document.querySelector(".wizard-image-preview-mask")).not.toBeInTheDocument();
+    expect(document.querySelector(".wizard-image-preview-mask")).toHaveClass(
+      "bg-black/45",
+      "cursor-default",
+    );
+    await userEvent.click(document.querySelector(".wizard-image-preview-mask")!);
+    expect(document.querySelector("[data-image-preview-root]")).toBeInTheDocument();
     expect(document.querySelector("[data-image-preview-root]")).toHaveClass("pointer-events-none");
     expect(document.querySelector("[data-image-preview-close]")).toHaveClass("pointer-events-auto");
     await userEvent.click(document.querySelector("[data-image-preview-close]")!);
@@ -218,6 +242,54 @@ describe("Image", () => {
     expect(previewImage).toHaveClass("cursor-grab", "transition-transform");
   });
 
+  it("zooms gradually with wheel distance and ignores horizontal scrolling", async () => {
+    render(<Image src="photo.png" alt="wheel zoom" />);
+    const image = screen.getByAltText("wheel zoom");
+    fireEvent.load(image);
+    await userEvent.click(image);
+    const preview = document.querySelector<HTMLElement>(".wizard-image-preview-image")!;
+    const scale = () => Number(preview.style.transform.match(/scale\(([^,]+)/)![1]);
+
+    fireEvent.wheel(preview, { deltaY: -2, ctrlKey: true });
+    expect(scale()).toBeGreaterThan(1);
+    expect(scale()).toBeLessThan(1.02);
+    fireEvent.wheel(preview, { deltaY: 2, ctrlKey: true });
+    expect(scale()).toBeCloseTo(1);
+    fireEvent.wheel(preview, { deltaY: 0, deltaX: 20 });
+    expect(scale()).toBeCloseTo(1);
+    fireEvent.wheel(preview, { deltaY: -10000 });
+    expect(scale()).toBeLessThan(1.83);
+    for (let i = 0; i < 30; i++) fireEvent.wheel(preview, { deltaY: -100 });
+    expect(scale()).toBe(50);
+    for (let i = 0; i < 30; i++) fireEvent.wheel(preview, { deltaY: 100 });
+    expect(scale()).toBe(0.25);
+  });
+
+  it("prevents browser pinch zoom only on the open preview image and cleans up", async () => {
+    render(<Image src="photo.png" alt="pinch zoom" />);
+    const image = screen.getByAltText("pinch zoom");
+    fireEvent.load(image);
+    await userEvent.click(image);
+    const preview = document.querySelector<HTMLElement>(".wizard-image-preview-image")!;
+    const pinch = () =>
+      new WheelEvent("wheel", {
+        deltaY: -2,
+        ctrlKey: true,
+        bubbles: true,
+        cancelable: true,
+      });
+    const inside = pinch();
+    fireEvent(preview, inside);
+    expect(inside.defaultPrevented).toBe(true);
+    const outside = pinch();
+    fireEvent(document.body, outside);
+    expect(outside.defaultPrevented).toBe(false);
+    await userEvent.click(document.querySelector("[data-image-preview-close]")!);
+    const afterClose = pinch();
+    fireEvent(preview, afterClose);
+    expect(afterClose.defaultPrevented).toBe(false);
+  });
+
   it("accumulates rapid zoom clicks without dropping an intermediate scale", async () => {
     render(<Image src="photo.png" alt="사진" />);
     fireEvent.load(screen.getByRole("img", { name: "사진" }));
@@ -285,6 +357,8 @@ describe("Image", () => {
     await userEvent.click(image);
 
     expect(document.querySelector("[data-image-preview-root]")).toBeInTheDocument();
-    expect(document.querySelector(".wizard-image-preview-mask")).not.toBeInTheDocument();
+    expect(document.querySelector(".wizard-image-preview-mask")).toHaveClass("bg-black/45");
+    await userEvent.click(document.querySelector(".wizard-image-preview-mask")!);
+    expect(document.querySelector("[data-image-preview-root]")).toBeInTheDocument();
   });
 });

@@ -1,20 +1,23 @@
-import type { FocusEvent, KeyboardEvent, ReactNode, UIEvent } from "react";
+import type { FocusEvent, Key, KeyboardEvent, ReactNode, UIEvent } from "react";
 import type { InputSizeType } from "../Input";
 import type { TagColorType } from "../Tag";
+import type { ValidatableErrorMessage } from "../_internal/useErrorMessageValidation";
 
 export type SelectModeType = "multiple" | "tags";
 export type SelectSizeType = InputSizeType;
 export type SelectPlacementType = "bottomLeft" | "bottomRight" | "topLeft" | "topRight";
 export type SelectVariantType = "default" | "filled";
+export type SelectValueType = Key | Key[] | undefined;
+export type SelectErrorMessage = ValidatableErrorMessage<SelectValueType>;
 
 export interface SelectBasicProps {
-  value: string | number;
+  value: Key;
   label: ReactNode;
 }
 
 export interface SelectOption {
   label?: ReactNode;
-  value?: string | number;
+  value?: Key;
   color?: TagColorType;
   disabled?: boolean;
   options?: SelectOption[];
@@ -23,7 +26,7 @@ export interface SelectOption {
 
 export interface SelectTagProps {
   label: ReactNode;
-  value: string | number;
+  value: Key;
   color?: TagColorType;
   closable: boolean;
   onClose: () => void;
@@ -41,7 +44,7 @@ interface SelectCommonProps {
   variant?: SelectVariantType;
   width?: number;
   label?: ReactNode;
-  errorMessage?: ReactNode;
+  errorMessage?: SelectErrorMessage;
   required?: boolean;
   readOnly?: boolean;
   disabled?: boolean;
@@ -67,7 +70,7 @@ interface SelectCommonProps {
   maxTagTextLength?: number;
   closable?: boolean;
   popupMatchWidth?: boolean | number;
-  tagSeparators?: string[] | ((input: string) => string[]);
+  tagSeparators?: string[];
   virtual?: boolean;
   optionRender?: (option: SelectOption, info: { index: number }) => ReactNode;
   popupRender?: (originNode: ReactNode) => ReactNode;
@@ -75,8 +78,8 @@ interface SelectCommonProps {
   labelRender?: (props: SelectBasicProps) => ReactNode;
   className?: string;
   onSearch?: (value: string) => void;
-  onSelect?: (value: string | number, option: SelectOption) => void;
-  onDeselect?: (value: string | number, option: SelectOption) => void;
+  onSelect?: (value: Key, option: SelectOption) => void;
+  onDeselect?: (value: Key, option: SelectOption) => void;
   onClear?: () => void;
   onOpenChange?: (open: boolean) => void;
   onFocus?: (event: FocusEvent<HTMLButtonElement | HTMLInputElement | HTMLDivElement>) => void;
@@ -89,16 +92,16 @@ interface SelectCommonProps {
 
 interface SelectSingleValueProps {
   mode?: undefined;
-  value?: string | number;
-  defaultValue?: string | number;
-  onChange?: (value: string | number | undefined, option: SelectOption | undefined) => void;
+  value?: Key;
+  defaultValue?: Key;
+  onChange?: (value: Key | undefined, option: SelectOption | undefined) => void;
 }
 
 interface SelectMultipleValueProps {
   mode: SelectModeType;
-  value?: (string | number)[];
-  defaultValue?: (string | number)[];
-  onChange?: (value: (string | number)[], option: SelectOption[]) => void;
+  value?: Key[];
+  defaultValue?: Key[];
+  onChange?: (value: Key[], option: SelectOption[]) => void;
 }
 
 export type SelectProps = SelectCommonProps & (SelectSingleValueProps | SelectMultipleValueProps);

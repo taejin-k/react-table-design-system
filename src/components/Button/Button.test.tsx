@@ -86,7 +86,11 @@ describe("Button", () => {
         삭제
       </Button>,
     );
-    expect(button).toHaveClass("disabled:bg-hover", "disabled:text-gray", "disabled:ring-border");
+    expect(button).toHaveClass(
+      "disabled:bg-hover",
+      "disabled:text-disabled",
+      "disabled:ring-border",
+    );
   });
 
   it("keeps icon interaction owned by the button", async () => {
@@ -120,11 +124,19 @@ describe("Button", () => {
     const { rerender } = render(<Button iconOnly size="sm" prefixIcon={<span />} />);
 
     const button = screen.getByRole("button");
-    expect(button).toHaveClass("w-5", "transition-[opacity,color,background-color,box-shadow]");
-    expect(button).not.toHaveClass("transition-[width,opacity,color,background-color,box-shadow]");
+    expect(button).toHaveClass(
+      "w-5",
+      "transition-[opacity,color,background-color,box-shadow]",
+    );
+    expect(button).not.toHaveClass(
+      "transition-[width,opacity,color,background-color,box-shadow]",
+    );
 
     rerender(<Button iconOnly size="lg" prefixIcon={<span />} />);
-    expect(button).toHaveClass("w-10", "transition-[opacity,color,background-color,box-shadow]");
+    expect(button).toHaveClass(
+      "w-10",
+      "transition-[opacity,color,background-color,box-shadow]",
+    );
   });
 
   it("applies a border radius equal to each button height when rounded", () => {
@@ -169,15 +181,13 @@ describe("Button", () => {
     );
 
     const button = screen.getByRole("button", { name: "저장" });
-    expect(button).toHaveClass(
-      "cursor-default",
-      "bg-[#6ea0fa]",
-      "opacity-100",
-      "hover:bg-[#6ea0fa]",
-    );
+    expect(button).toHaveClass("cursor-default", "bg-primary", "opacity-70", "hover:bg-primary");
     expect(screen.getByTestId("prefix")).toBeInTheDocument();
     expect(screen.queryByTestId("suffix")).not.toBeInTheDocument();
     expect(button.querySelector("svg")).toHaveClass("animate-spin");
+    expect(button.querySelector("svg")?.parentElement).toHaveClass(
+      "animate-[wizard-button-loading-in_200ms_ease-out]",
+    );
 
     await user.click(button);
     expect(onClick).not.toHaveBeenCalled();
@@ -193,7 +203,7 @@ describe("Button", () => {
     );
   });
 
-  it("scales shadow range and intensity with the button size", () => {
+  it("uses a subtle shadow for every button size", () => {
     const { rerender } = render(
       <Button size="sm" shadow>
         Small
@@ -215,12 +225,14 @@ describe("Button", () => {
         Large
       </Button>,
     );
-    expect(button).toHaveClass("shadow-lg");
+    expect(button).toHaveClass("shadow-sm");
   });
 
-  it("keeps text children on one line", () => {
+  it("keeps text children on one line and truncates them when the button width is constrained", () => {
     render(<Button>{"첫 줄\n둘째 줄"}</Button>);
 
-    expect(screen.getByRole("button")).toHaveClass("h-[30px]", "whitespace-nowrap");
+    const button = screen.getByRole("button");
+    expect(button).toHaveClass("h-[30px]", "max-w-full", "whitespace-nowrap");
+    expect(button.querySelector("span")).toHaveClass("min-w-0", "truncate");
   });
 });

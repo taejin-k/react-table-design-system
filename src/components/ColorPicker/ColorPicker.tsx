@@ -1,4 +1,5 @@
 import { createPortal } from "react-dom";
+import { MultilineText } from "../_internal/MultilineText";
 import { useMemo, useState } from "react";
 import { twMerge } from "tailwind-merge";
 import { Icon } from "../Icon";
@@ -29,6 +30,25 @@ function clamp(value: number, min = 0, max = 1) {
 function isValidColorInput(value: string, format: ColorFormatType) {
   const input = value.trim();
   if (format === "hex") return /^#(?:[\da-f]{3,4}|[\da-f]{6}|[\da-f]{8})$/i.test(input);
+  const channels = input.match(/[\d.]+%?/g)?.map((part) => ({
+    value: Number(part.replace("%", "")),
+    percent: part.endsWith("%"),
+  }));
+  if (
+    !channels ||
+    channels.length < 3 ||
+    channels.length > 4 ||
+    channels.some(({ value }) => !Number.isFinite(value) || value < 0)
+  )
+    return false;
+  if (
+    channels
+      .slice(0, 3)
+      .some(({ value }, index) => value > (format === "rgb" ? 255 : index === 0 ? 360 : 100))
+  )
+    return false;
+  const alpha = channels[3];
+  if (alpha && alpha.value > (alpha.percent ? 100 : 1)) return false;
   if (format === "rgb") {
     return /^rgba?\(\s*[\d.]+[,\s]+[\d.]+[,\s]+[\d.]+(?:[,/\s]+[\d.]+%?)?\s*\)$/i.test(input);
   }
@@ -210,6 +230,7 @@ export function ColorPicker({
   };
   const floating = useFloatingLayer({
     placement,
+    recoverOnPopupResize: true,
     trigger,
     targetGap: 2,
     disabled: disabled || readOnly,
@@ -288,7 +309,7 @@ export function ColorPicker({
             min={0}
             max={360}
             value={Math.round(hsb.h)}
-            className="wizard-color-hue h-3 w-full min-w-0 cursor-grab appearance-none rounded-full active:cursor-grabbing"
+            className="wizard-color-hue h-3 w-full min-w-0 cursor-grab appearance-none rounded-full outline-none active:cursor-grabbing"
             onInput={(event) => {
               const nextHue = Number(event.currentTarget.value);
               change(new InternalColor(hsbToRgb({ ...hsb, h: nextHue })), false, nextHue);
@@ -306,7 +327,7 @@ export function ColorPicker({
             min={0}
             max={100}
             value={Math.round(hsb.a * 100)}
-            className="wizard-color-alpha h-3 w-full min-w-0 cursor-grab appearance-none rounded-full active:cursor-grabbing"
+            className="wizard-color-alpha h-3 w-full min-w-0 cursor-grab appearance-none rounded-full outline-none active:cursor-grabbing"
             style={
               {
                 "--wizard-color-alpha-color": new InternalColor({
@@ -339,7 +360,9 @@ export function ColorPicker({
       <div className="flex min-w-0 gap-2">
         <Select
           value={format}
-          width={76}
+          allowClear={false}
+          width={86}
+          className="w-auto shrink-0"
           options={[
             { label: "HEX", value: "hex" },
             { label: "RGB", value: "rgb" },
@@ -373,7 +396,7 @@ export function ColorPicker({
           <button
             data-colorpicker-clear
             type="button"
-            className="inline-flex size-[30px] items-center justify-center rounded-md border border-border"
+            className="inline-flex size-[30px] shrink-0 cursor-pointer items-center justify-center rounded-md border border-border text-gray transition-[color,background-color,border-color] duration-200 ease-out outline-none hover:border-primary hover:bg-hover hover:text-danger motion-reduce:transition-none"
             onClick={() => {
               setHuePosition(0);
               if (value === undefined) setInnerValue("");
@@ -390,13 +413,15 @@ export function ColorPicker({
     <div className="grid w-full max-w-full min-w-0 gap-3 overflow-hidden border-t border-hover pt-3">
       {presets.map((preset, index) => (
         <div key={index} className="min-w-0">
-          <div className="text-sm font-medium">{preset.label}</div>
+          <div className="text-sm font-medium">
+            <MultilineText wrap>{preset.label}</MultilineText>
+          </div>
           <div className="mt-2 flex flex-wrap gap-2">
             {preset.colors.map((presetColor, colorIndex) => (
               <button
                 key={colorIndex}
                 type="button"
-                className="size-6 rounded border border-black/10 transition-transform hover:scale-110"
+                className="size-6 cursor-pointer rounded border border-black/10 outline-none"
                 style={{ background: colorCss(presetColor) }}
                 onClick={() => change(new InternalColor(colorCss(presetColor)), true)}
               />
@@ -416,17 +441,20 @@ export function ColorPicker({
     <>
       <span
         className={twMerge(
-          "rounded border border-black/10",
+          "shrink-0 rounded border border-black/10",
           size === "lg" ? "size-8" : size === "sm" ? "size-4" : "size-6",
         )}
         style={{ background: colorCss(selected) }}
       />
-      {showLabel ? <span className="truncate">{display}</span> : null}
+      {showLabel ? <span className="min-w-0 truncate">{display}</span> : null}
       <Icon
         icon="chevron-down"
         size={12}
         color="disabled"
-        className={twMerge("transition-transform", floating.isOpen && "rotate-180")}
+        className={twMerge(
+          "transition-transform duration-200 ease-out motion-reduce:transition-none",
+          floating.isOpen && "rotate-180",
+        )}
       />
     </>
   );
@@ -437,13 +465,16 @@ export function ColorPicker({
         type="button"
         disabled={disabled}
         className={twMerge(
-          "inline-flex items-center gap-2 rounded-md border border-border bg-white py-[3px] pr-2 pl-[3px] font-pretendard text-sm text-dark transition-colors focus:border-primary focus:outline-none disabled:cursor-not-allowed disabled:bg-hover disabled:text-disabled",
+          "inline-flex max-w-full min-w-0 items-center gap-2 rounded-md border border-border bg-white py-[3px] pr-2 pl-[3px] font-pretendard text-sm text-dark transition-colors duration-200 ease-out outline-none focus:border-primary disabled:cursor-not-allowed disabled:bg-hover disabled:text-disabled motion-reduce:transition-none",
           !disabled && !readOnly && "cursor-pointer hover:border-primary",
           readOnly && "cursor-default",
           size === "lg" ? "h-10" : size === "sm" ? "h-6" : "h-8",
           className,
         )}
         {...floating.triggerProps}
+        onMouseDown={(event) => {
+          if (readOnly) event.preventDefault();
+        }}
       >
         {triggerContent}
       </button>

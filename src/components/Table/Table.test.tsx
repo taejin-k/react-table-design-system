@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Table } from "./Table";
 import type { ColumnsType } from "./Table.types";
+import * as floatingPosition from "../_internal/floating-position";
 
 type Row = { id: string; name: string; team: string };
 const data: Row[] = [{ id: "1", name: "김민준", team: "Design" }];
@@ -21,6 +22,450 @@ function requiredElement<T extends Element>(selector: string): T {
 afterEach(() => vi.unstubAllGlobals());
 
 describe("Table regressions", () => {
+  it.each(["menu", "tree"] as const)(
+    "keeps the open %s filter side while searching but recalculates on reopen or overflow",
+    (filterMode) => {
+      vi.stubGlobal("innerWidth", 1000);
+      vi.stubGlobal("innerHeight", 600);
+      const rect = vi
+        .spyOn(HTMLElement.prototype, "getBoundingClientRect")
+        .mockImplementation(function (this: HTMLElement) {
+          return this.hasAttribute("data-table-filter")
+            ? new DOMRect(100, 400, 24, 24)
+            : new DOMRect();
+        });
+      const width = vi.spyOn(HTMLElement.prototype, "offsetWidth", "get").mockReturnValue(200);
+      const height = vi
+        .spyOn(HTMLElement.prototype, "offsetHeight", "get")
+        .mockImplementation(function (this: HTMLElement) {
+          return this.hasAttribute("data-table-filter-motion")
+            ? 100 + this.querySelectorAll('input[type="checkbox"]').length * 40
+            : 0;
+        });
+      try {
+        render(
+          <Table
+            columns={[
+              {
+                title: "팀",
+                dataIndex: "team",
+                filterSearch: true,
+                filterMode,
+                filters: ["Design", "Product", "Platform", "Mobile"].map((label) => ({
+                  label,
+                  value: label,
+                })),
+              },
+            ]}
+            dataSource={rows}
+            pagination={false}
+          />,
+        );
+        const trigger = requiredElement("[data-table-filter]");
+        fireEvent.click(trigger);
+        const popup = requiredElement<HTMLElement>("[data-table-filter-motion]");
+        const search = screen.getByPlaceholderText("키워드를 입력해요");
+        expect(popup).toHaveStyle({ transformOrigin: "center bottom" });
+        for (const query of ["Design", "", "no-match", ""]) {
+          fireEvent.change(search, { target: { value: query } });
+          expect(popup).toHaveStyle({
+            transformOrigin: "center bottom",
+            top: `${400 - popup.offsetHeight - 4}px`,
+          });
+        }
+
+        vi.stubGlobal("innerHeight", 900);
+        fireEvent(window, new Event("resize"));
+        expect(popup).toHaveStyle({ transformOrigin: "center bottom" });
+        fireEvent.pointerDown(document.body);
+        expect(popup).toHaveStyle({ transformOrigin: "center bottom", opacity: "0" });
+        // Reopen before the leave animation has unmounted the popup.
+        fireEvent.click(trigger);
+        expect(requiredElement("[data-table-filter-motion]")).toHaveStyle({
+          transformOrigin: "center top",
+          top: "428px",
+        });
+
+        vi.stubGlobal("innerHeight", 600);
+        fireEvent(window, new Event("resize"));
+        expect(requiredElement("[data-table-filter-motion]")).toHaveStyle({
+          transformOrigin: "center bottom",
+        });
+      } finally {
+        rect.mockRestore();
+        width.mockRestore();
+        height.mockRestore();
+      }
+    },
+  );
+
+  it.each(["menu", "tree"] as const)(
+    "repositions an upward %s filter in the same commit as its search results",
+    async (filterMode) => {
+      const height = vi
+        .spyOn(HTMLElement.prototype, "offsetHeight", "get")
+        .mockImplementation(function (this: HTMLElement) {
+          return this.hasAttribute("data-table-filter-motion")
+            ? 100 + this.querySelectorAll('input[type="checkbox"]').length * 40
+            : 0;
+        });
+      const position = vi
+        .spyOn(floatingPosition, "calculateFloatingPosition")
+        .mockImplementation((_anchor, popup) => ({
+          left: 100,
+          top: 600 - popup.height,
+          placement: "topLeft",
+          arrowStyle: {},
+        }));
+      // No resize delivery: a content commit must not wait for ResizeObserver.
+      vi.stubGlobal("ResizeObserver", undefined);
+      try {
+        render(
+          <Table
+            columns={[
+              {
+                title: "팀",
+                dataIndex: "team",
+                filterSearch: true,
+                filterMode,
+                filters: [
+                  {
+                    label: "제품 조직",
+                    value: "product",
+                    children: [
+                      { label: "Design", value: "Design" },
+                      { label: "Product", value: "Product" },
+                    ],
+                  },
+                  {
+                    label: "기술 조직",
+                    value: "tech",
+                    children: [
+                      { label: "Platform", value: "Platform" },
+                      { label: "Mobile", value: "Mobile" },
+                    ],
+                  },
+                ],
+              },
+            ]}
+            dataSource={rows}
+            pagination={false}
+          />,
+        );
+        fireEvent.click(requiredElement("[data-table-filter]"));
+        const popup = requiredElement<HTMLElement>("[data-table-filter-motion]");
+        const search = screen.getByPlaceholderText("키워드를 입력해요");
+        await waitFor(() => expect(popup).toHaveStyle({ opacity: "1" }));
+        for (const query of ["Design", "", "no-match", "기술", ""]) {
+          fireEvent.change(search, { target: { value: query } });
+          expect(requiredElement("[data-table-filter-motion]")).toBe(popup);
+          expect(popup).toHaveStyle({
+            top: `${600 - popup.offsetHeight}px`,
+            opacity: "1",
+            transform: "scaleY(1)",
+            transformOrigin: "center bottom",
+          });
+          expect(document.activeElement).toBe(search);
+        }
+      } finally {
+        height.mockRestore();
+        position.mockRestore();
+      }
+    },
+  );
+
+  it.each([
+    ["topLeft", "center bottom", "scaleY(0.8)"],
+    ["bottomLeft", "center top", "scaleY(0.8)"],
+    ["leftTop", "right center", "scaleX(0.8)"],
+    ["rightTop", "left center", "scaleX(0.8)"],
+  ] as const)(
+    "uses resolved %s placement for filter enter and exit motion",
+    (placement, origin, transform) => {
+      const position = vi.spyOn(floatingPosition, "calculateFloatingPosition").mockReturnValue({
+        left: 100,
+        top: 100,
+        placement,
+        arrowStyle: {},
+      });
+      try {
+        render(
+          <Table
+            columns={[
+              { title: "팀", dataIndex: "team", filters: [{ label: "Design", value: "Design" }] },
+            ]}
+            dataSource={rows}
+            pagination={false}
+          />,
+        );
+        fireEvent.click(requiredElement("[data-table-filter]"));
+        const popup = requiredElement<HTMLElement>("[data-table-filter-motion]");
+        expect(popup).toHaveStyle({
+          transformOrigin: origin,
+          transform,
+          transitionDuration: "200ms",
+        });
+        fireEvent.pointerDown(document.body);
+        expect(popup).toHaveStyle({ transformOrigin: origin, transform, opacity: "0" });
+      } finally {
+        position.mockRestore();
+      }
+    },
+  );
+
+  it.each(["menu", "tree"] as const)(
+    "uses 200ms hover backgrounds in %s filter rows",
+    (filterMode) => {
+      render(
+        <Table
+          columns={[
+            {
+              title: "팀",
+              dataIndex: "team",
+              filterMode,
+              filters: [{ label: "Design", value: "Design" }],
+            },
+          ]}
+          dataSource={rows}
+          pagination={false}
+        />,
+      );
+      fireEvent.click(requiredElement("[data-table-filter]"));
+      const row = screen.getByRole("checkbox", { name: "Design" }).closest("label")!.parentElement;
+      expect(row).toHaveClass(
+        "hover:bg-hover",
+        "transition-colors",
+        "duration-200",
+        "motion-reduce:transition-none",
+      );
+    },
+  );
+
+  it("emits controlled sort requests without changing the supplied order", () => {
+    const onChange = vi.fn();
+    render(
+      <Table
+        columns={[
+          {
+            title: "이름",
+            dataIndex: "name",
+            sorter: (a, b) => a.name.localeCompare(b.name, "ko"),
+            sortOrder: "ascend",
+          },
+        ]}
+        dataSource={rows}
+        pagination={false}
+        onChange={onChange}
+      />,
+    );
+    fireEvent.click(requiredElement("[data-table-sorter]"));
+    expect(onChange).toHaveBeenCalledWith(expect.anything(), {}, [
+      expect.objectContaining({ order: "descend" }),
+    ]);
+    expect(screen.getAllByRole("row")[1]).toHaveTextContent("김민준");
+    fireEvent.click(requiredElement("[data-table-sorter]"));
+    expect(onChange.mock.lastCall?.[2][0].order).toBe("descend");
+  });
+
+  it("honors initial loading delay across equivalent config rerenders", () => {
+    vi.useFakeTimers();
+    try {
+      const props = {
+        columns: [{ title: "이름", dataIndex: "name" }],
+        dataSource: rows,
+        pagination: false as const,
+      };
+      const { rerender } = render(<Table {...props} loading={{ delay: 200, text: "로딩 중" }} />);
+      expect(screen.queryByText("로딩 중")).not.toBeInTheDocument();
+      act(() => vi.advanceTimersByTime(100));
+      rerender(<Table {...props} loading={{ delay: 200, text: "로딩 중" }} />);
+      act(() => vi.advanceTimersByTime(100));
+      expect(screen.getByText("로딩 중")).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it.each(["menu", "tree"] as const)(
+    "shows all descendants of a matching %s filter parent",
+    async (filterMode) => {
+      render(
+        <Table
+          columns={[
+            {
+              title: "팀",
+              dataIndex: "team",
+              filterSearch: true,
+              filterMode,
+              filters: [
+                {
+                  label: "제품 조직",
+                  value: "product",
+                  children: [
+                    { label: "Design", value: "design" },
+                    {
+                      label: "하위팀",
+                      value: "sub",
+                      children: [{ label: "Product", value: "pm" }],
+                    },
+                  ],
+                },
+                {
+                  label: "기술 조직",
+                  value: "tech",
+                  children: [{ label: "Platform", value: "platform" }],
+                },
+              ],
+            },
+          ]}
+          dataSource={data}
+          pagination={false}
+        />,
+      );
+      await userEvent.click(requiredElement("[data-table-filter]"));
+      const input = screen.getByPlaceholderText("키워드를 입력해요");
+      const labels = () =>
+        screen.getAllByRole("checkbox").map((el) => el.closest("label")?.textContent);
+      for (const value of ["제품", "ㅈㅍ", "제푸"]) {
+        fireEvent.change(input, { target: { value } });
+        expect(labels()).toEqual(["Design", "Product"]);
+      }
+      fireEvent.change(input, { target: { value: "Design" } });
+      expect(labels()).toEqual(["Design"]);
+      fireEvent.change(input, { target: { value: "하위" } });
+      expect(labels()).toEqual(["Product"]);
+      fireEvent.change(input, { target: { value: "" } });
+      expect(labels()).toEqual(["Design", "Product", "Platform"]);
+    },
+  );
+
+  it.each(["menu", "tree"] as const)(
+    "keeps nested %s filter results only while IME is composing",
+    async (filterMode) => {
+      render(
+        <Table
+          columns={[
+            {
+              title: "이름",
+              dataIndex: "name",
+              filterSearch: true,
+              filterMode,
+              filters: [
+                { label: "구성원", value: "group", children: [{ label: "김민준", value: "kim" }] },
+              ],
+            },
+          ]}
+          dataSource={rows}
+          pagination={false}
+        />,
+      );
+      await userEvent.click(requiredElement("[data-table-filter]"));
+      const input = screen.getByPlaceholderText("키워드를 입력해요");
+      fireEvent.compositionStart(input);
+      fireEvent.change(input, { target: { value: "김믽" } });
+      expect(screen.getByRole("checkbox", { name: "김민준" })).toBeInTheDocument();
+      fireEvent.compositionEnd(input, { data: "믽" });
+      expect(screen.queryByRole("checkbox", { name: "김민준" })).not.toBeInTheDocument();
+      fireEvent.compositionStart(input);
+      expect(screen.getByRole("checkbox", { name: "김민준" })).toBeInTheDocument();
+      fireEvent.blur(input);
+      expect(screen.queryByRole("checkbox", { name: "김민준" })).not.toBeInTheDocument();
+    },
+  );
+
+  it.each(["menu", "tree"] as const)(
+    "searches nested Korean filter labels in %s mode without filtering rows early",
+    async (filterMode) => {
+      const user = userEvent.setup();
+      const onFilter = vi.fn((value, record: Row) => record.id === value);
+      render(
+        <Table<Row>
+          rowKey="id"
+          columns={[
+            {
+              title: "이름",
+              dataIndex: "name",
+              filterMode,
+              filterSearch: true,
+              onFilter,
+              filters: [
+                {
+                  label: "구성원",
+                  value: "members",
+                  children: [
+                    { label: "김민준", value: "1" },
+                    { label: "이서연", value: "2" },
+                  ],
+                },
+                { label: "박지호", value: "3" },
+                { label: "Design42", value: "design" },
+              ],
+            },
+          ]}
+          dataSource={rows}
+          pagination={false}
+        />,
+      );
+      await user.click(requiredElement("[data-table-filter]"));
+      const search = screen.getByPlaceholderText("키워드를 입력해요");
+      const popup = within(requiredElement<HTMLElement>("[data-table-filter-motion]"));
+      for (const query of ["ㄱ", "기", "ㄱㅁ", "ㄱㅁㅈ", "김미", "김민주", "민준"]) {
+        fireEvent.change(search, { target: { value: query } });
+        expect(popup.getByText("구성원")).toBeInTheDocument();
+        // ㄱ also matches the parent 구성원, so both descendants are included.
+        expect(popup.getAllByRole("checkbox")).toHaveLength(query === "ㄱ" ? 2 : 1);
+        expect(popup.getByRole("checkbox", { name: "김민준" })).toBeInTheDocument();
+        expect(document.querySelectorAll("tbody tr")).toHaveLength(3);
+      }
+      for (const query of ["기민", "ㄱㅈ", "없는이름"]) {
+        fireEvent.change(search, { target: { value: query } });
+        expect(popup.queryAllByRole("checkbox")).toHaveLength(0);
+        expect(popup.getByText("검색결과가 없어요")).toBeInTheDocument();
+      }
+      for (const query of ["DESIGN", "42"]) {
+        fireEvent.change(search, { target: { value: query } });
+        expect(popup.getByRole("checkbox", { name: "Design42" })).toBeInTheDocument();
+      }
+      fireEvent.change(search, { target: { value: "" } });
+      expect(popup.getAllByRole("checkbox")).toHaveLength(4);
+      expect(onFilter).not.toHaveBeenCalled();
+
+      fireEvent.change(search, { target: { value: "ㄱㅁㅈ" } });
+      await user.click(popup.getByRole("checkbox", { name: "김민준" }));
+      await user.click(popup.getByRole("button", { name: "확인" }));
+      expect(onFilter).toHaveBeenCalledWith("1", rows[0]);
+      expect(document.querySelectorAll("tbody tr")).toHaveLength(1);
+      expect(document.querySelector("tbody")).toHaveTextContent("김민준");
+    },
+  );
+
+  it("also searches Korean labels in single-selection filters", async () => {
+    render(
+      <Table
+        columns={[
+          {
+            title: "이름",
+            dataIndex: "name",
+            filterSearch: true,
+            filterMultiple: false,
+            filters: [
+              { label: "김민준", value: "1" },
+              { label: "박지호", value: "3" },
+            ],
+          },
+        ]}
+        dataSource={rows}
+        pagination={false}
+      />,
+    );
+    await userEvent.click(requiredElement("[data-table-filter]"));
+    fireEvent.change(screen.getByPlaceholderText("키워드를 입력해요"), {
+      target: { value: "ㄱㅁ" },
+    });
+    expect(screen.getByRole("radio", { name: "김민준" })).toBeInTheDocument();
+    expect(screen.queryByRole("radio", { name: "박지호" })).not.toBeInTheDocument();
+  });
+
   it("forwards className to the top-level Table element", () => {
     const { container } = render(
       <Table
@@ -426,7 +871,7 @@ describe("Table regressions", () => {
           {
             title: "팀",
             dataIndex: "team",
-            filters: [{ text: "Design", value: "Design" }],
+            filters: [{ label: "Design", value: "Design" }],
             filteredValue: ["Design"],
             onFilter: (value, record) => record.team === value,
           },
@@ -449,7 +894,7 @@ describe("Table regressions", () => {
           {
             title: "팀",
             dataIndex: "team",
-            filters: [{ text: "Design", value: "Design" }],
+            filters: [{ label: "Design", value: "Design" }],
           },
         ]}
         dataSource={data}
@@ -470,8 +915,8 @@ describe("Table regressions", () => {
             title: "팀",
             dataIndex: "team",
             filters: [
-              { text: "Design", value: "Design" },
-              { text: "Platform", value: "Platform" },
+              { label: "Design", value: "Design" },
+              { label: "Platform", value: "Platform" },
             ],
             filterSearch: true,
           },
@@ -597,6 +1042,8 @@ describe("Table regressions", () => {
     );
 
     const sorter = requiredElement<HTMLElement>("[data-table-sorter]");
+    expect(sorter).toHaveClass("hover:bg-transparent");
+    expect(sorter).not.toHaveClass("hover:bg-hover");
     await user.hover(sorter);
     expect(await screen.findByText("오름차순 정렬")).toBeInTheDocument();
     await user.unhover(sorter);
@@ -641,8 +1088,8 @@ describe("Table regressions", () => {
             title: "팀",
             dataIndex: "team",
             filters: [
-              { text: "Design", value: "Design" },
-              { text: "Platform", value: "Platform" },
+              { label: "Design", value: "Design" },
+              { label: "Platform", value: "Platform" },
             ],
             onFilter: (value, record) => record.team === value,
           },
@@ -664,6 +1111,45 @@ describe("Table regressions", () => {
     expect(screen.getAllByRole("row")).toHaveLength(3);
   });
 
+  it("keeps long filter reset and confirm actions usable", async () => {
+    const resetText = "초기화".repeat(80);
+    const confirmText = "확인".repeat(80);
+    const onChange = vi.fn();
+    render(
+      <Table
+        columns={[
+          {
+            title: "팀",
+            dataIndex: "team",
+            filters: [{ label: "Design", value: "Design" }],
+            defaultFilteredValue: ["Design"],
+            onFilter: (value, record) => record.team === value,
+          },
+        ]}
+        dataSource={rows}
+        pagination={false}
+        locale={{ filterReset: resetText, filterConfirm: confirmText }}
+        onChange={onChange}
+      />,
+    );
+    await userEvent.click(requiredElement("[data-table-filter]"));
+    const popup = within(requiredElement<HTMLElement>("[data-table-filter-motion]"));
+    const reset = popup.getByRole("button", { name: resetText });
+    const confirm = popup.getByRole("button", { name: confirmText });
+    expect(reset).toHaveClass("min-w-0");
+    expect(confirm).toHaveClass("min-w-0", "shrink-0", "max-w-[50%]");
+    expect(reset.querySelector("span")).toHaveClass("truncate");
+    await userEvent.click(reset);
+    expect(popup.getByRole("checkbox", { name: "Design" })).not.toBeChecked();
+    expect(onChange).not.toHaveBeenCalled();
+    await userEvent.click(confirm);
+    expect(onChange).toHaveBeenCalledWith(expect.anything(), { team: null }, []);
+    await waitFor(() =>
+      expect(document.querySelector("[data-table-filter-motion]")).not.toBeInTheDocument(),
+    );
+    expect(screen.getAllByRole("row")).toHaveLength(4);
+  });
+
   it("closes the filter popup when the page scrolls", async () => {
     const user = userEvent.setup();
     render(
@@ -672,7 +1158,7 @@ describe("Table regressions", () => {
           {
             title: "팀",
             dataIndex: "team",
-            filters: [{ text: "Design", value: "Design" }],
+            filters: [{ label: "Design", value: "Design" }],
             onFilter: (value, record) => record.team === value,
           },
         ]}
@@ -821,6 +1307,10 @@ describe("Table regressions", () => {
     expect(detail).toBeInTheDocument();
     expect(detail.closest("td")).toHaveClass("!bg-hover");
     await user.click(requiredElement("[data-table-expand]"));
+    expect(screen.getByText("김민준 상세 정보")).toBeInTheDocument();
+    fireEvent.transitionEnd(requiredElement("[data-table-expand-motion]"), {
+      propertyName: "grid-template-rows",
+    });
     expect(screen.queryByText("김민준 상세 정보")).not.toBeInTheDocument();
   });
 
@@ -909,6 +1399,78 @@ describe("Table regressions", () => {
 
     expect(screen.getByText("하위 구성원").closest("tr")).toHaveClass("[&>td]:bg-hover");
     expect(screen.getByText("상위 구성원").closest("tr")).not.toHaveClass("[&>td]:bg-hover");
+  });
+
+  it("slides nested tree rows out before removing them and preserves expansion when reopened", () => {
+    vi.useFakeTimers();
+    try {
+      const treeRows = [{
+        ...rows[0],
+        children: [{ ...rows[1], children: [rows[2]] }],
+      }];
+      const { container } = render(
+        <Table
+          columns={[{ title: "이름", dataIndex: "name", fixed: "left", width: 160 }]}
+          dataSource={treeRows}
+          expandable={{ defaultExpandedKeys: ["1", "2"], fixed: true }}
+          rowSelection={{ fixed: true }}
+          pagination={false}
+        />,
+      );
+      act(() => vi.advanceTimersByTime(40));
+      const trigger = requiredElement('[data-row-key="1"] [data-table-expand]');
+      const child = requiredElement('[data-row-key="2"]');
+      expect(child.querySelector("td")).toHaveStyle({ position: "sticky", left: "0px" });
+      fireEvent.click(trigger);
+      expect(container.querySelectorAll('[data-row-depth="1"], [data-row-depth="2"]')).toHaveLength(2);
+      for (const motion of Array.from(container.querySelectorAll("[data-table-tree-motion]"))) {
+        expect(motion).toHaveStyle({ gridTemplateRows: "0fr" });
+        expect(motion.closest("td")).toHaveClass("!py-0", "!border-b-0");
+      }
+      act(() => vi.advanceTimersByTime(80));
+      fireEvent.click(trigger);
+      expect(requiredElement('[data-row-key="2"]')).toBe(child);
+      for (const motion of Array.from(container.querySelectorAll("[data-table-tree-motion]"))) {
+        expect(motion).toHaveStyle({ gridTemplateRows: "1fr" });
+      }
+      act(() => vi.advanceTimersByTime(300));
+      expect(child).toBeInTheDocument();
+      fireEvent.click(trigger);
+      act(() => vi.advanceTimersByTime(250));
+      expect(container.querySelector('[data-row-depth="1"]')).toBeNull();
+      expect(container.querySelector('[data-row-depth="2"]')).toBeNull();
+      fireEvent.click(trigger);
+      act(() => vi.advanceTimersByTime(40));
+      expect(requiredElement('[data-row-key="3"]')).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("animates externally controlled tree collapse without changing expansion callbacks", () => {
+    vi.useFakeTimers();
+    try {
+      const onExpandedRowsChange = vi.fn();
+      const props = {
+        columns: [{ title: "이름", dataIndex: "name" }],
+        dataSource: [{ ...rows[0], children: [rows[1]] }],
+        pagination: false as const,
+      };
+      const { container, rerender } = render(
+        <Table {...props} expandable={{ expandedKeys: ["1"], onExpandedRowsChange }} />,
+      );
+      act(() => vi.advanceTimersByTime(40));
+      fireEvent.click(requiredElement("[data-table-expand]"));
+      expect(onExpandedRowsChange).toHaveBeenCalledWith([]);
+      expect(requiredElement("[data-table-tree-motion]")).toHaveStyle({ gridTemplateRows: "1fr" });
+      rerender(<Table {...props} expandable={{ expandedKeys: [], onExpandedRowsChange }} />);
+      expect(requiredElement("[data-table-tree-motion]")).toHaveStyle({ gridTemplateRows: "0fr" });
+      act(() => vi.advanceTimersByTime(250));
+      expect(container.querySelector('[data-row-depth="1"]')).toBeNull();
+      expect(onExpandedRowsChange).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("uses radio selection as a single controlled choice", async () => {
@@ -1215,83 +1777,151 @@ describe("Table regressions", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("shows and synchronizes the sticky horizontal scrollbar while the table bottom is offscreen", () => {
-    vi.stubGlobal("CSS", { supports: () => true });
-    const { container } = render(
+  it.each([
+    [undefined, 8],
+    [8, 8],
+    [12, 12],
+    [16, 16],
+    [17, 16],
+    [41, 16],
+    [4, 8],
+    [-1, 8],
+    [Number.NaN, 8],
+  ] as const)(
+    "sizes and synchronizes the sticky horizontal scrollbar (%s px)",
+    (scrollBarHeight, expectedHeight) => {
+      vi.stubGlobal("CSS", { supports: () => true });
+      const { container } = render(
+        <Table
+          columns={[
+            { title: "이름", dataIndex: "name", width: 300 },
+            { title: "팀", dataIndex: "team", width: 300 },
+          ]}
+          dataSource={rows}
+          pagination={false}
+          stickyScrollBar
+          stickyScrollBarOffset={24}
+          scrollBarHeight={scrollBarHeight}
+          scroll={{ x: 600 }}
+        />,
+      );
+
+      const scrollRegion = container.querySelector<HTMLElement>("[data-table-scroll-container]");
+      expect(scrollRegion).not.toBeNull();
+      if (!scrollRegion) return;
+
+      Object.defineProperties(scrollRegion, {
+        clientWidth: { configurable: true, value: 400 },
+        scrollWidth: { configurable: true, value: 800 },
+        scrollLeft: { configurable: true, writable: true, value: 0 },
+      });
+      let bottom = 1200;
+      vi.spyOn(scrollRegion, "getBoundingClientRect").mockImplementation(
+        () =>
+          ({
+            bottom,
+            height: bottom - 100,
+            left: 40,
+            right: 440,
+            top: 100,
+            width: 400,
+            x: 40,
+            y: 100,
+            toJSON: () => ({}),
+          }) as DOMRect,
+      );
+
+      fireEvent.scroll(scrollRegion);
+      fireEvent.scroll(window);
+      const stickyTrack = document.body.querySelector<HTMLElement>("[data-table-sticky-scrollbar]");
+      expect(stickyTrack).toHaveStyle({
+        left: "40px",
+        opacity: "1",
+        top: `${window.innerHeight - expectedHeight - 30}px`,
+        width: "400px",
+        height: `${expectedHeight}px`,
+      });
+      expect(
+        container.querySelector("[data-table-horizontal-scrollbar-track]"),
+      ).toBeInTheDocument();
+      expect(container.querySelector("[data-table-horizontal-scrollbar-track]")).toHaveStyle({
+        height: `${expectedHeight}px`,
+      });
+      expect(container.querySelector("[data-table-horizontal-scrollbar-thumb]")).toHaveClass(
+        "h-full",
+      );
+      expect(stickyTrack?.querySelector("[data-table-sticky-scrollbar-thumb]")).toHaveClass(
+        "h-full",
+      );
+      expect(scrollRegion.style.paddingBottom).toBe("");
+      expect(container.querySelector("[data-table-horizontal-scrollbar-track]")).toHaveClass(
+        "bottom-0",
+      );
+      expect(container.firstElementChild).not.toHaveAttribute("scrollbarheight");
+
+      scrollRegion.scrollLeft = 100;
+      fireEvent.scroll(scrollRegion);
+      expect(
+        document.body.querySelector<HTMLElement>("[data-table-sticky-scrollbar-thumb]"),
+      ).toHaveStyle({ transform: "translateX(50px)", width: "200px" });
+
+      bottom = window.innerHeight - 29;
+      fireEvent.scroll(window);
+      expect(document.body.querySelector<HTMLElement>("[data-table-sticky-scrollbar]")).toHaveStyle(
+        {
+          opacity: "1",
+        },
+      );
+
+      bottom = window.innerHeight - 30;
+      fireEvent.scroll(window);
+      expect(document.body.querySelector<HTMLElement>("[data-table-sticky-scrollbar]")).toHaveStyle(
+        {
+          opacity: "0",
+          pointerEvents: "none",
+        },
+      );
+
+      bottom = -100;
+      fireEvent.scroll(window);
+      expect(document.body.querySelector<HTMLElement>("[data-table-sticky-scrollbar]")).toHaveStyle(
+        {
+          opacity: "0",
+          pointerEvents: "none",
+        },
+      );
+    },
+  );
+
+  it("defaults grouped headers to bordered while respecting an explicit false", () => {
+    const groupedColumns: ColumnsType<Row> = [
+      {
+        title: "구성원",
+        children: [
+          { title: "이름", dataIndex: "name" },
+          { title: "팀", dataIndex: "team" },
+        ],
+      },
+    ];
+    const borderClass = "[&>tbody>tr>td:not(:last-child)]:border-r-hover";
+    const { container, rerender } = render(
+      <Table columns={groupedColumns} dataSource={rows} pagination={false} />,
+    );
+    expect(container.querySelector("table")).toHaveClass(borderClass);
+    rerender(
+      <Table columns={groupedColumns} dataSource={rows} pagination={false} bordered={false} />,
+    );
+    expect(container.querySelector("table")).not.toHaveClass(borderClass);
+    rerender(<Table columns={groupedColumns} dataSource={rows} pagination={false} />);
+    expect(container.querySelector("table")).toHaveClass(borderClass);
+    rerender(
       <Table
-        columns={[
-          { title: "이름", dataIndex: "name", width: 300 },
-          { title: "팀", dataIndex: "team", width: 300 },
-        ]}
+        columns={[{ title: "이름", dataIndex: "name" }]}
         dataSource={rows}
         pagination={false}
-        stickyScrollBar
-        stickyScrollBarOffset={24}
-        scroll={{ x: 600 }}
       />,
     );
-
-    const scrollRegion = container.querySelector<HTMLElement>("[data-table-scroll-container]");
-    expect(scrollRegion).not.toBeNull();
-    if (!scrollRegion) return;
-
-    Object.defineProperties(scrollRegion, {
-      clientWidth: { configurable: true, value: 400 },
-      scrollWidth: { configurable: true, value: 800 },
-      scrollLeft: { configurable: true, writable: true, value: 0 },
-    });
-    let bottom = 1200;
-    vi.spyOn(scrollRegion, "getBoundingClientRect").mockImplementation(
-      () =>
-        ({
-          bottom,
-          height: bottom - 100,
-          left: 40,
-          right: 440,
-          top: 100,
-          width: 400,
-          x: 40,
-          y: 100,
-          toJSON: () => ({}),
-        }) as DOMRect,
-    );
-
-    fireEvent.scroll(scrollRegion);
-    fireEvent.scroll(window);
-    const stickyTrack = document.body.querySelector<HTMLElement>("[data-table-sticky-scrollbar]");
-    expect(stickyTrack).toHaveStyle({
-      left: "40px",
-      opacity: "1",
-      top: `${window.innerHeight - 38}px`,
-      width: "400px",
-    });
-    expect(container.querySelector("[data-table-horizontal-scrollbar-track]")).toBeInTheDocument();
-
-    scrollRegion.scrollLeft = 100;
-    fireEvent.scroll(scrollRegion);
-    expect(
-      document.body.querySelector<HTMLElement>("[data-table-sticky-scrollbar-thumb]"),
-    ).toHaveStyle({ transform: "translateX(50px)", width: "200px" });
-
-    bottom = window.innerHeight - 29;
-    fireEvent.scroll(window);
-    expect(document.body.querySelector<HTMLElement>("[data-table-sticky-scrollbar]")).toHaveStyle({
-      opacity: "1",
-    });
-
-    bottom = window.innerHeight - 30;
-    fireEvent.scroll(window);
-    expect(document.body.querySelector<HTMLElement>("[data-table-sticky-scrollbar]")).toHaveStyle({
-      opacity: "0",
-      pointerEvents: "none",
-    });
-
-    bottom = -100;
-    fireEvent.scroll(window);
-    expect(document.body.querySelector<HTMLElement>("[data-table-sticky-scrollbar]")).toHaveStyle({
-      opacity: "0",
-      pointerEvents: "none",
-    });
+    expect(container.querySelector("table")).not.toHaveClass(borderClass);
   });
 
   it("adds internal vertical cell borders in bordered mode", () => {
@@ -1311,6 +1941,8 @@ describe("Table regressions", () => {
       "[&>thead>tr>th:not(:last-child)]:border-r",
       "[&>tbody>tr>td:not(:last-child)]:border-r",
     );
+    expect(container.querySelector("thead th")).toHaveClass("border-b");
+    expect(container.querySelector("thead th")).not.toHaveClass("border-b-0");
   });
 
   it("reserves transparent outer and cell borders when bordered is false", () => {
@@ -1335,6 +1967,8 @@ describe("Table regressions", () => {
       "[&>tbody>tr>td:not(:last-child)]:border-r",
       "[&>tbody>tr>td:not(:last-child)]:border-r-transparent",
     );
+    expect(container.querySelector("thead th")).toHaveClass("border-b-0");
+    expect(container.querySelector("tbody td")).toHaveClass("border-b");
   });
 
   it("병합 범위의 두 번째 행을 hover해도 병합 셀을 함께 강조한다", () => {
@@ -1390,18 +2024,91 @@ describe("Table regressions", () => {
     expect(requiredElement("[data-pagination-current]")).toBeInTheDocument();
   });
 
-  it("keeps page buttons static and transitions only previous and next buttons", () => {
+  it.each([
+    { current: 1 },
+    { current: 3 },
+    { current: 2, disabled: true },
+    { current: 2, disabled: true, simple: true },
+  ])("shows disabled pagination arrows without a button box (%j)", (pagination) => {
+    const onChange = vi.fn();
+    const { container } = render(
+      <Table
+        columns={[{ title: "이름", dataIndex: "name" }]}
+        dataSource={rows}
+        pagination={{ ...pagination, pageSize: 1, onChange }}
+      />,
+    );
+    const disabledArrows = container.querySelectorAll(
+      "[data-pagination-prev]:disabled, [data-pagination-next]:disabled",
+    );
+    expect(disabledArrows.length).toBe(pagination.disabled ? 2 : 1);
+    for (const arrow of Array.from(disabledArrows)) {
+      expect(arrow).toHaveClass(
+        "disabled:!border-transparent",
+        "disabled:!bg-transparent",
+        "disabled:!text-disabled",
+        "disabled:!ring-transparent",
+      );
+      expect(arrow).not.toHaveClass("disabled:!border-border", "disabled:!bg-hover");
+      fireEvent.click(arrow);
+    }
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it("shows disabled page numbers and jump buttons without a button box", () => {
+    const onChange = vi.fn();
+    const { container } = render(
+      <Table
+        columns={[{ title: "이름", dataIndex: "name" }]}
+        dataSource={rows}
+        pagination={{ disabled: true, total: 19, pageSize: 1, onChange }}
+      />,
+    );
+    expect(requiredElement('[data-pagination-page="1"]')).toBeDisabled();
+    expect(requiredElement('[data-pagination-jump="jump-next"]')).toBeDisabled();
+    for (const button of Array.from(
+      container.querySelectorAll("[data-pagination-page], [data-pagination-jump]"),
+    )) {
+      expect(button).toBeDisabled();
+      expect(button).toHaveClass(
+        "disabled:!border-transparent",
+        "disabled:!bg-transparent",
+        "disabled:!text-disabled",
+        "disabled:!ring-transparent",
+      );
+      expect(button).not.toHaveClass("disabled:!border-border", "disabled:!bg-hover");
+      fireEvent.click(button);
+    }
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it("keeps page selection instant while transitioning hover backgrounds and jump colors", () => {
     render(
       <Table
         columns={[{ title: "이름", dataIndex: "name" }]}
         dataSource={rows}
-        pagination={{ pageSize: 1 }}
+        pagination={{ pageSize: 1, total: 19 }}
       />,
     );
 
     expect(requiredElement('[data-pagination-page="1"]')).toHaveClass(
       "transition-none",
       "duration-0",
+      "before:!opacity-0",
+      "before:transition-none",
+    );
+    expect(requiredElement('[data-pagination-page="2"]')).toHaveClass(
+      "transition-none",
+      "duration-0",
+      "before:transition-opacity",
+      "before:duration-200",
+      "before:-inset-px",
+      "enabled:hover:before:opacity-100",
+    );
+    expect(requiredElement('[data-pagination-jump="jump-next"]')).toHaveClass(
+      "transition-colors",
+      "duration-200",
+      "ease-out",
     );
     expect(requiredElement("[data-pagination-prev]")).toHaveClass(
       "transition-colors",
@@ -1412,6 +2119,17 @@ describe("Table regressions", () => {
       "transition-colors",
       "duration-200",
       "ease-out",
+    );
+    fireEvent.click(requiredElement('[data-pagination-page="2"]'));
+    expect(requiredElement('[data-pagination-page="2"]')).toHaveClass(
+      "bg-primary",
+      "transition-none",
+      "before:!opacity-0",
+    );
+    expect(requiredElement('[data-pagination-page="1"]')).not.toHaveClass("bg-primary");
+    expect(requiredElement('[data-pagination-page="1"]')).toHaveClass(
+      "transition-none",
+      "before:transition-opacity",
     );
   });
 });

@@ -40,15 +40,17 @@ const apiExports = ["message", "notification"] as const;
 
 const reactExports = ["useCallback", "useEffect", "useMemo", "useRef", "useState"] as const;
 const componentTypeExports = [
-  "DatePickerValueType",
-  "DateRangeValueType",
+  "CalendarProps",
+  "CollapseItem",
+  "ColumnsType",
   "DrawerPlacementType",
+  "DrawerSizeType",
   "DropdownItem",
   "Key",
+  "MenuItemType",
   "SelectOption",
   "TabItemType",
   "TableRef",
-  "TimePickerValueType",
   "TreeDataNode",
   "TreeDropInfo",
   "UploadFile",
@@ -97,6 +99,7 @@ export function withStoryImports(source: string) {
     importLine(example, componentExports, packageName),
     apiImportLine(example, apiExports, packageName),
     typeImportLine(example, componentTypeExports, packageName),
+    typeImportLine(example, ["Dayjs"], "dayjs"),
     importLine(example, dndCoreExports, "@dnd-kit/core"),
     importLine(example, dndSortableExports, "@dnd-kit/sortable"),
     used(example, "dayjs") && !imported(example, "dayjs") ? "import dayjs from 'dayjs';" : "",
@@ -119,10 +122,6 @@ export function formatTooltipStorySource(source: string) {
     .replace(/\s+trigger=(?:"hover"|'hover'|\{"hover"\}|\{'hover'\})/g, "")
     .replace(/\s+arrow=\{true\}/g, "")
     .replace(/\s+arrow(?=\s|\/?>)/g, "")
-    .replace(/\s+autoAdjustOverflow=\{true\}/g, "")
-    .replace(/\s+autoAdjustOverflow(?=\s|\/?>)/g, "")
-    .replace(/\s+mouseEnterDelay=\{0\.1\}/g, "")
-    .replace(/\s+mouseLeaveDelay=\{0\.1\}/g, "")
     .replace(/\s+>/g, ">")
     .replace(/<Tooltip\s+([^<>\n]+)>/g, (_match, props: string) => {
       return `<Tooltip ${props.trim()}>`;

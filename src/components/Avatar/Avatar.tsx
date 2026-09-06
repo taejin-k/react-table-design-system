@@ -1,5 +1,6 @@
 import { Children, cloneElement, isValidElement, useLayoutEffect, useRef, useState } from "react";
 import { twMerge } from "tailwind-merge";
+import { resolveColorToken, resolveReadableTextColor } from "../../color-tokens";
 import { Icon } from "../Icon";
 import { Image } from "../Image";
 import type {
@@ -17,7 +18,7 @@ function AvatarBase({
   src,
   icon,
   color,
-  label = false,
+  showLabel = false,
   labelWidth,
   size = "md",
   shape = "circle",
@@ -28,7 +29,14 @@ function AvatarBase({
   preview = false,
   ...imageProps
 }: AvatarProps) {
-  const pixelSize = resolveSize(size);
+  const pixelSize = resolveSize(size) - (showLabel ? 8 : 0);
+  const resolvedColor = color ?? (showLabel ? "primary" : undefined);
+  const textColor =
+    resolvedColor === "gray" || resolvedColor === "disabled"
+      ? resolveColorToken("white")
+      : resolvedColor === undefined
+        ? undefined
+        : resolveReadableTextColor(resolvedColor);
   const [loadedImageSource, setLoadedImageSource] = useState<string | null>(null);
   const [failedImageSource, setFailedImageSource] = useState<string | null>(null);
   const [textScale, setTextScale] = useState(1);
@@ -51,11 +59,12 @@ function AvatarBase({
         : null;
   const imageLoaded = imageSource !== null && loadedImageSource === imageSource;
   const imageFailed = imageSource !== null && failedImageSource === imageSource;
+  const backgroundColor = (imageSource || imageElement) && !imageFailed ? "hover" : resolvedColor;
   const displayedChildren =
     typeof children === "string" || typeof children === "number"
       ? (Array.from(String(children))[0] ?? "")
       : children;
-  const fallbackIconSize = { md: 18, lg: 24 }[size];
+  const fallbackIconSize = pixelSize * 0.6;
   const fallbackContent = icon ? (
     <span className="inline-flex" style={{ fontSize: pixelSize * 0.56 }}>
       {icon}
@@ -124,34 +133,36 @@ function AvatarBase({
 
   const avatar = (
     <span
-      ref={!label ? rootRef : undefined}
+      ref={!showLabel ? rootRef : undefined}
       className={twMerge(
-        "relative inline-flex shrink-0 items-center justify-center overflow-hidden bg-disabled align-middle font-pretendard text-white",
+        "relative inline-flex shrink-0 items-center justify-center overflow-hidden bg-hover align-middle font-pretendard text-dark-gray",
         shape === "circle" ? "rounded-full" : "rounded-md",
         pixelSize >= 40 && "text-xl",
-        !label && className,
+        !showLabel && className,
       )}
       style={{
         width: pixelSize,
         height: pixelSize,
         lineHeight: `${pixelSize}px`,
-        ...(!label ? style : undefined),
-        backgroundColor: color,
+        color: textColor,
+        ...(!showLabel ? style : undefined),
+        backgroundColor:
+          backgroundColor === undefined ? undefined : resolveColorToken(backgroundColor),
       }}
     >
       {content}
     </span>
   );
 
-  if (label) {
+  if (showLabel) {
     return (
       <span
         ref={rootRef}
         className={twMerge(
-          "inline-flex w-fit items-center bg-hover font-pretendard text-dark",
+          "inline-flex w-fit max-w-full min-w-0 items-center overflow-hidden bg-hover font-pretendard text-dark",
           shape === "circle" ? "rounded-full" : "rounded-lg",
-          size === "md" && "gap-2 p-1 pr-3 text-base",
-          size === "lg" && "gap-2.5 p-1 pr-4 text-lg",
+          size === "md" && "h-[30px] gap-2 p-1 pr-3 text-sm",
+          size === "lg" && "h-10 gap-2.5 p-1 pr-4 text-lg",
           className,
         )}
         style={{ ...style, width: labelWidth ?? style?.width }}
@@ -197,7 +208,7 @@ function AvatarGroup({
           : node,
       )}
       {omitted > 0 ? (
-        <AvatarBase size={size} shape={shape} color="var(--color-hover)" className="text-dark-gray">
+        <AvatarBase size={size} shape={shape} color="hover" className="text-dark-gray">
           +{omitted}
         </AvatarBase>
       ) : null}

@@ -5,6 +5,33 @@ import { describe, expect, it, vi } from "vitest";
 import { Segmented } from "./Segmented";
 
 describe("Segmented", () => {
+  it("removes the selection thumb when the selected option is removed", () => {
+    const { container, rerender } = render(
+      <Segmented value="a" options={[{ value: "a", label: "A" }]} />,
+    );
+    expect(container.querySelector("[data-segmented-thumb]")).toBeInTheDocument();
+    rerender(<Segmented value="a" options={[]} />);
+    expect(container.querySelector("[data-segmented-thumb]")).not.toBeInTheDocument();
+  });
+
+  it("groups its native radios without affecting another Segmented", () => {
+    render(
+      <>
+        <Segmented
+          options={[
+            { value: "a", label: "A" },
+            { value: "b", label: "B" },
+          ]}
+        />
+        <Segmented options={[{ value: "c", label: "C" }]} />
+      </>,
+    );
+    const inputs = screen.getAllByRole("radio") as HTMLInputElement[];
+    expect(inputs[0].name).toBeTruthy();
+    expect(inputs[1].name).toBe(inputs[0].name);
+    expect(inputs[2].name).not.toBe(inputs[0].name);
+  });
+
   it("fits its content by default", () => {
     const { container } = render(<Segmented options={[{ label: "일", value: "day" }]} />);
 
@@ -29,6 +56,20 @@ describe("Segmented", () => {
     expect(disabledItem).not.toHaveClass("hover:text-dark");
   });
 
+  it("selects the first enabled option by default", () => {
+    render(
+      <Segmented
+        options={[
+          { disabled: true, label: "비활성", value: "disabled" },
+          { label: "기본", value: "enabled" },
+        ]}
+      />,
+    );
+
+    expect(screen.getByRole("radio", { name: "비활성" })).not.toBeChecked();
+    expect(screen.getByRole("radio", { name: "기본" })).toBeChecked();
+  });
+
   it("selects an option and reports its value", async () => {
     const onChange = vi.fn();
     render(
@@ -44,6 +85,24 @@ describe("Segmented", () => {
     await userEvent.click(screen.getByText("주"));
     expect(onChange).toHaveBeenCalledWith("week");
     expect(screen.getByRole("radio", { name: "주" })).toBeChecked();
+  });
+
+  it("supports bigint item keys", async () => {
+    const onChange = vi.fn();
+    render(
+      <Segmented
+        options={[
+          { label: "첫 번째", value: 1n },
+          { label: "두 번째", value: 2n },
+        ]}
+        onChange={onChange}
+      />,
+    );
+
+    await userEvent.click(screen.getByText("두 번째"));
+
+    expect(onChange).toHaveBeenCalledWith(2n);
+    expect(screen.getByRole("radio", { name: "두 번째" })).toBeChecked();
   });
 
   it("does not select a disabled option", async () => {
@@ -82,7 +141,7 @@ describe("Segmented", () => {
 
     await userEvent.click(screen.getByText("더 긴 선택지"));
 
-    expect(thumb).toHaveClass("duration-300", "ease-[cubic-bezier(0.645,0.045,0.355,1)]");
+    expect(thumb).toHaveClass("duration-200", "ease-[cubic-bezier(0.645,0.045,0.355,1)]");
   });
 
   it("fills its parent width when fullWidth is enabled", () => {

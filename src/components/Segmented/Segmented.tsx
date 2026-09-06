@@ -1,4 +1,4 @@
-import { useCallback, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useId, useLayoutEffect, useRef, useState, type Key } from "react";
 import { cva } from "class-variance-authority";
 import { twMerge } from "tailwind-merge";
 import { Tooltip } from "../Tooltip";
@@ -17,13 +17,15 @@ export function Segmented({
   ...rest
 }: SegmentedProps) {
   const normalized = options;
-  const [innerValue, setInnerValue] = useState<string | number | undefined>(
-    defaultValue ?? normalized[0]?.value,
+  const inputName = useId();
+  const [innerValue, setInnerValue] = useState<Key | undefined>(
+    defaultValue ?? normalized.find((option) => !option.disabled)?.value,
   );
   const selectedValue = value ?? innerValue;
   const direction = vertical ? "vertical" : "horizontal";
   const rootRef = useRef<HTMLDivElement>(null);
-  const itemRefs = useRef(new Map<string | number, HTMLLabelElement>());
+  const itemRefs = useRef(new Map<Key, HTMLLabelElement>());
+  const [compactKeys, setCompactKeys] = useState<Set<Key>>(() => new Set());
   const hasMeasuredThumb = useRef(false);
   const canAnimateThumb = useRef(false);
   const animationFrameRef = useRef<number | null>(null);
@@ -36,10 +38,38 @@ export function Segmented({
   } | null>(null);
 
   const updateThumb = useCallback(() => {
+    if (!fullWidth && !vertical && rootRef.current && normalized.length) {
+      const root = rootRef.current;
+      const style = getComputedStyle(root);
+      const available =
+        root.clientWidth -
+        (parseFloat(style.paddingLeft) || 0) -
+        (parseFloat(style.paddingRight) || 0) -
+        (parseFloat(style.columnGap) || 0) * (normalized.length - 1);
+      const share = available / normalized.length;
+      const nextCompactKeys = new Set<Key>();
+      itemRefs.current.forEach((item, key) => {
+        const label = item.querySelector<HTMLElement>("[data-segmented-label]");
+        const naturalWidth = label
+          ? item.offsetWidth - label.clientWidth + label.scrollWidth
+          : item.offsetWidth;
+        if (naturalWidth <= share) nextCompactKeys.add(key);
+      });
+      // Keep short choices readable; let only the oversized choices give up space.
+      setCompactKeys((current) =>
+        current.size === nextCompactKeys.size &&
+        [...current].every((key) => nextCompactKeys.has(key))
+          ? current
+          : nextCompactKeys,
+      );
+    }
     const selectedItem =
       selectedValue === undefined ? undefined : itemRefs.current.get(selectedValue);
 
-    if (!selectedItem) return;
+    if (!selectedItem) {
+      setThumb(null);
+      return;
+    }
 
     setThumb({
       animate: hasMeasuredThumb.current && canAnimateThumb.current,
@@ -56,7 +86,7 @@ export function Segmented({
         animationFrameRef.current = null;
       });
     }
-  }, [selectedValue]);
+  }, [selectedValue, fullWidth, vertical, normalized]);
 
   useLayoutEffect(() => {
     updateThumb();
@@ -90,7 +120,7 @@ export function Segmented({
           className={twMerge(
             thumbClassName,
             thumb.animate
-              ? "transition-[transform,width,height] duration-300 ease-[cubic-bezier(0.645,0.045,0.355,1)] motion-reduce:transition-none"
+              ? "transition-[transform,width,height] duration-200 ease-[cubic-bezier(0.645,0.045,0.355,1)] motion-reduce:transition-none"
               : "transition-none",
           )}
           style={{
@@ -116,7 +146,9 @@ export function Segmented({
                 ? direction === "horizontal"
                   ? "flex-1"
                   : "w-full flex-none"
-                : "flex-none",
+                : compactKeys.has(option.value)
+                  ? "flex-none"
+                  : "flex-initial",
               itemDisabled
                 ? "cursor-not-allowed text-disabled"
                 : selected
@@ -126,8 +158,9 @@ export function Segmented({
           >
             <input
               type="radio"
-              className="sr-only"
-              value={option.value}
+              name={inputName}
+              className="sr-only outline-none"
+              value={String(option.value)}
               checked={selected}
               disabled={itemDisabled}
               onChange={() => {
@@ -137,7 +170,9 @@ export function Segmented({
             />
             {option.icon ? <span className="inline-flex shrink-0">{option.icon}</span> : null}
             {option.label !== undefined ? (
-              <span className="min-w-0 truncate">{option.label}</span>
+              <span data-segmented-label className="min-w-0 truncate">
+                {option.label}
+              </span>
             ) : null}
           </label>
         );
@@ -146,7 +181,15 @@ export function Segmented({
         return (
           <Tooltip
             key={option.value}
-            className={fullWidth ? (direction === "horizontal" ? "flex-1" : "w-full") : undefined}
+            className={
+              fullWidth
+                ? direction === "horizontal"
+                  ? "flex-1"
+                  : "w-full"
+                : compactKeys.has(option.value)
+                  ? "min-w-0 flex-none"
+                  : "min-w-0 flex-initial"
+            }
             title={option.tooltip}
           >
             {item}
@@ -158,7 +201,7 @@ export function Segmented({
 }
 
 const segmentedVariants = cva(
-  "relative isolate inline-flex w-fit gap-0.5 rounded-lg bg-hover p-0.5 font-pretendard",
+  "relative isolate inline-flex w-fit max-w-full min-w-0 gap-0.5 overflow-hidden rounded-lg bg-hover p-0.5 font-pretendard",
   {
     variants: {
       fullWidth: { true: "flex w-full", false: "" },

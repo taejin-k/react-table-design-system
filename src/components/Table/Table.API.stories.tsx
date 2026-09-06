@@ -4,8 +4,13 @@ import { storyDescriptions } from "../../storybook/story-descriptions";
 import { Illustrations } from "../Illustrations";
 import { Flex } from "../Flex";
 import { Input } from "../Input";
+import { Toggle } from "../Toggle";
 import { withStoryImports } from "../../storybook/story-source";
-import { formatTableStorySource } from "../../storybook/table-story-source";
+import {
+  formatTableDataSourceDeclaration,
+  formatTableVirtualDataSourceDeclaration,
+  formatTableStorySource,
+} from "../../storybook/table-story-source";
 import { Button } from "../Button/Button";
 import { columns, largeData, members, type Member } from "./Table.playground-data";
 import { Table } from "./Table";
@@ -87,12 +92,6 @@ export const FixedTableHeight: Story = {
   args: { dataSource: members, columns, pagination: false, scroll: { y: 280 } },
 };
 
-export const StickyHeader: Story = {
-  name: "Sticky Header",
-  parameters: storyDescription("components-table-api-compatibility--sticky-header"),
-  args: { dataSource: members, columns, pagination: false, stickyHeader: true },
-};
-
 export const FixedColumns: Story = {
   parameters: {
     ...storyDescription("components-table-api-compatibility--fixed-columns"),
@@ -104,17 +103,102 @@ export const FixedColumns: Story = {
   },
 };
 
+function scrollbarHeightSource(sticky: boolean) {
+  return withStoryImports(`${formatTableDataSourceDeclaration(sticky ? largeData.slice(0, 20) : members.slice(0, 5))}
+
+const columns: ColumnsType<(typeof members)[number]> = [
+  { key: 'name', dataIndex: 'name', title: '이름', width: 220, fixed: 'left' },
+  { key: 'role', dataIndex: 'role', title: '직무', minWidth: 190 },
+  { key: 'team', dataIndex: 'team', title: '팀', width: 220 },
+  { key: 'status', dataIndex: 'status', title: '상태', width: 180 },
+  { key: 'joinedAt', dataIndex: 'joinedAt', title: '합류일', width: 200 },
+  { key: 'memberId', dataIndex: 'id', title: '구성원 ID', width: 180 },
+  { key: 'projects', dataIndex: 'projects', title: '프로젝트', width: 220, fixed: 'right' },
+];
+
+function ${sticky ? "StickyScrollbar" : "ScrollbarHeight"}Table() {
+  const [height, setHeight] = useState('${sticky ? 8 : 12}');
+
+  return (
+    <>
+      <Input
+        type="number"
+        min={8}
+        max={16}
+        step={1}
+        label="Scrollbar height (px)"
+        value={height}
+        width={180}
+        onChange={setHeight}
+      />
+      <Table
+        className="mt-4"
+        dataSource={members}
+        columns={columns}
+        pagination={false}
+        scrollBarHeight={Number(height)}${sticky ? "\n        stickyScrollBar" : ""}
+      />
+    </>
+  );
+}`);
+}
+
+function ScrollbarHeightTable(args: TableProps<Member>) {
+  const [height, setHeight] = useState(String(args.scrollBarHeight ?? 8));
+
+  return (
+    <>
+      <Input
+        type="number"
+        min={8}
+        max={16}
+        step={1}
+        label="Scrollbar height (px)"
+        value={height}
+        width={180}
+        onChange={setHeight}
+      />
+      <Table {...args} className="mt-4" scrollBarHeight={Number(height)} />
+    </>
+  );
+}
+
+export const ScrollbarHeight: Story = {
+  name: "Scrollbar Height",
+  parameters: {
+    ...storyDescription("components-table-api-compatibility--scrollbar-height"),
+    tableSource: false,
+    docs: {
+      ...storyDescription("components-table-api-compatibility--scrollbar-height").docs,
+      source: { code: scrollbarHeightSource(false) },
+    },
+  },
+  args: { columns: fixedColumns, scrollBarHeight: 12 },
+  render: (args) => <ScrollbarHeightTable {...args} />,
+};
+
 export const StickyScrollbar: Story = {
   name: "Sticky Scrollbar",
   parameters: {
     ...storyDescription("components-table-api-compatibility--sticky-scrollbar"),
-    tableColumnsComment: "가로 스크롤을 확인할 수 있도록 컬럼 너비를 지정해요.",
+    tableSource: false,
+    docs: {
+      ...storyDescription("components-table-api-compatibility--sticky-scrollbar").docs,
+      source: { code: scrollbarHeightSource(true) },
+    },
   },
   args: {
     dataSource: largeData.slice(0, 20),
     columns: fixedColumns,
     stickyScrollBar: true,
   },
+  render: (args) => <ScrollbarHeightTable {...args} />,
+};
+
+export const StickyHeader: Story = {
+  name: "Sticky Header",
+  parameters: storyDescription("components-table-api-compatibility--sticky-header"),
+  args: { dataSource: members, columns, pagination: false, stickyHeader: true },
 };
 
 export const StickyOffsets: Story = {
@@ -125,20 +209,9 @@ export const StickyOffsets: Story = {
     docs: {
       ...storyDescription("components-table-api-compatibility--sticky-offsets").docs,
       source: {
-        code: withStoryImports(`const members = [
-  {
-    id: 'M-1001',
-    name: '김민준',
-    role: 'Product Designer',
-    team: 'Design',
-    status: '활성',
-    projects: 8,
-    joinedAt: '2023-02-14',
-  },
-  // ...나머지 19개 항목
-];
+        code: withStoryImports(`${formatTableDataSourceDeclaration(largeData.slice(0, 20))}
 
-const columns = [
+const columns: ColumnsType<(typeof members)[number]> = [
   { key: 'name', dataIndex: 'name', title: '이름', width: 220, fixed: 'left' },
   { key: 'role', dataIndex: 'role', title: '직무', minWidth: 190 },
   { key: 'team', dataIndex: 'team', title: '팀', width: 220 },
@@ -237,9 +310,65 @@ function StickyOffsetsTable(args: Partial<TableProps<Member>>) {
 }
 
 export const Loading: Story = {
-  parameters: storyDescription("components-table-api-compatibility--loading"),
-  args: { columns, loading: { text: "구성원을 불러오는 중" } },
+  parameters: {
+    ...storyDescription("components-table-api-compatibility--loading"),
+    tableSource: false,
+    docs: {
+      ...storyDescription("components-table-api-compatibility--loading").docs,
+      source: {
+        code: withStoryImports(`${formatTableDataSourceDeclaration(members.slice(0, 5))}
+
+const columns: ColumnsType<(typeof members)[number]> = [
+  { key: 'name', dataIndex: 'name', title: '이름', width: 150 },
+  { key: 'role', dataIndex: 'role', title: '직무', minWidth: 190 },
+  { key: 'team', dataIndex: 'team', title: '팀', width: 120 },
+  { key: 'projects', dataIndex: 'projects', title: '프로젝트', width: 110 },
+];
+
+function LoadingTable() {
+  const [loading, setLoading] = useState(true);
+
+  return (
+    <>
+      <Flex align="center" gap={8}>
+        <Toggle checked={loading} onChange={setLoading} />
+        <span>loading: {String(loading)}</span>
+      </Flex>
+      <Table
+        className="mt-4"
+        dataSource={members}
+        columns={columns}
+        pagination={false}
+        loading={{ spinning: loading, text: '구성원을 불러오는 중' }}
+      />
+    </>
+  );
+}`),
+      },
+    },
+  },
+  args: { columns },
+  render: (args) => <LoadingTable {...args} />,
 };
+
+function LoadingTable(args: TableProps<Member>) {
+  const [loading, setLoading] = useState(true);
+
+  return (
+    <>
+      <Flex align="center" gap={8}>
+        <Toggle checked={loading} onChange={setLoading} />
+        <span>loading: {String(loading)}</span>
+      </Flex>
+      <Table
+        {...args}
+        className="mt-4"
+        loading={{ spinning: loading, text: "구성원을 불러오는 중" }}
+      />
+    </>
+  );
+}
+
 export const Empty: Story = {
   parameters: storyDescription("components-table-api-compatibility--empty"),
   args: {
@@ -259,20 +388,14 @@ export const ImperativeScrollTo: Story = {
     docs: {
       ...storyDescription("components-table-api-compatibility--imperative-scroll-to").docs,
       source: {
-        code: withStoryImports(`const columns = [
+        code: withStoryImports(`const columns: ColumnsType<(typeof members)[number]> = [
   { key: 'name', dataIndex: 'name', title: '이름', width: 150 },
   { key: 'role', dataIndex: 'role', title: '직무', minWidth: 190 },
   { key: 'team', dataIndex: 'team', title: '팀', width: 120 },
   { key: 'projects', dataIndex: 'projects', title: '프로젝트', width: 110 },
 ];
 
-const members = Array.from({ length: 100 }, (_, index) => ({
-  id: \`M-\${index + 1}\`,
-  name: \`구성원 \${String(index + 1).padStart(3, '0')}\`,
-  role: 'Product Designer',
-  team: 'Design',
-  projects: index,
-}));
+${formatTableVirtualDataSourceDeclaration(100)}
 
 function ImperativeScrollTable() {
   const tableRef = useRef<TableRef>(null);
@@ -288,7 +411,7 @@ function ImperativeScrollTable() {
         </Button>
         <Button
           variant="secondary"
-          onClick={() => tableRef.current?.scrollTo({ key: 'M-75', align: 'center' })}
+          onClick={() => tableRef.current?.scrollTo({ key: 'V-75', align: 'center' })}
         >
           75번째 행
         </Button>

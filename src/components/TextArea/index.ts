@@ -1,2 +1,8 @@
 export { TextArea } from "./TextArea";
-export type { TextAreaAutoSize, TextAreaProps, TextAreaVariantType } from "./TextArea.types";
+export type {
+  TextAreaAutoSize,
+  TextAreaErrorMessage,
+  TextAreaProps,
+  TextAreaSizeType,
+  TextAreaVariantType,
+} from "./TextArea.types";

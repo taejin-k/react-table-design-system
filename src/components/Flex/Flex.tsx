@@ -7,7 +7,7 @@ export const Flex = forwardRef<HTMLElement, FlexProps>(
     {
       component: Component = "div",
       vertical,
-      wrap = "nowrap",
+      wrap,
       justify,
       align,
       flex,

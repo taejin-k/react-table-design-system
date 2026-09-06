@@ -27,16 +27,346 @@ beforeEach(() => {
 afterEach(() => vi.restoreAllMocks());
 
 describe("Select", () => {
-  it("fills the parent by default and applies a custom width to the root", () => {
+  it("does not scroll a partially visible option into view on mouse hover", () => {
+    render(<Select defaultOpen virtual={false} options={options} listHeight={40} />);
+    const viewport = document.querySelector<HTMLElement>("[data-select-popup] .overflow-auto")!;
+    const second = screen.getByRole("button", { name: "Platform" });
+    Object.defineProperty(second, "offsetTop", { configurable: true, value: 34 });
+    Object.defineProperty(second, "offsetHeight", { configurable: true, value: 32 });
+    fireEvent.mouseEnter(second);
+    expect(second).toHaveClass("bg-hover");
+    expect(viewport.scrollTop).toBe(0);
+  });
+
+  it("keeps keyboard navigation visible in a virtual list and resets after filtering", () => {
+    render(
+      <Select
+        showSearch
+        defaultOpen
+        listHeight={136}
+        options={Array.from({ length: 1000 }, (_, i) => ({ value: i, label: `항목 ${i}` }))}
+      />,
+    );
+    const input = screen.getByRole("textbox");
+    const viewport = document.querySelector<HTMLElement>("[data-select-popup] .overflow-auto")!;
+    for (let i = 0; i < 30; i++) fireEvent.keyDown(input, { key: "ArrowDown" });
+    expect(viewport.scrollTop).toBeGreaterThan(0);
+    expect(screen.getByRole("button", { name: "항목 30" })).toHaveClass("bg-hover");
+    fireEvent.change(input, { target: { value: "항목 9" } });
+    expect(viewport.scrollTop).toBe(0);
+    expect(screen.getByRole("button", { name: "항목 9" })).toHaveClass("bg-hover");
+  });
+
+  it.each([undefined, "multiple", "tags"] as const)(
+    "moves the single active highlight to the hovered option and selects it with Enter in %s mode",
+    async (mode) => {
+      const onChange = vi.fn();
+      render(<Select mode={mode} showSearch defaultOpen options={options} onChange={onChange} />);
+      const first = screen.getByRole("button", { name: "Design" });
+      const second = screen.getByRole("button", { name: "Platform" });
+      expect(first).toHaveClass("bg-hover");
+      await userEvent.hover(second);
+      expect(first).not.toHaveClass("bg-hover", "hover:bg-hover");
+      expect(second).toHaveClass("bg-hover");
+      fireEvent.keyDown(screen.getByRole("textbox"), { key: "Enter" });
+      expect(onChange).toHaveBeenCalledWith(
+        mode ? ["platform"] : "platform",
+        mode ? [options[1]] : options[1],
+      );
+    },
+  );
+
+  it("switches between mouse and keyboard highlighting without a stale CSS hover", async () => {
+    render(<Select showSearch defaultOpen options={options} />);
+    const first = screen.getByRole("button", { name: "Design" });
+    const second = screen.getByRole("button", { name: "Platform" });
+    const disabled = screen.getByRole("button", { name: "Mobile" });
+    const input = screen.getByRole("textbox");
+    await userEvent.hover(second);
+    fireEvent.keyDown(input, { key: "ArrowUp" });
+    expect(first).toHaveClass("bg-hover");
+    expect(second).not.toHaveClass("bg-hover", "hover:bg-hover");
+    fireEvent.mouseMove(second);
+    expect(first).not.toHaveClass("bg-hover");
+    expect(second).toHaveClass("bg-hover");
+    fireEvent.mouseEnter(disabled);
+    expect(disabled).not.toHaveClass("bg-hover");
+    expect(second).toHaveClass("bg-hover");
+    fireEvent.change(input, { target: { value: "des" } });
+    expect(first).toHaveClass("bg-hover");
+  });
+
+  it("preserves selected styling when the pointer moves onto a selected item", async () => {
+    render(
+      <Select
+        mode="multiple"
+        showSearch
+        defaultOpen
+        options={options}
+        defaultValue={["platform"]}
+      />,
+    );
+    const first = screen.getByRole("button", { name: "Design" });
+    const second = screen.getByRole("button", { name: "Platform" });
+    await userEvent.hover(second);
+    expect(first).not.toHaveClass("bg-hover");
+    expect(second).toHaveClass("bg-selected", "text-primary");
+    expect(second).not.toHaveClass("bg-hover");
+  });
+
+  it.each([undefined, "multiple", "tags"] as const)(
+    "includes all descendants of matching group labels in %s mode",
+    (mode) => {
+      const groupedOptions = [
+        {
+          label: "제품 조직",
+          options: [
+            { label: "Design", value: "design" },
+            { label: "Product", value: "product", disabled: true },
+          ],
+        },
+        {
+          label: "기술 조직",
+          options: [
+            {
+              label: "개발팀",
+              options: [
+                { label: "Platform", value: "platform" },
+                { label: "Mobile", value: "mobile" },
+              ],
+            },
+          ],
+        },
+        { options: [{ label: "Other", value: "other" }] },
+      ];
+      render(<Select mode={mode} showSearch defaultOpen options={groupedOptions} />);
+      const input = screen.getByRole("textbox");
+      const popup = within(document.querySelector("[data-select-popup]") as HTMLElement);
+      const visibleLabels = () => popup.getAllByRole("button").map((el) => el.textContent);
+      for (const value of ["제품", "ㅈㅍ", "제푸"]) {
+        fireEvent.change(input, { target: { value } });
+        expect(visibleLabels()).toEqual(["Design", "Product"]);
+        expect(popup.getByRole("button", { name: "Product" })).toBeDisabled();
+      }
+      for (const value of ["기술", "개발", "ㄱㅂㅌ"]) {
+        fireEvent.change(input, { target: { value } });
+        expect(visibleLabels()).toEqual(["Platform", "Mobile"]);
+      }
+      fireEvent.change(input, { target: { value: "Design" } });
+      expect(visibleLabels()).toEqual(["Design"]);
+      fireEvent.change(input, { target: { value: "조직" } });
+      expect(visibleLabels()).toEqual(["Design", "Product", "Platform", "Mobile"]);
+      fireEvent.change(input, { target: { value: "없는조직" } });
+      expect(popup.queryAllByRole("button")).toHaveLength(0);
+      fireEvent.change(input, { target: { value: "" } });
+      expect(visibleLabels()).toEqual(["Design", "Product", "Platform", "Mobile", "Other"]);
+    },
+  );
+
+  it("does not force group matches past a custom filter", () => {
+    render(
+      <Select
+        showSearch
+        defaultOpen
+        filterOption={(query, option) => String(option.label).includes(query)}
+        options={[{ label: "제품 조직", options: [{ label: "Design", value: "design" }] }]}
+      />,
+    );
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: "제품" } });
+    expect(screen.queryByRole("button", { name: "Design" })).not.toBeInTheDocument();
+  });
+
+  it("searches composing group labels without exposing search metadata on selection", async () => {
+    const onChange = vi.fn();
+    render(
+      <Select
+        showSearch
+        defaultOpen
+        onChange={onChange}
+        options={[{ label: "김민준 팀", options: [{ label: "Design", value: "design" }] }]}
+      />,
+    );
+    const input = screen.getByRole("textbox");
+    fireEvent.compositionStart(input);
+    fireEvent.change(input, { target: { value: "김믽" } });
+    expect(screen.getByRole("button", { name: "Design" })).toBeInTheDocument();
+    fireEvent.compositionEnd(input, { data: "믽" });
+    expect(screen.queryByRole("button", { name: "Design" })).not.toBeInTheDocument();
+    fireEvent.change(input, { target: { value: "김민준" } });
+    await userEvent.click(screen.getByRole("button", { name: "Design" }));
+    expect(onChange).toHaveBeenCalledWith("design", {
+      label: "Design",
+      value: "design",
+      __groupLabel: "김민준 팀",
+    });
+  });
+
+  it.each([undefined, "multiple", "tags"] as const)(
+    "keeps Korean results during IME carryover and stops on composition end in %s mode",
+    (mode) => {
+      render(
+        <Select mode={mode} showSearch defaultOpen options={[{ label: "김민준", value: "kim" }]} />,
+      );
+      const input = screen.getByRole("textbox");
+      const popup = within(document.querySelector("[data-select-popup]") as HTMLElement);
+      fireEvent.compositionStart(input);
+      for (const value of ["김미", "김민", "김믽", "김민주", "김민준"]) {
+        fireEvent.change(input, { target: { value } });
+        expect(popup.getByRole("button", { name: "김민준" })).toBeInTheDocument();
+      }
+      fireEvent.change(input, { target: { value: "김믽" } });
+      fireEvent.compositionEnd(input, { data: "믽" });
+      expect(popup.queryByRole("button", { name: "김민준" })).not.toBeInTheDocument();
+      fireEvent.compositionStart(input);
+      expect(popup.getByRole("button", { name: "김민준" })).toBeInTheDocument();
+      fireEvent.blur(input);
+      expect(popup.queryByRole("button", { name: "김민준" })).not.toBeInTheDocument();
+    },
+  );
+
+  it("keeps custom filtering unchanged even during composition", () => {
+    render(
+      <Select
+        showSearch
+        defaultOpen
+        filterOption={(query, option) => String(option.label).includes(query)}
+        options={[{ label: "김민준", value: "kim" }]}
+      />,
+    );
+    const input = screen.getByRole("textbox");
+    fireEvent.compositionStart(input);
+    fireEvent.change(input, { target: { value: "김믽" } });
+    expect(screen.queryByRole("button", { name: "김민준" })).not.toBeInTheDocument();
+  });
+
+  it("commits the final IME text once after the carried initial becomes a syllable", async () => {
+    const onChange = vi.fn();
+    render(
+      <Select mode="tags" onChange={onChange} options={[{ label: "김민준", value: "kim" }]} />,
+    );
+    const input = screen.getByRole("textbox");
+    fireEvent.compositionStart(input);
+    fireEvent.change(input, { target: { value: "김믽" } });
+    fireEvent.change(input, { target: { value: "김민준" } });
+    fireEvent.keyDown(input, { key: "Enter", keyCode: 229, isComposing: true });
+    fireEvent.compositionEnd(input, { data: "준" });
+    await waitFor(() => expect(onChange).toHaveBeenCalledTimes(1));
+    expect(onChange).toHaveBeenCalledWith(["kim"], expect.any(Array));
+    expect(input).toHaveValue("");
+  });
+
+  it.each([undefined, "multiple", "tags"] as const)(
+    "uses Korean default search in %s mode without reordering options",
+    (mode) => {
+      render(
+        <Select
+          mode={mode}
+          showSearch
+          defaultOpen
+          options={[
+            { label: "김민준", value: "kim" },
+            { label: "김민지", value: "kim2" },
+            { label: "박지호", value: "park" },
+          ]}
+        />,
+      );
+      const input = screen.getByRole("textbox");
+      const popup = document.querySelector("[data-select-popup]") as HTMLElement;
+      for (const query of ["ㄱ", "기", "ㄱㅁ", "ㄱㅁㅈ", "김미"]) {
+        fireEvent.change(input, { target: { value: query } });
+        expect(
+          within(popup)
+            .getAllByRole("button")
+            .map((button) => button.textContent),
+        ).toEqual(["김민준", "김민지"]);
+      }
+      fireEvent.change(input, { target: { value: "김민주" } });
+      expect(
+        within(popup)
+          .getAllByRole("button")
+          .map((button) => button.textContent),
+      ).toEqual(["김민준"]);
+      fireEvent.change(input, { target: { value: "기민" } });
+      expect(within(popup).queryAllByRole("button")).toHaveLength(0);
+      fireEvent.change(input, { target: { value: "" } });
+      expect(within(popup).getAllByRole("button")).toHaveLength(3);
+    },
+  );
+
+  it("leaves a custom filter in full control of Korean search", () => {
+    const filterOption = vi.fn((input: string, option: { label?: ReactNode }) =>
+      String(option.label).includes(input),
+    );
+    render(
+      <Select
+        showSearch
+        defaultOpen
+        filterOption={filterOption}
+        options={[{ label: "김민준", value: "kim" }]}
+      />,
+    );
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: "ㄱ" } });
+    expect(screen.queryByRole("button", { name: "김민준" })).not.toBeInTheDocument();
+    expect(filterOption).toHaveBeenCalledWith("ㄱ", expect.objectContaining({ value: "kim" }));
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: "김" } });
+    expect(screen.getByRole("button", { name: "김민준" })).toBeInTheDocument();
+  });
+
+  it("honors optionFilterProp and a custom sort with Korean matches", () => {
+    render(
+      <Select
+        showSearch
+        defaultOpen
+        optionFilterProp="name"
+        optionsSort={(a, b) => Number(b.value) - Number(a.value)}
+        options={[
+          { label: "First", name: "김민준", value: 1 },
+          { label: "Second", name: "김민지", value: 2 },
+          { label: "김민수", name: "박지호", value: 3 },
+        ]}
+      />,
+    );
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: "ㄱㅁ" } });
+    const popup = document.querySelector("[data-select-popup]") as HTMLElement;
+    expect(
+      within(popup)
+        .getAllByRole("button")
+        .map((button) => button.textContent),
+    ).toEqual(["Second", "First"]);
+  });
+
+  it("selects a Korean match with Enter and still creates an unmatched tag", () => {
+    const onChange = vi.fn();
+    render(
+      <Select mode="tags" onChange={onChange} options={[{ label: "김민준", value: "kim" }]} />,
+    );
+    const input = screen.getByRole("textbox");
+    fireEvent.change(input, { target: { value: "ㄱㅁㅈ" } });
+    fireEvent.keyDown(input, { key: "Enter" });
+    expect(onChange).toHaveBeenLastCalledWith(["kim"], expect.any(Array));
+    fireEvent.change(input, { target: { value: "새이름" } });
+    fireEvent.keyDown(input, { key: "Enter" });
+    expect(onChange).toHaveBeenLastCalledWith(["kim", "새이름"], expect.any(Array));
+    expect(input).toHaveValue("");
+  });
+
+  it("fills the parent by default and applies a custom width only to the trigger", () => {
     const { container, rerender } = render(<Select options={options} />);
 
     expect(container.firstElementChild).toHaveClass("w-full");
 
     rerender(<Select options={options} width={320} />);
-    expect(container.firstElementChild).toHaveStyle({ width: "320px" });
+    expect(container.firstElementChild).not.toHaveStyle({ width: "320px" });
+    expect(screen.getByRole("button").parentElement).toHaveStyle({ width: "320px" });
 
-    rerender(<Select options={options} width={240} />);
-    expect(container.firstElementChild).toHaveStyle({ width: "240px" });
+    rerender(
+      <Select options={options} width={240} label="긴 레이블" errorMessage="긴 오류 문구" />,
+    );
+    const triggerWrapper = screen.getByRole("button").parentElement;
+    expect(container.firstElementChild).not.toHaveStyle({ width: "240px" });
+    expect(triggerWrapper).toHaveStyle({ width: "240px" });
+    expect(triggerWrapper).not.toContainElement(screen.getByText("긴 레이블"));
+    expect(triggerWrapper).not.toContainElement(screen.getByText("긴 오류 문구"));
   });
 
   it("uses the filled background without retaining the white background class", () => {
@@ -58,6 +388,33 @@ describe("Select", () => {
     expect(onChange).toHaveBeenCalledWith("design", options[0]);
     expect(screen.queryByRole("button", { name: "Platform" })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Design" })).toBeInTheDocument();
+  });
+
+  it("supports bigint option keys", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    const bigintOption = { label: "BigInt", value: 1n };
+    render(<Select options={[bigintOption]} onChange={onChange} />);
+
+    await user.click(screen.getByRole("button", { name: "선택하세요" }));
+    await user.click(screen.getByRole("button", { name: "BigInt" }));
+
+    expect(onChange).toHaveBeenCalledWith(1n, bigintOption);
+  });
+
+  it("uses an async errorMessage function to validate a changed value", async () => {
+    const user = userEvent.setup();
+    const getErrorMessage = vi.fn(async (nextValue) =>
+      nextValue === "design" ? "Design은 선택할 수 없어요." : "",
+    );
+    render(<Select options={options} errorMessage={getErrorMessage} />);
+
+    await user.click(screen.getByRole("button", { name: "선택하세요" }));
+    await user.click(screen.getByRole("button", { name: "Design" }));
+
+    expect(await screen.findByText("Design은 선택할 수 없어요.")).toBeInTheDocument();
+    expect(getErrorMessage).toHaveBeenCalledWith("design");
+    expect(screen.getByRole("button", { name: "Design" })).toHaveClass("border-danger");
   });
 
   it("keeps the popup mounted with the dropdown leave motion after selecting an option", () => {
@@ -83,6 +440,38 @@ describe("Select", () => {
       transformOrigin: "center top",
       transitionDuration: "200ms",
     });
+  });
+
+  it("repositions an upward popup before paint when clearing search changes its height", () => {
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (
+      this: HTMLElement,
+    ) {
+      const isTrigger = this.hasAttribute("data-wizard-floating-trigger");
+      const isPopup = this.hasAttribute("data-select-popup");
+      const height = isPopup ? (this.textContent?.includes("검색 결과가 없어요") ? 40 : 200) : 40;
+      const top = isTrigger ? 700 : 0;
+      return {
+        bottom: top + height,
+        height,
+        left: 0,
+        right: 320,
+        top,
+        width: 320,
+        x: 0,
+        y: top,
+        toJSON: () => ({}),
+      };
+    });
+
+    render(<Select mode="tags" options={options} defaultOpen />);
+    const search = screen.getByRole("textbox");
+    const popup = document.querySelector("[data-select-popup]") as HTMLElement;
+
+    fireEvent.change(search, { target: { value: "새 태그" } });
+    expect(popup).toHaveStyle({ top: "658px" });
+
+    fireEvent.keyDown(search, { key: "Enter" });
+    expect(popup).toHaveStyle({ top: "498px" });
   });
 
   it("closes with the leave motion when an outer scroll container scrolls", () => {
@@ -460,28 +849,32 @@ describe("Select", () => {
     expect(screen.getByRole("textbox").tagName).toBe("INPUT");
   });
 
-  it("smoothly collapses the empty blurred tags input", () => {
-    render(<Select mode="tags" options={options} defaultValue={["design", "platform"]} />);
+  it.each(["multiple", "tags"] as const)(
+    "collapses the empty blurred %s input without animating the placeholder",
+    (mode) => {
+      render(
+        <Select mode={mode} showSearch options={options} defaultValue={["design", "platform"]} />,
+      );
 
-    const search = screen.getByRole("textbox");
+      const search = screen.getByRole("textbox");
 
-    expect(search.parentElement?.parentElement).toHaveClass("items-start");
-    expect(search).toHaveAttribute("data-select-layout-key", "search");
-    expect(search).toHaveClass(
-      "h-0",
-      "min-w-0",
-      "opacity-0",
-      "-mt-[5px]",
-      "-ml-[5px]",
-      "transition-opacity",
-      "duration-300",
-      "ease-[cubic-bezier(0.645,0.045,0.355,1)]",
-    );
+      expect(search.parentElement?.parentElement).toHaveClass("items-start");
+      expect(search).toHaveAttribute("data-select-layout-key", "search");
+      expect(search).toHaveClass(
+        "h-0",
+        "min-w-0",
+        "opacity-0",
+        "-mt-[5px]",
+        "-ml-[5px]",
+        "transition-none",
+      );
+      expect(search).not.toHaveClass("transition-opacity", "duration-200");
 
-    fireEvent.focus(search);
+      fireEvent.focus(search);
 
-    expect(search).not.toHaveClass("h-0", "min-w-0", "opacity-0", "-mt-[5px]", "-ml-[5px]");
-  });
+      expect(search).not.toHaveClass("h-0", "min-w-0", "opacity-0", "-mt-[5px]", "-ml-[5px]");
+    },
+  );
 
   it("renders a newly visible tag at its final position", () => {
     vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (
@@ -523,76 +916,6 @@ describe("Select", () => {
 
     expect(animate).not.toHaveBeenCalled();
 
-    if (originalAnimate) {
-      Object.defineProperty(HTMLElement.prototype, "animate", originalAnimate);
-    } else {
-      Reflect.deleteProperty(HTMLElement.prototype, "animate");
-    }
-  });
-
-  it("continues an interrupted height animation from its rendered height", () => {
-    let trigger: HTMLElement | null = null;
-    let naturalHeight = 32;
-    let heightAnimationRunning = false;
-    let triggerAnimationCount = 0;
-    const originalAnimate = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "animate");
-    const getBoundingClientRect = vi
-      .spyOn(HTMLElement.prototype, "getBoundingClientRect")
-      .mockImplementation(function (this: HTMLElement) {
-        const height =
-          this === trigger && heightAnimationRunning ? 48 : this === trigger ? naturalHeight : 32;
-        return {
-          bottom: height,
-          height,
-          left: 0,
-          right: 320,
-          top: 0,
-          width: 320,
-          x: 0,
-          y: 0,
-          toJSON: () => ({}),
-        };
-      });
-
-    Object.defineProperty(HTMLElement.prototype, "animate", {
-      configurable: true,
-      value: function (this: HTMLElement) {
-        const isTriggerAnimation = this === trigger;
-        if (isTriggerAnimation) {
-          triggerAnimationCount += 1;
-          heightAnimationRunning = true;
-        }
-        return {
-          addEventListener: vi.fn(),
-          cancel: vi.fn(() => {
-            if (isTriggerAnimation) heightAnimationRunning = false;
-          }),
-        } as unknown as Animation;
-      },
-    });
-
-    const { rerender } = render(
-      <Select mode="tags" options={options} searchValue="" value={["design"]} />,
-    );
-    trigger = screen.getByRole("textbox").parentElement?.parentElement as HTMLElement;
-    naturalHeight = 64;
-
-    rerender(
-      <Select mode="tags" options={options} searchValue="" value={["design", "platform"]} />,
-    );
-    expect(triggerAnimationCount).toBe(1);
-
-    rerender(
-      <Select
-        mode="tags"
-        options={options}
-        searchValue=""
-        value={["design", "platform", "mobile"]}
-      />,
-    );
-    expect(triggerAnimationCount).toBe(2);
-
-    getBoundingClientRect.mockRestore();
     if (originalAnimate) {
       Object.defineProperty(HTMLElement.prototype, "animate", originalAnimate);
     } else {
@@ -656,6 +979,18 @@ describe("Select", () => {
     expect(document.querySelector("[data-select-popup]")).not.toBeInTheDocument();
   });
 
+  it("uses the disabled token for regular and searchable placeholders", () => {
+    const { rerender } = render(<Select options={options} placeholder="선택하세요" />);
+
+    expect(screen.getByText("선택하세요")).toHaveClass("text-disabled");
+    expect(screen.getByText("선택하세요")).not.toHaveClass("text-gray");
+
+    rerender(<Select options={options} showSearch placeholder="검색하세요" />);
+
+    expect(screen.getByPlaceholderText("검색하세요")).toHaveClass("placeholder:text-disabled");
+    expect(screen.getByPlaceholderText("검색하세요")).not.toHaveClass("placeholder:text-gray");
+  });
+
   it("blocks opening and value changes while loading", async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
@@ -694,12 +1029,25 @@ describe("Select", () => {
 
     const trigger = screen.getByRole("button", { name: "Design" });
     expect(trigger).not.toBeDisabled();
-    expect(trigger).toHaveClass("focus:border-primary", "focus:outline-none");
+    expect(trigger).toHaveClass("cursor-default", "outline-none", "focus:border-primary");
 
     await user.click(trigger);
 
+    expect(trigger).not.toHaveFocus();
     expect(document.querySelector("[data-select-popup]")).not.toBeInTheDocument();
     expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it("uses the default cursor and does not focus its searchable input by click while read only", async () => {
+    const user = userEvent.setup();
+    render(<Select options={options} readOnly showSearch />);
+
+    const searchInput = screen.getByRole("textbox");
+    expect(searchInput).toHaveClass("cursor-default");
+    expect(searchInput.parentElement?.parentElement).toHaveClass("cursor-default");
+
+    await user.click(searchInput);
+    expect(searchInput).not.toHaveFocus();
   });
 
   it("measures the trigger width when initially controlled open", () => {
@@ -806,7 +1154,7 @@ describe("Select", () => {
     render(
       <Select
         mode="multiple"
-        options={[{ label: "활성", value: "active", color: "green" }]}
+        options={[{ label: "활성", value: "active", color: "success" }]}
         defaultValue={["active"]}
       />,
     );
@@ -830,7 +1178,7 @@ describe("Select", () => {
         <Select
           mode={mode}
           variant="filled"
-          options={[{ label: "활성", value: "active", color: "green" }]}
+          options={[{ label: "활성", value: "active", color: "success" }]}
           defaultValue={["active"]}
         />,
       );
@@ -895,6 +1243,7 @@ describe("Select", () => {
     const trigger = screen.getByRole("button", { name: "Design" });
     const clearIcon = trigger.querySelector("svg")?.parentElement;
     expect(clearIcon).not.toBeNull();
+    expect(clearIcon).toHaveClass("transition-opacity", "duration-200", "hover:opacity-75");
     await user.click(clearIcon as HTMLElement);
 
     expect(onChange).toHaveBeenCalledWith(undefined, undefined);

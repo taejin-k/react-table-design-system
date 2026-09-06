@@ -2,7 +2,10 @@ import { useState, type ComponentType } from "react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { storyDescriptions } from "../../storybook/story-descriptions";
 import { withStoryImports } from "../../storybook/story-source";
-import { formatTableStorySource } from "../../storybook/table-story-source";
+import {
+  formatTableDataSourceDeclaration,
+  formatTableStorySource,
+} from "../../storybook/table-story-source";
 import { columns, members, statusFilters, type Member } from "./Table.playground-data";
 import { Table } from "./Table";
 import type { ColumnsType, Key, TableProps } from "./Table.types";
@@ -24,6 +27,7 @@ const meta: Meta<TableProps<Member>> = {
     rowSelection: { control: false, table: { disable: true } },
     expandable: { control: false, table: { disable: true } },
     scroll: { control: false, table: { disable: true } },
+    scrollBarHeight: { control: false, table: { disable: true } },
     className: { control: false, table: { disable: true } },
   },
   parameters: {
@@ -47,18 +51,9 @@ const storyDescription = (id: string) => ({
   docs: { description: { story: storyDescriptions[id] } },
 });
 
-const tableStoryDataSource = `const members = [
-  {
-    id: 'M-1001',
-    name: '김민준',
-    role: 'Product Designer',
-    team: 'Design',
-    projects: 8,
-  },
-  // ...나머지 4개 항목
-];
+const tableStoryDataSource = `${formatTableDataSourceDeclaration(members.slice(0, 5))}
 
-const columns = [
+const columns: ColumnsType<(typeof members)[number]> = [
   {
     key: 'name',
     dataIndex: 'name',
@@ -85,19 +80,10 @@ const columns = [
   },
 ];`;
 
-const dragColumnStoryDataSource = `const members = [
-  {
-    id: 'M-1001',
-    name: '김민준',
-    role: 'Product Designer',
-    team: 'Design',
-    projects: 8,
-  },
-  // ...나머지 4개 항목
-];
+const dragColumnStoryDataSource = `${formatTableDataSourceDeclaration(members.slice(0, 5))}
 
 // width가 있는 컬럼은 고정하고, 직무 컬럼은 남은 공간을 사용해요.
-const columns = [
+const columns: ColumnsType<(typeof members)[number]> = [
   { key: 'name', dataIndex: 'name', title: '이름', width: 150 },
   { key: 'role', dataIndex: 'role', title: '직무', minWidth: 190 },
   { key: 'team', dataIndex: 'team', title: '팀', width: 120 },
@@ -147,19 +133,19 @@ const filterColumns: ColumnsType<Member> = [
     filterSearch: true, // 필터 목록 위에 검색창을 표시해요.
     filters: [
       {
-        text: "제품 조직",
+        label: "제품 조직",
         value: "product-group",
         children: [
-          { text: "Design", value: "Design" },
-          { text: "Product", value: "Product" },
+          { label: "Design", value: "Design" },
+          { label: "Product", value: "Product" },
         ],
       },
       {
-        text: "기술 조직",
+        label: "기술 조직",
         value: "engineering-group",
         children: [
-          { text: "Platform", value: "Platform" },
-          { text: "Mobile", value: "Mobile" },
+          { label: "Platform", value: "Platform" },
+          { label: "Mobile", value: "Mobile" },
         ],
       },
     ],
@@ -179,10 +165,10 @@ const filterColumns: ColumnsType<Member> = [
     title: "직무",
     minWidth: 190,
     filters: [
-      { text: "디자인", value: "design" },
-      { text: "개발", value: "engineering" },
-      { text: "기획", value: "product" },
-      { text: "데이터", value: "data" },
+      { label: "디자인", value: "design" },
+      { label: "개발", value: "engineering" },
+      { label: "기획", value: "product" },
+      { label: "데이터", value: "data" },
     ],
     filterMultiple: false, // 라디오로 하나의 값만 선택해요.
     onFilter: (value, record) => {
@@ -198,9 +184,9 @@ const filterColumns: ColumnsType<Member> = [
     title: "프로젝트",
     width: 120,
     filters: [
-      { text: "5개 이하", value: "low" },
-      { text: "6~9개", value: "middle" },
-      { text: "10개 이상", value: "high" },
+      { label: "5개 이하", value: "low" },
+      { label: "6~9개", value: "middle" },
+      { label: "10개 이상", value: "high" },
     ],
     filterOnClose: false, // 선택한 뒤 확인을 눌러야 필터를 적용해요.
     onFilter: (value, record) => {
@@ -215,8 +201,8 @@ const filterColumns: ColumnsType<Member> = [
     title: "합류일",
     width: 140,
     filters: [
-      { text: "전체 기간", value: "all" },
-      { text: "2024년", value: "2024" },
+      { label: "전체 기간", value: "all" },
+      { label: "2024년", value: "2024" },
     ],
     defaultFilteredValue: ["all"], // 처음 적용할 필터 값이에요.
     filterResetToDefault: true, // 초기화하면 기본값으로 돌아가요.
@@ -318,16 +304,14 @@ export const Sorter: Story = {
     docs: {
       ...storyDescription("components-table--sorter").docs,
       source: {
-        code: withStoryImports(`const members = [
-  { id: 'M-1001', name: '김민준', role: 'Product Designer', team: 'Design', projects: 8 },
-  // ...나머지 4개 항목
-];
+        code: withStoryImports(`${formatTableDataSourceDeclaration(members.slice(0, 5))}
 
-const columns = [
+const columns: ColumnsType<(typeof members)[number]> = [
   {
     key: 'name',
     dataIndex: 'name',
     title: '이름',
+    width: 150,
     // 하나의 컬럼만 정렬할 때는 비교 함수를 바로 전달해요.
     sorter: (a, b) => a.name.localeCompare(b.name),
   },
@@ -335,11 +319,13 @@ const columns = [
     key: 'role',
     dataIndex: 'role',
     title: '직무',
+    minWidth: 190,
   },
   {
     key: 'team',
     dataIndex: 'team',
     title: '팀',
+    width: 120,
     sorter: {
       compare: (a, b) => a.team.localeCompare(b.team),
       // 여러 컬럼을 함께 정렬할 때 multiple을 사용해요.
@@ -351,6 +337,7 @@ const columns = [
     key: 'projects',
     dataIndex: 'projects',
     title: '프로젝트',
+    width: 110,
     sorter: {
       compare: (a, b) => a.projects - b.projects,
       // multiple 숫자가 클수록 먼저 정렬해요.
@@ -382,68 +369,58 @@ export const Filter: Story = {
     docs: {
       ...storyDescription("components-table--filter").docs,
       source: {
-        code: withStoryImports(`const members = [
-  {
-    id: 'M-1001',
-    name: '김민준',
-    role: 'Product Designer',
-    team: 'Design',
-    status: '활성',
-    projects: 8,
-    joinedAt: '2023-02-14',
-  },
-  // ...나머지 4개 항목
-];
+        code: withStoryImports(`${formatTableDataSourceDeclaration(members.slice(0, 5))}
 
 const teamFilters = [
   {
-    text: '제품 조직',
+    label: '제품 조직',
     value: 'product-group',
     children: [
-      { text: 'Design', value: 'Design' },
-      { text: 'Product', value: 'Product' },
+      { label: 'Design', value: 'Design' },
+      { label: 'Product', value: 'Product' },
     ],
   },
   {
-    text: '기술 조직',
+    label: '기술 조직',
     value: 'engineering-group',
     children: [
-      { text: 'Platform', value: 'Platform' },
-      { text: 'Mobile', value: 'Mobile' },
+      { label: 'Platform', value: 'Platform' },
+      { label: 'Mobile', value: 'Mobile' },
     ],
   },
 ];
 
 const statusFilters = [
-  { text: '활성', value: '활성' },
-  { text: '휴가', value: '휴가' },
-  { text: '대기', value: '대기' },
+  { label: '활성', value: '활성' },
+  { label: '휴가', value: '휴가' },
+  { label: '대기', value: '대기' },
 ];
 
 const roleFilters = [
-  { text: '디자인', value: 'design' },
-  { text: '개발', value: 'engineering' },
-  { text: '기획', value: 'product' },
-  { text: '데이터', value: 'data' },
+  { label: '디자인', value: 'design' },
+  { label: '개발', value: 'engineering' },
+  { label: '기획', value: 'product' },
+  { label: '데이터', value: 'data' },
 ];
 
 const projectFilters = [
-  { text: '5개 이하', value: 'low' },
-  { text: '6~9개', value: 'middle' },
-  { text: '10개 이상', value: 'high' },
+  { label: '5개 이하', value: 'low' },
+  { label: '6~9개', value: 'middle' },
+  { label: '10개 이상', value: 'high' },
 ];
 
 const joinedAtFilters = [
-  { text: '전체 기간', value: 'all' },
-  { text: '2024년', value: '2024' },
+  { label: '전체 기간', value: 'all' },
+  { label: '2024년', value: '2024' },
 ];
 
-const columns = [
-  { key: 'name', dataIndex: 'name', title: '이름' },
+const columns: ColumnsType<(typeof members)[number]> = [
+  { key: 'name', dataIndex: 'name', title: '이름', width: 150 },
   {
     key: 'team',
     dataIndex: 'team',
     title: '팀',
+    width: 160,
     filters: teamFilters,
     filterMode: 'tree', // 필터 항목을 트리로 표시해요.
     filterSearch: true, // 필터 목록 위에 검색창을 표시해요.
@@ -453,6 +430,7 @@ const columns = [
     key: 'status',
     dataIndex: 'status',
     title: '상태',
+    width: 120,
     filters: statusFilters, // 기본값이 다중 선택이라 일반 체크박스를 표시해요.
     onFilter: (value, record) => record.status === value,
   },
@@ -460,6 +438,7 @@ const columns = [
     key: 'role',
     dataIndex: 'role',
     title: '직무',
+    minWidth: 190,
     filters: roleFilters,
     filterMultiple: false, // 라디오로 하나의 값만 선택해요.
     onFilter: (value, record) => {
@@ -473,6 +452,7 @@ const columns = [
     key: 'projects',
     dataIndex: 'projects',
     title: '프로젝트',
+    width: 120,
     filters: projectFilters,
     filterOnClose: false, // 선택한 뒤 확인을 눌러야 필터를 적용해요.
     onFilter: (value, record) => {
@@ -485,6 +465,7 @@ const columns = [
     key: 'joinedAt',
     dataIndex: 'joinedAt',
     title: '합류일',
+    width: 140,
     filters: joinedAtFilters,
     defaultFilteredValue: ['all'], // 처음 적용할 필터 값이에요.
     filterResetToDefault: true, // 초기화하면 기본값으로 돌아가요.

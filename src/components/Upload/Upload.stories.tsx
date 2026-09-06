@@ -69,7 +69,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "클릭 또는 드래그로 파일을 선택하고 목록을 관리해요.  \n파일 검증, 두 가지 목록 모양과 미리보기를 지원해요.",
+          "Upload는 클릭하거나 파일을 끌어놓아 업로드 대상을 선택할 때 사용해요.  \n파일 검증·목록 표시·미리보기와 순서 변경을 지원해요.",
       },
       page: () => (
         <div className="upload-docs component-docs">
@@ -80,13 +80,15 @@ const meta = {
           <Markdown>{`
 ### <span id="upload">Upload</span>
 
+Upload는 사용자가 파일을 선택하고 업로드 상태를 확인하게 해요.
+
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
 | \`children\` | 파일 선택 트리거를 구성해요. | \`ReactNode\` | - |
 | \`accept\` | 선택할 파일의 확장자나 MIME 형식을 설정해요. | \`string\` | - |
 | \`capture\` | 모바일에서 카메라나 마이크 입력을 요청해요. | \`boolean\` | \`false\` |
 | \`multiple\` | 파일을 여러 개 선택해요. | \`boolean\` | \`false\` |
-| \`maxCount\` | 최대 파일 수를 정하고 초과 시 안내해요. | \`number\` | - |
+| \`maxCount\` | 최대 파일 수를 정하고 초과 시 안내해요. 0이면 파일을 추가하지 않아요. | \`number\` | - |
 | \`directory\` | 폴더 단위 선택을 허용해요. | \`boolean\` | \`false\` |
 | \`disabled\` | 파일 선택과 제거를 비활성화해요. | \`boolean\` | \`false\` |
 | \`fileList\` | 표시할 파일 목록을 제어해요. | [\`UploadFile[]\`](#upload-file) | - |
@@ -103,13 +105,15 @@ const meta = {
 
 ### Upload.Dragger
 
-나머지 설정은 Upload와 같아요.
+Upload.Dragger는 파일을 끌어놓아 선택할 수 있는 업로드 영역이에요. 나머지 설정은 Upload와 같아요.
 
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
 | \`children\` | 드래그 영역에 표시할 내용을 구성해요. | \`ReactNode\` | 기본 업로드 안내 |
 
 ### <span id="upload-file">UploadFile</span>
+
+UploadFile은 업로드 목록에 표시할 파일의 이름과 상태를 정의해요.
 
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
@@ -122,6 +126,8 @@ const meta = {
 
 ### <span id="upload-change-param">UploadChangeParam</span>
 
+UploadChangeParam은 업로드 상태가 바뀔 때 받는 파일 정보예요.
+
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
 | \`file\` | 변경을 일으킨 파일이에요. | [\`UploadFile\`](#upload-file) | - |
@@ -130,7 +136,7 @@ const meta = {
           `}</Markdown>
           <h2 className="component-docs-types-heading">Types</h2>
           <h3 id="upload-list-type">UploadListType</h3>
-          <p>파일 목록의 표현 방식을 선택해요.</p>
+          <p>UploadListType은 업로드한 파일 목록의 표현 방식을 구분해요.</p>
           <TypeTokens values={uploadListTypes} />
         </div>
       ),
@@ -265,22 +271,22 @@ export const SortableLists: Story = {
         type: "code",
         code: withStoryImports(`const initialFiles: UploadFile[] = [
   {
-    uid: 'design',
+    uid: 'sortable-1',
     name: 'design-system.png',
     url: 'https://picsum.photos/seed/wizard-upload-design-system/160/160',
     type: 'image/png',
   },
   {
-    uid: 'dashboard',
+    uid: 'sortable-2',
     name: 'dashboard.png',
     url: 'https://picsum.photos/seed/wizard-upload-product-photo/160/160',
-    type: 'image/png',
+    type: 'image/jpeg',
   },
   {
-    uid: 'profile',
+    uid: 'sortable-3',
     name: 'profile.png',
     url: 'https://picsum.photos/seed/wizard-upload-profile/160/160',
-    type: 'image/png',
+    type: 'image/jpeg',
   },
 ];
 
@@ -400,18 +406,23 @@ export const DragAndDrop: Story = {
 
 export const SelectionRules: Story = {
   args: {
+    accept: "image/png",
+    multiple: true,
+    maxCount: 2,
     listType: "text",
     disabled: false,
     showUploadList: true,
   },
   argTypes: {
-    accept: { control: false, table: { disable: true } },
-    multiple: { control: false, table: { disable: true } },
-    maxCount: { control: false, table: { disable: true } },
+    accept: { control: "text" },
+    multiple: { control: "boolean" },
+    maxCount: { control: { type: "number", min: 0, step: 1 } },
   },
   parameters: {
     ...storyDescription("components-upload--selection-rules"),
-    controls: { include: ["목록 모양", "비활성", "목록 표시"] },
+    controls: {
+      include: ["파일 형식", "다중 선택", "최대 개수", "목록 모양", "비활성", "목록 표시"],
+    },
     docs: {
       ...storyDescription("components-upload--selection-rules").docs,
       source: {
@@ -427,7 +438,7 @@ export const SelectionRules: Story = {
     },
   },
   render: (args) => (
-    <Upload {...args} accept="image/png" multiple maxCount={2}>
+    <Upload {...args}>
       <Button>PNG 파일 선택</Button>
     </Upload>
   ),

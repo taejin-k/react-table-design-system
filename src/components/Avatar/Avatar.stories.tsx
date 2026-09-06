@@ -1,6 +1,7 @@
 import { Description, Markdown, Stories, Title } from "@storybook/addon-docs/blocks";
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState, type ComponentProps } from "react";
+import { colorTokenNames } from "../../color-tokens";
 import { storyDescriptions } from "../../storybook/story-descriptions";
 import { withStoryImports } from "../../storybook/story-source";
 import { TypeTokens } from "../../storybook/type-tokens";
@@ -25,12 +26,12 @@ const meta = {
     children: { name: "텍스트", control: "text" },
     size: { name: "크기", control: "select", options: avatarSizes },
     shape: { name: "모양", control: "select", options: avatarShapes },
-    color: { name: "배경색", control: "color" },
-    label: { name: "라벨", control: "boolean" },
+    color: { name: "배경색", control: "select", options: colorTokenNames },
+    showLabel: { name: "라벨 표시", control: "boolean" },
     labelWidth: {
       name: "라벨 너비",
       control: { type: "number", min: 0, step: 1 },
-      if: { arg: "label", truthy: true },
+      if: { arg: "showLabel", truthy: true },
     },
     preview: { name: "이미지 미리보기", control: "boolean" },
     src: { control: false, table: { disable: true } },
@@ -42,7 +43,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "사용자나 대상을 이미지, 아이콘 또는 짧은 문자로 표현해요.  \n크기와 모양을 설정하고 여러 아바타를 그룹으로 묶을 수 있어요.",
+          "Avatar는 사용자 프로필이나 항목을 이미지·아이콘·짧은 문자로 표시해요.  \n크기와 모양을 지정하고 여러 Avatar를 그룹으로 묶을 수 있어요.",
       },
       page: () => (
         <div className="avatar-docs component-docs">
@@ -53,12 +54,14 @@ const meta = {
           <Markdown>{`
 ### Avatar
 
+Avatar는 사용자 프로필이나 항목을 이미지·아이콘·짧은 문자로 표시해요.
+
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
 | \`src\` | 아바타 이미지 주소 또는 이미지 노드를 전달해요. | \`ReactNode\` | - |
 | \`icon\` | 이미지 대신 표시할 아이콘이에요. | \`ReactNode\` | - |
-| \`color\` | 아바타 배경색을 설정해요. | \`CSSProperties['backgroundColor']\` | \`var(--color-disabled)\` |
-| \`label\` | 아바타 옆에 라벨을 표시해요. | \`boolean\` | \`false\` |
+| \`color\` | 디자인 토큰으로 배경색을 설정해요. | [\`ColorTokenType\`](./iframe.html?id=components-color--documentation&viewMode=docs#color-token-type) | 라벨: \`primary\`, 그 외: \`hover\` |
+| \`showLabel\` | 아바타 옆에 라벨을 표시해요. | \`boolean\` | \`false\` |
 | \`labelWidth\` | 라벨 너비를 px로 정하고 넘치는 텍스트를 말줄임해요. | \`number\` | 텍스트 너비 |
 | \`size\` | 아바타 크기를 정해요. | [\`AvatarSizeType\`](#avatar-size-type) | \`md\` |
 | \`shape\` | 원형 또는 사각형 모양을 정해요. | [\`AvatarShapeType\`](#avatar-shape-type) | \`circle\` |
@@ -66,6 +69,8 @@ const meta = {
 | \`className\` | 최상위 요소에 Tailwind 클래스를 추가해요. | \`string\` | - |
 
 ### Avatar.Group
+
+Avatar.Group은 여러 Avatar를 겹쳐 하나의 그룹으로 표시해요.
 
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
@@ -76,10 +81,10 @@ const meta = {
           `}</Markdown>
           <h2 className="component-docs-types-heading">Types</h2>
           <h3 id="avatar-size-type">AvatarSizeType</h3>
-          <p>미리 정한 아바타 크기를 사용해요.</p>
+          <p>AvatarSizeType은 Avatar의 높이와 너비를 구분해요.</p>
           <TypeTokens values={avatarSizes} />
           <h3 id="avatar-shape-type">AvatarShapeType</h3>
-          <p>아바타 모양을 선택해요.</p>
+          <p>AvatarShapeType은 Avatar의 원형과 사각형 모양을 구분해요.</p>
           <TypeTokens values={avatarShapes} />
         </div>
       ),
@@ -91,18 +96,18 @@ type Story = StoryObj<typeof meta>;
 
 export const Basic: Story = {
   args: {
+    color: undefined,
     children: "MD",
     size: "md",
     shape: "circle",
-    color: "var(--color-disabled)",
-    label: false,
+    showLabel: false,
     preview: false,
   },
   parameters: {
     ...storyDescription("components-avatar--basic"),
     controls: {
       disable: false,
-      include: ["텍스트", "크기", "모양", "배경색", "라벨", "라벨 너비"],
+      include: ["텍스트", "크기", "모양", "배경색", "라벨 표시", "라벨 너비"],
     },
     docs: {
       ...storyDescription("components-avatar--basic").docs,
@@ -115,10 +120,10 @@ export const Basic: Story = {
 };
 
 export const Sizes: Story = {
-  args: { shape: "circle", color: "var(--color-disabled)", label: false },
+  args: { color: undefined, shape: "circle", showLabel: false },
   parameters: {
     ...storyDescription("components-avatar--sizes"),
-    controls: { disable: false, include: ["모양", "배경색", "라벨"] },
+    controls: { disable: false, include: ["모양", "배경색", "라벨 표시"] },
     docs: {
       ...storyDescription("components-avatar--sizes").docs,
       source: {
@@ -143,10 +148,10 @@ export const Sizes: Story = {
 };
 
 export const Shapes: Story = {
-  args: { color: "var(--color-disabled)", label: false },
+  args: { color: undefined, showLabel: false },
   parameters: {
     ...storyDescription("components-avatar--shapes"),
-    controls: { disable: false, include: ["배경색", "라벨"] },
+    controls: { disable: false, include: ["배경색", "라벨 표시"] },
     docs: {
       ...storyDescription("components-avatar--shapes").docs,
       source: {
@@ -180,26 +185,26 @@ export const Shapes: Story = {
 };
 
 export const Color: Story = {
-  args: { size: "md", shape: "circle", label: false },
+  args: { size: "md", shape: "circle", showLabel: false },
   parameters: {
     ...storyDescription("components-avatar--color"),
-    controls: { disable: false, include: ["크기", "모양", "라벨"] },
+    controls: { disable: false, include: ["크기", "모양", "라벨 표시"] },
     docs: {
       ...storyDescription("components-avatar--color").docs,
       source: {
         type: "code",
         code: withStoryImports(`<div className="flex flex-col items-start gap-3">
   <div className="flex items-center gap-3">
-    <Avatar color="#0062df">K</Avatar>
-    <Avatar color="#52c41a">L</Avatar>
-    <Avatar color="#faad14">P</Avatar>
-    <Avatar color="#722ed1">C</Avatar>
+    <Avatar color="primary">K</Avatar>
+    <Avatar color="success">L</Avatar>
+    <Avatar color="warning">P</Avatar>
+    <Avatar color="purple">C</Avatar>
   </div>
   <div className="flex items-center gap-3">
-    <Avatar color="#0062df" label>김민준</Avatar>
-    <Avatar color="#52c41a" label>이서연</Avatar>
-    <Avatar color="#faad14" label>박지호</Avatar>
-    <Avatar color="#722ed1" label>최유진</Avatar>
+    <Avatar color="primary" showLabel>김민준</Avatar>
+    <Avatar color="success" showLabel>이서연</Avatar>
+    <Avatar color="warning" showLabel>박지호</Avatar>
+    <Avatar color="purple" showLabel>최유진</Avatar>
   </div>
 </div>`),
       },
@@ -208,30 +213,30 @@ export const Color: Story = {
   render: (args) => (
     <div className="flex flex-col items-start gap-3">
       <div className="flex items-center gap-3">
-        <Avatar {...args} color="#0062df">
+        <Avatar {...args} color="primary">
           K
         </Avatar>
-        <Avatar {...args} color="#52c41a">
+        <Avatar {...args} color="success">
           L
         </Avatar>
-        <Avatar {...args} color="#faad14">
+        <Avatar {...args} color="warning">
           P
         </Avatar>
-        <Avatar {...args} color="#722ed1">
+        <Avatar {...args} color="purple">
           C
         </Avatar>
       </div>
       <div className="flex items-center gap-3">
-        <Avatar color="#0062df" label>
+        <Avatar color="primary" showLabel>
           김민준
         </Avatar>
-        <Avatar color="#52c41a" label>
+        <Avatar color="success" showLabel>
           이서연
         </Avatar>
-        <Avatar color="#faad14" label>
+        <Avatar color="warning" showLabel>
           박지호
         </Avatar>
-        <Avatar color="#722ed1" label>
+        <Avatar color="purple" showLabel>
           최유진
         </Avatar>
       </div>
@@ -240,7 +245,7 @@ export const Color: Story = {
 };
 
 export const Text: Story = {
-  args: { size: "md", shape: "circle", color: "var(--color-disabled)" },
+  args: { color: undefined, size: "md", shape: "circle" },
   parameters: {
     ...storyDescription("components-avatar--text"),
     controls: { disable: false, include: ["크기", "모양", "배경색"] },
@@ -260,8 +265,7 @@ export const Text: Story = {
         onChange={setText}
       />
       <div className="flex items-center gap-3">
-        <Avatar size="md">{text}</Avatar>
-        <Avatar size="lg">{text}</Avatar>
+        <Avatar>{text}</Avatar>
       </div>
     </div>
   );
@@ -302,7 +306,7 @@ function AvatarLabelTextExample(args: ComponentProps<typeof Avatar>) {
           onChange={setWidth}
         />
       </div>
-      <Avatar {...args} label labelWidth={Number(width) || 180} src={avatarImage}>
+      <Avatar {...args} showLabel labelWidth={Number(width) || 180} src={avatarImage}>
         {text}
       </Avatar>
     </div>
@@ -310,7 +314,7 @@ function AvatarLabelTextExample(args: ComponentProps<typeof Avatar>) {
 }
 
 export const LabelText: Story = {
-  args: { size: "lg", shape: "circle", color: "var(--color-disabled)", preview: false },
+  args: { color: undefined, size: "lg", shape: "circle", preview: false },
   parameters: {
     ...storyDescription("components-avatar--label-text"),
     controls: {
@@ -346,7 +350,7 @@ function AvatarLabelText() {
         />
       </div>
       <Avatar
-        label
+        showLabel
         labelWidth={Number(width) || 180}
         size="lg"
         src={avatarImage}
@@ -416,7 +420,7 @@ export const ImagePreview: Story = {
     preview
   />
   <Avatar
-    label
+    showLabel
     src={avatarImage}
     size="lg"
     preview
@@ -431,7 +435,7 @@ export const ImagePreview: Story = {
   render: (args) => (
     <div className="flex items-center gap-3">
       <Avatar {...args} src={avatarImage} size="lg" />
-      <Avatar {...args} label src={avatarImage} size="lg">
+      <Avatar {...args} showLabel src={avatarImage} size="lg">
         manhat
       </Avatar>
     </div>
@@ -439,7 +443,7 @@ export const ImagePreview: Story = {
 };
 
 export const ImageError: Story = {
-  args: { shape: "circle", color: "var(--color-disabled)" },
+  args: { color: undefined, shape: "circle" },
   parameters: {
     ...storyDescription("components-avatar--image-error"),
     controls: { disable: false, include: ["모양", "배경색"] },
@@ -476,9 +480,9 @@ export const Group: Story = {
         code: withStoryImports(
           `<Avatar.Group maxCount={3}>
   <Avatar>KIM</Avatar>
-  <Avatar color="#0062df">LEE</Avatar>
-  <Avatar color="#52c41a">PARK</Avatar>
-  <Avatar color="#722ed1">CHOI</Avatar>
+  <Avatar color="primary">LEE</Avatar>
+  <Avatar color="success">PARK</Avatar>
+  <Avatar color="purple">CHOI</Avatar>
 </Avatar.Group>`,
         ),
       },
@@ -489,13 +493,13 @@ export const Group: Story = {
       <Avatar size={args.size} shape={args.shape}>
         KIM
       </Avatar>
-      <Avatar size={args.size} shape={args.shape} color="#0062df">
+      <Avatar size={args.size} shape={args.shape} color="primary">
         LEE
       </Avatar>
-      <Avatar size={args.size} shape={args.shape} color="#52c41a">
+      <Avatar size={args.size} shape={args.shape} color="success">
         PARK
       </Avatar>
-      <Avatar size={args.size} shape={args.shape} color="#722ed1">
+      <Avatar size={args.size} shape={args.shape} color="purple">
         CHOI
       </Avatar>
     </Avatar.Group>

@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
+import { MultilineText } from "../_internal/MultilineText";
 import { twMerge } from "tailwind-merge";
 import { Icon } from "../Icon";
 import {
@@ -16,6 +17,7 @@ import {
   type FloatingPosition,
 } from "../_internal/floating-position";
 import type { MenuClickInfo, MenuItemType, MenuProps } from "./Menu.types";
+import { observeFloatingResize } from "../_internal/observe-floating-resize";
 
 const SUBMENU_CLOSE_DELAY_MS = 100;
 const INLINE_INDENT = 24;
@@ -43,20 +45,24 @@ function MenuPopupPortal({
 }) {
   const popupRef = useRef<HTMLDivElement>(null);
   const getAnchorRef = useRef(getAnchor);
+  const openRef = useRef(open);
+  const currentPlacementRef = useRef<FloatingPlacement | undefined>(undefined);
   const [position, setPosition] = useState<FloatingPosition | null>(null);
   const [motionOpen, setMotionOpen] = useState(false);
   getAnchorRef.current = getAnchor;
+  openRef.current = open;
 
   const updatePosition = useCallback(() => {
     const anchor = getAnchorRef.current();
     const popup = popupRef.current;
-    if (!anchor || !popup) return;
+    if (!anchor || !popup || !openRef.current) return;
     const next = calculateFloatingPosition(
       anchor.getBoundingClientRect(),
-      popup.getBoundingClientRect(),
+      new DOMRect(0, 0, popup.offsetWidth, popup.offsetHeight),
       "rightTop",
-      { targetGap: 4 },
+      { targetGap: 4, currentPlacement: currentPlacementRef.current, recoverPreferredAxis: false },
     );
+    currentPlacementRef.current = next.placement;
     setPosition((current) =>
       current?.left === next.left &&
       current.top === next.top &&
@@ -75,10 +81,13 @@ function MenuPopupPortal({
   );
 
   useLayoutEffect(() => {
+    if (!open) {
+      currentPlacementRef.current = undefined;
+      return;
+    }
     updatePosition();
     const anchor = getAnchorRef.current();
-    const observer =
-      typeof ResizeObserver === "undefined" ? null : new ResizeObserver(updatePosition);
+    const observer = observeFloatingResize(updatePosition);
     if (anchor) observer?.observe(anchor);
     if (popupRef.current) observer?.observe(popupRef.current);
     window.addEventListener("resize", updatePosition);
@@ -88,10 +97,11 @@ function MenuPopupPortal({
       window.removeEventListener("resize", updatePosition);
       window.removeEventListener("scroll", updatePosition, true);
     };
-  }, [updatePosition]);
+  }, [open, updatePosition]);
 
   useEffect(() => {
-    updatePosition();
+    // The parent item's ref may attach after the portal's layout effect.
+    if (open) updatePosition();
   }, [open, updatePosition]);
 
   useEffect(() => {
@@ -113,7 +123,7 @@ function MenuPopupPortal({
       data-menu-popup=""
       data-placement={resolvedPlacement}
       className={twMerge(
-        "fixed z-[1050] will-change-[opacity,transform] motion-reduce:transition-none",
+        "fixed z-[1050] max-w-[calc(100vw-16px)] min-w-0 will-change-[opacity,transform] motion-reduce:transition-none",
         motionOpen ? "translate-x-0 translate-y-0 opacity-100" : "pointer-events-none opacity-0",
         className,
       )}
@@ -124,7 +134,7 @@ function MenuPopupPortal({
         transform: motionOpen ? "translate3d(0, 0, 0) scale(1)" : hiddenTransform,
         transformOrigin: getMenuPopupTransformOrigin(resolvedPlacement),
         transition:
-          "opacity 220ms cubic-bezier(0.2, 0, 0, 1), transform 260ms cubic-bezier(0.2, 0, 0, 1)",
+          "opacity 200ms cubic-bezier(0.2, 0, 0, 1), transform 200ms cubic-bezier(0.2, 0, 0, 1)",
       }}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
@@ -233,16 +243,18 @@ export function Menu({
     else onSelect?.({ ...info, selectedKeys: next });
   };
 
-  const renderItems = (data: MenuItemType[], level = 0, popup = false) => (
+  const renderItems = (data: MenuItemType[], level = 0, popup = false, groupContent = false) => (
     <ul
       className={twMerge(
-        "m-0 list-none space-y-1 p-1",
-        level === 0 &&
-          "transition-[width] duration-[280ms] ease-[cubic-bezier(0.4,0,0.2,1)] will-change-[width] motion-reduce:transition-none",
-        level === 0 && mode === "inline" && "overflow-hidden",
-        level === 0 && (mode === "inline" && inlineCollapsed ? "w-16" : "w-64"),
+        "m-0 max-w-full min-w-0 list-none space-y-1 p-1",
+        !groupContent &&
+          level === 0 &&
+          "transition-[width] duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] will-change-[width] motion-reduce:transition-none",
+        !groupContent && level === 0 && mode === "inline" && "overflow-hidden",
+        !groupContent && level === 0 && (mode === "inline" && inlineCollapsed ? "w-16" : "w-64"),
         level > 0 && mode === "inline" && !popup && "pb-0",
-        popup && "min-w-40 rounded-lg bg-white shadow-2xl",
+        popup && !groupContent && "min-w-40 rounded-lg bg-white shadow-2xl",
+        groupContent && "p-0",
       )}
     >
       {data.map((item) => {
@@ -250,11 +262,13 @@ export function Menu({
         if (item.type === "divider") return <li key={key} className="border-t border-hover" />;
         if (item.type === "group")
           return (
-            <li key={key} className="py-1">
+            <li key={key}>
               {item.label != null ? (
-                <div className="px-3 py-1 text-xs text-gray">{item.label}</div>
+                <div className="px-3 py-1 text-xs text-gray">
+                  <MultilineText wrap>{item.label}</MultilineText>
+                </div>
               ) : null}
-              {renderItems(item.children ?? [], level, popup)}
+              {renderItems(item.children ?? [], level, popup, true)}
             </li>
           );
         const hasChildren = Boolean(item.children?.length);
@@ -275,7 +289,7 @@ export function Menu({
             className={twMerge(
               "relative block h-10 w-full cursor-pointer overflow-hidden rounded-md px-3 text-left text-sm text-dark transition-colors duration-200 outline-none hover:bg-hover motion-reduce:transition-none",
               active && "bg-selected text-primary",
-              item.disabled && "cursor-not-allowed opacity-40 hover:bg-transparent",
+              item.disabled && "cursor-not-allowed text-disabled hover:bg-transparent",
             )}
             style={{
               paddingInlineStart:
@@ -292,7 +306,7 @@ export function Menu({
             {item.icon ? (
               <span
                 className={twMerge(
-                  "absolute top-1/2 left-3 inline-flex shrink-0 -translate-y-1/2 transform-gpu transition-transform duration-[280ms] ease-[cubic-bezier(0.4,0,0.2,1)] will-change-transform motion-reduce:transition-none",
+                  "absolute top-1/2 left-3 inline-flex shrink-0 -translate-y-1/2 transform-gpu transition-transform duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] will-change-transform motion-reduce:transition-none",
                   collapsed ? "translate-x-2" : "translate-x-0",
                 )}
                 style={{
@@ -304,14 +318,16 @@ export function Menu({
             ) : null}
             <span
               className={twMerge(
-                "flex h-full min-w-0 items-center gap-2 transition-opacity duration-150 ease-out motion-reduce:transition-none",
+                "flex h-full min-w-0 items-center gap-2 transition-opacity duration-200 ease-out motion-reduce:transition-none",
                 item.icon && "pl-6",
                 collapsed ? "pointer-events-none opacity-0 delay-0" : "opacity-100 delay-100",
               )}
             >
               <span className="min-w-0 flex-1 truncate">{item.label}</span>
               {item.extra ? (
-                <span className="shrink-0 text-xs whitespace-nowrap text-gray">{item.extra}</span>
+                <span className="max-w-[50%] min-w-0 shrink truncate text-xs text-gray">
+                  {item.extra}
+                </span>
               ) : null}
               {hasChildren ? (
                 <span
@@ -337,12 +353,14 @@ export function Menu({
             }}
             className="relative"
             onMouseEnter={() =>
+              !item.disabled &&
               hasChildren &&
               popupSubmenu &&
               triggerSubMenuAction === "hover" &&
               delayOpen(key, true, collapsedPopup)
             }
             onMouseLeave={() =>
+              !item.disabled &&
               hasChildren &&
               popupSubmenu &&
               triggerSubMenuAction === "hover" &&
@@ -352,13 +370,13 @@ export function Menu({
             {itemNode}
             {hasChildren && inlineSubmenu ? (
               <div
-                className="grid transition-[grid-template-rows,opacity] duration-[280ms] ease-[cubic-bezier(0.4,0,0.2,1)] motion-reduce:transition-none"
+                className="grid transition-[grid-template-rows,opacity] duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] motion-reduce:transition-none"
                 style={{
                   gridTemplateRows: inlineOpen && !collapsed ? "1fr" : "0fr",
                   opacity: inlineOpen && !collapsed ? 1 : 0,
                 }}
               >
-                <div className="overflow-hidden">
+                <div className="min-h-0 overflow-clip">
                   {inlineOpen || visitedOpenKeys.current.has(key)
                     ? renderItems(item.children!, level + 1)
                     : null}

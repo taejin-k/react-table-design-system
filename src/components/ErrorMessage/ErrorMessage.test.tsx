@@ -21,4 +21,13 @@ describe("ErrorMessage", () => {
 
     expect(screen.getByText(/첫 오류\s+둘째 오류/)).toHaveClass("whitespace-pre-line");
   });
+
+  it("wraps continuous English letters and numbers", () => {
+    render(<ErrorMessage errorMessage="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789" />);
+
+    expect(screen.getByText("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")).toHaveClass(
+      "min-w-0",
+      "break-all",
+    );
+  });
 });

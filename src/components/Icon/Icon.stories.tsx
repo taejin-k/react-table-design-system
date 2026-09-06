@@ -30,7 +30,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "화면의 동작이나 의미를 아이콘으로 전달해요.  \n아이콘 종류·크기·색상과 클릭 동작을 설정할 수 있어요.",
+          "Icon은 버튼의 동작이나 항목의 의미를 그림으로 전달해요.  \n아이콘 종류·크기·색상과 클릭 동작을 지정할 수 있어요.",
       },
       page: () => (
         <div className="icon-docs component-docs">
@@ -40,6 +40,8 @@ const meta = {
           <h2>API</h2>
           <Markdown>{`
 ### Icon
+
+Icon은 디자인 시스템에서 제공하는 아이콘을 표시해요.
 
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
@@ -53,7 +55,7 @@ const meta = {
           `}</Markdown>
           <h2 className="component-docs-types-heading">Types</h2>
           <h3 id="icon-name">IconNameType</h3>
-          <p>표시할 아이콘 이름을 선택해요.</p>
+          <p>IconNameType은 디자인 시스템에서 사용할 수 있는 아이콘 이름이에요.</p>
           <div className="flex flex-wrap gap-2">
             {iconGalleryNames.map((name) => (
               <TokenNameCode key={name} name={name} />
@@ -86,7 +88,6 @@ function IconGallery({ args }: { args: Partial<IconProps> }) {
   return (
     <div className="w-full">
       <label className="mb-8 block max-w-80">
-        <span className="sr-only">아이콘 검색</span>
         <div className="relative">
           <Icon
             className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2"
@@ -94,7 +95,7 @@ function IconGallery({ args }: { args: Partial<IconProps> }) {
             icon="search"
           />
           <input
-            className="h-10 w-full rounded-md border border-border bg-white pr-3 pl-9 text-sm outline-none placeholder:text-gray focus:border-primary"
+            className="h-10 w-full rounded-md border border-border bg-white pr-3 pl-9 text-sm outline-none placeholder:text-disabled focus:border-primary"
             onChange={(event) => setSearch(event.currentTarget.value)}
             placeholder="아이콘 이름 검색"
             type="search"

@@ -35,11 +35,12 @@ const paginationPlacements: PaginationPlacementType[] = [
 ];
 const rowSelectionTypes: RowSelectionType[] = ["checkbox", "radio"];
 const columnFilterModes: ColumnFilterModeType[] = ["menu", "tree"];
-const filterValueTypes = ["(string | number | bigint | boolean)[]", "null"] as const;
 const tableScrollAligns: TableScrollAlignType[] = ["start", "center", "end", "nearest"];
 
 const tableApi = `
 ### Table
+
+Table은 구조화된 데이터를 행과 열로 표시해요.
 
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
@@ -51,17 +52,18 @@ const tableApi = `
 | \`rowDrag\` | 행 드래그 정렬과 순서 변경 함수를 설정해요. | \`boolean \\|\` [\`RowDragConfig<T>\`](#rowdragconfig) | \`false\` |
 | \`columnDrag\` | 열 드래그 정렬과 순서 변경 함수를 설정해요. | \`boolean \\|\` [\`ColumnDragConfig<T>\`](#columndragconfig) | \`false\` |
 | \`expandable\` | 확장 행과 트리 데이터를 설정해요. | [\`ExpandableConfig<T>\`](#expandableconfig) | - |
-| \`bordered\` | 셀 사이의 테두리를 표시해요. | \`boolean\` | \`false\` |
+| \`bordered\` | 셀 사이의 테두리를 표시해요. | \`boolean\` | 그룹 외 \`false\` |
 | \`loading\` | 로딩 오버레이와 안내 문구를 설정해요. | \`boolean \\|\` [\`TableLoadingConfig\`](#tableloadingconfig) | \`false\` |
 | \`size\` | 행의 높이와 셀 여백을 설정해요. | [\`TableSizeType\`](#table-size-type) | \`lg\` |
 | \`locale\` | 빈 상태, 필터, 정렬, 선택 문구를 바꿔요. | [\`TableLocale\`](#tablelocale) | - |
 | \`showHeader\` | 열 헤더를 표시하거나 숨겨요. | \`boolean\` | \`true\` |
 | \`showSorterTooltip\` | 정렬 아이콘의 Tooltip 표시 여부를 설정해요. | \`boolean\` | \`true\` |
 | \`rowHoverable\` | 행에 마우스를 올렸을 때 배경을 표시해요. | \`boolean\` | \`true\` |
-| \`textSelectable\` | 테이블 텍스트를 드래그해서 선택할 수 있게 해요. | \`boolean\` | \`true\` |
+| \`textSelectable\` | 텍스트를 드래그해 선택해요. | \`boolean\` | \`true\` |
 | \`stickyHeader\` | 테이블 헤더를 화면 상단에 고정해요. | \`boolean\` | \`false\` |
 | \`stickyHeaderOffset\` | 고정 헤더를 화면 상단에서 이동해요. | \`number\` | \`0\` |
 | \`virtual\` | 많은 행을 가상 스크롤로 렌더링해요. | \`boolean\` | \`false\` |
+| \`scrollBarHeight\` | 가로 스크롤바 높이예요. (8~16px) | \`number\` | \`8\` |
 | \`stickyScrollBar\` | 가로 스크롤바를 화면 아래에 고정해요. | \`boolean\` | \`false\` |
 | \`stickyScrollBarOffset\` | 고정 스크롤바를 화면 하단에서 이동해요. | \`number\` | \`0\` |
 | \`scroll\` | 가로·세로 스크롤 크기를 설정해요. | \`{ x?, y? }\` | - |
@@ -75,7 +77,7 @@ const tableApi = `
 const columnApi = `
 ### ColumnsType
 
-columns 배열의 각 항목에 아래 속성을 설정할 수 있어요.
+ColumnsType은 Table의 각 열에 표시할 데이터와 동작을 정의해요.
 
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
@@ -97,10 +99,10 @@ columns 배열의 각 항목에 아래 속성을 설정할 수 있어요.
 | \`filters\` | 필터 메뉴에 표시할 항목을 설정해요. | [\`FilterItem[]\`](#filteritem) | - |
 | \`filterOnClose\` | 필터 메뉴가 닫힐 때 선택값을 적용해요. | \`boolean\` | \`true\` |
 | \`filterMultiple\` | 여러 필터 값을 선택할 수 있게 해요. | \`boolean\` | \`true\` |
-| \`filteredValue\` | 선택된 필터 값을 외부 상태로 제어해요. | [\`FilterValueType\`](#filter-value-type) | - |
-| \`defaultFilteredValue\` | 처음 선택할 필터 값을 설정해요. | [\`FilterValueType\`](#filter-value-type) | - |
+| \`filteredValue\` | 선택된 필터 값을 외부 상태로 제어해요. | \`(Key \\| boolean)[] \\| null\` | - |
+| \`defaultFilteredValue\` | 처음 선택할 필터 값을 설정해요. | \`(Key \\| boolean)[] \\| null\` | - |
 | \`filterMode\` | 필터 항목을 메뉴나 트리로 표시해요. | [\`ColumnFilterModeType\`](#column-filter-mode-type) | \`menu\` |
-| \`filterSearch\` | 필터 항목 검색 기능을 설정해요. | \`boolean\` | \`false\` |
+| \`filterSearch\` | 초성·입력 중인 한글로 필터를 검색해요. | \`boolean\` | \`false\` |
 | \`filterResetToDefault\` | 초기화할 때 기본 필터 값으로 돌아가요. | \`boolean\` | \`false\` |
 | \`sorter\` | 로컬·다중·서버 정렬 방식을 설정해요. | \`boolean \\| function \\|\` [\`SorterConfig<T>\`](#sorterconfig) | - |
 | \`children\` | 하위 열을 그룹 헤더로 묶어요. | [\`ColumnsType<T>\`](#columnstype) | - |
@@ -111,6 +113,8 @@ columns 배열의 각 항목에 아래 속성을 설정할 수 있어요.
 
 const paginationApi = `
 ### PaginationConfig
+
+PaginationConfig는 Table 데이터를 여러 페이지로 나누는 방식을 정의해요.
 
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
@@ -134,6 +138,8 @@ const paginationApi = `
 const selectionApi = `
 ### RowSelection
 
+RowSelection은 Table에서 하나 이상의 행을 선택하는 방식을 정의해요.
+
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
 | \`type\` | 여러 행 또는 한 행 선택 방식을 설정해요. | [\`RowSelectionType\`](#row-selection-type) | \`checkbox\` |
@@ -151,12 +157,16 @@ const selectionApi = `
 const rowDragApi = `
 ### RowDragConfig
 
+RowDragConfig는 사용자가 행을 끌어 순서를 바꾸는 동작을 정의해요.
+
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
 | \`columnWidth\` | 드래그 핸들 열의 너비를 px로 설정해요. | \`number\` | \`48\` |
 | \`onChange\` | 변경된 데이터와 이동 정보를 전달해요. | \`(records, info:\` [\`RowDrag\`](#rowdrag) \`) => void\` | - |
 
 ### RowDrag
+
+RowDrag는 행을 옮긴 전후 위치와 키를 담은 정보예요.
 
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
@@ -169,11 +179,15 @@ const rowDragApi = `
 const columnDragApi = `
 ### ColumnDragConfig
 
+ColumnDragConfig는 사용자가 열을 끌어 순서를 바꾸는 동작을 정의해요.
+
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
 | \`onChange\` | 변경된 열과 이동 정보를 전달해요. | \`(columns, info:\` [\`ColumnDrag\`](#columndrag) \`) => void\` | - |
 
 ### ColumnDrag
+
+ColumnDrag는 열을 옮긴 전후 위치와 키를 담은 정보예요.
 
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
@@ -185,6 +199,8 @@ const columnDragApi = `
 
 const expandableApi = `
 ### ExpandableConfig
+
+ExpandableConfig는 행의 상세 내용이나 하위 데이터를 펼치는 방식을 정의해요.
 
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
@@ -206,6 +222,8 @@ const expandableApi = `
 const supportingApi = `
 ### TableLoadingConfig
 
+TableLoadingConfig는 데이터를 기다리는 동안 표시할 로딩 화면을 정의해요.
+
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
 | \`spinning\` | 로딩 오버레이 표시 여부를 설정해요. | \`boolean\` | \`true\` |
@@ -213,6 +231,8 @@ const supportingApi = `
 | \`delay\` | 지정한 시간 뒤에 로딩 오버레이를 표시해요. | \`number\` | \`0\` |
 
 ### TableLocale
+
+TableLocale은 필터, 정렬과 빈 상태에 사용할 문구를 정의해요.
 
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
@@ -227,6 +247,8 @@ const supportingApi = `
 
 ### TableRef
 
+TableRef는 Table 요소에 접근하거나 특정 행으로 이동할 때 사용해요.
+
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
 | \`nativeElement\` | Table 최상위 div 요소예요. | \`HTMLDivElement \\| null\` | - |
@@ -234,13 +256,17 @@ const supportingApi = `
 
 ### FilterItem
 
+FilterItem은 필터 메뉴에 표시할 하나의 선택지를 정의해요.
+
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
-| \`text\` | 필터 메뉴에 표시할 내용이에요. | \`ReactNode\` | - |
+| \`label\` | 필터 메뉴에 표시하고 검색할 내용이에요. | \`ReactNode\` | - |
 | \`value\` | 필터 선택과 onFilter에 전달할 값이에요. | \`string \\| number \\| bigint \\| boolean\` | - |
 | \`children\` | 하위 필터를 묶어 tree 구조를 만들어요. | [\`FilterItem[]\`](#filteritem) | - |
 
 ### SorterConfig
+
+SorterConfig는 행의 정렬 기준과 다중 정렬 우선순위를 정의해요.
 
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
@@ -258,7 +284,9 @@ const storyGroups = [
     stories: [
       "GroupedHeaders",
       "Headerless",
+      "ScrollbarHeight",
       "StickyScrollbar",
+      "StickyHeader",
       "StickyOffsets",
       "Loading",
       "Empty",
@@ -267,7 +295,7 @@ const storyGroups = [
   {
     id: "components-table-api-compatibility",
     module: apiStories,
-    stories: ["FixedTableHeight", "StickyHeader", "FixedColumns"],
+    stories: ["FixedTableHeight", "FixedColumns"],
   },
   {
     id: "components-table-layout",
@@ -331,70 +359,63 @@ function TableTypes() {
     <>
       <h2 className="component-docs-types-heading">Types</h2>
       <h3 id="table-size-type">TableSizeType</h3>
-      <p>Table과 Pagination의 크기를 선택해요.</p>
+      <p>TableSizeType은 Table의 행 높이와 Pagination 크기를 구분해요.</p>
       <div className="flex flex-wrap gap-2">
         {tableSizes.map((size) => (
           <TableTypeCode key={size} value={size} />
         ))}
       </div>
       <h3 id="column-align-type">ColumnAlignType</h3>
-      <p>헤더와 셀의 가로 정렬을 선택해요.</p>
+      <p>ColumnAlignType은 열 헤더와 셀의 가로 정렬 방향을 구분해요.</p>
       <div className="flex flex-wrap gap-2">
         {columnAligns.map((align) => (
           <TableTypeCode key={align} value={align} />
         ))}
       </div>
       <h3 id="column-fixed-type">ColumnFixedType</h3>
-      <p>가로 스크롤 중 열을 고정할 방향을 선택해요.</p>
+      <p>ColumnFixedType은 가로 스크롤 중 열을 고정할 방향을 구분해요.</p>
       <div className="flex flex-wrap gap-2">
         {columnFixedSides.map((side) => (
           <TableTypeCode key={side} value={side} />
         ))}
       </div>
       <h3 id="sort-order-type">SortOrderType</h3>
-      <p>열의 정렬 방향이나 정렬하지 않는 상태를 선택해요.</p>
+      <p>SortOrderType은 열의 오름차순·내림차순과 정렬하지 않는 상태를 구분해요.</p>
       <div className="flex flex-wrap gap-2">
         {sortOrders.map((order) => (
           <TableTypeCode key={String(order)} value={order} />
         ))}
       </div>
       <h3 id="breakpoint-type">BreakpointType</h3>
-      <p>열을 표시할 반응형 화면 너비를 선택해요.</p>
+      <p>BreakpointType은 열을 표시할 반응형 화면 너비 구간을 구분해요.</p>
       <div className="flex flex-wrap gap-2">
         {breakpoints.map((breakpoint) => (
           <TableTypeCode key={breakpoint} value={breakpoint} />
         ))}
       </div>
       <h3 id="pagination-placement-type">PaginationPlacementType</h3>
-      <p>Table을 기준으로 Pagination이 표시될 위치를 선택해요.</p>
+      <p>PaginationPlacementType은 Table을 기준으로 Pagination이 놓일 위치를 구분해요.</p>
       <div className="flex flex-wrap gap-2">
         {paginationPlacements.map((placement) => (
           <TableTypeCode key={placement} value={placement} />
         ))}
       </div>
       <h3 id="row-selection-type">RowSelectionType</h3>
-      <p>여러 행 또는 한 행을 선택할 방식을 선택해요.</p>
+      <p>RowSelectionType은 여러 행 또는 한 행만 선택하는 방식을 구분해요.</p>
       <div className="flex flex-wrap gap-2">
         {rowSelectionTypes.map((type) => (
           <TableTypeCode key={type} value={type} />
         ))}
       </div>
       <h3 id="column-filter-mode-type">ColumnFilterModeType</h3>
-      <p>필터 항목을 표시할 방식을 선택해요.</p>
+      <p>ColumnFilterModeType은 필터 항목을 목록이나 트리로 표시하는 방식을 구분해요.</p>
       <div className="flex flex-wrap gap-2">
         {columnFilterModes.map((mode) => (
           <TableTypeCode key={mode} value={mode} />
         ))}
       </div>
-      <h3 id="filter-value-type">FilterValueType</h3>
-      <p>선택된 필터 값의 배열이나 선택값이 없는 상태예요.</p>
-      <div className="flex flex-wrap gap-2">
-        {filterValueTypes.map((value) => (
-          <TableTypeCode key={value} value={value} />
-        ))}
-      </div>
       <h3 id="table-scroll-align-type">TableScrollAlignType</h3>
-      <p>scrollTo로 이동한 행을 스크롤 영역에 맞출 위치를 선택해요.</p>
+      <p>TableScrollAlignType은 scrollTo로 이동한 행을 스크롤 영역에 맞출 위치를 구분해요.</p>
       <div className="flex flex-wrap gap-2">
         {tableScrollAligns.map((align) => (
           <TableTypeCode key={align} value={align} />

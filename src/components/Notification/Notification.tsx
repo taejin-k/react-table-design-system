@@ -533,11 +533,11 @@ function NotificationCard({
             title != null ? "-mt-0.5" : "-mt-[3px]",
           )}
         >
-          {item.icon ?? <NotificationIcon type={item.type ?? "info"} />}
+          {item.icon ?? <NotificationIcon key={item.type ?? "info"} type={item.type ?? "info"} />}
         </span>
         <div
           className={twMerge(
-            "min-w-0 flex-1 [overflow-wrap:anywhere] break-words",
+            "min-w-0 flex-1 [overflow-wrap:anywhere] break-all",
             title != null && description != null && "flex flex-col gap-2",
           )}
         >
@@ -563,7 +563,11 @@ function NotificationCard({
           ) : null}
         </div>
       </div>
-      {item.actions ? <div className="mt-3 flex justify-end gap-2">{item.actions}</div> : null}
+      {item.actions ? (
+        <div className="mt-3 flex max-w-full min-w-0 justify-end gap-2 [overflow-wrap:anywhere] [&_button]:min-w-0 [&>*]:max-w-full [&>*]:min-w-0">
+          {item.actions}
+        </div>
+      ) : null}
       {closable ? (
         <OverlayCloseButton
           className="absolute top-[14px] right-5"
@@ -574,13 +578,15 @@ function NotificationCard({
         />
       ) : null}
       {item.showProgress && item.duration ? (
-        <div
-          className="absolute right-2 bottom-0 left-2 h-0.5 origin-left rounded-lg bg-primary"
-          style={{
-            animation: `wizard-notification-progress ${item.duration}s linear forwards`,
-            animationPlayState: paused ? "paused" : "running",
-          }}
-        />
+        <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-[inherit]">
+          <div
+            className="absolute inset-x-0 bottom-0 h-0.5 origin-left bg-primary"
+            style={{
+              animation: `wizard-notification-progress ${item.duration}s linear forwards`,
+              animationPlayState: paused ? "paused" : "running",
+            }}
+          />
+        </div>
       ) : null}
     </div>
   );
@@ -633,6 +639,7 @@ let root: Root | null = null;
 let container: HTMLDivElement | null = null;
 let staticInstance: NotificationInstance | null = null;
 const queue: Array<(api: NotificationInstance) => void> = [];
+const pendingCalls = new Set<{ key: NotificationArgsProps["key"]; cancelled: boolean }>();
 
 function StaticNotificationHost() {
   const [api, holder] = useNotificationHolder();
@@ -656,9 +663,15 @@ function invoke(
   config: NotificationArgsProps,
 ) {
   ensureHost();
-  const run = (api: NotificationInstance) => api[method](config);
-  if (staticInstance) run(staticInstance);
-  else queue.push(run);
+  if (staticInstance) staticInstance[method](config);
+  else {
+    const pending = { key: config.key, cancelled: false };
+    pendingCalls.add(pending);
+    queue.push((api) => {
+      pendingCalls.delete(pending);
+      if (!pending.cancelled) api[method](config);
+    });
+  }
 }
 
 export const notification: NotificationApi = {
@@ -668,5 +681,10 @@ export const notification: NotificationApi = {
   info: (config) => invoke("info", config),
   warning: (config) => invoke("warning", config),
   loading: (config) => invoke("loading", config),
-  destroy: (key) => staticInstance?.destroy(key),
+  destroy: (key) => {
+    for (const pending of pendingCalls) {
+      if (key === undefined || pending.key === key) pending.cancelled = true;
+    }
+    staticInstance?.destroy(key);
+  },
 };

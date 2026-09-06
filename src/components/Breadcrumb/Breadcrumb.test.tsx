@@ -33,7 +33,7 @@ describe("Breadcrumb", () => {
 
     const link = screen.getByRole("link", { name: "홈" });
     expect(link).toHaveAttribute("href", "/home");
-    expect(link.className).toContain("hover:bg-hover");
+    expect(link).toHaveClass("duration-200", "hover:bg-hover");
     await user.click(link);
     expect(onClick).toHaveBeenCalledOnce();
   });
@@ -45,7 +45,7 @@ describe("Breadcrumb", () => {
 
     const button = screen.getByRole("button", { name: "프로젝트" });
     expect(button).toHaveAttribute("type", "button");
-    expect(button.className).toContain("hover:bg-hover");
+    expect(button).toHaveClass("duration-200", "hover:bg-hover");
     await user.click(button);
     expect(onClick).toHaveBeenCalledOnce();
   });
@@ -63,5 +63,11 @@ describe("Breadcrumb", () => {
     expect(screen.getByTestId("home-icon")).toBeInTheDocument();
     expect(screen.getByText("홈").parentElement).toHaveStyle({ color: "#0062df" });
     expect(screen.getByText("현재 위치").parentElement).toHaveStyle({ color: "#ff4d4f" });
+  });
+
+  it("resolves a color token for an item", () => {
+    render(<Breadcrumb items={[{ title: "홈", color: "primary" }]} />);
+
+    expect(screen.getByText("홈").parentElement).toHaveStyle({ color: "var(--color-primary)" });
   });
 });

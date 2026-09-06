@@ -1,14 +1,14 @@
 export { DatePicker } from "./DatePicker";
 export type {
   DatePickerPreset,
+  DatePickerErrorMessage,
   DatePickerShowTime,
   DatePickerModeType,
   DatePickerPlacementType,
   DatePickerProps,
   DatePickerSizeType,
-  DatePickerValueType,
   DatePickerVariantType,
   DateRangePreset,
+  DateRangePickerErrorMessage,
   DateRangePickerProps,
-  DateRangeValueType,
 } from "./DatePicker.types";

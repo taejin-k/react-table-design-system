@@ -32,7 +32,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "이미지를 안정적으로 표시하고 전체 화면 미리보기에서 자세히 살펴봐요.  \n로드 실패 대체 이미지, 자리 표시자, 확대·회전·반전·이동과 그룹 탐색을 지원해요.",
+          "Image는 사진이나 그림을 표시하고 전체 화면에서 확대해 볼 수 있게 해요.  \n로드 실패 대체 이미지·자리 표시자·회전·반전·이동과 그룹 탐색을 지원해요.",
       },
       page: () => (
         <div className="image-docs component-docs">
@@ -42,6 +42,8 @@ const meta = {
           <h2>API</h2>
           <Markdown>{`
 ### Image
+
+Image는 이미지를 표시하고 필요할 때 확대 미리보기를 제공해요.
 
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
@@ -55,16 +57,20 @@ const meta = {
 
 ### ImagePreviewConfig
 
+ImagePreviewConfig는 개별 이미지 미리보기의 표시와 동작을 정의해요.
+
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
 | \`open\` | 미리보기 표시 상태를 제어해요. | \`boolean\` | - |
 | \`src\` | 미리보기에서 사용할 이미지 주소를 변경해요. | \`string\` | Image의 src |
 | \`cover\` | hover 미리보기 안내를 표시해요. | \`boolean\` | \`true\` |
-| \`mask\` | 배경 마스크를 표시해요. | \`boolean\` | \`true\` |
+| \`mask\` | 배경 클릭으로 닫아요. | \`boolean\` | \`true\` |
 | \`zIndex\` | 미리보기의 겹침 순서를 설정해요. | \`number\` | \`1080\` |
 | \`onOpenChange\` | 미리보기 표시 상태가 바뀔 때 실행해요. | \`(open, previousOpen) => void\` | - |
 
 ### Image.PreviewGroup
+
+Image.PreviewGroup은 여러 Image를 한 미리보기에서 순서대로 탐색하게 해요.
 
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
@@ -127,17 +133,17 @@ export const Cover: Story = {
     <p className="mb-2 text-sm text-dark-gray">Default</p>
     <Image
       src={picture}
-      alt="기본 Cover"
+      alt="Cover 예시"
       width={220}
       height={140}
       preview={{ cover: true }}
     />
   </div>
   <div>
-    <p className="mb-2 text-sm text-dark-gray">Hidden</p>
+    <p className="mb-2 text-sm text-dark-gray">배경 클릭 닫기 비활성</p>
     <Image
       src={picture}
-      alt="Cover 없음"
+      alt="Cover 예시"
       width={220}
       height={140}
       preview={{ cover: false }}
@@ -155,7 +161,7 @@ export const Cover: Story = {
         <Image {...args} src={picture} preview={{ cover: true }} />
       </div>
       <div>
-        <p className="mb-2 text-sm text-dark-gray">Hidden</p>
+        <p className="mb-2 text-sm text-dark-gray">배경 클릭 닫기 비활성</p>
         <Image {...args} src={picture} preview={{ cover: false }} />
       </div>
     </div>
@@ -175,9 +181,9 @@ export const Dimensions: Story = {
           `const picture = ${JSON.stringify(picture)};
 
 <div className="flex flex-wrap items-end gap-4">
-  <Image src={picture} alt="작은 풍경" width={160} height={100} />
-  <Image src={picture} alt="중간 풍경" width={240} height={150} />
-  <Image src={picture} alt="큰 풍경" width={320} height={200} />
+  <Image src={picture} alt="크기 비교 풍경" width={160} height={100} />
+  <Image src={picture} alt="크기 비교 풍경" width={240} height={150} />
+  <Image src={picture} alt="크기 비교 풍경" width={320} height={200} />
 </div>`,
         ),
       },
@@ -294,14 +300,14 @@ const detailImage = ${JSON.stringify(secondPicture)};
 <div className="flex flex-wrap gap-4">
   <Image
     src={picture}
-    alt="미리보기를 사용하지 않는 풍경"
+    alt="미리보기 옵션 풍경"
     width={240}
     height={150}
     preview={false}
   />
   <Image
     src={picture}
-    alt="상세 이미지가 따로 있는 풍경"
+    alt="미리보기 옵션 풍경"
     width={240}
     height={150}
     preview={{ src: detailImage }}
@@ -340,10 +346,10 @@ export const PreviewMask: Story = {
     <Image src={picture} alt="기본 마스크" width={200} height={125} />
   </div>
   <div>
-    <p className="mb-2 text-sm text-dark-gray">Hidden</p>
+    <p className="mb-2 text-sm text-dark-gray">배경 클릭 닫기 비활성</p>
     <Image
       src={picture}
-      alt="마스크 없음"
+      alt="배경 클릭 닫기 비활성"
       width={200}
       height={125}
       preview={{ mask: false }}
@@ -361,8 +367,8 @@ export const PreviewMask: Story = {
         <Image {...args} src={picture} alt="기본 마스크" />
       </div>
       <div>
-        <p className="mb-2 text-sm text-dark-gray">Hidden</p>
-        <Image {...args} src={picture} alt="마스크 없음" preview={{ mask: false }} />
+        <p className="mb-2 text-sm text-dark-gray">배경 클릭 닫기 비활성</p>
+        <Image {...args} src={picture} alt="배경 클릭 닫기 비활성" preview={{ mask: false }} />
       </div>
     </div>
   ),
@@ -407,6 +413,7 @@ function ControlledPreview() {
       <Button onClick={() => setOpen(true)}>미리보기 열기</Button>
       <Image
         className="hidden"
+        alt="제어형 미리보기"
         src={picture}
         preview={{
           open,

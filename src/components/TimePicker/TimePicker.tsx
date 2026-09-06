@@ -10,6 +10,7 @@ import { Label } from "../Label";
 import { Tag } from "../Tag";
 import { ScrollFade } from "../_internal/ScrollFade";
 import { getPopupMotionStyle } from "../_internal/motion";
+import { useErrorMessageValidation } from "../_internal/useErrorMessageValidation";
 import { useFloatingLayer } from "../_internal/use-floating-layer";
 import type { TimePickerProps } from "./TimePicker.types";
 
@@ -142,49 +143,56 @@ function isTimeDisabled(
   );
 }
 
-function BaseTimePicker({
-  value,
-  defaultValue,
-  placeholder = "시간을 선택하세요",
-  size = "md",
-  variant = "default",
-  label,
-  errorMessage,
-  required = false,
-  disabled = false,
-  readOnly = false,
-  width,
-  allowClear = true,
-  multiple = false,
-  order = true,
-  use12Hours = false,
-  showSecond = true,
-  hourStep = 1,
-  minuteStep = 1,
-  secondStep = 1,
-  needConfirm = false,
-  changeOnScroll = false,
-  disabledTime,
-  hideDisabled = false,
-  showNow = true,
-  previewValue = false,
-  cellRender,
-  format,
-  open,
-  defaultOpen = false,
-  placement = "bottomLeft",
-  className,
-  onChange,
-  onClear,
-  onOpenChange,
-}: TimePickerProps) {
+function BaseTimePicker(props: TimePickerProps<boolean>) {
+  const {
+    value,
+    defaultValue,
+    placeholder = "시간을 선택하세요",
+    size = "md",
+    variant = "default",
+    label,
+    errorMessage,
+    required = false,
+    disabled = false,
+    readOnly = false,
+    width,
+    allowClear = true,
+    multiple = false,
+    order = true,
+    use12Hours = false,
+    showSecond = true,
+    hourStep = 1,
+    minuteStep = 1,
+    secondStep = 1,
+    needConfirm = false,
+    changeOnScroll = false,
+    disabledTime,
+    hideDisabled = false,
+    showNow = true,
+    previewValue = false,
+    cellRender,
+    format,
+    open,
+    defaultOpen = false,
+    placement = "bottomLeft",
+    className,
+    onChange,
+    onClear,
+    onOpenChange,
+  } = props;
+  const isControlled = Object.prototype.hasOwnProperty.call(props, "value");
   const [innerValues, setInnerValues] = useState<Dayjs[]>(() => normalizeValues(defaultValue));
-  const sourceValues = value === undefined ? innerValues : normalizeValues(value);
+  const sourceValues = isControlled ? normalizeValues(value) : innerValues;
   const selectedValues = order
     ? [...sourceValues].sort((first, second) =>
         timeValueKey(first, true).localeCompare(timeValueKey(second, true)),
       )
     : sourceValues;
+  const initialValidationValue = multiple ? selectedValues : selectedValues[0];
+  const { displayedErrorMessage, hasError, validateErrorMessage } = useErrorMessageValidation(
+    errorMessage,
+    initialValidationValue,
+  );
   const selectedValue = sourceValues[multiple ? sourceValues.length - 1 : 0] ?? null;
   const resolvedShowSecond = showSecond && (!format || format.includes("s"));
   const resolvedNeedConfirm = needConfirm || multiple;
@@ -204,6 +212,7 @@ function BaseTimePicker({
   const [panelResetKey, setPanelResetKey] = useState(0);
   const floating = useFloatingLayer({
     placement,
+    recoverOnPopupResize: true,
     trigger: "click",
     targetGap: 2,
     disabled: disabled || readOnly,
@@ -221,7 +230,9 @@ function BaseTimePicker({
           timeValueKey(first, true).localeCompare(timeValueKey(second, true)),
         )
       : nextValues;
-    if (value === undefined) setInnerValues(normalizedValues);
+    if (!isControlled) setInnerValues(normalizedValues);
+    const outputValue = multiple ? normalizedValues : normalizedValues[0];
+    validateErrorMessage(outputValue);
     if (multiple) {
       onChange?.(
         normalizedValues,
@@ -231,7 +242,7 @@ function BaseTimePicker({
       );
       return;
     }
-    const nextValue = normalizedValues[0] ?? null;
+    const nextValue = normalizedValues[0];
     onChange?.(
       nextValue,
       nextValue ? formatDisplayTime(nextValue, format, use12Hours, resolvedShowSecond) : "",
@@ -239,6 +250,7 @@ function BaseTimePicker({
   };
 
   const commitTime = (parts: TimeParts | null) => {
+    if (parts && isTimeDisabled(parts, disabledTime, resolvedShowSecond)) return;
     if (!parts) {
       emitValues([]);
       return;
@@ -280,9 +292,14 @@ function BaseTimePicker({
   const nowDisabled = isTimeDisabled(nowParts, disabledTime, resolvedShowSecond);
 
   return (
-    <div className={twMerge("flex w-full flex-col gap-1", className)} style={{ width }}>
+    <div className={twMerge("flex w-full flex-col gap-1", className)}>
       {label ? <Label label={label} required={required} size={size} /> : null}
-      <span ref={floating.triggerRef} className="block w-full" {...floating.triggerProps}>
+      <span
+        ref={floating.triggerRef}
+        className="block w-full"
+        style={{ width }}
+        {...floating.triggerProps}
+      >
         <button
           type="button"
           disabled={disabled}
@@ -290,7 +307,7 @@ function BaseTimePicker({
             timePickerRootVariants({
               size,
               variant,
-              error: Boolean(errorMessage),
+              error: hasError,
               disabled,
               readOnly,
               interactive: !disabled && !readOnly,
@@ -303,6 +320,9 @@ function BaseTimePicker({
                 size === "sm" && "min-h-5 py-0.5 pl-0.5",
               ],
           )}
+          onMouseDown={(event) => {
+            if (readOnly) event.preventDefault();
+          }}
         >
           {multiple && selectedValues.length > 0 ? (
             <span className="flex min-w-0 flex-1 flex-wrap items-center gap-[5px]">
@@ -312,12 +332,13 @@ function BaseTimePicker({
                   <Tag
                     key={itemKey}
                     data-timepicker-tag
-                    color="grey"
+                    color="gray"
                     variant="filled"
                     className={twMerge(
                       multipleTagSizeClasses[size],
                       "tabular-nums",
                       variant === "filled" && "bg-white",
+                      disabled && "bg-white text-disabled",
                     )}
                     suffixIcon={
                       disabled || readOnly ? undefined : (
@@ -344,7 +365,9 @@ function BaseTimePicker({
               })}
             </span>
           ) : (
-            <span className={twMerge("min-w-0 flex-1 truncate", !displayedValue && "text-gray")}>
+            <span
+              className={twMerge("min-w-0 flex-1 truncate", !displayedValue && "text-disabled")}
+            >
               {preview && previewValue === "hover"
                 ? formatDisplayTime(
                     dayjs().hour(preview.hour).minute(preview.minute).second(preview.second),
@@ -357,7 +380,7 @@ function BaseTimePicker({
           )}
           {allowClear && selectedValues.length > 0 && !disabled && !readOnly ? (
             <span
-              className="cursor-pointer self-center"
+              className="cursor-pointer self-center transition-opacity duration-200 ease-out hover:opacity-75 motion-reduce:transition-none"
               onClick={(event) => {
                 event.stopPropagation();
                 commitTime(null);
@@ -383,11 +406,11 @@ function BaseTimePicker({
               )}
             </span>
           ) : (
-            <Icon icon="clock-outlined" color="gray" />
+            <Icon icon="clock-outlined" color="disabled" />
           )}
         </button>
       </span>
-      <ErrorMessage errorMessage={errorMessage} />
+      <ErrorMessage errorMessage={displayedErrorMessage} />
       {floating.isRendered && typeof document !== "undefined"
         ? createPortal(
             <div
@@ -443,6 +466,7 @@ function BaseTimePicker({
                   )}
                   {resolvedNeedConfirm ? (
                     <Button
+                      disabled={isTimeDisabled(pending, disabledTime, resolvedShowSecond)}
                       onClick={() => {
                         commitTime(pending);
                         floating.changeOpen(false, "menu");
@@ -566,7 +590,7 @@ export function TimePanel({
                 type="button"
                 disabled={disabled}
                 className={twMerge(
-                  "h-8 w-full shrink-0 cursor-pointer rounded hover:bg-hover",
+                  "h-8 w-full shrink-0 cursor-pointer rounded transition-colors duration-200 ease-out outline-none hover:bg-hover motion-reduce:transition-none",
                   isSelected && "bg-selected text-primary hover:bg-selected",
                   disabled && "cursor-not-allowed text-disabled hover:bg-transparent",
                 )}
@@ -651,7 +675,7 @@ function TimeColumn({
             type="button"
             disabled={valueDisabled}
             className={twMerge(
-              "h-8 w-full shrink-0 cursor-pointer rounded hover:bg-hover",
+              "h-8 w-full shrink-0 cursor-pointer rounded transition-colors duration-200 ease-out outline-none hover:bg-hover motion-reduce:transition-none",
               selected === value && "bg-selected font-medium text-primary hover:bg-selected",
               valueDisabled && "cursor-not-allowed text-disabled hover:bg-transparent",
             )}
@@ -686,10 +710,12 @@ function formatTwelveHours(value: string | Dayjs, showSecond: boolean) {
   return `${pad(twelveHour(parts.hour))}:${pad(parts.minute)}${showSecond ? `:${pad(parts.second)}` : ""} ${parts.hour >= 12 ? "PM" : "AM"}`;
 }
 
-export const TimePicker = BaseTimePicker;
+export const TimePicker = BaseTimePicker as <Multiple extends boolean = false>(
+  props: TimePickerProps<Multiple>,
+) => React.ReactNode;
 
 const timePickerRootVariants = cva(
-  "flex w-full items-center gap-2 rounded border border-solid px-2.5 text-left font-pretendard font-medium text-dark transition-colors hover:border-primary focus:border-primary focus:outline-none",
+  "flex w-full items-center gap-2 rounded border border-solid px-2.5 text-left font-pretendard font-medium text-dark transition-colors duration-200 ease-out outline-none hover:border-primary focus:border-primary motion-reduce:transition-none",
   {
     variants: {
       size: { lg: "h-10 text-base", md: "h-[30px] text-sm", sm: "h-5 text-xs" },
@@ -707,7 +733,7 @@ const timePickerRootVariants = cva(
         false: "",
       },
       disabled: {
-        true: "cursor-not-allowed border-border bg-hover text-gray hover:border-border",
+        true: "cursor-not-allowed border-border bg-hover text-disabled hover:border-border",
         false: "",
       },
     },

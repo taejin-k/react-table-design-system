@@ -118,13 +118,14 @@ const meta = {
       options: variants,
     },
     width: { name: "가로 길이", control: { type: "number", min: 1 } },
-    placeholder: { name: "안내 문구", control: "text" },
+    placeholder: { name: "placeholder", control: "text" },
     label: { name: "레이블", control: "text" },
     errorMessage: { name: "오류 문구", control: "text" },
     required: { name: "필수 표시", control: "boolean" },
     closable: { name: "태그 닫기", control: "boolean" },
     allowClear: { name: "지우기", control: "boolean" },
     showSearch: { name: "검색", control: "boolean" },
+    loading: { name: "로딩", control: "boolean" },
     readOnly: { name: "읽기 전용", control: "boolean" },
     disabled: { name: "비활성", control: "boolean" },
     className: { control: false },
@@ -137,7 +138,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "목록에서 하나 또는 여러 값과 직접 입력한 태그를 선택할 수 있어요.  \n검색·그룹·선택 제한·커스텀 렌더와 제어 상태를 설정할 수 있어요.",
+          "Select는 펼쳐지는 목록에서 하나 이상의 값을 고를 때 사용해요.  \n검색·그룹·다중 선택·직접 입력과 사용자 정의 렌더링을 지원해요.",
       },
       page: () => (
         <div className="select-docs component-docs">
@@ -148,13 +149,15 @@ const meta = {
           <Markdown>{`
 ### Select
 
+Select는 목록에서 하나 이상의 값을 선택하게 해요.
+
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
 | \`options\` | 선택할 항목과 그룹을 설정해요. | [\`SelectOption[]\`](#selectoption) | - |
 | \`mode\` | 셀렉트의 동작 방식을 설정해요. | [\`SelectModeType\`](#select-mode-type) | - |
-| \`value\` | 선택값을 외부에서 관리해요. | \`string \\| number \\| (string \\| number)[]\` | - |
-| \`defaultValue\` | 처음 선택할 값을 설정해요. | \`string \\| number \\| (string \\| number)[]\` | - |
-| \`placeholder\` | 선택 전 안내할 내용을 표시해요. | \`ReactNode\` | \`선택하세요\` |
+| \`value\` | 선택값을 외부에서 관리해요. | \`Key \\| Key[]\` | - |
+| \`defaultValue\` | 처음 선택할 값을 설정해요. | \`Key \\| Key[]\` | - |
+| \`placeholder\` | 선택 전 표시할 placeholder를 설정해요. | \`ReactNode\` | \`선택하세요\` |
 | \`size\` | Select의 크기를 설정해요. | [\`SelectSizeType\`](#select-size-type) | \`md\` |
 | \`variant\` | 배경과 테두리 표현 방식을 설정해요. | [\`SelectVariantType\`](#select-variant-type) | \`default\` |
 | \`width\` | Select의 가로 길이를 px 단위로 설정해요. | \`number\` | \`100%\` |
@@ -164,7 +167,7 @@ const meta = {
 | \`optionsSort\` | 드롭다운 항목의 정렬 방법을 설정해요. | \`(a, b, info) => number\` | - |
 | \`optionFilterProp\` | 검색에 사용할 항목 속성을 설정해요. | \`string \\| string[]\` | \`label\` |
 | \`optionLabelProp\` | 선택 영역에 표시할 항목 속성을 설정해요. | \`string\` | \`label\` |
-| \`allowClear\` | 선택값을 지우는 버튼을 표시해요. | \`boolean\` | \`false\` |
+| \`allowClear\` | 선택값을 지우는 버튼을 표시해요. | \`boolean\` | \`true\` |
 | \`readOnly\` | 선택값을 읽기 전용으로 표시해요. | \`boolean\` | \`false\` |
 | \`disabled\` | 선택과 열기 동작을 비활성화해요. | \`boolean\` | \`false\` |
 | \`loading\` | 로딩 상태를 표시하고 선택 동작을 막아요. | \`boolean\` | \`false\` |
@@ -175,7 +178,7 @@ const meta = {
 | \`maxVisibleTagCount\` | 화면에 표시할 최대 태그 수를 설정해요. | \`number \\| responsive\` | - |
 | \`maxTagTextLength\` | 태그 레이블의 최대 글자 수를 설정해요. | \`number\` | - |
 | \`closable\` | 선택 태그의 삭제 아이콘을 표시해요. | \`boolean\` | \`true\` |
-| \`tagSeparators\` | 입력값을 태그로 나눌 구분자를 설정해요. | \`string[] \\| (input) => string[]\` | - |
+| \`tagSeparators\` | 입력값을 태그로 나눌 구분자를 설정해요. | \`string[]\` | - |
 | \`listHeight\` | 목록의 최대 세로 길이를 설정해요. | \`number\` | \`256\` |
 | \`popupMatchWidth\` | 목록 너비를 선택 영역과 맞추거나 지정해요. | \`boolean \\| number\` | \`true\` |
 | \`virtual\` | 많은 항목을 가상 목록으로 표시해요. | \`boolean\` | \`true\` |
@@ -185,7 +188,7 @@ const meta = {
 | \`labelRender\` | 선택된 레이블을 직접 구성해요. | [\`(props: SelectBasicProps) => ReactNode\`](#selectbasicprops) | - |
 | \`popupRender\` | 목록 전체에 추가 내용을 구성해요. | \`(menu) => ReactNode\` | - |
 | \`label\` | Select 위에 레이블을 표시해요. | \`ReactNode\` | - |
-| \`errorMessage\` | Select 아래에 오류 문구를 표시해요. | \`ReactNode\` | - |
+| \`errorMessage\` | 오류 문구를 표시하거나 선택값을 검사해요. | \`ReactNode \\| ((value: SelectValueType) => string \\| Promise<string>)\` | - |
 | \`required\` | 레이블에 필수 표시를 추가해요. | \`boolean\` | \`false\` |
 | \`className\` | 최상위 요소에 Tailwind 클래스를 추가해요. | \`string\` | - |
 | \`onChange\` | 선택값이 바뀔 때 실행할 함수예요. | \`(value, option) => void\` | - |
@@ -201,55 +204,61 @@ const meta = {
 
 ### SelectOption
 
+SelectOption은 목록에 표시할 하나의 선택지를 정의해요.
+
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
 | \`label\` | 목록과 선택 영역에 표시할 내용을 설정해요. | \`ReactNode\` | - |
-| \`value\` | 항목을 구분하고 반환할 값을 설정해요. | \`string \\| number\` | - |
+| \`value\` | 항목을 구분하고 반환할 값을 설정해요. | \`Key\` | - |
 | \`color\` | 선택된 기본 Tag의 색상을 설정해요. | [\`TagColorType\`](${tagColorTypeHref}) | - |
-| \`disabled\` | 해당 항목을 선택할 수 없게 해요. | \`boolean\` | \`false\` |
+| \`disabled\` | 이 선택지를 선택할 수 없게 해요. | \`boolean\` | \`false\` |
 | \`options\` | 하위 항목을 전달해 그룹을 구성해요. | [\`SelectOption[]\`](#selectoption) | - |
 
 ### SelectBasicProps
 
+SelectBasicProps는 값과 레이블로 구성된 기본 선택 항목이에요.
+
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
-| \`value\` | 선택값을 전달해요. | \`string \\| number\` | - |
+| \`value\` | 선택값을 전달해요. | \`Key\` | - |
 | \`label\` | 선택 레이블을 전달해요. | \`ReactNode\` | - |
 
 ### SelectTagProps
 
+SelectTagProps는 다중 선택 Tag를 직접 렌더링할 때 받는 정보예요.
+
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
 | \`label\` | 태그에 표시할 내용이에요. | \`ReactNode\` | - |
-| \`value\` | 태그가 나타내는 값이에요. | \`string \\| number\` | - |
+| \`value\` | 태그가 나타내는 값이에요. | \`Key\` | - |
 | \`color\` | 태그의 색상이에요. | [\`TagColorType\`](${tagColorTypeHref}) | - |
 | \`closable\` | 태그를 지울 수 있는 상태인지 나타내요. | \`boolean\` | - |
 | \`onClose\` | 태그를 지울 때 실행할 함수예요. | \`() => void\` | - |
           `}</Markdown>
           <h2 className="component-docs-types-heading">Types</h2>
           <h3 id="select-mode-type">SelectModeType</h3>
-          <p>Select에서 여러 값을 선택하거나 직접 태그를 입력할 방식을 선택해요.</p>
+          <p>SelectModeType은 단일·다중 선택과 직접 태그 입력 방식을 구분해요.</p>
           <div className="flex flex-wrap gap-2">
             {modes.map((mode) => (
               <SelectTypeCode key={mode} value={mode} />
             ))}
           </div>
           <h3 id="select-size-type">SelectSizeType</h3>
-          <p>Select의 크기를 선택해요.</p>
+          <p>SelectSizeType은 Select의 높이와 내부 글자 크기를 구분해요.</p>
           <div className="flex flex-wrap gap-2">
             {sizes.map((size) => (
               <SelectTypeCode key={size} value={size} />
             ))}
           </div>
           <h3 id="select-variant-type">SelectVariantType</h3>
-          <p>Select의 배경과 테두리 표현 방식을 선택해요.</p>
+          <p>SelectVariantType은 Select의 배경과 테두리 표현 방식을 구분해요.</p>
           <div className="flex flex-wrap gap-2">
             {variants.map((variant) => (
               <SelectTypeCode key={variant} value={variant} />
             ))}
           </div>
           <h3 id="select-placement-type">SelectPlacementType</h3>
-          <p>선택 영역을 기준으로 목록이 표시될 위치를 선택해요.</p>
+          <p>SelectPlacementType은 선택 영역을 기준으로 목록이 열릴 위치를 구분해요.</p>
           <div className="flex flex-wrap gap-2">
             {placements.map((placement) => (
               <SelectTypeCode key={placement} value={placement} />
@@ -277,10 +286,35 @@ function SelectTypeCode({
 }
 
 export const Sizes: Story = {
-  args: { variant: "default" },
+  args: {
+    variant: "default",
+    placeholder: "선택하세요",
+    label: "",
+    errorMessage: "",
+    required: false,
+    allowClear: true,
+    showSearch: false,
+    readOnly: false,
+    disabled: false,
+    loading: false,
+  },
   parameters: {
     ...storyDescription("components-select--sizes"),
-    controls: { disable: false, include: ["표현 방식"] },
+    controls: {
+      disable: false,
+      include: [
+        "표현 방식",
+        "placeholder",
+        "레이블",
+        "오류 문구",
+        "필수 표시",
+        "지우기",
+        "검색",
+        "읽기 전용",
+        "비활성",
+        "로딩",
+      ],
+    },
     docs: {
       ...storyDescription("components-select--sizes").docs,
       source: {
@@ -307,9 +341,35 @@ export const Sizes: Story = {
 };
 
 export const Widths: Story = {
+  args: {
+    size: "md",
+    variant: "default",
+    label: "",
+    errorMessage: "",
+    required: false,
+    allowClear: true,
+    showSearch: false,
+    readOnly: false,
+    disabled: false,
+    loading: false,
+  },
   parameters: {
     ...storyDescription("components-select--widths"),
-    controls: { disable: true },
+    controls: {
+      disable: false,
+      include: [
+        "크기",
+        "표현 방식",
+        "레이블",
+        "오류 문구",
+        "필수 표시",
+        "지우기",
+        "검색",
+        "읽기 전용",
+        "비활성",
+        "로딩",
+      ],
+    },
     docs: {
       ...storyDescription("components-select--widths").docs,
       source: {
@@ -321,20 +381,45 @@ export const Widths: Story = {
       },
     },
   },
-  render: () => (
+  render: (args) => (
     <div className="grid max-w-xl gap-3">
-      <Select options={memberOptions} placeholder="부모 너비 100%" />
-      <Select options={memberOptions} width={240} placeholder="가로 길이 240px" />
-      <Select options={memberOptions} width={320} placeholder="가로 길이 320px" />
+      <StorySelect {...args} options={memberOptions} placeholder="부모 너비 100%" />
+      <StorySelect {...args} options={memberOptions} width={240} placeholder="가로 길이 240px" />
+      <StorySelect {...args} options={memberOptions} width={320} placeholder="가로 길이 320px" />
     </div>
   ),
 };
 
 export const Variants: Story = {
-  args: { size: "md" },
+  args: {
+    size: "md",
+    width: undefined,
+    label: "",
+    errorMessage: "",
+    required: false,
+    allowClear: true,
+    showSearch: false,
+    readOnly: false,
+    disabled: false,
+    loading: false,
+  },
   parameters: {
     ...storyDescription("components-select--variants"),
-    controls: { disable: false, include: ["크기"] },
+    controls: {
+      disable: false,
+      include: [
+        "크기",
+        "가로 길이",
+        "레이블",
+        "오류 문구",
+        "필수 표시",
+        "지우기",
+        "검색",
+        "읽기 전용",
+        "비활성",
+        "로딩",
+      ],
+    },
     docs: {
       ...storyDescription("components-select--variants").docs,
       source: {
@@ -359,10 +444,19 @@ export const Variants: Story = {
 };
 
 export const States: Story = {
-  args: { size: "md", variant: "default" },
+  args: {
+    size: "md",
+    variant: "default",
+    label: "",
+    errorMessage: "",
+    required: false,
+  },
   parameters: {
     ...storyDescription("components-select--states"),
-    controls: { disable: false, include: ["크기", "표현 방식"] },
+    controls: {
+      disable: false,
+      include: ["크기", "표현 방식", "레이블", "오류 문구", "필수 표시"],
+    },
     docs: {
       ...storyDescription("components-select--states").docs,
       source: {
@@ -384,12 +478,18 @@ export const States: Story = {
       <Select
         size={args.size}
         variant={args.variant}
+        label={args.label}
+        errorMessage={args.errorMessage}
+        required={args.required}
         options={sizeMemberOptions}
         placeholder="기본"
       />
       <Select
         size={args.size}
         variant={args.variant}
+        label={args.label}
+        errorMessage={args.errorMessage}
+        required={args.required}
         options={sizeMemberOptions}
         readOnly
         defaultValue="lee"
@@ -397,6 +497,9 @@ export const States: Story = {
       <Select
         size={args.size}
         variant={args.variant}
+        label={args.label}
+        errorMessage={args.errorMessage}
+        required={args.required}
         options={sizeMemberOptions}
         disabled
         defaultValue="kim"
@@ -448,7 +551,7 @@ export const Multiple: Story = {
 };
 
 export const Tags: Story = {
-  args: { closable: true, variant: "default" },
+  args: { closable: true, variant: "default", disabled: false },
   parameters: {
     ...storySource(
       "components-select--tags",
@@ -478,13 +581,14 @@ export const Tags: Story = {
   />
 </div>`,
     ),
-    controls: { disable: false, include: ["표현 방식", "태그 닫기"] },
+    controls: { disable: false, include: ["표현 방식", "태그 닫기", "비활성"] },
   },
   render: (args) => (
     <div className="grid max-w-md gap-3">
       <Select
         allowClear
         closable={args.closable}
+        disabled={args.disabled}
         variant={args.variant}
         defaultValue={["kim"]}
         mode="tags"
@@ -495,6 +599,7 @@ export const Tags: Story = {
       <Select
         allowClear
         closable={args.closable}
+        disabled={args.disabled}
         variant={args.variant}
         defaultValue={["kim"]}
         mode="tags"
@@ -504,6 +609,7 @@ export const Tags: Story = {
       <Select
         allowClear
         closable={args.closable}
+        disabled={args.disabled}
         variant={args.variant}
         defaultValue={["kim"]}
         mode="tags"
@@ -527,7 +633,7 @@ export const TagRender: Story = {
     defaultValue={['kim', 'lee']}
     tagRender={({ label, closable, onClose }) => (
       <Tag
-        color="blue"
+        color="primary"
         suffixIcon={
           closable ? <Icon icon="close" onClick={onClose} /> : undefined
         }
@@ -550,7 +656,7 @@ export const TagRender: Story = {
         defaultValue={["kim", "lee"]}
         tagRender={({ label, closable, onClose }) => (
           <Tag
-            color="blue"
+            color="primary"
             suffixIcon={closable ? <Icon icon="close" onClick={onClose} /> : undefined}
           >
             {label}
@@ -562,14 +668,14 @@ export const TagRender: Story = {
 };
 
 export const OptionColors: Story = {
-  args: { closable: true, size: "md", variant: "default" },
+  args: { closable: true, size: "md", variant: "default", disabled: false },
   parameters: {
     ...storySource(
       "components-select--option-colors",
       `const statusOptions: SelectOption[] = [
-  { label: '활성', value: 'active', color: 'green' },
-  { label: '휴가', value: 'leave', color: 'blue' },
-  { label: '오류', value: 'error', color: 'red' },
+  { label: '활성', value: 'active', color: 'success' },
+  { label: '휴가', value: 'leave', color: 'primary' },
+  { label: '오류', value: 'error', color: 'danger' },
 ];
 
 <div className="max-w-md">
@@ -580,13 +686,13 @@ export const OptionColors: Story = {
   />
 </div>`,
     ),
-    controls: { disable: false, include: ["크기", "표현 방식", "태그 닫기"] },
+    controls: { disable: false, include: ["크기", "표현 방식", "태그 닫기", "비활성"] },
   },
   render: (args) => {
     const statusOptions: SelectOption[] = [
-      { label: "활성", value: "active", color: "green" },
-      { label: "휴가", value: "leave", color: "blue" },
-      { label: "오류", value: "error", color: "red" },
+      { label: "활성", value: "active", color: "success" },
+      { label: "휴가", value: "leave", color: "primary" },
+      { label: "오류", value: "error", color: "danger" },
     ];
 
     return (
@@ -597,6 +703,7 @@ export const OptionColors: Story = {
           variant={args.variant}
           mode="multiple"
           options={statusOptions}
+          disabled={args.disabled}
           defaultValue={["active", "leave", "error"]}
         />
       </div>

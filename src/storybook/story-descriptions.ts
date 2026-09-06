@@ -24,7 +24,8 @@ export const storyDescriptions: Record<string, string> = {
     "Toggle을 클릭하면 thumb 안에 로딩을 표시하고 작업이 끝난 뒤 상태를 바꿔요.",
 
   "components-input--sizes": "화면과 입력 환경에 맞게 세 가지 Input 크기를 선택할 수 있어요.",
-  "components-input--widths": "기본 전체 너비와 px 단위 가로 길이를 설정할 수 있어요.",
+  "components-input--widths":
+    "width를 생략하면 부모 너비를 채우고, 숫자를 전달하면 px 단위로 고정해요.",
   "components-input--variants": "기본, 채움, 테두리 없음과 밑줄 표현 방식을 선택할 수 있어요.",
   "components-input--states":
     "기본, 읽기 전용과 비활성 상태의 모양과 입력 가능 여부를 비교할 수 있어요.",
@@ -38,10 +39,11 @@ export const storyDescriptions: Record<string, string> = {
   "components-input--client-error":
     "레이블과 필수 표시를 추가하고 입력값을 클라이언트에서 검증해요.",
   "components-input--server-error":
-    "비동기 validate로 서버 응답을 확인하고 반환된 오류 문구를 입력창 아래에 표시해요.",
+    "비동기 errorMessage 함수로 서버 응답을 확인하고 반환된 오류 문구를 입력창 아래에 표시해요.",
 
   "components-textarea--sizes": "입력할 내용의 양에 맞게 세 가지 TextArea 크기를 선택할 수 있어요.",
-  "components-textarea--widths": "기본 전체 너비와 px 단위 가로 길이를 설정할 수 있어요.",
+  "components-textarea--widths":
+    "width를 생략하면 부모 너비를 채우고, 숫자를 전달하면 px 단위로 고정해요.",
   "components-textarea--variants": "기본 배경과 채움 배경의 테두리·배경 표현을 비교할 수 있어요.",
   "components-textarea--states":
     "기본, 읽기 전용과 비활성 상태의 모양과 입력 가능 여부를 비교할 수 있어요.",
@@ -54,12 +56,14 @@ export const storyDescriptions: Record<string, string> = {
     "resize 설정에 따라 우측 하단 핸들로 입력 영역의 높이를 직접 조절할 수 있어요.",
   "components-textarea--count":
     "입력 영역 아래에 현재 글자 수만 표시하거나 최대 글자 수를 함께 표시할 수 있어요.",
-  "components-textarea--client-error": "동기 validate로 입력값을 검사하고 오류를 표시해요.",
+  "components-textarea--client-error":
+    "동기 errorMessage 함수로 입력값을 검사하고 오류를 표시해요.",
   "components-textarea--server-error":
-    "비동기 validate로 서버 응답을 확인하고 반환된 오류 문구를 입력 영역 아래에 표시해요.",
+    "비동기 errorMessage 함수로 서버 응답을 확인하고 반환된 오류 문구를 입력 영역 아래에 표시해요.",
 
   "components-select--sizes": "화면과 선택 환경에 맞게 세 가지 Select 크기를 선택할 수 있어요.",
-  "components-select--widths": "기본 전체 너비와 px 단위 가로 길이를 설정할 수 있어요.",
+  "components-select--widths":
+    "width를 생략하면 부모 너비를 채우고, 숫자를 전달하면 px 단위로 고정해요.",
   "components-select--variants": "기본 배경과 채움 배경의 테두리·배경 표현을 비교할 수 있어요.",
   "components-select--states":
     "기본, 읽기 전용과 비활성 상태의 모양과 선택 가능 여부를 비교할 수 있어요.",
@@ -73,9 +77,9 @@ export const storyDescriptions: Record<string, string> = {
   "components-select--label-and-error":
     "Select 위에 레이블과 필수 표시를 추가하고 아래에 오류 문구를 표시할 수 있어요.",
   "components-select--multiple-and-search":
-    "기본·filled 입력창에서 그룹 항목을 검색하고 여러 값을 선택하거나 해제할 수 있어요.",
+    "항목을 검색하고 여러 값을 선택하거나 해제해요. 그룹 이름으로 검색하면 하위 항목을 모두 표시해요.",
   "components-select--search":
-    "Select에 검색어를 입력해 일치하는 항목만 드롭다운에 표시할 수 있어요.",
+    "검색어가 포함된 항목을 표시해요. 김민준은 ㄱㅁ 같은 초성이나 입력 중인 기, 김미로도 찾을 수 있어요.",
   "components-select--filter-option":
     "filterOption으로 검색어와 항목이 일치하는 조건을 직접 설정할 수 있어요.",
   "components-select--option-label-prop":
@@ -90,14 +94,15 @@ export const storyDescriptions: Record<string, string> = {
   "components-select--popup-width-and-placement":
     "Select를 기준으로 드롭다운의 너비와 위·아래 표시 위치를 설정할 수 있어요.",
   "components-select--loading-and-empty":
-    "항목을 불러오는 동안 로딩을 표시하고 결과가 없을 때 안내 문구를 보여줘요.",
+    "선택 목록을 불러오는 동안 로딩을 표시하고, 결과가 없으면 안내 문구를 표시해요.",
   "components-select--controlled-open-and-search":
     "open과 searchValue로 드롭다운 표시 상태와 검색어를 외부에서 함께 관리해요.",
   "components-select--virtual-list":
     "많은 항목 중 화면에 보이는 영역만 가상 렌더링해 목록을 부드럽게 탐색할 수 있어요.",
   "components-datepicker--sizes":
     "화면과 날짜 선택 환경에 맞게 두 가지 DatePicker 크기를 선택할 수 있어요.",
-  "components-datepicker--widths": "기본 전체 너비와 px 단위 가로 길이를 설정할 수 있어요.",
+  "components-datepicker--widths":
+    "width를 생략하면 부모 너비를 채우고, 숫자를 전달하면 px 단위로 고정해요.",
   "components-datepicker--states":
     "기본, 읽기 전용과 비활성 상태의 모양과 선택 가능 여부를 비교할 수 있어요.",
   "components-datepicker--variants":
@@ -135,7 +140,8 @@ export const storyDescriptions: Record<string, string> = {
 
   "components-timepicker--sizes":
     "화면과 시간 선택 환경에 맞게 세 가지 TimePicker 크기를 선택할 수 있어요.",
-  "components-timepicker--widths": "기본 전체 너비와 px 단위 가로 길이를 설정할 수 있어요.",
+  "components-timepicker--widths":
+    "width를 생략하면 부모 너비를 채우고, 숫자를 전달하면 px 단위로 고정해요.",
   "components-timepicker--states":
     "기본, 읽기 전용과 비활성 상태의 모양과 선택 가능 여부를 비교할 수 있어요.",
   "components-timepicker--variants":
@@ -179,43 +185,46 @@ export const storyDescriptions: Record<string, string> = {
   "components-errormessage--message":
     "입력 컴포넌트 아래에 표시할 오류 문구를 전달하거나 숨길 수 있어요.",
 
-  "components-breadcrumb--items": "상위 경로부터 현재 위치까지 각 항목을 순서대로 보여줘요.",
+  "components-breadcrumb--items":
+    "Breadcrumb가 홈 같은 상위 경로부터 현재 페이지까지 항목을 순서대로 표시해요.",
   "components-breadcrumb--with-icons": "각 항목에 아이콘을 더해 경로를 쉽게 구분할 수 있어요.",
   "components-breadcrumb--single-icon":
     "경로 이름 없이 아이콘만 사용해 간결한 이동 경로를 구성할 수 있어요.",
   "components-breadcrumb--item-colors": "각 항목의 글자와 아이콘에 원하는 색상을 적용할 수 있어요.",
 
-  "components-tooltip--basic": "대상 요소에 마우스를 올리면 가까운 위치에 짧은 설명을 표시해요.",
-  "components-tooltip--placements": "대상을 기준으로 열두 가지 위치에 설명을 배치할 수 있어요.",
-  "components-tooltip--triggers":
-    "hover, focus, click, contextMenu 중 하나를 선택하거나 여러 동작을 함께 사용할 수 있어요.",
+  "components-tooltip--basic": "버튼이나 아이콘에 마우스를 올려 짧은 설명을 확인해요.",
+  "components-tooltip--placements": "Tooltip을 대상 주변 열두 가지 위치에 배치할 수 있어요.",
+  "components-tooltip--triggers": "Tooltip을 표시할 동작을 하나 이상 선택할 수 있어요.",
   "components-tooltip--appearance": "배경 색상과 화살표 표시 여부를 변경할 수 있어요.",
   "components-popover--appearance": "배경 색상과 화살표 표시 여부를 변경할 수 있어요.",
-  "components-tooltip--controlled": "open과 onOpenChange로 표시 상태를 직접 관리할 수 있어요.",
+  "components-tooltip--controlled": "Tooltip의 표시 상태를 외부에서 관리할 수 있어요.",
 
   "components-dropdown--basic":
-    "대상에 마우스를 올리면 선택하거나 실행할 수 있는 작업 메뉴를 표시해요.",
+    "버튼이나 아이콘에 마우스를 올리면 선택하거나 실행할 수 있는 작업 메뉴를 표시해요.",
   "components-dropdown--triggers":
     "hover, focus, click, contextMenu 중 메뉴를 표시할 동작을 하나 이상 선택할 수 있어요.",
-  "components-dropdown--placements": "대상을 기준으로 열두 가지 위치에 메뉴를 배치할 수 있어요.",
+  "components-dropdown--placements":
+    "Dropdown이 연결된 버튼이나 아이콘을 기준으로 열두 가지 위치에 메뉴를 배치해요.",
   "components-dropdown--menu-items":
     "그룹, 아이콘, 구분선, 비활성, 위험 작업과 하위 메뉴를 구성할 수 있어요.",
   "components-dropdown--selectable": "메뉴가 처음 열릴 때 선택할 항목을 지정할 수 있어요.",
   "components-dropdown--multiple-selectable":
     "여러 메뉴 항목을 동시에 선택하고 선택된 값과 표시 상태를 관리할 수 있어요.",
   "components-dropdown--item-click": "항목마다 서로 다른 클릭 동작을 연결할 수 있어요.",
-  "components-dropdown--arrow": "메뉴와 대상을 연결하는 화살표를 표시할 수 있어요.",
+  "components-dropdown--arrow": "메뉴와 연결된 버튼이나 아이콘 사이에 화살표를 표시해요.",
   "components-dropdown--disabled": "필요할 때 Dropdown 전체를 비활성화할 수 있어요.",
   "components-dropdown--controlled":
     "open과 onOpenChange로 메뉴 표시 상태를 직접 관리할 수 있어요.",
 
-  "components-popover--basic": "요소에 마우스를 올리면 제목과 추가 내용을 표시해요.",
-  "components-popover--placements": "대상을 기준으로 열두 가지 위치에 카드를 배치할 수 있어요.",
+  "components-popover--basic":
+    "버튼이나 아이콘에 마우스를 올리면 관련 제목과 추가 내용을 카드로 표시해요.",
+  "components-popover--placements":
+    "Popover가 연결된 버튼이나 아이콘을 기준으로 열두 가지 위치에 카드를 배치해요.",
   "components-popover--triggers": "hover, focus, click, contextMenu 중 표시 동작을 설정해요.",
   "components-popover--actions": "카드 안에 설명과 실행 버튼을 함께 배치할 수 있어요.",
   "components-popover--controlled": "open과 onOpenChange로 카드 표시 상태를 직접 관리할 수 있어요.",
 
-  "components-flex--basic": "방향, 정렬, 줄바꿈과 간격을 Controls에서 조절해보세요.",
+  "components-flex--basic": "Flex의 방향·정렬·줄바꿈과 간격을 Controls에서 바꿔 비교해요.",
   "components-flex--vertical":
     "vertical 설정에 따라 요소를 가로 또는 세로 방향으로 배치할 수 있어요.",
   "components-flex--wrap": "공간이 부족할 때 요소를 한 줄로 유지하거나 다음 줄로 배치할 수 있어요.",
@@ -240,6 +249,8 @@ export const storyDescriptions: Record<string, string> = {
 
   "components-modal--basic":
     "버튼으로 Modal을 열고 본문을 확인한 뒤 작업을 실행하거나 취소할 수 있어요.",
+  "components-modal--button-variants":
+    "확인·취소 버튼 종류를 각각 설정해요. 일반 Modal과 Modal.confirm에서 비교해보세요.",
   "components-modal--async": "비동기 작업이 끝날 때까지 확인 버튼을 로딩 상태로 표시해요.",
   "components-modal--footer": "footer의 콘텐츠와 기본 버튼을 함께 구성해요.",
   "components-modal--static-methods":
@@ -256,6 +267,7 @@ export const storyDescriptions: Record<string, string> = {
   "components-drawer--sizes": "기본, 큰 크기와 직접 지정한 Drawer 크기를 비교해요.",
   "components-drawer--resizable":
     "가로·세로 Drawer의 가장자리를 드래그하고 최소·최대 크기 제한을 확인해요.",
+  "components-drawer--extra": "헤더 오른쪽에 텍스트나 작업 버튼을 추가해요.",
   "components-drawer--header-footer": "제목 옆 작업과 footer를 본문과 함께 구성해요.",
   "components-drawer--scrollable": "긴 본문만 스크롤하고 header와 footer는 고정된 상태로 유지해요.",
   "components-drawer--nested":
@@ -322,12 +334,14 @@ export const storyDescriptions: Record<string, string> = {
     "stickyHeader=true로 페이지를 내려도 테이블 헤더가 화면 상단을 따라오게 해요.",
   "components-table-api-compatibility--fixed-columns":
     "이름은 왼쪽, 프로젝트는 오른쪽에 고정하고 가운데 열만 가로 스크롤해요.",
+  "components-table-api-compatibility--scrollbar-height":
+    "숫자를 입력해 가로 스크롤바의 두께를 조절해요. scrollBarHeight로 설정할 수 있어요.",
   "components-table-api-compatibility--sticky-scrollbar":
-    "페이지를 상하로 이동해도 가로 스크롤바가 화면 아래를 따라와요.",
+    "페이지를 상하로 이동해도 가로 스크롤바가 화면 아래를 따라와요. 숫자를 입력하면 두께도 바뀌어요.",
   "components-table-api-compatibility--sticky-offsets":
     "숫자를 입력해 고정 헤더와 가로 스크롤바의 위치를 조정해요.",
   "components-table-api-compatibility--loading":
-    "데이터를 불러오는 동안 로딩 상태와 안내 문구를 표시해요.",
+    "토글로 로딩 상태를 켜고 끄며 안내 문구를 확인할 수 있어요.",
   "components-table-api-compatibility--empty":
     "locale.emptyText에 Illustrations를 전달해 데이터가 없을 때의 안내를 표시해요.",
   "components-table-api-compatibility--imperative-scroll-to":
@@ -425,9 +439,13 @@ export const storyDescriptions: Record<string, string> = {
   "components-avatar--group":
     "여러 아바타를 겹쳐 표시하고 최대 개수를 넘는 사용자를 숫자로 요약해요.",
 
-  "components-badge--basic": "상태, 텍스트와 애니메이션을 Controls에서 조절해보세요.",
+  "components-badge--basic": "색상, 라벨과 애니메이션을 Controls에서 조절해보세요.",
   "components-badge--statuses": "성공, 처리 중, 기본, 오류와 경고 상태를 구분해요.",
   "components-badge--process": "상태 점이 퍼지는 애니메이션으로 진행 중인 상태를 강조해요.",
+  "components-badge--content":
+    "오른쪽 위에 숫자나 텍스트를 붙여요. 내용은 오른쪽으로 늘어나며, 없으면 점으로 표시해요.",
+  "components-badge--offset":
+    "X·Y 값으로 위치를 조절해요. 긴 내용은 남은 공간에 맞춰 말줄임하고, 마우스를 올리면 전체 내용을 보여줘요.",
 
   "components-calendar--fullscreen":
     "월간 달력을 전체 너비로 표시하고 날짜와 이전·다음 달을 탐색해요.",
@@ -457,7 +475,8 @@ export const storyDescriptions: Record<string, string> = {
   "components-image--placeholder": "이미지를 불러오는 동안 같은 크기의 Image Skeleton을 보여줘요.",
   "components-image--group": "여러 이미지를 묶어 개수를 확인하고 이전·다음 이미지로 이동해요.",
   "components-image--preview-options": "미리보기를 끄거나 썸네일과 상세 이미지를 다르게 지정해요.",
-  "components-image--preview-mask": "미리보기 배경 마스크를 표시하거나 숨긴 상태를 비교해요.",
+  "components-image--preview-mask":
+    "dimmed는 항상 표시해요. mask가 false면 배경을 클릭해도 닫히지 않아요.",
   "components-image--controlled-preview":
     "버튼과 open 상태로 이미지 미리보기를 외부에서 열고 닫아요.",
   "components-image--fallback":

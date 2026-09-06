@@ -14,6 +14,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { MultilineText } from "../_internal/MultilineText";
 import { CSSMotionList } from "@rc-component/motion";
 import { useEffect, useRef, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
@@ -21,6 +22,7 @@ import { twMerge } from "tailwind-merge";
 import { Icon } from "../Icon";
 import { Image } from "../Image";
 import { message } from "../Message";
+import { useMotionPresence } from "../_internal/motion";
 import type { UploadChangeParam, UploadComponent, UploadFile, UploadProps } from "./Upload.types";
 
 let uid = 0;
@@ -34,6 +36,35 @@ function toUploadFile(file: File): UploadFile {
     type: file.type,
     originFileObj: file,
   };
+}
+
+function UploadDownloadIcon({ loading }: { loading: boolean }) {
+  const loadingRef = useRef<HTMLSpanElement>(null);
+  const loadingMotion = useMotionPresence(loading, 200, loadingRef);
+
+  return (
+    <span className="relative inline-flex size-3.5 items-center justify-center">
+      <span
+        className={twMerge(
+          "absolute inset-0 inline-flex items-center justify-center transition-opacity duration-200 ease-out motion-reduce:transition-none",
+          loading ? "opacity-0" : "opacity-100",
+        )}
+      >
+        <Icon icon="download" size={14} />
+      </span>
+      {loadingMotion.rendered ? (
+        <span
+          ref={loadingRef}
+          className={twMerge(
+            "absolute inset-0 inline-flex items-center justify-center transition-opacity duration-200 ease-out motion-reduce:transition-none",
+            loadingMotion.motionVisible ? "opacity-100" : "opacity-0",
+          )}
+        >
+          <Icon icon="loading" loading size={14} />
+        </span>
+      ) : null}
+    </span>
+  );
 }
 function isImage(file: UploadFile) {
   return Boolean(
@@ -81,11 +112,15 @@ interface UploadSortContextProps {
 
 function EnabledUploadSortContext({ children, enabled, items, onDragEnd }: UploadSortContextProps) {
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
+  const [detachedAccessibilityContainer] = useState<Element | undefined>(() =>
+    typeof document === "undefined" ? undefined : document.createElement("div"),
+  );
 
   return (
     <DndContext
       sensors={sensors}
       collisionDetection={closestCenter}
+      accessibility={{ container: detachedAccessibilityContainer, restoreFocus: false }}
       onDragEnd={enabled ? onDragEnd : undefined}
     >
       <SortableContext items={items} strategy={verticalListSortingStrategy}>
@@ -111,12 +146,12 @@ export function getSortableUploadItemClassName(listType: "text" | "picture", isD
   return twMerge(
     "relative shadow-none",
     listType === "picture" && "rounded-lg",
-    isDragging && [listType === "picture" ? "z-[1000]" : "z-10", "shadow-md"],
+    isDragging && [listType === "picture" ? "z-[1000]" : "z-10 rounded", "bg-white shadow-sm"],
   );
 }
 
 export function getSortableUploadItemTransition(transition?: string) {
-  return `${transition ?? "transform 220ms cubic-bezier(.2,.8,.2,1)"}, box-shadow 180ms ease-out`;
+  return `${transition ?? "transform 200ms cubic-bezier(.2,.8,.2,1)"}, box-shadow 200ms ease-out`;
 }
 
 export function shouldDisableSortableTextHover(
@@ -157,7 +192,7 @@ function SortableUploadItem({
           ref={setActivatorNodeRef}
           data-upload-drag-handle={id}
           className={twMerge(
-            "inline-flex h-6 shrink-0 cursor-grab items-center justify-center text-gray active:cursor-grabbing",
+            "inline-flex h-6 shrink-0 cursor-grab items-center justify-center text-gray outline-none active:cursor-grabbing",
             listType === "text" ? "mr-1 w-6" : "w-4",
           )}
           {...listeners}
@@ -272,10 +307,15 @@ function UploadBase({
   const listMountedRef = useRef(false);
   const mountedRef = useRef(true);
   fileListRef.current = currentFiles;
+  const fileLimit =
+    maxCount === undefined || !Number.isFinite(maxCount)
+      ? undefined
+      : Math.max(0, Math.floor(maxCount));
   const inputRef = useRef<HTMLInputElement>(null);
   const rootRef = useRef<HTMLSpanElement>(null);
   const emit = (file: UploadFile, next: UploadFile[]) => {
-    const limited = maxCount ? (maxCount === 1 ? next.slice(-1) : next.slice(0, maxCount)) : next;
+    const limited =
+      fileLimit === undefined ? next : fileLimit === 1 ? next.slice(-1) : next.slice(0, fileLimit);
     fileListRef.current = limited;
     if (fileList === undefined) setInnerFiles(limited);
     onChange?.({ file, fileList: limited } as UploadChangeParam);
@@ -289,15 +329,16 @@ function UploadBase({
       });
     }
     const selectedFiles = multiple ? files : files.slice(0, 1);
-    const accepted = maxCount
-      ? maxCount === 1
-        ? selectedFiles.slice(-1)
-        : selectedFiles.slice(0, Math.max(0, maxCount - fileListRef.current.length))
-      : selectedFiles;
-    if (maxCount && selectedFiles.length > accepted.length) {
+    const accepted =
+      fileLimit !== undefined
+        ? fileLimit === 1
+          ? selectedFiles.slice(-1)
+          : selectedFiles.slice(0, Math.max(0, fileLimit - fileListRef.current.length))
+        : selectedFiles;
+    if (fileLimit !== undefined && selectedFiles.length > accepted.length) {
       message.warning({
-        key: `upload-max-count-${maxCount}`,
-        content: `${maxCount}개까지 등록할 수 있어요.`,
+        key: `upload-max-count-${fileLimit}`,
+        content: `${fileLimit}개까지 등록할 수 있어요.`,
       });
     }
 
@@ -312,17 +353,21 @@ function UploadBase({
       }),
     );
 
+    if (!mountedRef.current) return;
     accepted.forEach((file, index) => {
       if (!validationResults[index]) return;
+      // Another asynchronously validated batch may already have filled the list.
+      if (fileLimit !== undefined && fileLimit !== 1 && fileListRef.current.length >= fileLimit)
+        return;
       const uploadFile = toUploadFile(file);
-      const nextList = maxCount === 1 ? [uploadFile] : [...fileListRef.current, uploadFile];
+      const nextList = fileLimit === 1 ? [uploadFile] : [...fileListRef.current, uploadFile];
       emit(uploadFile, nextList);
     });
   };
   const remove = async (file: UploadFile) => {
     try {
       const allowed = await onRemove?.(file);
-      if (allowed === false) return;
+      if (allowed === false || !mountedRef.current) return;
       emit(
         file,
         fileListRef.current.filter((entry) => entry.uid !== file.uid),
@@ -423,7 +468,7 @@ function UploadBase({
         data-upload-list-item
         data-upload-hover-disabled={textHoverDisabled || undefined}
         className={twMerge(
-          "group relative min-w-0 rounded text-sm transition-[background-color]",
+          "group relative min-w-0 rounded text-sm transition-[background-color] duration-200 ease-out motion-reduce:transition-none",
           listType === "text" && [
             "h-[22px] px-1",
             dragState?.isDragging
@@ -461,13 +506,7 @@ function UploadBase({
           <span
             key={listType}
             data-upload-actions
-            className={twMerge(
-              "ml-0.5 inline-flex shrink-0 items-center gap-0",
-              listType === "text" &&
-                (textHoverDisabled
-                  ? "opacity-0"
-                  : "opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100"),
-            )}
+            className="ml-0.5 inline-flex shrink-0 items-center gap-0"
           >
             {showDownloadAction ? (
               <button
@@ -477,14 +516,14 @@ function UploadBase({
                 data-upload-download-loading={downloading || undefined}
                 disabled={downloadActive}
                 className={twMerge(
-                  "inline-flex shrink-0 cursor-pointer items-center justify-center text-gray transition-colors hover:text-primary",
+                  "inline-flex shrink-0 cursor-pointer items-center justify-center text-gray transition-colors duration-200 ease-out outline-none hover:text-primary motion-reduce:transition-none",
                   listType === "text" ? "size-5" : "size-6",
                   downloadActive && "cursor-default hover:text-gray",
                   downloading && "cursor-wait",
                 )}
                 onClick={() => void download(file)}
               >
-                <Icon icon="download" size={14} loading={downloading} />
+                <UploadDownloadIcon loading={downloading} />
               </button>
             ) : null}
             {showRemoveAction ? (
@@ -492,7 +531,7 @@ function UploadBase({
                 type="button"
                 data-upload-remove-action
                 className={twMerge(
-                  "inline-flex shrink-0 cursor-pointer items-center justify-center text-gray transition-colors hover:text-danger",
+                  "inline-flex shrink-0 cursor-pointer items-center justify-center text-gray transition-colors duration-200 ease-out outline-none hover:text-danger motion-reduce:transition-none",
                   listType === "text" ? "size-5" : "size-6",
                 )}
                 onClick={() => void remove(file)}
@@ -520,10 +559,27 @@ function UploadBase({
     <span
       data-upload-trigger
       tabIndex={disabled ? -1 : 0}
+      ref={(node) => {
+        if (disabled) node?.setAttribute("inert", "");
+        else node?.removeAttribute("inert");
+      }}
+      onClickCapture={(event) => {
+        if (disabled) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+      }}
+      onKeyDownCapture={(event) => {
+        if (disabled) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+      }}
       className={twMerge(
-        "inline-flex w-fit self-start",
+        "inline-flex w-fit self-start outline-none",
         !disabled && "cursor-pointer",
-        disabled && "cursor-not-allowed opacity-50 [&>*]:pointer-events-none",
+        disabled &&
+          "cursor-not-allowed text-disabled [&_*]:!cursor-not-allowed [&_button]:!border-border [&_button]:!bg-hover [&_button]:!text-disabled [&>*]:pointer-events-none",
       )}
       onClick={() => !disabled && inputRef.current?.click()}
       onKeyDown={(event) => {
@@ -606,14 +662,16 @@ function UploadBase({
       onDragOver={(event) => event.preventDefault()}
       onDrop={(event) => {
         event.preventDefault();
-        if (!disabled) void processFiles(event.dataTransfer.files);
-        onDrop?.(event);
+        if (!disabled) {
+          void processFiles(event.dataTransfer.files);
+          onDrop?.(event);
+        }
       }}
     >
       <input
         ref={inputRef}
         type="file"
-        className="hidden"
+        className="hidden outline-none"
         accept={accept}
         capture={capture}
         multiple={multiple}
@@ -635,6 +693,9 @@ function UploadBase({
 function Dragger(props: UploadProps) {
   const { children, className, onDrop, disabled, multiple = false, ...rest } = props;
   const [dragging, setDragging] = useState(false);
+  useEffect(() => {
+    if (disabled) setDragging(false);
+  }, [disabled]);
   return (
     <div className={twMerge("min-w-0", className)}>
       <UploadBase
@@ -647,12 +708,14 @@ function Dragger(props: UploadProps) {
         <span
           data-upload-dragger-area
           className={twMerge(
-            "flex min-h-44 w-full cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-border bg-black/[0.02] p-4 text-center text-sm text-dark-gray transition-colors hover:border-primary",
+            "flex min-h-44 w-full cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-border bg-black/[0.02] p-4 text-center text-sm text-dark-gray transition-colors duration-200 ease-out outline-none hover:border-primary motion-reduce:transition-none",
             dragging && "border-primary bg-selected",
-            disabled && "cursor-not-allowed",
+            disabled &&
+              "cursor-not-allowed border-border bg-hover text-disabled hover:border-border",
           )}
           onDragEnter={(event) => {
             event.preventDefault();
+            if (disabled) return;
             setDragging(true);
           }}
           onDragOver={(event) => event.preventDefault()}
@@ -664,13 +727,15 @@ function Dragger(props: UploadProps) {
             setDragging(false);
           }}
         >
-          {children ?? (
+          {children != null ? (
+            <MultilineText wrap>{children}</MultilineText>
+          ) : (
             <>
-              <Icon icon="upload" size={40} color="primary" />
-              <span className="mt-2 text-base text-dark">
+              <Icon icon="upload" size={40} color={disabled ? "disabled" : "primary"} />
+              <span className={twMerge("mt-2 text-base text-dark", disabled && "text-disabled")}>
                 클릭하거나 파일을 이 영역으로 드래그하세요
               </span>
-              <span className="text-sm text-gray">
+              <span className={twMerge("text-sm text-gray", disabled && "text-disabled")}>
                 {multiple ? "여러 파일을 선택할 수 있어요." : "단일 파일만 선택할 수 있어요."}
               </span>
             </>

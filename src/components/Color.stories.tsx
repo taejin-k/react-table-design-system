@@ -106,7 +106,7 @@ const colorGroups: ColorGroup[] = [
         name: "Black",
         token: "black",
         hex: "#000000",
-        description: "가장 높은 대비가 필요한 콘텐츠에 사용해요.",
+        description: "오버레이와 그림자의 투명 검정에 사용해요.",
         swatchClass: "bg-black",
       },
       {
@@ -127,7 +127,7 @@ const colorGroups: ColorGroup[] = [
         name: "Gray",
         token: "gray",
         hex: "#999999",
-        description: "입력 안내 문구의 글자색으로 사용해요.",
+        description: "회색 범주의 항목을 구분할 때 사용해요.",
         swatchClass: "bg-gray",
       },
       {
@@ -136,6 +136,13 @@ const colorGroups: ColorGroup[] = [
         hex: "#DDDDDD",
         description: "요소의 기본 테두리에 사용해요.",
         swatchClass: "bg-border",
+      },
+      {
+        name: "Light Gray",
+        token: "light-gray",
+        hex: "#FAFAFA",
+        description: "테이블 헤더와 밝은 회색 배경에 사용해요.",
+        swatchClass: "bg-light-gray",
       },
       {
         name: "White",
@@ -363,14 +370,14 @@ function ColorGuide() {
         Types
       </h2>
       <h3 id="color-token-type">ColorTokenType</h3>
-      <p>Color에서 제공하는 색상 토큰 이름이에요.</p>
+      <p>ColorTokenType은 디자인 시스템에서 사용할 수 있는 색상 토큰 이름이에요.</p>
       <div className="flex flex-wrap gap-2">
         {colorTokenNames.map((name) => (
           <TokenCode key={name} name={name} />
         ))}
       </div>
       <h3 id="shadow-token-type">ShadowTokenType</h3>
-      <p>Color에서 제공하는 그림자 토큰 이름이에요.</p>
+      <p>ShadowTokenType은 디자인 시스템에서 사용할 수 있는 그림자 토큰 이름이에요.</p>
       <div className="flex flex-wrap gap-2">
         {shadowTokenNames.map((name) => (
           <TokenCode key={name} name={name} />

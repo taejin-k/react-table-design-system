@@ -60,7 +60,7 @@ const meta = {
     controls: { disable: false },
     docs: {
       description: {
-        component: "제목과 설명이 있는 전역 알림을 화면 가장자리에 표시해요.",
+        component: "Notification은 제목과 상세 설명이 있는 알림을 화면 가장자리에 표시해요.",
       },
       page: () => (
         <div className="notification-docs component-docs">
@@ -70,6 +70,8 @@ const meta = {
           <h2>API</h2>
           <Markdown>{`
 ### Notification
+
+Notification은 화면 가장자리에 상세한 알림을 표시해요.
 
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
@@ -82,6 +84,8 @@ const meta = {
 | \`destroy\` | key의 알림 또는 모든 알림을 닫아요. | \`(key?) => void\` | - |
 
 ### Config
+
+Notification의 Config는 명령형 호출에 표시할 내용과 동작을 정의해요.
 
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
@@ -102,10 +106,10 @@ const meta = {
       `}</Markdown>
           <h2 className="component-docs-types-heading">Types</h2>
           <h3 id="notification-status-type">NotificationStatusType</h3>
-          <p>알림 상태를 선택해요.</p>
+          <p>NotificationStatusType은 알림의 의미와 상태 아이콘을 구분해요.</p>
           <TypeTokens values={notificationStatuses} />
           <h3 id="notification-placement-type">NotificationPlacementType</h3>
-          <p>알림이 표시될 위치를 선택해요.</p>
+          <p>NotificationPlacementType은 화면에서 알림이 나타날 위치를 구분해요.</p>
           <TypeTokens values={notificationPlacements} />
         </div>
       ),

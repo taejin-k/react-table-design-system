@@ -14,6 +14,51 @@ import {
 import type { UploadChangeParam, UploadFile } from "./Upload.types";
 
 describe("Upload", () => {
+  it("does not emit after pending validation finishes on an unmounted upload", async () => {
+    let finish!: (allowed: boolean) => void;
+    const onChange = vi.fn();
+    const { container, unmount } = render(
+      <Upload
+        onChange={onChange}
+        beforeUpload={() =>
+          new Promise<boolean>((resolve) => {
+            finish = resolve;
+          })
+        }
+      />,
+    );
+    fireEvent.change(container.querySelector("input")!, {
+      target: { files: [new File(["a"], "a.txt")] },
+    });
+    unmount();
+    await act(async () => finish(true));
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it("does not report a file that concurrent validation cannot add past maxCount", async () => {
+    const finishes: ((allowed: boolean) => void)[] = [];
+    const onChange = vi.fn();
+    const { container } = render(
+      <Upload
+        maxCount={2}
+        defaultFileList={[{ uid: "first", name: "first.txt" }]}
+        onChange={onChange}
+        beforeUpload={() => new Promise<boolean>((resolve) => finishes.push(resolve))}
+      />,
+    );
+    const input = container.querySelector("input")!;
+    fireEvent.change(input, { target: { files: [new File(["a"], "a.txt")] } });
+    fireEvent.change(input, { target: { files: [new File(["b"], "b.txt")] } });
+    await act(async () => {
+      finishes[0](true);
+      finishes[1](true);
+    });
+    expect(onChange).toHaveBeenCalledTimes(1);
+    expect(onChange.mock.calls[0][0].fileList.map((file: UploadFile) => file.name)).toEqual([
+      "first.txt",
+      "a.txt",
+    ]);
+  });
   it("merges className into the outermost Upload and Upload.Dragger elements", () => {
     const upload = render(
       <Upload className="upload-custom w-fit">
@@ -51,6 +96,34 @@ describe("Upload", () => {
     await userEvent.click(screen.getByRole("button", { name: "파일 선택" }));
 
     expect(inputClick).toHaveBeenCalledOnce();
+  });
+
+  it("makes a disabled trigger and its children inert without opacity styling", () => {
+    const { container } = render(
+      <Upload disabled>
+        <button type="button">파일 선택</button>
+      </Upload>,
+    );
+    const trigger = container.querySelector("[data-upload-trigger]");
+    const input = container.querySelector<HTMLInputElement>('input[type="file"]')!;
+    const inputClick = vi.spyOn(input, "click");
+
+    expect(trigger).toHaveAttribute("inert");
+    expect(trigger).not.toHaveClass("opacity-50");
+    fireEvent.click(container.querySelector("button")!);
+    expect(inputClick).not.toHaveBeenCalled();
+  });
+
+  it("does not enter a drag state or call onDrop while disabled", () => {
+    const onDrop = vi.fn();
+    const { container } = render(<Upload.Dragger disabled onDrop={onDrop} />);
+    const dropArea = container.querySelector("[data-upload-dragger-area]")!;
+    const dataTransfer = { files: [new File(["a"], "file.txt")] };
+
+    fireEvent.dragEnter(dropArea, { dataTransfer });
+    expect(dropArea).not.toHaveClass("border-primary", "bg-selected");
+    fireEvent.drop(dropArea, { dataTransfer });
+    expect(onDrop).not.toHaveBeenCalled();
   });
 
   it("renders a Dragger file list below the dashed drop area", () => {
@@ -116,6 +189,7 @@ describe("Upload", () => {
     expect(container.querySelector("[data-upload-list-item]")).toHaveClass(
       "bg-white",
       "transition-[background-color]",
+      "duration-200",
     );
     expect(container.querySelector("[data-upload-list-item]")).not.toHaveClass("transition-colors");
 
@@ -143,7 +217,7 @@ describe("Upload", () => {
     );
   });
 
-  it("switches picture actions to the hidden text state without an opacity transition", () => {
+  it("keeps actions visible when switching between picture and text lists", () => {
     const files = [{ uid: "1", name: "actions.pdf", url: "/actions.pdf" }];
     const { container, rerender } = render(<Upload listType="picture" defaultFileList={files} />);
     const pictureActions = container.querySelector("[data-upload-actions]");
@@ -156,7 +230,8 @@ describe("Upload", () => {
     const textActions = container.querySelector("[data-upload-actions]");
 
     expect(textActions).not.toBe(pictureActions);
-    expect(textActions).toHaveClass("opacity-0", "transition-opacity");
+    expect(textActions).not.toHaveClass("opacity-0");
+    expect(textActions).not.toHaveClass("transition-opacity");
     expect(container.querySelector("[data-upload-download-action]")).toBeInTheDocument();
     expect(container.querySelector("[data-upload-remove-action]")).toBeInTheDocument();
   });
@@ -164,10 +239,13 @@ describe("Upload", () => {
   it("styles sortable items by list type and disables hover on inactive text rows", () => {
     expect(getSortableUploadItemClassName("text", true)).toContain("z-10");
     expect(getSortableUploadItemClassName("picture", true)).toContain("z-[1000]");
-    expect(getSortableUploadItemClassName("picture", true)).toContain("shadow-md");
+    expect(getSortableUploadItemClassName("picture", true)).toContain("shadow-sm");
     expect(getSortableUploadItemClassName("picture", false)).toContain("shadow-none");
     expect(getSortableUploadItemTransition("transform 200ms ease")).toBe(
-      "transform 200ms ease, box-shadow 180ms ease-out",
+      "transform 200ms ease, box-shadow 200ms ease-out",
+    );
+    expect(getSortableUploadItemTransition()).toBe(
+      "transform 200ms cubic-bezier(.2,.8,.2,1), box-shadow 200ms ease-out",
     );
     expect(shouldDisableSortableTextHover("text", true, false)).toBe(true);
     expect(shouldDisableSortableTextHover("text", true, true)).toBe(false);
@@ -343,7 +421,8 @@ describe("Upload", () => {
     expect(revokeObjectUrlMock).not.toHaveBeenCalledWith("blob:leaving-picture");
 
     await waitFor(() => expect(screen.queryByText("leaving.png")).not.toBeInTheDocument());
-    expect(revokeObjectUrlMock).toHaveBeenCalledWith("blob:leaving-picture");
+    // DOM removal precedes React's passive-effect cleanup under concurrent rendering.
+    await waitFor(() => expect(revokeObjectUrlMock).toHaveBeenCalledWith("blob:leaving-picture"));
   });
 
   it("reorders files by their drag identifiers", () => {
@@ -578,6 +657,23 @@ describe("Upload", () => {
     expect(screen.queryByText("first.txt")).not.toBeInTheDocument();
   });
 
+  it("does not add files when maxCount is zero", async () => {
+    const onChange = vi.fn();
+    const { container } = render(
+      <Upload maxCount={0} onChange={onChange}>
+        <button>파일 선택</button>
+      </Upload>,
+    );
+
+    fireEvent.change(container.querySelector("input")!, {
+      target: { files: [new File(["a"], "blocked.txt")] },
+    });
+
+    await waitFor(() => expect(onChange).not.toHaveBeenCalled());
+    expect(screen.queryByText("blocked.txt")).not.toBeInTheDocument();
+    message.destroy();
+  });
+
   it("shows a message when selected files exceed maxCount", async () => {
     const { container } = render(
       <Upload
@@ -687,11 +783,14 @@ describe("Upload", () => {
 
       await act(async () => resolveFirst());
       expect(firstButton).not.toBeDisabled();
+      expect(firstButton.querySelector("svg.animate-spin")).toBeInTheDocument();
+      act(() => vi.advanceTimersByTime(250));
       expect(firstButton.querySelector("svg.animate-spin")).not.toBeInTheDocument();
       expect(secondButton).toBeDisabled();
 
       await act(async () => resolveSecond());
       expect(secondButton).not.toBeDisabled();
+      act(() => vi.advanceTimersByTime(250));
       expect(secondButton.querySelector("svg.animate-spin")).not.toBeInTheDocument();
     } finally {
       vi.useRealTimers();

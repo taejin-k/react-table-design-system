@@ -6,6 +6,7 @@ export default defineConfig({
   dts: true,
   sourcemap: true,
   clean: true,
+  noExternal: ["@rc-component/motion"],
   external: [
     "react",
     "react-dom",

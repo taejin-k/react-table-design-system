@@ -35,16 +35,42 @@ describe("Toggle", () => {
     );
 
     const toggle = screen.getByRole("button");
-    const loadingIcon = container.querySelector("svg");
-    expect(toggle).toHaveClass("cursor-default", "bg-[#6ea0fa]");
+    const loadingIconWrapper = container.querySelector("[data-toggle-loading-icon]");
+    const loadingIcon = loadingIconWrapper?.querySelector("svg");
+    expect(toggle).toHaveClass(
+      "cursor-default",
+      "bg-primary",
+      "opacity-70",
+      "transition-[background-color,opacity]",
+      "duration-200",
+    );
+    expect(loadingIconWrapper).toHaveClass("transition-opacity", "duration-200", "opacity-100");
     expect(loadingIcon).toHaveAttribute("width", "20");
     expect(loadingIcon).toHaveAttribute("height", "20");
     expect(loadingIcon).toHaveClass("animate-spin");
-    expect(loadingIcon?.querySelector("path")).toHaveAttribute("fill", "#6ea0fa");
+    expect(loadingIcon?.querySelector("path")).toHaveAttribute("fill", "var(--color-primary)");
 
     await user.click(toggle);
     expect(onClick).not.toHaveBeenCalled();
     expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it("animates the loading icon out without immediately removing it", () => {
+    const { container, rerender } = render(<Toggle checked={false} loading />);
+    const toggle = screen.getByRole("button");
+    const loadingIconWrapper = container.querySelector("[data-toggle-loading-icon]");
+    const loadingIcon = loadingIconWrapper?.querySelector("svg");
+
+    expect(toggle).toHaveClass("bg-border", "opacity-70");
+
+    rerender(<Toggle checked={false} loading={false} />);
+
+    expect(toggle).toHaveClass("bg-border");
+    expect(toggle).not.toHaveClass("opacity-70");
+    expect(container.querySelector("[data-toggle-loading-icon]")).toBe(loadingIconWrapper);
+    expect(loadingIconWrapper).toHaveClass("duration-200", "opacity-0");
+    expect(loadingIconWrapper).not.toHaveClass("scale-75");
+    expect(loadingIcon).toHaveClass("animate-spin");
   });
 
   it("changes thumb size immediately while keeping checked transitions", () => {

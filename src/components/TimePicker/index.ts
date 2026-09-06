@@ -1,10 +1,10 @@
 export { TimePicker } from "./TimePicker";
 export type {
   DisabledTime,
+  TimePickerErrorMessage,
   TimePickerCellInfo,
   TimePickerPlacementType,
   TimePickerProps,
   TimePickerSizeType,
-  TimePickerValueType,
   TimePickerVariantType,
 } from "./TimePicker.types";

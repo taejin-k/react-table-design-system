@@ -31,7 +31,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "콘텐츠를 불러오는 동안 필요한 자리에 독립적인 Skeleton element를 배치해요.  \nAvatar·Button·Input·Image·Node를 실제 레이아웃에 맞게 조합할 수 있어요.",
+          "Skeleton은 실제 내용이 나타나기 전까지 같은 모양의 자리 표시자를 보여줘요.  \nAvatar·Button·Input·Image·Node 모양을 실제 레이아웃에 맞게 조합할 수 있어요.",
       },
       page: () => (
         <div className="skeleton-docs component-docs">
@@ -41,6 +41,8 @@ const meta = {
           <h2>API</h2>
           <Markdown>{`
 ### Skeleton Elements
+
+Skeleton Elements는 실제 내용이 나타나기 전에 비슷한 모양의 로딩 화면을 보여줘요.
 
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
@@ -52,6 +54,8 @@ const meta = {
 
 ### <span id="skeleton-element-props">SkeletonElementProps</span>
 
+SkeletonElementProps는 각 자리 표시자의 크기, 모양과 움직임을 정의해요.
+
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
 | \`active\` | 흐르는 애니메이션을 적용해요. | \`boolean\` | \`false\` |
@@ -62,7 +66,7 @@ const meta = {
           `}</Markdown>
           <h2 className="component-docs-types-heading">Types</h2>
           <h3 id="skeleton-shape-type">SkeletonShapeType</h3>
-          <p>자리 표시자 모양을 선택해요.</p>
+          <p>SkeletonShapeType은 자리 표시자의 사각형과 원형 모양을 구분해요.</p>
           <TypeTokens values={skeletonShapes} />
         </div>
       ),
@@ -97,13 +101,28 @@ export const Elements: Story = {
         type: "code",
         code: withStoryImports(
           `<div className="flex flex-wrap items-end gap-6">
-  <Skeleton.Avatar />
-  <Skeleton.Button />
-  <Skeleton.Input />
-  <Skeleton.Image />
-  <Skeleton.Node>
-    <Icon icon="file-outlined" />
-  </Skeleton.Node>
+  <div className="grid justify-items-center gap-2">
+    <Skeleton.Avatar />
+    <span className="text-xs text-dark-gray">Avatar</span>
+  </div>
+  <div className="grid justify-items-center gap-2">
+    <Skeleton.Button />
+    <span className="text-xs text-dark-gray">Button</span>
+  </div>
+  <div className="grid justify-items-center gap-2">
+    <Skeleton.Input />
+    <span className="text-xs text-dark-gray">Input</span>
+  </div>
+  <div className="grid justify-items-center gap-2">
+    <Skeleton.Image />
+    <span className="text-xs text-dark-gray">Image</span>
+  </div>
+  <div className="grid justify-items-center gap-2">
+    <Skeleton.Node>
+      <Icon icon="file-outlined" />
+    </Skeleton.Node>
+    <span className="text-xs text-dark-gray">Node</span>
+  </div>
 </div>`,
         ),
       },
@@ -123,11 +142,28 @@ export const Active: Story = {
         type: "code",
         code: withStoryImports(
           `<div className="flex flex-wrap items-end gap-6">
-  <Skeleton.Avatar active />
-  <Skeleton.Button active />
-  <Skeleton.Input active />
-  <Skeleton.Image active />
-  <Skeleton.Node active />
+  <div className="grid justify-items-center gap-2">
+    <Skeleton.Avatar active />
+    <span className="text-xs text-dark-gray">Avatar</span>
+  </div>
+  <div className="grid justify-items-center gap-2">
+    <Skeleton.Button active />
+    <span className="text-xs text-dark-gray">Button</span>
+  </div>
+  <div className="grid justify-items-center gap-2">
+    <Skeleton.Input active />
+    <span className="text-xs text-dark-gray">Input</span>
+  </div>
+  <div className="grid justify-items-center gap-2">
+    <Skeleton.Image active />
+    <span className="text-xs text-dark-gray">Image</span>
+  </div>
+  <div className="grid justify-items-center gap-2">
+    <Skeleton.Node active>
+      <Icon icon="file-outlined" />
+    </Skeleton.Node>
+    <span className="text-xs text-dark-gray">Node</span>
+  </div>
 </div>`,
         ),
       },
@@ -147,11 +183,28 @@ export const Width: Story = {
         type: "code",
         code: withStoryImports(
           `<div className="flex flex-wrap items-end gap-6">
-  <Skeleton.Avatar width={120} />
-  <Skeleton.Button width={120} />
-  <Skeleton.Input width={120} />
-  <Skeleton.Image width={120} />
-  <Skeleton.Node width={120} />
+  <div className="grid justify-items-center gap-2">
+    <Skeleton.Avatar width={120} />
+    <span className="text-xs text-dark-gray">Avatar</span>
+  </div>
+  <div className="grid justify-items-center gap-2">
+    <Skeleton.Button width={120} />
+    <span className="text-xs text-dark-gray">Button</span>
+  </div>
+  <div className="grid justify-items-center gap-2">
+    <Skeleton.Input width={120} />
+    <span className="text-xs text-dark-gray">Input</span>
+  </div>
+  <div className="grid justify-items-center gap-2">
+    <Skeleton.Image width={120} />
+    <span className="text-xs text-dark-gray">Image</span>
+  </div>
+  <div className="grid justify-items-center gap-2">
+    <Skeleton.Node width={120}>
+      <Icon icon="file-outlined" />
+    </Skeleton.Node>
+    <span className="text-xs text-dark-gray">Node</span>
+  </div>
 </div>`,
         ),
       },
@@ -171,11 +224,28 @@ export const Height: Story = {
         type: "code",
         code: withStoryImports(
           `<div className="flex flex-wrap items-end gap-6">
-  <Skeleton.Avatar height={48} />
-  <Skeleton.Button height={48} />
-  <Skeleton.Input height={48} />
-  <Skeleton.Image height={48} />
-  <Skeleton.Node height={48} />
+  <div className="grid justify-items-center gap-2">
+    <Skeleton.Avatar height={48} />
+    <span className="text-xs text-dark-gray">Avatar</span>
+  </div>
+  <div className="grid justify-items-center gap-2">
+    <Skeleton.Button height={48} />
+    <span className="text-xs text-dark-gray">Button</span>
+  </div>
+  <div className="grid justify-items-center gap-2">
+    <Skeleton.Input height={48} />
+    <span className="text-xs text-dark-gray">Input</span>
+  </div>
+  <div className="grid justify-items-center gap-2">
+    <Skeleton.Image height={48} />
+    <span className="text-xs text-dark-gray">Image</span>
+  </div>
+  <div className="grid justify-items-center gap-2">
+    <Skeleton.Node height={48}>
+      <Icon icon="file-outlined" />
+    </Skeleton.Node>
+    <span className="text-xs text-dark-gray">Node</span>
+  </div>
 </div>`,
         ),
       },
@@ -195,11 +265,28 @@ export const Shape: Story = {
         type: "code",
         code: withStoryImports(
           `<div className="flex flex-wrap items-end gap-6">
-  <Skeleton.Avatar shape="round" />
-  <Skeleton.Button shape="round" />
-  <Skeleton.Input shape="round" />
-  <Skeleton.Image shape="round" />
-  <Skeleton.Node shape="round" />
+  <div className="grid justify-items-center gap-2">
+    <Skeleton.Avatar shape="round" />
+    <span className="text-xs text-dark-gray">Avatar</span>
+  </div>
+  <div className="grid justify-items-center gap-2">
+    <Skeleton.Button shape="round" />
+    <span className="text-xs text-dark-gray">Button</span>
+  </div>
+  <div className="grid justify-items-center gap-2">
+    <Skeleton.Input shape="round" />
+    <span className="text-xs text-dark-gray">Input</span>
+  </div>
+  <div className="grid justify-items-center gap-2">
+    <Skeleton.Image shape="round" />
+    <span className="text-xs text-dark-gray">Image</span>
+  </div>
+  <div className="grid justify-items-center gap-2">
+    <Skeleton.Node shape="round">
+      <Icon icon="file-outlined" />
+    </Skeleton.Node>
+    <span className="text-xs text-dark-gray">Node</span>
+  </div>
 </div>`,
         ),
       },

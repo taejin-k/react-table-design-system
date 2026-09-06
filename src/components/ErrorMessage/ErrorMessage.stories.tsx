@@ -16,7 +16,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "입력값에 문제가 있을 때 오류 내용을 안내해요.  \n표시할 문구를 직접 설정할 수 있어요.",
+          "ErrorMessage는 Input이나 Select 아래에 오류 원인을 안내해요.  \n표시할 문구를 직접 전달할 수 있어요.",
       },
       page: () => (
         <div className="error-message-docs component-docs">
@@ -26,6 +26,8 @@ const meta = {
           <h2>API</h2>
           <Markdown>{`
 ### ErrorMessage
+
+ErrorMessage는 입력값에 문제가 있을 때 오류 안내 문구를 표시해요.
 
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |

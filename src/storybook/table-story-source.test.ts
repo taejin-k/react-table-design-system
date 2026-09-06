@@ -19,6 +19,62 @@ describe("formatTableDataSourceDeclaration", () => {
 });
 
 describe("formatTableStorySource", () => {
+  it("shows custom scrollbar height and omits the default height", () => {
+    expect(formatTableStorySource("<Table />", { args: { scrollBarHeight: 12 } })).toContain(
+      "scrollBarHeight={12}",
+    );
+    expect(formatTableStorySource("<Table />", { args: { scrollBarHeight: 8 } })).not.toContain(
+      "scrollBarHeight",
+    );
+  });
+  it("uses the grouped header bordered default without hiding an explicit false", () => {
+    const columns = [{ title: "구성원", children: [{ title: "이름", dataIndex: "name" }] }];
+    expect(
+      formatTableStorySource("<Table />", { args: { columns, bordered: true } }),
+    ).not.toContain("  bordered");
+    expect(formatTableStorySource("<Table />", { args: { columns, bordered: false } })).toContain(
+      "bordered={false}",
+    );
+  });
+
+  it("omits runtime defaults but retains Basic's non-default md size", () => {
+    const source = formatTableStorySource("<Table />", {
+      args: {
+        bordered: false,
+        loading: false,
+        size: "md",
+        showHeader: true,
+        rowHoverable: true,
+        textSelectable: true,
+      },
+      name: "Basic",
+    });
+    for (const key of ["bordered", "loading", "showHeader", "rowHoverable", "textSelectable"]) {
+      expect(source).not.toContain(key);
+    }
+    expect(source).toContain('size="md"');
+    expect(formatTableStorySource("<Table />", { args: { size: "lg" } })).not.toContain("size=");
+  });
+
+  it("retains controls changed away from their runtime defaults", () => {
+    const source = formatTableStorySource("<Table />", {
+      args: {
+        bordered: true,
+        loading: true,
+        size: "sm",
+        showHeader: false,
+        rowHoverable: false,
+        textSelectable: false,
+      },
+    });
+    expect(source).toContain("  bordered\n");
+    expect(source).toContain("  loading\n");
+    expect(source).toContain('size="sm"');
+    for (const key of ["showHeader", "rowHoverable", "textSelectable"]) {
+      expect(source).toContain(`${key}={false}`);
+    }
+  });
+
   it("includes merged story args so the copied example does not depend on meta args", () => {
     const source = formatTableStorySource("<Table />", {
       args: {
@@ -31,7 +87,7 @@ describe("formatTableStorySource", () => {
     });
 
     expect(source).toContain("const members =");
-    expect(source).toContain("const columns =");
+    expect(source).toContain("const columns: ColumnsType<(typeof members)[number]> =");
     expect(source).toContain("dataSource={members}");
     expect(source).toContain("columns={columns}");
     expect(source).toContain("pagination={false}");

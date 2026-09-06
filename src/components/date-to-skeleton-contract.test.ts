@@ -19,11 +19,9 @@ import type {
   DatePickerProps,
   DatePickerShowTime,
   DatePickerSizeType,
-  DatePickerValueType,
   DatePickerVariantType,
   DateRangePickerProps,
   DateRangePreset,
-  DateRangeValueType,
   DisabledTime,
   MenuClickInfo,
   MenuItemKindType,
@@ -39,7 +37,6 @@ import type {
   TimePickerPlacementType,
   TimePickerProps,
   TimePickerSizeType,
-  TimePickerValueType,
   TimePickerVariantType,
 } from "../index";
 
@@ -54,11 +51,9 @@ type PublicTypes =
   | DatePickerProps
   | DatePickerShowTime
   | DatePickerSizeType
-  | DatePickerValueType
   | DatePickerVariantType
   | DateRangePickerProps
   | DateRangePreset
-  | DateRangeValueType
   | DisabledTime
   | MenuClickInfo
   | MenuItemKindType
@@ -74,7 +69,6 @@ type PublicTypes =
   | TimePickerPlacementType
   | TimePickerProps
   | TimePickerSizeType
-  | TimePickerValueType
   | TimePickerVariantType;
 
 const componentSources = import.meta.glob<string>(

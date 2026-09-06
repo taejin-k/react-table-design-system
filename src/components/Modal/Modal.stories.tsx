@@ -3,9 +3,19 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { useEffect, useRef, useState } from "react";
 import { storyDescriptions } from "../../storybook/story-descriptions";
 import { withStoryImports } from "../../storybook/story-source";
-import { Button } from "../Button";
+import { Button, type ButtonVariantType } from "../Button";
+
 import { Modal } from "./Modal";
 import type { ModalFuncConfig, ModalProps } from "./Modal.types";
+
+const buttonVariants: ButtonVariantType[] = [
+  "primary",
+  "danger",
+  "secondary",
+  "tertiary",
+  "dark",
+  "ghost",
+];
 
 const storyDescription = (id: string) => ({
   docs: { description: { story: storyDescriptions[id] } },
@@ -18,13 +28,15 @@ const meta = {
   argTypes: {
     title: { name: "제목", control: "text" },
     centered: { name: "가운데 정렬", control: "boolean" },
-    width: { name: "가로 길이", control: "text" },
+    width: { name: "가로 길이", control: "number" },
     closable: { name: "닫기 버튼", control: "boolean" },
     keyboard: { name: "Escape 닫기", control: "boolean" },
-    mask: { name: "배경 마스크", control: "boolean" },
+    mask: { name: "배경 클릭 닫기", control: "boolean" },
     scrollLock: { name: "스크롤 잠금", control: "boolean" },
     confirmText: { name: "확인 버튼", control: "text" },
     cancelText: { name: "취소 버튼", control: "text" },
+    confirmVariant: { name: "확인 버튼 종류", control: "select", options: buttonVariants },
+    cancelVariant: { name: "취소 버튼 종류", control: "select", options: buttonVariants },
     open: { control: false, table: { disable: true } },
     children: { control: false, table: { disable: true } },
     footer: { control: false, table: { disable: true } },
@@ -35,7 +47,7 @@ const meta = {
     controls: { disable: false },
     docs: {
       description: {
-        component: "현재 화면 위에서 중요한 정보나 작업을 확인해요.",
+        component: "Modal은 현재 화면 위에 확인이나 입력이 필요한 대화상자를 표시해요.",
       },
       page: () => (
         <div className="modal-docs component-docs">
@@ -45,6 +57,8 @@ const meta = {
           <h2>API</h2>
           <Markdown>{`
 ### Modal
+
+Modal은 현재 화면 위에 확인이나 입력이 필요한 대화상자를 표시해요.
 
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
@@ -58,8 +72,10 @@ const meta = {
 | \`confirmLoading\` | 확인 버튼의 로딩 상태를 표시해요. | \`boolean\` | \`false\` |
 | \`confirmText\` | 확인 버튼 내용을 설정해요. | \`ReactNode\` | \`확인\` |
 | \`cancelText\` | 취소 버튼 내용을 설정해요. | \`ReactNode\` | \`취소\` |
+| \`confirmVariant\` | 확인 버튼 종류를 설정해요. | [\`ButtonVariantType\`](./iframe.html?id=components-button--documentation&viewMode=docs#button-variant) | \`primary\` |
+| \`cancelVariant\` | 취소 버튼 종류를 설정해요. | [\`ButtonVariantType\`](./iframe.html?id=components-button--documentation&viewMode=docs#button-variant) | \`secondary\` |
 | \`keyboard\` | Escape로 닫을 수 있게 해요. | \`boolean\` | \`true\` |
-| \`mask\` | 배경 마스크를 표시해요. | \`boolean\` | \`true\` |
+| \`mask\` | 배경 클릭으로 닫아요. | \`boolean\` | \`true\` |
 | \`scrollLock\` | 열려 있는 동안 문서 스크롤을 잠가요. | \`boolean\` | \`true\` |
 | \`forceRender\` | 닫힌 상태에서도 내용을 미리 렌더링해요. | \`boolean\` | \`false\` |
 | \`destroyOnHidden\` | 닫힌 뒤 내용을 제거해요. | \`boolean\` | \`false\` |
@@ -70,6 +86,8 @@ const meta = {
 | \`onCancel\` | 취소·닫기·마스크를 누르면 실행해요. | \`(event) => void\` | - |
 
 ### <span id="modal-breakpoint-map">ModalBreakpointMap</span>
+
+ModalBreakpointMap은 화면 너비에 따라 사용할 Modal 너비를 정의해요.
 
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
@@ -82,6 +100,8 @@ const meta = {
 
 ### Static methods
 
+Static methods는 컴포넌트를 직접 렌더링하지 않고 Modal을 열어요.
+
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
 | \`info\` | 정보 Modal을 표시해요. | (config: [\`ModalFuncConfig\`](#modal-func-config)) => [\`ModalFuncResult\`](#modal-func-result) | - |
@@ -93,19 +113,21 @@ const meta = {
 
 ### <span id="modal-func-config">ModalFuncConfig</span>
 
-Modal의 공통 속성과 아래 설정을 함께 사용해요.
+ModalFuncConfig는 정적 메서드로 여는 Modal의 내용과 동작을 정의해요.
 
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
 | \`title\` | 제목을 설정해요. | \`ReactNode\` | - |
 | \`content\` | 본문에 표시할 내용을 설정해요. | \`ReactNode\` | - |
 | \`icon\` | 상태 아이콘을 변경해요. | \`ReactNode\` | 상태별 아이콘 |
+| \`confirmVariant\` | 확인 버튼 종류를 설정해요. | [\`ButtonVariantType\`](./iframe.html?id=components-button--documentation&viewMode=docs#button-variant) | \`primary\` |
+| \`cancelVariant\` | 취소 버튼 종류를 설정해요. | [\`ButtonVariantType\`](./iframe.html?id=components-button--documentation&viewMode=docs#button-variant) | \`secondary\` |
 | \`onConfirm\` | 확인할 때 실행하고 close 함수를 전달해요. | \`(close) => void \\| Promise<void>\` | - |
 | \`onCancel\` | 취소할 때 실행하고 close 함수를 전달해요. | \`(close) => void \\| Promise<void>\` | - |
 
 ### <span id="modal-func-result">ModalFuncResult</span>
 
-확인하면 true, 취소하거나 닫으면 false로 완료되며 await할 수 있어요.
+ModalFuncResult는 Modal의 확인 여부를 Promise 결과로 전달해요.
 
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
@@ -133,6 +155,8 @@ export const Basic: Story = {
     scrollLock: true,
     confirmText: "확인",
     cancelText: "취소",
+    confirmVariant: "primary",
+    cancelVariant: "secondary",
   },
   parameters: {
     ...storyDescription("components-modal--basic"),
@@ -143,10 +167,12 @@ export const Basic: Story = {
         "가로 길이",
         "닫기 버튼",
         "Escape 닫기",
-        "배경 마스크",
+        "배경 클릭 닫기",
         "스크롤 잠금",
         "확인 버튼",
         "취소 버튼",
+        "확인 버튼 종류",
+        "취소 버튼 종류",
       ],
     },
     docs: {
@@ -186,6 +212,82 @@ function BasicModalExample(args: Partial<ModalProps>) {
   );
 }
 
+export const ButtonVariants: Story = {
+  args: { confirmVariant: "danger", cancelVariant: "secondary" },
+  parameters: {
+    ...storyDescription("components-modal--button-variants"),
+    controls: { include: ["확인 버튼 종류", "취소 버튼 종류"] },
+    docs: {
+      ...storyDescription("components-modal--button-variants").docs,
+      source: {
+        code: withStoryImports(`function ModalButtonVariants() {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <>
+      <div className="flex flex-wrap gap-2">
+        <Button onClick={() => setOpen(true)}>Modal 열기</Button>
+        <Button onClick={() => Modal.confirm({
+          title: '삭제 확인',
+          content: '선택한 항목을 삭제할까요?',
+          confirmVariant: 'danger',
+          cancelVariant: 'secondary',
+        })}>
+          Modal.confirm 열기
+        </Button>
+      </div>
+      <Modal
+        open={open}
+        title="삭제 확인"
+        confirmVariant="danger"
+        cancelVariant="secondary"
+        onConfirm={() => setOpen(false)}
+        onCancel={() => setOpen(false)}
+      >
+        선택한 항목을 삭제할까요?
+      </Modal>
+    </>
+  );
+}`),
+      },
+    },
+  },
+  render: (args) => <ButtonVariantsExample {...args} />,
+};
+
+function ButtonVariantsExample({ confirmVariant, cancelVariant }: Partial<ModalProps>) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <div className="flex flex-wrap gap-2">
+        <Button onClick={() => setOpen(true)}>Modal 열기</Button>
+        <Button
+          onClick={() =>
+            Modal.confirm({
+              title: "삭제 확인",
+              content: "선택한 항목을 삭제할까요?",
+              confirmVariant,
+              cancelVariant,
+            })
+          }
+        >
+          Modal.confirm 열기
+        </Button>
+      </div>
+      <Modal
+        open={open}
+        title="삭제 확인"
+        confirmVariant={confirmVariant}
+        cancelVariant={cancelVariant}
+        onConfirm={() => setOpen(false)}
+        onCancel={() => setOpen(false)}
+      >
+        선택한 항목을 삭제할까요?
+      </Modal>
+    </>
+  );
+}
+
 export const Async: Story = {
   args: {
     title: "변경사항 저장",
@@ -197,6 +299,8 @@ export const Async: Story = {
     scrollLock: true,
     confirmText: "확인",
     cancelText: "취소",
+    confirmVariant: "primary",
+    cancelVariant: "secondary",
   },
   parameters: {
     ...storyDescription("components-modal--async"),
@@ -207,10 +311,12 @@ export const Async: Story = {
         "가로 길이",
         "닫기 버튼",
         "Escape 닫기",
-        "배경 마스크",
+        "배경 클릭 닫기",
         "스크롤 잠금",
         "확인 버튼",
         "취소 버튼",
+        "확인 버튼 종류",
+        "취소 버튼 종류",
       ],
     },
     docs: {
@@ -295,6 +401,8 @@ export const Footer: Story = {
     scrollLock: true,
     confirmText: "확인",
     cancelText: "취소",
+    confirmVariant: "primary",
+    cancelVariant: "secondary",
   },
   parameters: {
     ...storyDescription("components-modal--footer"),
@@ -305,10 +413,12 @@ export const Footer: Story = {
         "가로 길이",
         "닫기 버튼",
         "Escape 닫기",
-        "배경 마스크",
+        "배경 클릭 닫기",
         "스크롤 잠금",
         "확인 버튼",
         "취소 버튼",
+        "확인 버튼 종류",
+        "취소 버튼 종류",
       ],
     },
     docs: {
@@ -324,8 +434,8 @@ export const Footer: Story = {
         open={open}
         title="Footer 구성"
         footer={(origin) => (
-          <div className="flex items-center justify-between">
-            <span className="text-dark-gray">자동 저장</span>
+          <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
+            <span className="min-w-0 flex-1 text-dark-gray">자동 저장</span>
             {origin}
           </div>
         )}
@@ -353,8 +463,8 @@ function FooterExample(args: Partial<ModalProps>) {
         {...args}
         open={open}
         footer={(origin) => (
-          <div className="flex items-center justify-between">
-            <span className="text-dark-gray">자동 저장</span>
+          <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
+            <span className="min-w-0 flex-1 text-dark-gray">자동 저장</span>
             {origin}
           </div>
         )}
@@ -377,6 +487,8 @@ export const StaticMethods: Story = {
     scrollLock: true,
     confirmText: "확인",
     cancelText: "취소",
+    confirmVariant: "primary",
+    cancelVariant: "secondary",
   },
   parameters: {
     ...storyDescription("components-modal--static-methods"),
@@ -386,10 +498,12 @@ export const StaticMethods: Story = {
         "가로 길이",
         "닫기 버튼",
         "Escape 닫기",
-        "배경 마스크",
+        "배경 클릭 닫기",
         "스크롤 잠금",
         "확인 버튼",
         "취소 버튼",
+        "확인 버튼 종류",
+        "취소 버튼 종류",
       ],
     },
     docs: {
@@ -450,6 +564,8 @@ function createStaticConfig(
     scrollLock: args.scrollLock,
     confirmText: args.confirmText,
     cancelText: args.cancelText,
+    confirmVariant: args.confirmVariant,
+    cancelVariant: args.cancelVariant,
   };
 }
 
@@ -499,6 +615,8 @@ export const PositionAndWidth: Story = {
     scrollLock: true,
     confirmText: "확인",
     cancelText: "취소",
+    confirmVariant: "primary",
+    cancelVariant: "secondary",
   },
   parameters: {
     ...storyDescription("components-modal--position-width"),
@@ -507,10 +625,12 @@ export const PositionAndWidth: Story = {
         "제목",
         "닫기 버튼",
         "Escape 닫기",
-        "배경 마스크",
+        "배경 클릭 닫기",
         "스크롤 잠금",
         "확인 버튼",
         "취소 버튼",
+        "확인 버튼 종류",
+        "취소 버튼 종류",
       ],
     },
     docs: {

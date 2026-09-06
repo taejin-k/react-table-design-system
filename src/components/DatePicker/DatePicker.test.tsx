@@ -1,11 +1,144 @@
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import dayjs, { type Dayjs } from "dayjs";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, expectTypeOf, it, vi } from "vitest";
 import { DatePicker } from "./DatePicker";
 
 describe("DatePicker", () => {
+  it("uses only the disabled cursor for a disabled range picker", () => {
+    render(<DatePicker.RangePicker disabled readOnly />);
+    const trigger = screen.getByRole("button", { name: "" });
+    expect(trigger).toBeDisabled();
+    expect(trigger).toHaveClass("cursor-not-allowed");
+    expect(trigger).not.toHaveClass("cursor-pointer");
+    expect(trigger).not.toHaveClass("cursor-default");
+  });
+
+  it("keeps disabled multiple tags distinct from the input background", () => {
+    render(<DatePicker multiple disabled defaultValue={[dayjs("2026-08-17")]} />);
+    const tag = document.querySelector("[data-datepicker-tag]");
+    expect(tag).toHaveClass("bg-white", "text-disabled");
+    expect(tag?.querySelector("[data-tag-icon]")).toBeNull();
+  });
+
+  it("infers the value type from multiple", () => {
+    const single = (
+      <DatePicker
+        onChange={(value) => {
+          expectTypeOf(value).toEqualTypeOf<Dayjs | undefined>();
+        }}
+      />
+    );
+    const multiple = (
+      <DatePicker
+        multiple
+        onChange={(value) => {
+          expectTypeOf(value).toEqualTypeOf<Dayjs[]>();
+        }}
+      />
+    );
+    // @ts-expect-error A single picker cannot receive an array.
+    const invalidSingle = <DatePicker value={[dayjs()]} />;
+    // @ts-expect-error A multiple picker requires an array.
+    const invalidMultiple = <DatePicker multiple value={dayjs()} />;
+    expect([single, multiple, invalidSingle, invalidMultiple]).toHaveLength(4);
+  });
+
+  it("clears a controlled date with undefined and emits undefined", () => {
+    const onChange = vi.fn();
+    const { rerender } = render(<DatePicker value={dayjs("2026-08-17")} onChange={onChange} />);
+    const trigger = screen.getByRole("button", { name: "2026-08-17" });
+    fireEvent.click(trigger.querySelector("span.cursor-pointer")!);
+    expect(onChange).toHaveBeenCalledWith(undefined);
+    rerender(<DatePicker value={undefined} onChange={onChange} />);
+    expect(screen.getByRole("button", { name: "날짜를 선택하세요" })).toBeInTheDocument();
+  });
+
+  it.each(["date", "month", "year"] as const)(
+    "transitions %s cells and navigation hover colors for 200ms",
+    (picker) => {
+      render(<DatePicker defaultOpen picker={picker} showNow={false} />);
+      const popup = document.querySelector("[data-datepicker-popup]")!;
+      const hoverButtons = Array.from(popup.querySelectorAll("button")).filter((button) =>
+        /hover:bg-(hover|selected)\b/.test(button.className),
+      );
+
+      expect(hoverButtons.length).toBe(picker === "date" ? 46 : 14);
+      for (const button of hoverButtons) {
+        expect(button).toHaveClass(
+          "transition-colors",
+          "duration-200",
+          "ease-out",
+          "motion-reduce:transition-none",
+        );
+      }
+    },
+  );
+
+  it.each(["date", "month", "year"] as const)(
+    "transitions %s range panel hover colors for 200ms",
+    (picker) => {
+      render(<DatePicker.RangePicker defaultOpen picker={picker} />);
+      const popup = document.querySelector("[data-datepicker-range-popup]")!;
+      const hoverButtons = Array.from(popup.querySelectorAll("button")).filter((button) =>
+        /hover:bg-(hover|selected)\b/.test(button.className),
+      );
+
+      expect(hoverButtons).toHaveLength(picker === "date" ? 88 : 26);
+      for (const button of hoverButtons) {
+        expect(button).toHaveClass(
+          "transition-colors",
+          "duration-200",
+          "ease-out",
+          "motion-reduce:transition-none",
+        );
+      }
+    },
+  );
+
+  it("moves from January 31 to February without skipping a month", () => {
+    render(<DatePicker defaultOpen defaultPickerValue={dayjs("2026-01-31")} />);
+    const next = screen.getByText("2026년 1월").nextElementSibling?.querySelector("button");
+    expect(next).toBeTruthy();
+    fireEvent.click(next!);
+    expect(screen.getByText("2026년 2월")).toBeInTheDocument();
+  });
+
+  it("keeps February when navigating a leap-day panel by year", () => {
+    render(<DatePicker defaultOpen defaultPickerValue={dayjs("2024-02-29")} />);
+    fireEvent.click(document.querySelector("[data-datepicker-next-year]")!);
+    expect(screen.getByText("2025년 2월")).toBeInTheDocument();
+  });
+
+  it("shows adjacent range months at month end and follows controlled pickerValue", () => {
+    const { rerender } = render(<DatePicker.RangePicker open pickerValue={dayjs("2026-01-31")} />);
+    expect(screen.getByText("2026년 1월")).toBeInTheDocument();
+    expect(screen.getByText("2026년 2월")).toBeInTheDocument();
+    rerender(<DatePicker.RangePicker open pickerValue={dayjs("2026-04-30")} />);
+    expect(screen.getByText("2026년 4월")).toBeInTheDocument();
+    expect(screen.getByText("2026년 5월")).toBeInTheDocument();
+  });
+
+  it("applies width only to date and range triggers", () => {
+    const { container, rerender } = render(
+      <DatePicker width={240} label="긴 레이블" errorMessage="긴 오류 문구" />,
+    );
+
+    let triggerWrapper = screen.getByRole("button").parentElement;
+    expect(container.firstElementChild).not.toHaveStyle({ width: "240px" });
+    expect(triggerWrapper).toHaveStyle({ width: "240px" });
+    expect(triggerWrapper).not.toContainElement(screen.getByText("긴 레이블"));
+    expect(triggerWrapper).not.toContainElement(screen.getByText("긴 오류 문구"));
+
+    rerender(<DatePicker.RangePicker width={320} label="기간 레이블" errorMessage="기간 오류" />);
+    triggerWrapper = screen.getByRole("button").parentElement;
+    expect(container.firstElementChild).not.toHaveStyle({ width: "320px" });
+    expect(triggerWrapper).toHaveStyle({ width: "320px" });
+    expect(triggerWrapper).not.toContainElement(screen.getByText("기간 레이블"));
+    expect(triggerWrapper).not.toContainElement(screen.getByText("기간 오류"));
+  });
+
   it("normalizes serialized legacy values without crashing", () => {
     render(<DatePicker multiple defaultValue={["2026-08-11", "2026-08-14"] as never} />);
 
@@ -32,6 +165,31 @@ describe("DatePicker", () => {
     );
 
     expect(screen.getByText("2026년 08월 11일 09:25:30")).toBeInTheDocument();
+  });
+
+  it("uses an errorMessage function to validate an initial date", () => {
+    const getErrorMessage = vi.fn((nextValue) =>
+      !Array.isArray(nextValue) && nextValue?.date() === 11 ? "11일은 선택할 수 없어요." : "",
+    );
+    render(<DatePicker defaultValue={dayjs("2026-08-11")} errorMessage={getErrorMessage} />);
+
+    expect(screen.getByText("11일은 선택할 수 없어요.")).toBeInTheDocument();
+    expect(getErrorMessage).toHaveBeenCalledOnce();
+    expect(screen.getByRole("button", { name: /2026-08-11/ })).toHaveClass("border-danger");
+  });
+
+  it("uses an errorMessage function to validate an initial date range", () => {
+    const getErrorMessage = vi.fn((nextValue) => (nextValue ? "" : "종료일을 선택해 주세요."));
+    render(
+      <DatePicker.RangePicker
+        defaultValue={undefined}
+        errorMessage={getErrorMessage}
+      />,
+    );
+
+    expect(screen.getByText("종료일을 선택해 주세요.")).toBeInTheDocument();
+    expect(getErrorMessage).toHaveBeenCalledOnce();
+    expect(screen.getByRole("button", { name: "" })).toHaveClass("border-danger");
   });
 
   it("selects a date from the calendar", async () => {
@@ -106,13 +264,24 @@ describe("DatePicker", () => {
 
     const trigger = screen.getByRole("button", { name: /2026-08-11/ });
     expect(trigger).not.toBeDisabled();
-    expect(trigger).toHaveClass("focus:border-primary", "focus:outline-none");
+    expect(trigger).toHaveClass("cursor-default", "outline-none", "focus:border-primary");
 
     await user.click(trigger);
 
-    expect(trigger).toHaveFocus();
+    expect(trigger).not.toHaveFocus();
     expect(document.querySelector("[data-datepicker-popup]")).not.toBeInTheDocument();
     expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it("uses the default cursor and does not focus a read-only date range by click", async () => {
+    const user = userEvent.setup();
+    render(<DatePicker.RangePicker readOnly />);
+
+    const trigger = screen.getByRole("button", { name: "" });
+    expect(trigger).toHaveClass("cursor-default");
+
+    await user.click(trigger);
+    expect(trigger).not.toHaveFocus();
   });
 
   it("keeps the filled background while read only", () => {
@@ -127,7 +296,19 @@ describe("DatePicker", () => {
   it("uses the disabled text color for a selected value", () => {
     render(<DatePicker disabled defaultValue={dayjs("2026-08-11")} />);
 
-    expect(screen.getByText("2026-08-11").parentElement).toHaveClass("text-gray");
+    expect(screen.getByText("2026-08-11").parentElement).toHaveClass("text-disabled");
+  });
+
+  it("uses the disabled token for date and range placeholders", () => {
+    const { rerender } = render(<DatePicker placeholder="날짜 선택" />);
+
+    expect(screen.getByText("날짜 선택")).toHaveClass("text-disabled");
+    expect(screen.getByText("날짜 선택")).not.toHaveClass("text-gray");
+
+    rerender(<DatePicker.RangePicker placeholder={["시작 날짜", "종료 날짜"]} />);
+
+    expect(screen.getByText("시작 날짜")).toHaveClass("text-disabled");
+    expect(screen.getByText("종료 날짜")).toHaveClass("text-disabled");
   });
 
   it("moves the date panel by one year with the outer header buttons", async () => {
@@ -150,6 +331,11 @@ describe("DatePicker", () => {
     render(<DatePicker defaultValue={dayjs("2026-08-11")} />);
     const clearIcon = screen.getByRole("button", { name: /2026-08-11/ }).querySelector("svg");
     expect(clearIcon).not.toBeNull();
+    expect(clearIcon?.parentElement).toHaveClass(
+      "transition-opacity",
+      "duration-200",
+      "hover:opacity-75",
+    );
     await user.click(clearIcon as Element);
     expect(screen.getByRole("button", { name: /날짜를 선택하세요/ })).toBeInTheDocument();
   });
@@ -341,13 +527,12 @@ describe("DatePicker", () => {
   it("waits for confirmation after selecting a preset when confirmation is required", async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
-    const onConfirm = vi.fn();
     render(
       <DatePicker
         needConfirm
+        defaultPickerValue={dayjs("2026-09-01")}
         presets={[{ label: "프로젝트 시작일", value: dayjs("2026-08-17") }]}
         onChange={onChange}
-        onConfirm={onConfirm}
       />,
     );
 
@@ -356,9 +541,10 @@ describe("DatePicker", () => {
     await user.click(screen.getByRole("button", { name: "프로젝트 시작일" }));
 
     expect(onChange).not.toHaveBeenCalled();
+    expect(screen.getByText("2026년 8월")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "확인" }));
     expect(onChange.mock.calls[0]?.[0].format("YYYY-MM-DD")).toBe("2026-08-17");
-    expect(onConfirm.mock.calls[0]?.[0].format("YYYY-MM-DD")).toBe("2026-08-17");
+    expect(onChange).toHaveBeenCalledTimes(1);
   });
 
   it("renders two adjacent calendar panels for a range", async () => {
@@ -366,7 +552,7 @@ describe("DatePicker", () => {
     render(<DatePicker.RangePicker defaultPickerValue={dayjs("2026-08-01")} />);
     expect(document.querySelector("[data-datepicker-range-separator] svg")).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: /시작 날짜.*종료 날짜/ }));
+    await user.click(screen.getByRole("button", { name: "" }));
     const popup = document.querySelector("[data-datepicker-range-popup]") as HTMLElement;
 
     expect(within(popup).getByText("2026년 8월")).toBeInTheDocument();
@@ -384,6 +570,11 @@ describe("DatePicker", () => {
     );
 
     const trigger = screen.getByRole("button", { name: /2026-08-11.*2026-08-14/ });
+    expect(trigger.querySelector("span.cursor-pointer")).toHaveClass(
+      "transition-opacity",
+      "duration-200",
+      "hover:opacity-75",
+    );
     await user.click(trigger);
     const popup = document.querySelector("[data-datepicker-range-popup]") as HTMLElement;
     const rightPanel = popup.firstElementChild?.lastElementChild as HTMLElement;
@@ -395,7 +586,7 @@ describe("DatePicker", () => {
 
     expect(within(popup).getByText("2026년 8월")).toBeInTheDocument();
     expect(within(popup).getByText("2026년 9월")).toBeInTheDocument();
-    expect(trigger).toHaveTextContent("시작 날짜종료 날짜");
+    expect(trigger).toHaveTextContent(/^$/);
   });
 
   it("keeps the first date while selecting a controlled range", async () => {
@@ -403,7 +594,7 @@ describe("DatePicker", () => {
     const onChange = vi.fn();
 
     function ControlledRange() {
-      const [value, setValue] = useState<[Dayjs | null, Dayjs | null]>([null, null]);
+      const [value, setValue] = useState<[Dayjs, Dayjs]>();
       return (
         <DatePicker.RangePicker
           value={value}
@@ -417,12 +608,13 @@ describe("DatePicker", () => {
     }
 
     render(<ControlledRange />);
-    const trigger = screen.getByRole("button", { name: /시작 날짜.*종료 날짜/ });
+    const trigger = screen.getByRole("button", { name: "" });
     await user.click(trigger);
     const popup = document.querySelector("[data-datepicker-range-popup]") as HTMLElement;
 
     await user.click(within(popup).getAllByRole("button", { name: "14" })[0]);
     expect(trigger).toHaveTextContent("2026-08-14");
+    expect(onChange).not.toHaveBeenCalled();
 
     await user.click(within(popup).getAllByRole("button", { name: "15" })[0]);
     const changedRange = onChange.mock.calls[0]?.[0] as [Dayjs, Dayjs];
@@ -431,6 +623,9 @@ describe("DatePicker", () => {
       "2026-08-15",
     ]);
     expect(trigger).toHaveTextContent("2026-08-142026-08-15");
+    await user.click(trigger.querySelector("span.cursor-pointer")!);
+    expect(onChange).toHaveBeenLastCalledWith(undefined);
+    expect(trigger).toHaveTextContent(/^$/);
   });
 
   it("does not duplicate range styles on adjacent-month dates", async () => {

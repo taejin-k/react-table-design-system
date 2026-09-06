@@ -1,4 +1,5 @@
 import type { CSSProperties, ReactElement, ReactNode } from "react";
+import type { ColorTokenType } from "../../color-tokens";
 
 export type TooltipPlacementType =
   | "top"
@@ -17,19 +18,16 @@ export type TooltipPlacementType =
 export type TooltipTriggerType = "hover" | "focus" | "click" | "contextMenu";
 
 export interface TooltipProps {
-  /** Tooltip 안에 표시할 내용이에요. 비어 있으면 Tooltip을 표시하지 않아요. */
+  /** Tooltip에 표시할 내용이에요. */
   title?: ReactNode;
   /** Tooltip을 연결할 하나의 요소예요. */
   children: ReactElement;
   placement?: TooltipPlacementType;
   trigger?: TooltipTriggerType | TooltipTriggerType[];
   arrow?: boolean;
-  color?: CSSProperties["backgroundColor"];
+  color?: ColorTokenType | CSSProperties["backgroundColor"];
   open?: boolean;
   defaultOpen?: boolean;
-  autoAdjustOverflow?: boolean;
-  mouseEnterDelay?: number;
-  mouseLeaveDelay?: number;
   zIndex?: number;
   className?: string;
   onOpenChange?: (open: boolean) => void;

@@ -107,16 +107,18 @@ function NetworkIllustration() {
 function PermissionIllustration() {
   return (
     <IllustrationCanvas>
-      <rect x="28" y="30" width="72" height="70" rx="12" fill="white" />
-      <path
-        d="M48 60V52C48 43.2 55.2 36 64 36C72.8 36 80 43.2 80 52V60"
-        stroke="#97A3B6"
-        strokeWidth="7"
-        strokeLinecap="round"
-      />
-      <rect x="43" y="57" width="42" height="34" rx="9" fill="#C3DDFD" />
-      <circle cx="64" cy="72" r="5" fill="#3F83F8" />
-      <path d="M64 76V82" stroke="#3F83F8" strokeWidth="4" strokeLinecap="round" />
+      <rect x="25" y="25" width="78" height="78" rx="12" fill="white" />
+      <g transform="translate(64 66) scale(0.88) translate(-64 -64)">
+        <path
+          d="M48 60V52C48 43.2 55.2 36 64 36C72.8 36 80 43.2 80 52V60"
+          stroke="#97A3B6"
+          strokeWidth="7"
+          strokeLinecap="round"
+        />
+        <rect x="43" y="57" width="42" height="34" rx="9" fill="#C3DDFD" />
+        <circle cx="64" cy="72" r="5" fill="#3F83F8" />
+        <path d="M64 76V82" stroke="#3F83F8" strokeWidth="4" strokeLinecap="round" />
+      </g>
     </IllustrationCanvas>
   );
 }
@@ -255,7 +257,7 @@ const illustrationSizeVariants = cva("shrink-0", {
 });
 
 const illustrationDescriptionVariants = cva(
-  "text-center font-pretendard font-medium whitespace-pre-line text-dark-gray",
+  "max-w-full min-w-0 text-center font-pretendard font-medium [overflow-wrap:anywhere] break-all whitespace-pre-line text-gray",
   {
     variants: {
       size: {

@@ -40,7 +40,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "빈 상태와 오류·안내 상황을 이미지로 보여줘요  \n상황에 맞는 이미지와 안내 내용을 표시할 수 있어요",
+          "Illustrations는 데이터 없음이나 오류 같은 상황을 이미지로 안내해요.  \n상황에 맞는 이미지 종류와 크기를 선택할 수 있어요.",
       },
       page: () => (
         <div className="illustrations-docs component-docs">
@@ -51,6 +51,8 @@ const meta = {
           <Markdown>{`
 ### Illustrations
 
+Illustrations는 빈 상태나 오류 같은 상황을 이미지로 안내해요.
+
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
 | \`type\` | 표시할 이미지 종류를 설정해요 | [\`IllustrationType\`](#illustration-type) | \`noResults\` |
@@ -60,14 +62,14 @@ const meta = {
           `}</Markdown>
           <h2 className="component-docs-types-heading">Types</h2>
           <h3 id="illustration-type">IllustrationType</h3>
-          <p>상황에 맞는 이미지 타입을 선택해요</p>
+          <p>IllustrationType은 데이터 없음·오류·완료 등 안내할 상황을 구분해요.</p>
           <div className="flex flex-wrap gap-2">
             {illustrationTypes.map((type) => (
               <IllustrationTypeCode key={type} value={type} />
             ))}
           </div>
           <h3 id="illustration-size-type">IllustrationSizeType</h3>
-          <p>이미지 크기를 선택해요</p>
+          <p>IllustrationSizeType은 Illustrations가 표시될 크기를 구분해요.</p>
           <div className="flex flex-wrap gap-2">
             {illustrationSizes.map((size) => (
               <IllustrationTypeCode key={size} value={size} />
@@ -200,9 +202,12 @@ export const Sizes: Story = {
       ...storyDescription("components-illustrations--sizes").docs,
       source: {
         code: withStoryImports(`<div className="flex flex-wrap items-end gap-12">
-  <Illustrations size="sm" description="sm 크기예요" />
-  <Illustrations size="md" description="md 크기예요" />
-  <Illustrations size="lg" description="lg 크기예요" />
+  {(['sm', 'md', 'lg'] as const).map((size) => (
+    <div key={size} className="flex flex-col items-center gap-3 text-center">
+      <p className="m-0 font-mono text-sm text-[#677589]">{size}</p>
+      <Illustrations className="w-auto" size={size} description={size + ' 크기예요'} />
+    </div>
+  ))}
 </div>`),
       },
     },

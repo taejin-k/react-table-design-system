@@ -8,11 +8,14 @@ import {
   type MouseEvent,
 } from "react";
 import CSSMotion from "@rc-component/motion";
+import { MultilineText } from "../_internal/MultilineText";
+import { ScrollArea } from "../_internal/ScrollArea";
 import { createPortal } from "react-dom";
 import { twMerge } from "tailwind-merge";
 import { OverlayCloseButton } from "../_internal/OverlayCloseButton";
 import { MOTION_DURATION_SLOW } from "../_internal/motion";
 import { lockBodyScroll } from "../_internal/body-scroll-lock";
+import { isTopmostOverlay } from "../_internal/is-topmost-overlay";
 import type {
   DrawerPlacementType,
   DrawerProps,
@@ -61,6 +64,8 @@ export function Drawer({
   const [resized, setResized] = useState<number>();
   const triggerRef = useRef<HTMLElement | null>(null);
   const panelRef = useRef<HTMLDivElement | null>(null);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
   const lastOpenPlacementRef = useRef(placement);
   const parentPush = useContext(DrawerPushContext);
   if (open) lastOpenPlacementRef.current = placement;
@@ -79,7 +84,7 @@ export function Drawer({
   }, [open]);
 
   useEffect(() => {
-    parentPush(open);
+    if (!open) parentPush(false);
     return () => parentPush(false);
   }, [open, parentPush]);
 
@@ -88,19 +93,24 @@ export function Drawer({
   }, [open]);
 
   useEffect(() => {
-    if (!open || !keyboard) return;
+    if (!open) return;
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
+      if (event.defaultPrevented || !isTopmostOverlay(panelRef.current)) return;
+      if (event.key === "Escape" && keyboard) {
         event.preventDefault();
         panelRef.current?.focus({ preventScroll: true });
-        onClose?.(event);
+        onCloseRef.current?.(event);
         return;
       }
       if (event.key !== "Tab" || !panelRef.current) return;
       const elements = panelRef.current.querySelectorAll<HTMLElement>(
-        'button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex="-1"])',
+        'a[href], button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex="-1"])',
       );
-      if (!elements.length) return;
+      if (!elements.length) {
+        event.preventDefault();
+        panelRef.current.focus();
+        return;
+      }
       const first = elements[0];
       const last = elements[elements.length - 1];
       if (event.shiftKey && document.activeElement === first) {
@@ -112,12 +122,14 @@ export function Drawer({
       }
     };
     document.addEventListener("keydown", handleKeyDown);
-    const focusTimer = window.setTimeout(() => panelRef.current?.focus({ preventScroll: true }));
+    const focusTimer = window.setTimeout(() => {
+      if (isTopmostOverlay(panelRef.current)) panelRef.current?.focus({ preventScroll: true });
+    });
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
       window.clearTimeout(focusTimer);
     };
-  }, [keyboard, onClose, open]);
+  }, [keyboard, open]);
 
   const keepScrollLocked = open || rootVisible;
   useEffect(() => {
@@ -153,7 +165,7 @@ export function Drawer({
       data-drawer-panel
       tabIndex={-1}
       className={twMerge(
-        "wizard-drawer-panel absolute flex flex-col bg-white font-pretendard text-sm text-dark shadow-2xl outline-none",
+        "wizard-drawer-panel absolute flex flex-col bg-white font-pretendard text-sm text-dark shadow-lg outline-none",
         "pointer-events-auto",
         motionPlacement === "left" && "inset-y-0 left-0",
         motionPlacement === "right" && "inset-y-0 right-0",
@@ -167,24 +179,32 @@ export function Drawer({
       ) : null}
       {title !== undefined || extra || closeButton ? (
         <div className="flex min-h-14 items-center gap-3 border-b border-hover px-5 py-4">
-          <div className="min-w-0 flex-1 text-base leading-6 font-semibold [overflow-wrap:anywhere] break-words whitespace-pre-wrap">
+          <div className="min-w-0 flex-1 text-base leading-6 font-semibold [overflow-wrap:anywhere] break-all whitespace-pre-wrap">
             {title}
           </div>
-          {extra ? <div className="shrink-0">{extra}</div> : null}
+          {extra ? (
+            <div className="max-w-[50%] min-w-0 shrink">
+              <MultilineText wrap>{extra}</MultilineText>
+            </div>
+          ) : null}
           {closeButton}
         </div>
       ) : null}
-      <div data-drawer-scroll-container className="min-h-0 flex-1 overflow-auto p-5">
+      <ScrollArea
+        viewportMarker="data-drawer-scroll-container"
+        className="flex-1"
+        viewportClassName="p-5 pr-3 [scrollbar-gutter:stable]"
+      >
         {typeof children === "string" || typeof children === "number" ? (
-          <span className="[overflow-wrap:anywhere] break-words whitespace-pre-wrap">
-            {children}
-          </span>
+          <span className="[overflow-wrap:anywhere] break-all whitespace-pre-wrap">{children}</span>
         ) : (
           children
         )}
-      </div>
+      </ScrollArea>
       {footer !== undefined ? (
-        <div className="border-t border-hover px-5 py-4">{footer}</div>
+        <div className="border-t border-hover px-5 py-4">
+          <MultilineText wrap>{footer}</MultilineText>
+        </div>
       ) : null}
     </div>
   );
@@ -197,27 +217,26 @@ export function Drawer({
         display: open || rootVisible ? undefined : "none",
       }}
     >
-      {mask ? (
-        <CSSMotion
-          visible={open}
-          motionName="wizard-drawer-mask-motion"
-          motionDeadline={MOTION_DURATION_SLOW + 50}
-          removeOnLeave
-        >
-          {({ className: maskMotionClassName, style: maskMotionStyle }, maskRef) => (
-            <div
-              ref={maskRef}
-              data-drawer-mask
-              className={twMerge(
-                "pointer-events-auto absolute inset-0 cursor-pointer bg-black/45",
-                maskMotionClassName,
-              )}
-              style={maskMotionStyle}
-              onClick={close}
-            />
-          )}
-        </CSSMotion>
-      ) : null}
+      <CSSMotion
+        visible={open}
+        motionName="wizard-drawer-mask-motion"
+        motionDeadline={MOTION_DURATION_SLOW + 50}
+        removeOnLeave
+      >
+        {({ className: maskMotionClassName, style: maskMotionStyle }, maskRef) => (
+          <div
+            ref={maskRef}
+            data-drawer-mask
+            className={twMerge(
+              "pointer-events-auto absolute inset-0 bg-black/45",
+              mask ? "cursor-pointer" : "cursor-default",
+              maskMotionClassName,
+            )}
+            style={maskMotionStyle}
+            onClick={mask ? close : undefined}
+          />
+        )}
+      </CSSMotion>
       {forceRender || open || hasOpened ? (
         <CSSMotion
           visible={open}
@@ -225,8 +244,15 @@ export function Drawer({
           motionDeadline={MOTION_DURATION_SLOW + 50}
           forceRender={forceRender}
           removeOnLeave={destroyOnHidden}
+          onAppearActive={() => {
+            parentPush(true);
+          }}
+          onEnterActive={() => {
+            parentPush(true);
+          }}
           onVisibleChanged={(visible) => {
             setRootVisible(visible);
+            parentPush(visible);
             if (visible) {
               onAfterOpen?.();
               return;
@@ -270,8 +296,11 @@ function ResizeHandle({
   onResize: (value: number) => void;
 }) {
   const settings = typeof config === "object" ? config : {};
+  const cleanupResizeRef = useRef<(() => void) | undefined>(undefined);
+  useEffect(() => () => cleanupResizeRef.current?.(), []);
   const start = (event: React.PointerEvent<HTMLDivElement>) => {
-    event.currentTarget.setPointerCapture(event.pointerId);
+    cleanupResizeRef.current?.();
+    event.currentTarget.setPointerCapture?.(event.pointerId);
     const panel = event.currentTarget.closest<HTMLElement>("[data-drawer-panel]");
     const panelRect = panel?.getBoundingClientRect();
     const startSize =
@@ -294,13 +323,20 @@ function ResizeHandle({
       onResize(next);
       settings.onResize?.(next);
     };
-    const end = () => {
+    const cleanupResize = () => {
       document.removeEventListener("pointermove", move);
       document.removeEventListener("pointerup", end);
+      document.removeEventListener("pointercancel", end);
+      cleanupResizeRef.current = undefined;
+    };
+    const end = () => {
+      cleanupResize();
       settings.onResizeEnd?.(lastValue);
     };
+    cleanupResizeRef.current = cleanupResize;
     document.addEventListener("pointermove", move);
     document.addEventListener("pointerup", end);
+    document.addEventListener("pointercancel", end);
   };
   return (
     <div

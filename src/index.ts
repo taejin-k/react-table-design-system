@@ -14,15 +14,23 @@ export type { ErrorMessageProps } from "./components/ErrorMessage";
 export { Input } from "./components/Input";
 export type {
   AllowedCharacterType,
+  InputErrorMessage,
   InputProps,
   InputSizeType,
   InputVariantType,
 } from "./components/Input";
 export { TextArea } from "./components/TextArea";
-export type { TextAreaAutoSize, TextAreaProps, TextAreaVariantType } from "./components/TextArea";
+export type {
+  TextAreaAutoSize,
+  TextAreaErrorMessage,
+  TextAreaProps,
+  TextAreaSizeType,
+  TextAreaVariantType,
+} from "./components/TextArea";
 export { Select } from "./components/Select";
 export type {
   SelectBasicProps,
+  SelectErrorMessage,
   SelectModeType,
   SelectOption,
   SelectPlacementType,
@@ -30,30 +38,31 @@ export type {
   SelectRef,
   SelectSizeType,
   SelectTagProps,
+  SelectValueType,
   SelectVariantType,
 } from "./components/Select";
 export { DatePicker } from "./components/DatePicker";
 export type {
   DatePickerPreset,
+  DatePickerErrorMessage,
   DatePickerShowTime,
   DatePickerModeType,
   DatePickerPlacementType,
   DatePickerProps,
   DatePickerSizeType,
-  DatePickerValueType,
   DatePickerVariantType,
   DateRangePreset,
+  DateRangePickerErrorMessage,
   DateRangePickerProps,
-  DateRangeValueType,
 } from "./components/DatePicker";
 export { TimePicker } from "./components/TimePicker";
 export type {
   DisabledTime,
+  TimePickerErrorMessage,
   TimePickerCellInfo,
   TimePickerPlacementType,
   TimePickerProps,
   TimePickerSizeType,
-  TimePickerValueType,
   TimePickerVariantType,
 } from "./components/TimePicker";
 export { Checkbox } from "./components/Checkbox";
@@ -100,7 +109,7 @@ export type {
 export { message } from "./components/Message";
 export type {
   MessageApi,
-  MessageArgsProps,
+  MessageConfig,
   MessageInstance,
   MessageType,
   MessageStatusType,
@@ -197,7 +206,7 @@ export type {
   AvatarSizeType,
 } from "./components/Avatar";
 export { Badge } from "./components/Badge";
-export type { BadgeProps, BadgeStatusType } from "./components/Badge";
+export type { BadgeProps } from "./components/Badge";
 export { Calendar } from "./components/Calendar";
 export type {
   CalendarCellInfo,

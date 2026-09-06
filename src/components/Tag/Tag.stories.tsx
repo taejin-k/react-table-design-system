@@ -7,7 +7,7 @@ import { Icon } from "../Icon";
 import { Tag } from "./Tag";
 import type { TagColorType, TagVariantType } from "./Tag.types";
 
-const colors: TagColorType[] = ["black", "green", "navy", "red", "grey", "purple", "blue"];
+const colors: TagColorType[] = ["dark", "success", "navy", "danger", "gray", "purple", "primary"];
 const variants: TagVariantType[] = ["filled", "outlined", "solid", "soft-outlined"];
 
 const storyDescription = (id: string) => ({
@@ -31,7 +31,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "상태나 범주를 짧은 텍스트로 표시해요.  \n색상·표현 방식과 앞뒤 아이콘을 설정할 수 있어요.",
+          "Tag는 항목의 상태나 범주를 짧은 문구로 구분해요.  \n색상·표현 방식과 앞뒤 아이콘을 지정할 수 있어요.",
       },
       page: () => (
         <div className="tag-docs component-docs">
@@ -42,9 +42,11 @@ const meta = {
           <Markdown>{`
 ### Tag
 
+Tag는 상태나 범주를 짧은 텍스트로 구분해 표시해요.
+
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
-| \`color\` | Tag의 색상을 설정해요. | [\`TagColorType\`](#tag-color) | \`black\` |
+| \`color\` | Tag의 색상을 설정해요. | [\`TagColorType\`](#tag-color) | \`dark\` |
 | \`variant\` | 배경과 테두리 표현 방식을 설정해요. | [\`TagVariantType\`](#tag-variant) | \`filled\` |
 | \`prefixIcon\` | 텍스트 앞에 아이콘을 표시해요. | \`ReactNode\` | - |
 | \`suffixIcon\` | 텍스트 뒤에 아이콘을 표시해요. | \`ReactNode\` | - |
@@ -52,14 +54,14 @@ const meta = {
           `}</Markdown>
           <h2 className="component-docs-types-heading">Types</h2>
           <h3 id="tag-color">TagColorType</h3>
-          <p>Tag에 적용할 색상을 선택해요.</p>
+          <p>TagColorType은 Tag의 상태나 범주를 나타낼 색상을 구분해요.</p>
           <div className="flex flex-wrap gap-2">
             {colors.map((color) => (
               <TagTypeCode key={color} value={color} />
             ))}
           </div>
           <h3 id="tag-variant">TagVariantType</h3>
-          <p>Tag의 배경과 테두리 표현 방식을 선택해요.</p>
+          <p>TagVariantType은 Tag의 배경과 테두리 표현 방식을 구분해요.</p>
           <div className="flex flex-wrap gap-2">
             {variants.map((variant) => (
               <TagTypeCode key={variant} value={variant} />
@@ -97,56 +99,56 @@ export const Variants: Story = {
       source: {
         code: withStoryImports(`function TagVariants() {
   return (
-    <div className="grid gap-6">
-      <section className="grid gap-3">
+    <div className="grid min-w-0 gap-6">
+      <section className="grid min-w-0 gap-3">
         <h3 className="m-0 text-sm font-semibold">filled</h3>
-        <div className="flex flex-wrap items-center gap-3">
-          <Tag color="black" variant="filled">black</Tag>
-          <Tag color="green" variant="filled">green</Tag>
+        <div className="flex min-w-0 max-w-full flex-wrap items-center gap-3">
+          <Tag color="dark" variant="filled">dark</Tag>
+          <Tag color="success" variant="filled">success</Tag>
           <Tag color="navy" variant="filled">navy</Tag>
-          <Tag color="red" variant="filled">red</Tag>
-          <Tag color="grey" variant="filled">grey</Tag>
+          <Tag color="danger" variant="filled">danger</Tag>
+          <Tag color="gray" variant="filled">gray</Tag>
           <Tag color="purple" variant="filled">purple</Tag>
-          <Tag color="blue" variant="filled">blue</Tag>
+          <Tag color="primary" variant="filled">primary</Tag>
         </div>
       </section>
 
-      <section className="grid gap-3">
+      <section className="grid min-w-0 gap-3">
         <h3 className="m-0 text-sm font-semibold">outlined</h3>
-        <div className="flex flex-wrap items-center gap-3">
-          <Tag color="black" variant="outlined">black</Tag>
-          <Tag color="green" variant="outlined">green</Tag>
+        <div className="flex min-w-0 max-w-full flex-wrap items-center gap-3">
+          <Tag color="dark" variant="outlined">dark</Tag>
+          <Tag color="success" variant="outlined">success</Tag>
           <Tag color="navy" variant="outlined">navy</Tag>
-          <Tag color="red" variant="outlined">red</Tag>
-          <Tag color="grey" variant="outlined">grey</Tag>
+          <Tag color="danger" variant="outlined">danger</Tag>
+          <Tag color="gray" variant="outlined">gray</Tag>
           <Tag color="purple" variant="outlined">purple</Tag>
-          <Tag color="blue" variant="outlined">blue</Tag>
+          <Tag color="primary" variant="outlined">primary</Tag>
         </div>
       </section>
 
-      <section className="grid gap-3">
+      <section className="grid min-w-0 gap-3">
         <h3 className="m-0 text-sm font-semibold">solid</h3>
-        <div className="flex flex-wrap items-center gap-3">
-          <Tag color="black" variant="solid">black</Tag>
-          <Tag color="green" variant="solid">green</Tag>
+        <div className="flex min-w-0 max-w-full flex-wrap items-center gap-3">
+          <Tag color="dark" variant="solid">dark</Tag>
+          <Tag color="success" variant="solid">success</Tag>
           <Tag color="navy" variant="solid">navy</Tag>
-          <Tag color="red" variant="solid">red</Tag>
-          <Tag color="grey" variant="solid">grey</Tag>
+          <Tag color="danger" variant="solid">danger</Tag>
+          <Tag color="gray" variant="solid">gray</Tag>
           <Tag color="purple" variant="solid">purple</Tag>
-          <Tag color="blue" variant="solid">blue</Tag>
+          <Tag color="primary" variant="solid">primary</Tag>
         </div>
       </section>
 
-      <section className="grid gap-3">
+      <section className="grid min-w-0 gap-3">
         <h3 className="m-0 text-sm font-semibold">soft-outlined</h3>
-        <div className="flex flex-wrap items-center gap-3">
-          <Tag color="black" variant="soft-outlined">black</Tag>
-          <Tag color="green" variant="soft-outlined">green</Tag>
+        <div className="flex min-w-0 max-w-full flex-wrap items-center gap-3">
+          <Tag color="dark" variant="soft-outlined">dark</Tag>
+          <Tag color="success" variant="soft-outlined">success</Tag>
           <Tag color="navy" variant="soft-outlined">navy</Tag>
-          <Tag color="red" variant="soft-outlined">red</Tag>
-          <Tag color="grey" variant="soft-outlined">grey</Tag>
+          <Tag color="danger" variant="soft-outlined">danger</Tag>
+          <Tag color="gray" variant="soft-outlined">gray</Tag>
           <Tag color="purple" variant="soft-outlined">purple</Tag>
-          <Tag color="blue" variant="soft-outlined">blue</Tag>
+          <Tag color="primary" variant="soft-outlined">primary</Tag>
         </div>
       </section>
     </div>
@@ -156,11 +158,11 @@ export const Variants: Story = {
     },
   },
   render: (args) => (
-    <div className="grid gap-6">
+    <div className="grid min-w-0 gap-6">
       {variants.map((variant) => (
-        <section key={variant} className="grid gap-3">
+        <section key={variant} className="grid min-w-0 gap-3">
           <h3 className="m-0 text-sm font-semibold">{variant}</h3>
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex max-w-full min-w-0 flex-wrap items-center gap-3">
             {colors.map((color) => (
               <Tag {...args} key={color} color={color} variant={variant}>
                 {color}
@@ -187,13 +189,13 @@ export const Colors: Story = {
       description: { story: storyDescriptions["components-tag--colors"] },
       source: {
         code: withStoryImports(`<div className="flex flex-wrap items-center gap-3">
-  <Tag color="black">black</Tag>
-  <Tag color="green">green</Tag>
+  <Tag color="dark">dark</Tag>
+  <Tag color="success">success</Tag>
   <Tag color="navy">navy</Tag>
-  <Tag color="red">red</Tag>
-  <Tag color="grey">grey</Tag>
+  <Tag color="danger">danger</Tag>
+  <Tag color="gray">gray</Tag>
   <Tag color="purple">purple</Tag>
-  <Tag color="blue">blue</Tag>
+  <Tag color="primary">primary</Tag>
 </div>`),
       },
     },
@@ -210,7 +212,7 @@ export const Colors: Story = {
 };
 
 export const Icons: Story = {
-  args: { children: "텍스트", color: "black", variant: "filled" },
+  args: { children: "텍스트", color: "dark", variant: "filled" },
   parameters: {
     ...storyDescription("components-tag--icons"),
     controls: { disable: false, include: ["텍스트", "색상", "표현 방식"] },

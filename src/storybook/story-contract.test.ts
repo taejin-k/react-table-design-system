@@ -626,6 +626,7 @@ describe("Storybook render contracts", () => {
       const visit = (node: ts.Node) => {
         if (
           ts.isJsxAttribute(node) &&
+          node.name.getText(sourceFile) !== "key" &&
           node.initializer &&
           ts.isJsxExpression(node.initializer) &&
           node.initializer.expression &&

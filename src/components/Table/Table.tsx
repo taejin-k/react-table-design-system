@@ -18,6 +18,9 @@ import {
   type UIEvent as ReactUIEvent,
 } from "react";
 import { createPortal } from "react-dom";
+import { MultilineText } from "../_internal/MultilineText";
+import { ScrollArea } from "../_internal/ScrollArea";
+import { calculateFloatingPosition, type FloatingPosition } from "../_internal/floating-position";
 import { type DragEndEvent } from "@dnd-kit/core";
 import { arrayMove } from "@dnd-kit/sortable";
 import { twMerge } from "tailwind-merge";
@@ -29,6 +32,8 @@ import { Input } from "../Input/Input";
 import { Radio } from "../Radio/Radio";
 import { Tooltip } from "../Tooltip/Tooltip";
 import { getPopupMotionStyle, useMotionPresence } from "../_internal/motion";
+import { matchesTextSearch } from "../_internal/text-search";
+import { observeFloatingResize } from "../_internal/observe-floating-resize";
 import {
   breakpointWidths,
   columnKey,
@@ -38,6 +43,8 @@ import {
   maxDepth,
 } from "./Table.utils";
 import { Pagination } from "./Pagination";
+import { ExpandedRow } from "./ExpandedRow";
+import { TreeMotionCell, TreeRowMotion, useRetainedExpandedKeys } from "./TreeRowMotion";
 import {
   ColumnSortableContext,
   RowDragHandle,
@@ -63,7 +70,7 @@ import type {
 } from "./Table.types";
 
 type SortState<T> = { column: ColumnType<T>; key: string; order: SortOrderType; priority: number };
-type FlatRow<T> = { record: T; depth: number; parent?: Key };
+type FlatRow<T> = { record: T; depth: number; parent?: Key; visible: boolean };
 type VerticalScrollbarState = {
   visible: boolean;
   top: number;
@@ -107,6 +114,7 @@ const HIDDEN_STICKY_SCROLLBAR: StickyScrollbarState = {
   thumbWidth: 0,
 };
 const HORIZONTAL_SCROLLBAR_HEIGHT = 8;
+const MAX_HORIZONTAL_SCROLLBAR_HEIGHT = 16;
 const STICKY_SCROLLBAR_BOTTOM_GAP = 6;
 const SORT_DIRECTIONS: readonly SortOrderType[] = ["ascend", "descend", null];
 
@@ -118,8 +126,9 @@ const cellSizePad: Record<NonNullable<TableProps<object>["size"]>, string> = {
   sm: "p-2",
 };
 
-const cellBaseClass = "relative z-0 border-b border-hover bg-white align-middle transition-colors";
-const headerCellBaseClass = "bg-hover text-left text-[14px] font-semibold text-dark";
+const cellBaseClass =
+  "relative z-0 border-b border-hover bg-white align-middle transition-colors duration-200 ease-out motion-reduce:transition-none";
+const headerCellBaseClass = "bg-light-gray text-left text-[14px] font-semibold text-dark";
 const nestedHeaderBorderClass = "border-r border-r-hover";
 const headerCellSortedClass = "bg-border";
 const cellLastNoRightBorder = "border-r-0";
@@ -128,7 +137,7 @@ const gridBorderLayoutClass =
 const borderedGridClass =
   "[&>thead>tr>th:not(:last-child)]:border-r-hover [&>tbody>tr>td:not(:last-child)]:border-r-hover [&>tfoot>tr>td:not(:last-child)]:border-r-hover";
 
-const headerContentClass = "inline-flex min-w-0 items-center gap-0.5";
+const headerContentClass = "inline-flex min-w-0 max-w-full items-center gap-0.5";
 const dragCellClass = "!px-2 text-center";
 const selectionCellClass = "!px-4 text-center";
 const expandCellClass = "!px-4 text-center";
@@ -137,19 +146,19 @@ const expandIndentClass = "flex min-h-[17px] items-center";
 const selectionHeadClass = "relative inline-flex -translate-y-px items-center align-middle";
 
 const iconButtonClass =
-  "inline-grid size-6 cursor-pointer place-items-center rounded border-0 bg-transparent p-0 text-gray transition-colors hover:text-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary";
+  "inline-grid size-6 cursor-pointer place-items-center rounded border-0 bg-transparent p-0 text-gray outline-none transition-colors duration-200 ease-out hover:text-dark motion-reduce:transition-none";
 const iconButtonActiveClass = "text-primary";
 const expandButtonClass =
-  "inline-grid size-[17px] cursor-pointer place-items-center rounded-sm border border-border bg-white text-gray";
+  "inline-grid size-[17px] cursor-pointer place-items-center rounded-sm border border-border bg-white text-gray outline-none";
 const expandPlaceholderClass = "inline-block size-[17px]";
-const filterWrapClass = "relative";
+const filterWrapClass = "relative shrink-0";
 
 const menuShadow = "shadow-2xl";
 
-const filterMenuClass = `absolute z-[1050] top-7 left-[-12px] min-w-[196px] rounded-lg border border-border bg-white p-2 font-pretendard text-[14px] text-dark ${menuShadow}`;
-const filterOptionsClass = "max-h-[264px] overflow-auto";
+const filterMenuClass = `absolute z-[1050] top-7 left-[-12px] min-w-[min(196px,calc(100vw-16px))] max-w-[calc(100vw-16px)] rounded-lg border border-border bg-white p-2 font-pretendard text-[14px] text-dark ${menuShadow}`;
+const filterOptionsClass = "max-h-[264px]";
 const filterOptionLabelClass =
-  "flex min-h-9 items-center gap-2 rounded px-2 py-[7px] cursor-pointer hover:bg-hover";
+  "flex min-h-9 items-center gap-2 rounded px-2 py-[7px] cursor-pointer transition-colors duration-200 ease-out hover:bg-hover motion-reduce:transition-none";
 const filterGroupClass = "py-2 pb-1 text-[12px] font-semibold text-gray";
 const filterEmptyClass = "px-2 py-4 text-center text-gray";
 const filterSearchClass = "mb-1.5";
@@ -161,14 +170,14 @@ const ellipsisTooltipTriggerClass = "block w-full min-w-0 overflow-hidden";
 const emptyClass = "h-[184px] text-center text-gray";
 
 const loadingOverlayClass =
-  "absolute inset-0 z-10 grid place-items-center rounded-[inherit] bg-white/75 backdrop-blur-[1px]";
-const loadingContentClass = "text-primary inline-flex items-center gap-2.5";
+  "absolute inset-0 z-10 grid place-items-center rounded-[inherit] bg-white/75 backdrop-blur-[1px] transition-opacity duration-200 ease-out motion-reduce:transition-none";
+const loadingContentClass = "text-primary inline-flex min-w-0 max-w-full items-center gap-2.5 px-3";
 const fixedLeftLastShadowBaseClass =
-  "after:pointer-events-none after:absolute after:right-0 after:top-0 after:bottom-[-1px] after:z-[1] after:w-[30px] after:translate-x-full after:content-[''] after:shadow-[inset_10px_0_8px_-8px_color-mix(in_srgb,var(--color-black)_0%,transparent)] after:transition-shadow";
+  "after:pointer-events-none after:absolute after:right-0 after:top-0 after:bottom-[-1px] after:z-[1] after:w-[30px] after:translate-x-full after:content-[''] after:shadow-[inset_10px_0_8px_-8px_color-mix(in_srgb,var(--color-black)_0%,transparent)] after:transition-shadow after:duration-200 after:ease-out motion-reduce:after:transition-none";
 const fixedLeftLastShadowVisibleClass =
   "after:shadow-[inset_10px_0_8px_-8px_color-mix(in_srgb,var(--color-black)_12%,transparent)]";
 const fixedRightFirstShadowBaseClass =
-  "before:pointer-events-none before:absolute before:left-0 before:top-0 before:bottom-[-1px] before:z-[1] before:w-[30px] before:-translate-x-full before:content-[''] before:shadow-[inset_-10px_0_8px_-8px_color-mix(in_srgb,var(--color-black)_0%,transparent)] before:transition-shadow";
+  "before:pointer-events-none before:absolute before:left-0 before:top-0 before:bottom-[-1px] before:z-[1] before:w-[30px] before:-translate-x-full before:content-[''] before:shadow-[inset_-10px_0_8px_-8px_color-mix(in_srgb,var(--color-black)_0%,transparent)] before:transition-shadow before:duration-200 before:ease-out motion-reduce:before:transition-none";
 const fixedRightFirstShadowVisibleClass =
   "before:shadow-[inset_-10px_0_8px_-8px_color-mix(in_srgb,var(--color-black)_12%,transparent)]";
 
@@ -209,7 +218,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
     rowDrag,
     columnDrag,
     expandable,
-    bordered = false,
+    bordered: borderedProp,
     loading = false,
     size = "lg",
     locale = {},
@@ -220,6 +229,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
     stickyHeader = false,
     stickyHeaderOffset = 0,
     virtual = false,
+    scrollBarHeight = HORIZONTAL_SCROLLBAR_HEIGHT,
     stickyScrollBar = false,
     stickyScrollBarOffset = 0,
     scroll,
@@ -271,12 +281,15 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
   const stickyScrollBarEnabled = stickyScrollBar;
   const normalizedStickyHeaderOffset = Math.max(0, stickyHeaderOffset);
   const normalizedStickyScrollBarOffset = Math.max(0, stickyScrollBarOffset);
+  const normalizedScrollBarHeight = Number.isFinite(scrollBarHeight)
+    ? Math.min(MAX_HORIZONTAL_SCROLLBAR_HEIGHT, Math.max(HORIZONTAL_SCROLLBAR_HEIGHT, scrollBarHeight))
+    : HORIZONTAL_SCROLLBAR_HEIGHT;
 
   useEffect(() => {
     setOverlayScrollbarSupported(
       typeof CSS !== "undefined" &&
         typeof CSS.supports === "function" &&
-        CSS.supports("selector(::-webkit-scrollbar)"),
+        (CSS.supports("selector(::-webkit-scrollbar)") || CSS.supports("scrollbar-width", "none")),
     );
   }, []);
 
@@ -294,6 +307,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
   }, [columnDragEnabled, sourceColumnsResolved]);
 
   const columns = columnDragEnabled ? dragColumns : sourceColumnsResolved;
+  const bordered = borderedProp ?? columns.some((column) => Boolean(column.children?.length));
   const [internalPage, setInternalPage] = useState(
     typeof pagination === "object" ? (pagination.defaultPage ?? 1) : 1,
   );
@@ -334,9 +348,11 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
   const [viewportWidth, setViewportWidth] = useState(() =>
     typeof window === "undefined" ? 1440 : window.innerWidth,
   );
-  const [loadingVisible, setLoadingVisible] = useState(
-    typeof loading === "boolean" ? loading : (loading.spinning ?? true),
-  );
+  const loadingSpinning = typeof loading === "boolean" ? loading : (loading.spinning ?? true);
+  const loadingDelay = typeof loading === "object" ? (loading.delay ?? 0) : 0;
+  const [loadingVisible, setLoadingVisible] = useState(loadingSpinning && loadingDelay <= 0);
+  const loadingMotionRef = useRef<HTMLDivElement>(null);
+  const loadingMotion = useMotionPresence(loadingVisible, 200, loadingMotionRef);
   const [scrollBoundary, setScrollBoundary] = useState({ left: false, right: false });
   const [hasHorizontalOverflow, setHasHorizontalOverflow] = useState(false);
   const measureScrollBoundary = useCallback((node: HTMLDivElement | null) => {
@@ -386,25 +402,24 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
   }, []);
 
   useEffect(() => {
-    const spinning = typeof loading === "boolean" ? loading : (loading.spinning ?? true);
-    if (!spinning) {
+    if (!loadingSpinning) {
       setLoadingVisible(false);
       return;
     }
-    const delay = typeof loading === "object" ? (loading.delay ?? 0) : 0;
-    if (!delay) {
+    if (loadingDelay <= 0) {
       setLoadingVisible(true);
       return;
     }
-    const timer = window.setTimeout(() => setLoadingVisible(true), delay);
+    const timer = window.setTimeout(() => setLoadingVisible(true), loadingDelay);
     return () => window.clearTimeout(timer);
-  }, [loading]);
+  }, [loadingSpinning, loadingDelay]);
 
   const keyOf = useCallback((record: T): Key => record[rowKey] as Key, [rowKey]);
   const childrenName = expandable?.childrenColumnName ?? "children";
   const controlledExpanded = expandable?.expandedKeys
     ? new Set(expandable.expandedKeys)
     : expandedKeys;
+  const retainedExpanded = useRetainedExpandedKeys(controlledExpanded);
   const controlledSelected = rowSelection?.selectedKeys
     ? new Set(rowSelection.selectedKeys)
     : selectedKeys;
@@ -596,25 +611,27 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
     return rows;
   }, [childrenName, pageData]);
 
-  const flattenRows = (items: T[], depth = 0, parent?: Key): FlatRow<T>[] =>
+  const flattenRows = (items: T[], depth = 0, parent?: Key, visible = true): FlatRow<T>[] =>
     items.flatMap((record) => {
       const key = keyOf(record);
       const children = (record as Record<string, unknown>)[childrenName] as T[] | undefined;
       return [
-        { record, depth, parent },
-        ...(children?.length && controlledExpanded.has(key)
-          ? flattenRows(children, depth + 1, key)
+        { record, depth, parent, visible },
+        ...(children?.length && (virtual ? controlledExpanded : retainedExpanded).has(key)
+          ? flattenRows(children, depth + 1, key, visible && controlledExpanded.has(key))
           : []),
       ];
     });
-  const allFlatRows = flattenRows(pageData);
+  const retainedFlatRows = flattenRows(pageData);
+  const allFlatRows = retainedFlatRows.filter((row) => row.visible);
+  const visibleRowIndices = new Map(allFlatRows.map((row, index) => [row, index]));
   const rowHeight = size === "sm" ? 39 : size === "md" ? 47 : 55;
   const viewportHeight = typeof scroll?.y === "number" ? scroll.y : 400;
   const virtualStart = virtual ? Math.max(0, Math.floor(scrollTop / rowHeight) - 3) : 0;
   const virtualCount = virtual ? Math.ceil(viewportHeight / rowHeight) + 6 : allFlatRows.length;
   const renderedRows = virtual
     ? allFlatRows.slice(virtualStart, virtualStart + virtualCount)
-    : allFlatRows;
+    : retainedFlatRows;
   const topPad = virtual ? virtualStart * rowHeight : 0;
   const bottomPad = virtual
     ? Math.max(0, (allFlatRows.length - virtualStart - renderedRows.length) * rowHeight)
@@ -721,19 +738,19 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
   };
 
   const toggleSort = (item: ColumnType<T>, index: number) => {
-    if (!item.sorter || item.sortOrder !== undefined) return;
+    if (!item.sorter) return;
     const key = columnKey(item, index);
-    const current = sortStates.find((state) => state.key === key)?.order ?? null;
+    const current = activeSorts.find((state) => state.key === key)?.order ?? null;
     const nextOrder =
       SORT_DIRECTIONS[(SORT_DIRECTIONS.indexOf(current) + 1) % SORT_DIRECTIONS.length];
     const priority = typeof item.sorter === "object" ? (item.sorter.multiple ?? 0) : 0;
     const next = priority
       ? [
-          ...sortStates.filter((state) => state.key !== key),
+          ...activeSorts.filter((state) => state.key !== key),
           { column: item, key, order: nextOrder, priority },
         ]
       : [{ column: item, key, order: nextOrder, priority }];
-    setSortStates(next.filter((state) => state.order));
+    if (item.sortOrder === undefined) setSortStates(next.filter((state) => state.order));
     emitChange(safePage, pageSize, activeFilters, next);
     if (typeof scrollRef.current?.scrollTo === "function") scrollRef.current.scrollTo({ top: 0 });
   };
@@ -1103,17 +1120,16 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
                   <Icon
                     icon="sorter"
                     size={12}
-                    color="disabled"
                     className={
                       order === "ascend"
-                        ? "[&>path:first-child]:fill-primary"
+                        ? "[&>g>path:first-child]:fill-primary"
                         : order === "descend"
-                          ? "[&>path:last-child]:fill-primary"
+                          ? "[&>g>path:last-child]:fill-primary"
                           : undefined
                     }
                   />
                 }
-                className={iconButtonClass}
+                className={twMerge(iconButtonClass, "hover:bg-transparent")}
                 data-table-sorter
                 onClick={(event) => {
                   event.stopPropagation();
@@ -1132,7 +1148,9 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
                 className={twMerge(headerContentClass, item.sorter && "cursor-pointer select-none")}
                 onClick={item.sorter ? () => toggleSort(item, leafIndex) : undefined}
               >
-                <span>{item.title}</span>
+                <span className="min-w-0">
+                  <MultilineText wrap>{item.title}</MultilineText>
+                </span>
                 {sorterControl}
                 {item.filters?.length && !item.children ? (
                   <span className={filterWrapClass}>
@@ -1196,6 +1214,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
                   cellBaseClass,
                   cellSizePad[size],
                   headerCellBaseClass,
+                  !bordered && "border-b-0",
                   order && headerCellSortedClass,
                   !item.children && fixedClass(item, leafIndex),
                   isNestedHeader && nestedHeaderBorderClass,
@@ -1235,6 +1254,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
                 cellBaseClass,
                 cellSizePad[size],
                 headerCellBaseClass,
+                !bordered && "border-b-0",
                 isNestedHeader && nestedHeaderBorderClass,
                 dragCellClass,
               )}
@@ -1251,6 +1271,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
                 cellBaseClass,
                 cellSizePad[size],
                 headerCellBaseClass,
+                !bordered && "border-b-0",
                 isNestedHeader && nestedHeaderBorderClass,
                 selectionCellClass,
                 selectionBoundaryClass,
@@ -1270,13 +1291,14 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
                 cellBaseClass,
                 cellSizePad[size],
                 headerCellBaseClass,
+                !bordered && "border-b-0",
                 isNestedHeader && nestedHeaderBorderClass,
                 expandCellClass,
                 expandBoundaryClass,
               )}
               style={{ ...expandColumnWidthStyle, ...expandHeaderFixedStyle }}
             >
-              {expandable.columnTitle}
+              <MultilineText wrap>{expandable.columnTitle}</MultilineText>
             </th>
           )}
           {cells}
@@ -1286,7 +1308,11 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
   };
 
   const RenderedRowComponent: React.ElementType = rowDragEnabled ? SortableTableRow : "tr";
-  const renderRow = ({ record, depth }: FlatRow<T>, visibleIndex: number) => {
+  const renderRow = (
+    { record, depth, visible: rowVisible }: FlatRow<T>,
+    visibleIndex: number,
+    treeMotionVisible?: boolean,
+  ) => {
     const actualIndex = virtualStart + visibleIndex;
     const key = keyOf(record);
     const children = (record as Record<string, unknown>)[childrenName] as T[] | undefined;
@@ -1300,6 +1326,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
       rowHoverable && "hover:[&>td]:bg-hover",
       expandable?.expandRowByClick && canExpand && "cursor-pointer",
       controlledSelected.has(key) && "[&>td]:bg-selected hover:[&>td]:bg-selected",
+      !rowVisible && "pointer-events-none",
       rowProps.className,
     );
     const checkboxProps = rowSelection?.getCheckboxProps?.(record) ?? {};
@@ -1364,7 +1391,8 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
           }}
         >
           {rowDragEnabled && (
-            <td
+            <TreeMotionCell
+              motionVisible={treeMotionVisible}
               className={twMerge(cellBaseClass, cellSizePad[size], dragCellClass)}
               style={{
                 ...dragColumnWidthStyle,
@@ -1372,10 +1400,11 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
               }}
             >
               <RowDragHandle />
-            </td>
+            </TreeMotionCell>
           )}
           {rowSelection && (
-            <td
+            <TreeMotionCell
+              motionVisible={treeMotionVisible}
               className={twMerge(
                 cellBaseClass,
                 cellSizePad[size],
@@ -1388,10 +1417,11 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
               }}
             >
               <span className="flex items-center justify-center">{originSelectionNode}</span>
-            </td>
+            </TreeMotionCell>
           )}
           {expandable && expandable.showExpandColumn !== false && (
-            <td
+            <TreeMotionCell
+              motionVisible={treeMotionVisible}
               className={twMerge(
                 cellBaseClass,
                 cellSizePad[size],
@@ -1418,10 +1448,12 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
                   <span className={expandPlaceholderClass} />
                 )}
               </span>
-            </td>
+            </TreeMotionCell>
           )}
           {leafColumns.map((item, columnIndex) => (
             <BodyCell
+              motionVisible={treeMotionVisible}
+              multiline={!virtual}
               key={columnKey(item, columnIndex)}
               item={item}
               record={record}
@@ -1441,20 +1473,14 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
             />
           ))}
         </RenderedRowComponent>
-        {expandable?.expandedRowRender && expanded && (
-          <tr className="bg-hover">
-            <td
-              className={twMerge(
-                cellBaseClass,
-                cellSizePad[size],
-                cellLastNoRightBorder,
-                "!bg-hover",
-              )}
-              colSpan={fullColSpan}
-            >
-              {expandable.expandedRowRender(record, actualIndex)}
-            </td>
-          </tr>
+        {expandable?.expandedRowRender && (
+          <ExpandedRow
+            expanded={expanded && rowVisible}
+            colSpan={fullColSpan}
+            cellClassName={twMerge(cellBaseClass, cellLastNoRightBorder)}
+            paddingClassName={cellSizePad[size]}
+            renderContent={() => expandable.expandedRowRender!(record, actualIndex)}
+          />
         )}
       </Fragment>
     );
@@ -1569,10 +1595,10 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
       const viewportBottom = window.innerHeight;
       const stickyTop =
         viewportBottom -
-        HORIZONTAL_SCROLLBAR_HEIGHT -
+        normalizedScrollBarHeight -
         STICKY_SCROLLBAR_BOTTOM_GAP -
         normalizedStickyScrollBarOffset;
-      const regularScrollbarTop = bounds.bottom - HORIZONTAL_SCROLLBAR_HEIGHT;
+      const regularScrollbarTop = bounds.bottom - normalizedScrollBarHeight;
       const left = Math.max(0, bounds.left);
       const hiddenLeft = Math.max(0, -bounds.left);
       const width = Math.max(0, Math.min(node.clientWidth - hiddenLeft, window.innerWidth - left));
@@ -1605,7 +1631,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
           : next,
       );
     },
-    [normalizedStickyScrollBarOffset, stickyScrollBarEnabled],
+    [normalizedScrollBarHeight, normalizedStickyScrollBarOffset, stickyScrollBarEnabled],
   );
 
   useLayoutEffect(() => {
@@ -1720,7 +1746,12 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
         enabled={rowDragEnabled}
         items={allFlatRows.map(({ record }) => `row:${String(keyOf(record))}`)}
       >
-        <tbody className={twMerge(bordered && "[&>tr:last-child>td]:border-b-transparent")}>
+        <tbody
+          className={twMerge(
+            bordered &&
+              "[&>tr:last-child>td]:border-b-transparent [&>tr:last-child>td_[data-table-expanded-content]]:border-b-transparent",
+          )}
+        >
           {topPad > 0 && (
             <tr>
               <td
@@ -1730,7 +1761,15 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
               />
             </tr>
           )}
-          {renderedRows.map(renderRow)}
+          {renderedRows.map((row, index) =>
+            row.depth > 0 && !virtual ? (
+              <TreeRowMotion key={keyOf(row.record)} expanded={row.visible}>
+                {(visible) => renderRow(row, visibleRowIndices.get(row) ?? index, visible)}
+              </TreeRowMotion>
+            ) : (
+              renderRow(row, index)
+            ),
+          )}
           {bottomPad > 0 && (
             <tr>
               <td
@@ -1751,7 +1790,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
                 )}
                 colSpan={fullColSpan}
               >
-                {emptyText}
+                <MultilineText wrap>{emptyText}</MultilineText>
               </td>
             </tr>
           )}
@@ -1759,11 +1798,21 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
       </RowSortableContext>
     </>
   );
-  const loadingElement = loadingVisible ? (
-    <div className={loadingOverlayClass}>
+  const loadingElement = loadingMotion.rendered ? (
+    <div
+      ref={loadingMotionRef}
+      className={twMerge(
+        loadingOverlayClass,
+        loadingMotion.motionVisible ? "opacity-100" : "pointer-events-none opacity-0",
+      )}
+    >
       <div className={loadingContentClass}>
         <Icon icon="loading" size={24} />
-        {loadingConfig?.text && <span>{loadingConfig.text}</span>}
+        {loadingConfig?.text && (
+          <span className="min-w-0">
+            <MultilineText wrap>{loadingConfig.text}</MultilineText>
+          </span>
+        )}
       </div>
     </div>
   ) : null;
@@ -1919,13 +1968,13 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
   const horizontalScrollbarElement = horizontalScrollbar.visible ? (
     <div
       data-table-horizontal-scrollbar-track
-      className="absolute bottom-0 left-0 z-20 h-2 cursor-pointer touch-none bg-transparent"
-      style={{ width: horizontalScrollbar.viewportWidth }}
+      className="absolute bottom-0 left-0 z-20 cursor-pointer touch-none bg-transparent"
+      style={{ width: horizontalScrollbar.viewportWidth, height: normalizedScrollBarHeight }}
       onPointerDown={handleHorizontalTrackPointerDown}
     >
       <div
         data-table-horizontal-scrollbar-thumb
-        className="absolute inset-y-0 h-2 cursor-grab touch-none rounded-full border border-transparent bg-disabled bg-clip-padding transition-colors duration-200 ease-out hover:bg-gray active:cursor-grabbing motion-reduce:transition-none"
+        className="absolute inset-y-0 h-full cursor-grab touch-none rounded-full border border-transparent bg-disabled bg-clip-padding transition-colors duration-200 ease-out hover:bg-disabled active:cursor-grabbing motion-reduce:transition-none"
         style={{
           width: horizontalScrollbar.width,
           transform: `translateX(${horizontalScrollbar.left}px)`,
@@ -1942,11 +1991,12 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
       ? createPortal(
           <div
             data-table-sticky-scrollbar
-            className="fixed z-[1060] h-2 cursor-pointer touch-none bg-transparent"
+            className="fixed z-[1060] cursor-pointer touch-none bg-transparent"
             style={{
               left: stickyScrollbar.left,
               top: stickyScrollbar.top,
               width: stickyScrollbar.width,
+              height: normalizedScrollBarHeight,
               opacity: stickyScrollbar.visible ? 1 : 0,
               pointerEvents: stickyScrollbar.visible ? "auto" : "none",
             }}
@@ -1954,7 +2004,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
           >
             <div
               data-table-sticky-scrollbar-thumb
-              className="absolute inset-y-0 h-2 cursor-grab touch-none rounded-full border border-transparent bg-disabled bg-clip-padding transition-colors duration-200 ease-out hover:bg-gray active:cursor-grabbing motion-reduce:transition-none"
+              className="absolute inset-y-0 h-full cursor-grab touch-none rounded-full border border-transparent bg-disabled bg-clip-padding transition-colors duration-200 ease-out hover:bg-disabled active:cursor-grabbing motion-reduce:transition-none"
               style={{
                 width: stickyScrollbar.thumbWidth,
                 transform: `translateX(${stickyScrollbar.thumbLeft}px)`,
@@ -2026,7 +2076,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
                   data-table-scroll-container
                   data-table-overlay-scrollbar={overlayScrollbarSupported ? "" : undefined}
                   className={twMerge(
-                    "relative w-full overflow-x-auto rounded-b-[inherit] bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
+                    "relative w-full overflow-x-auto rounded-b-[inherit] bg-white outline-none",
                     hasVerticalViewport ? "overflow-y-auto" : "overflow-y-hidden",
                     !showHeader && "rounded-t-[inherit]",
                   )}
@@ -2058,7 +2108,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
                   >
                     <div
                       data-table-overlay-scrollbar-thumb
-                      className="absolute right-px w-1.5 cursor-grab touch-none rounded-full bg-disabled transition-colors duration-200 ease-out hover:bg-gray active:cursor-grabbing motion-reduce:transition-none"
+                      className="absolute right-px w-1.5 cursor-grab touch-none rounded-full bg-disabled transition-colors duration-200 ease-out hover:bg-disabled active:cursor-grabbing motion-reduce:transition-none"
                       style={{
                         height: verticalScrollbar.height,
                         transform: `translateY(${verticalScrollbar.top}px)`,
@@ -2078,7 +2128,7 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
                 ref={scrollRef}
                 data-table-scroll-container
                 data-table-overlay-scrollbar={overlayScrollbarSupported ? "" : undefined}
-                className="relative w-full overflow-x-auto overflow-y-hidden rounded-[inherit] bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                className="relative w-full overflow-x-auto overflow-y-hidden rounded-[inherit] bg-white outline-none"
                 tabIndex={hasHorizontalOverflow ? 0 : undefined}
                 onKeyDown={handleScrollKeyDown}
                 onScroll={handleTableScroll}
@@ -2109,6 +2159,8 @@ function InnerTable<T extends object>(props: TableProps<T>, ref: React.Forwarded
 }
 
 type BodyCellProps<T extends object> = {
+  motionVisible?: boolean;
+  multiline: boolean;
   item: ColumnType<T>;
   record: T;
   rowIndex: number;
@@ -2121,6 +2173,8 @@ type BodyCellProps<T extends object> = {
 };
 
 function BodyCell<T extends object>({
+  motionVisible,
+  multiline,
   item,
   record,
   rowIndex,
@@ -2144,8 +2198,9 @@ function BodyCell<T extends object>({
     hoveredRowIndex >= rowIndex &&
     hoveredRowIndex < rowIndex + rowSpan;
   return (
-    <td
+    <TreeMotionCell
       {...mergedProps}
+      motionVisible={motionVisible}
       title={mergedProps.title}
       className={twMerge(
         className,
@@ -2166,10 +2221,12 @@ function BodyCell<T extends object>({
         <Tooltip title={String(value ?? "")} className={ellipsisTooltipTriggerClass}>
           <span className={ellipsisClass}>{rendered}</span>
         </Tooltip>
+      ) : multiline ? (
+        <MultilineText wrap>{rendered}</MultilineText>
       ) : (
         rendered
       )}
-    </td>
+    </TreeMotionCell>
   );
 }
 
@@ -2195,9 +2252,58 @@ function FilterMenu<T extends object>({
   onClose: () => void;
 }) {
   const [search, setSearch] = useState("");
+  const [searchComposing, setSearchComposing] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const currentPlacementRef = useRef<FloatingPosition["placement"] | undefined>(undefined);
   const radioName = `wizard-table-filter-${useId().replace(/:/g, "")}`;
   const motion = useMotionPresence(open);
+  const [portalPosition, setPortalPosition] = useState<Pick<
+    FloatingPosition,
+    "left" | "top" | "placement"
+  > | null>(null);
+  const updatePosition = useCallback(() => {
+    const menu = menuRef.current;
+    if (!menu || !trigger) return;
+    const anchor = trigger.getBoundingClientRect();
+    const next = calculateFloatingPosition(
+      new DOMRect(anchor.x - 12, anchor.y, anchor.width, anchor.height),
+      new DOMRect(0, 0, menu.offsetWidth, menu.offsetHeight),
+      "bottomLeft",
+      {
+        targetGap: 4,
+        currentPlacement: currentPlacementRef.current,
+        recoverPreferredAxis: false,
+      },
+    );
+    currentPlacementRef.current = next.placement;
+    setPortalPosition((current) =>
+      current?.left === next.left &&
+      current.top === next.top &&
+      current.placement === next.placement
+        ? current
+        : { left: next.left, top: next.top, placement: next.placement },
+    );
+  }, [trigger]);
+  useLayoutEffect(() => {
+    if (!open) {
+      currentPlacementRef.current = undefined;
+      return;
+    }
+    // Search can resize an upward popup. Align its new height before paint,
+    // rather than displaying the previous top until ResizeObserver updates it.
+    if (motion.rendered) updatePosition();
+  }, [item.filters, motion.rendered, open, search, searchComposing, updatePosition]);
+  useLayoutEffect(() => {
+    if (!motion.rendered || !open || !trigger) return;
+    const observer = observeFloatingResize(updatePosition);
+    if (menuRef.current) observer?.observe(menuRef.current);
+    observer?.observe(trigger);
+    window.addEventListener("resize", updatePosition);
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener("resize", updatePosition);
+    };
+  }, [motion.rendered, open, trigger, updatePosition]);
   useEffect(() => {
     if (!open) return;
     const pointer = (event: PointerEvent) => {
@@ -2239,7 +2345,7 @@ function FilterMenu<T extends object>({
     onValues(next);
   };
   const hasVisibleFilters = Boolean(
-    item.filters?.some((filter) => matchesFilterSearch(filter, search)),
+    item.filters?.some((filter) => matchesFilterSearch(filter, search, searchComposing)),
   );
   const content = (
     <>
@@ -2250,33 +2356,45 @@ function FilterMenu<T extends object>({
           placeholder={locale.filterPlaceholder ?? "키워드를 입력해요"}
           value={search}
           onChange={setSearch}
+          onCompositionStart={() => setSearchComposing(true)}
+          onCompositionEnd={(event) => {
+            setSearchComposing(false);
+            setSearch(event.currentTarget.value);
+          }}
+          onBlur={() => setSearchComposing(false)}
         />
       )}
-      <div className={filterOptionsClass}>
+      <ScrollArea
+        className={filterOptionsClass}
+        viewportMarker="data-table-filter-scroll-container"
+      >
         {hasVisibleFilters ? (
           <FilterOptions
             items={item.filters ?? []}
             values={values}
             search={search}
+            composing={searchComposing}
             multiple={item.filterMultiple !== false}
             radioName={radioName}
             mode={item.filterMode ?? "menu"}
             onValues={onValues}
           />
         ) : (
-          <div className={filterEmptyClass}>{locale.filterEmptyText ?? "검색결과가 없어요"}</div>
+          <div className={filterEmptyClass}>
+            <MultilineText wrap>{locale.filterEmptyText ?? "검색결과가 없어요"}</MultilineText>
+          </div>
         )}
-      </div>
+      </ScrollArea>
       <div className={filterActionsClass}>
         <Button
           variant="ghost"
           size="sm"
-          className="h-6 bg-transparent px-2 text-primary hover:bg-transparent"
+          className="h-6 min-w-0 bg-transparent px-2 text-primary hover:bg-transparent"
           onClick={clearFilters}
         >
           {locale.filterReset ?? "초기화"}
         </Button>
-        <Button size="md" onClick={() => confirm()}>
+        <Button size="md" className="max-w-[50%] min-w-0 shrink-0" onClick={() => confirm()}>
           {locale.filterConfirm ?? "확인"}
         </Button>
       </div>
@@ -2287,8 +2405,8 @@ function FilterMenu<T extends object>({
         const triggerRect = trigger.getBoundingClientRect();
         return {
           position: "fixed" as const,
-          top: triggerRect.bottom + 4,
-          left: triggerRect.left - 12,
+          top: portalPosition?.top ?? triggerRect.bottom + 4,
+          left: portalPosition?.left ?? triggerRect.left - 12,
         };
       })()
     : undefined;
@@ -2298,7 +2416,7 @@ function FilterMenu<T extends object>({
       className={twMerge(filterMenuClass, className)}
       style={{
         ...portalStyle,
-        ...getPopupMotionStyle("bottomLeft", motion.motionVisible),
+        ...getPopupMotionStyle(portalPosition?.placement ?? "bottomLeft", motion.motionVisible),
         pointerEvents: open ? undefined : "none",
       }}
       data-table-filter-motion
@@ -2311,11 +2429,12 @@ function FilterMenu<T extends object>({
   return typeof document === "undefined" ? menu : createPortal(menu, document.body);
 }
 
-function matchesFilterSearch(item: FilterItem, search: string): boolean {
+function matchesFilterSearch(item: FilterItem, search: string, composing: boolean): boolean {
   if (!search) return true;
-  const matchesCurrent = String(item.text).toLowerCase().includes(search.toLowerCase());
+  const matchesCurrent = matchesTextSearch(String(item.label), search, composing);
   return (
-    matchesCurrent || Boolean(item.children?.some((child) => matchesFilterSearch(child, search)))
+    matchesCurrent ||
+    Boolean(item.children?.some((child) => matchesFilterSearch(child, search, composing)))
   );
 }
 
@@ -2323,6 +2442,7 @@ function FilterOptions({
   items,
   values,
   search,
+  composing,
   multiple,
   radioName,
   mode,
@@ -2332,13 +2452,14 @@ function FilterOptions({
   items: FilterItem[];
   values: FilterKey[];
   search: string;
+  composing: boolean;
   multiple: boolean;
   radioName: string;
   mode: NonNullable<ColumnType<object>["filterMode"]>;
   onValues: (values: FilterKey[]) => void;
   depth?: number;
 }) {
-  const visible = items.filter((item) => matchesFilterSearch(item, search));
+  const visible = items.filter((item) => matchesFilterSearch(item, search, composing));
   return (
     <>
       {visible.map((item) => (
@@ -2349,12 +2470,13 @@ function FilterOptions({
                 className={filterGroupClass}
                 style={{ paddingInlineStart: mode === "tree" ? depth * 12 : 8 }}
               >
-                {item.text}
+                <MultilineText wrap>{item.label}</MultilineText>
               </div>
               <FilterOptions
                 items={item.children}
                 values={values}
-                search={search}
+                search={matchesTextSearch(String(item.label), search, composing) ? "" : search}
+                composing={composing}
                 multiple={multiple}
                 radioName={radioName}
                 mode={mode}
@@ -2370,7 +2492,7 @@ function FilterOptions({
               {multiple ? (
                 <Checkbox
                   className="w-full"
-                  label={item.text}
+                  label={item.label}
                   checked={values.includes(item.value)}
                   onChange={(event) =>
                     onValues(
@@ -2383,7 +2505,7 @@ function FilterOptions({
               ) : (
                 <Radio
                   className="w-full"
-                  label={item.text}
+                  label={item.label}
                   name={radioName}
                   checked={values.includes(item.value)}
                   onChange={(event) => onValues(event.target.checked ? [item.value] : [])}

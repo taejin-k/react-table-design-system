@@ -52,9 +52,9 @@ export function Collapse({
   return (
     <div
       className={twMerge(
-        "min-w-0 overflow-hidden border border-transparent font-pretendard text-sm leading-[22px] text-dark",
+        "min-w-0 overflow-hidden border border-transparent bg-clip-padding font-pretendard text-sm leading-[22px] text-dark",
         !ghost && "rounded-lg",
-        bordered && !ghost && "border-border",
+        bordered && !ghost && "border-hover",
         ghost && "bg-transparent",
         !ghost && "bg-hover",
         className,
@@ -66,7 +66,7 @@ export function Collapse({
         const disabled = itemCollapsible === "disabled";
         const arrow = <Icon icon="chevron-right" size={12} />;
         const arrowClassName = twMerge(
-          "inline-flex transition-transform duration-200 ease-[cubic-bezier(0.645,0.045,0.355,1)] motion-reduce:transition-none",
+          "inline-flex shrink-0 transition-transform duration-200 ease-[cubic-bezier(0.645,0.045,0.355,1)] motion-reduce:transition-none",
           !disabled && "cursor-pointer",
         );
         return (
@@ -74,14 +74,14 @@ export function Collapse({
             key={item.key}
             className={twMerge(
               index > 0 && "border-t border-transparent",
-              index > 0 && bordered && !ghost && "border-border",
+              index > 0 && bordered && !ghost && "border-hover",
             )}
           >
             <div
               tabIndex={disabled ? -1 : 0}
               className={twMerge(
-                "flex items-center gap-3 bg-black/[0.02] transition-colors hover:bg-hover motion-reduce:transition-none",
-                ghost && "bg-transparent hover:bg-transparent",
+                "flex items-center gap-3 bg-hover outline-none",
+                ghost && "bg-transparent",
                 disabled
                   ? "cursor-not-allowed text-disabled"
                   : itemCollapsible === "icon"
@@ -115,11 +115,16 @@ export function Collapse({
                   {arrow}
                 </span>
               ) : null}
-              <span className="min-w-0 flex-1 [overflow-wrap:anywhere] break-words whitespace-pre-wrap">
+              <span className="min-w-0 flex-1 [overflow-wrap:anywhere] break-all whitespace-pre-wrap">
                 {item.label}
               </span>
-              {item.extra ? (
-                <span onClick={(event) => event.stopPropagation()}>{item.extra}</span>
+              {item.extra !== undefined && item.extra !== null ? (
+                <span
+                  className="max-w-[50%] min-w-0 shrink-0 overflow-hidden [overflow-wrap:anywhere] break-all whitespace-pre-wrap"
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  {item.extra}
+                </span>
               ) : null}
               {item.showArrow !== false && expandIconPlacement === "end" ? (
                 <span
@@ -140,11 +145,11 @@ export function Collapse({
               className="grid transition-[grid-template-rows] duration-200 ease-[cubic-bezier(0.645,0.045,0.355,1)] motion-reduce:transition-none"
               style={{ gridTemplateRows: open ? "1fr" : "0fr" }}
             >
-              <div className="overflow-hidden">
+              <div className="min-h-0 overflow-clip">
                 {open || visitedKeys.current.has(item.key) ? (
                   <div
                     className={twMerge(
-                      "min-w-0 bg-white [overflow-wrap:anywhere] break-words whitespace-pre-wrap",
+                      "min-w-0 bg-white [overflow-wrap:anywhere] break-all whitespace-pre-wrap",
                       ghost && "bg-transparent",
                       bodyPadding,
                     )}

@@ -29,7 +29,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "항목을 선택하거나 선택 해제해요.  \n레이블을 표시하고 오류·비활성 상태를 설정할 수 있어요.",
+          "Checkbox는 동의 여부나 목록 항목의 선택 상태를 표시해요.  \n레이블을 붙이고 오류·비활성 상태를 표현할 수 있어요.",
       },
       page: () => (
         <div className="checkbox-docs component-docs">
@@ -39,6 +39,8 @@ const meta = {
           <h2>API</h2>
           <Markdown>{`
 ### Checkbox
+
+Checkbox는 동의 여부나 목록 항목의 선택 상태를 표시하고 변경해요.
 
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
@@ -91,14 +93,13 @@ export const States: Story = {
 };
 
 export const Label: Story = {
-  args: { label: "레이블", checked: false, partiallyChecked: false },
+  args: { label: "레이블", checked: false, partiallyChecked: false, disabled: false },
   argTypes: {
-    disabled: { control: false, table: { disable: true } },
     error: { control: false, table: { disable: true } },
   },
   parameters: {
     ...storyDescription("components-checkbox--label"),
-    controls: { disable: false, include: ["레이블", "선택", "일부 선택"] },
+    controls: { disable: false, include: ["레이블", "선택", "일부 선택", "비활성"] },
     docs: {
       ...storyDescription("components-checkbox--label").docs,
       source: {

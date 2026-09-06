@@ -37,13 +37,10 @@ const meta = {
     placement: { name: "위치", control: "select", options: placements },
     trigger: { name: "표시 동작", control: "select", options: triggers },
     arrow: { name: "화살표", control: "boolean" },
-    color: { name: "배경 색상", control: "color" },
-    autoAdjustOverflow: { name: "위치 자동 보정", control: "boolean" },
+    color: { name: "배경 색상", control: "text" },
     children: { control: false, table: { disable: true } },
     open: { control: false, table: { disable: true } },
     defaultOpen: { control: false, table: { disable: true } },
-    mouseEnterDelay: { control: false, table: { disable: true } },
-    mouseLeaveDelay: { control: false, table: { disable: true } },
     zIndex: { control: false, table: { disable: true } },
     className: { control: false, table: { disable: true } },
     onOpenChange: { control: false, table: { disable: true } },
@@ -53,7 +50,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "요소와 관련된 추가 정보나 작업을 카드로 보여줘요.  \n제목·내용·위치·표시 동작과 화살표를 설정할 수 있어요.",
+          "Popover는 버튼이나 아이콘과 관련된 설명이나 작업을 작은 카드로 표시해요.  \n제목·내용·위치·열리는 동작과 화살표를 지정할 수 있어요.",
       },
       page: () => (
         <div className="popover-docs component-docs">
@@ -64,6 +61,8 @@ const meta = {
           <Markdown>{`
 ### Popover
 
+Popover는 버튼이나 아이콘 주변에 추가 내용과 동작을 표시해요.
+
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
 | \`children\` | Popover를 연결할 하나의 요소예요. | \`ReactElement\` | - |
@@ -72,23 +71,23 @@ const meta = {
 | \`placement\` | 카드가 표시될 위치를 설정해요. | [\`PopoverPlacementType\`](#popover-placement-type) | \`top\` |
 | \`trigger\` | hover, focus, click, contextMenu로 표시해요. | [\`PopoverTriggerType\`](#popover-trigger-type) \\| [\`PopoverTriggerType[]\`](#popover-trigger-type) | \`hover\` |
 | \`arrow\` | 대상을 가리키는 화살표를 표시해요. | \`boolean\` | \`true\` |
-| \`color\` | 카드의 배경 색상을 설정해요. | \`CSSProperties['backgroundColor']\` | \`#ffffff\` |
+| \`color\` | 카드의 배경 색상을 설정해요. | [\`ColorTokenType\`](./iframe.html?id=components-color--documentation&viewMode=docs#color-token-type) \\| \`CSSProperties['backgroundColor']\` | \`white\` |
 | \`open\` | 카드의 표시 상태를 외부에서 관리해요. | \`boolean\` | - |
 | \`defaultOpen\` | 처음 렌더링할 때 카드를 표시해요. | \`boolean\` | \`false\` |
-| \`autoAdjustOverflow\` | 화면을 벗어나면 반대 위치로 보정해요. | \`boolean\` | \`true\` |
+| \`zIndex\` | Popover가 겹쳐지는 순서를 설정해요. | \`number\` | \`1030\` |
 | \`className\` | 대상에 Tailwind 클래스를 추가해요. | \`string\` | - |
 | \`onOpenChange\` | 표시 상태가 바뀔 때 실행할 함수예요. | \`(open: boolean) => void\` | - |
           `}</Markdown>
           <h2 className="component-docs-types-heading">Types</h2>
           <h3 id="popover-placement-type">PopoverPlacementType</h3>
-          <p>대상을 기준으로 Popover가 표시될 위치를 선택해요.</p>
+          <p>PopoverPlacementType은 연결된 버튼이나 아이콘을 기준으로 카드가 열릴 위치를 구분해요.</p>
           <div className="flex flex-wrap gap-2">
             {placements.map((placement) => (
               <PopoverTypeCode key={placement} value={placement} />
             ))}
           </div>
           <h3 id="popover-trigger-type">PopoverTriggerType</h3>
-          <p>Popover를 표시할 동작을 선택해요.</p>
+          <p>PopoverTriggerType은 Popover를 열고 닫는 사용자 동작을 구분해요.</p>
           <div className="flex flex-wrap gap-2">
             {triggers.map((trigger) => (
               <PopoverTypeCode key={trigger} value={trigger} />
@@ -118,14 +117,13 @@ export const Basic: Story = {
     placement: "top",
     trigger: "hover",
     arrow: true,
-    color: "#ffffff",
-    autoAdjustOverflow: true,
+    color: "white",
   },
   parameters: {
     ...storyDescription("components-popover--basic"),
     controls: {
       disable: false,
-      include: ["제목", "내용", "위치", "표시 동작", "화살표", "배경 색상", "위치 자동 보정"],
+      include: ["제목", "내용", "위치", "표시 동작", "화살표", "배경 색상"],
     },
     docs: {
       ...storyDescription("components-popover--basic").docs,
@@ -152,50 +150,53 @@ export const Basic: Story = {
 };
 
 export const Placements: Story = {
-  args: { title: "Popover", content: "추가 내용", trigger: "click", arrow: true },
+  args: { title: "Popover", trigger: "click", arrow: true },
+  argTypes: {
+    content: { control: false, table: { disable: true } },
+  },
   parameters: {
     ...storyDescription("components-popover--placements"),
-    controls: { disable: false, include: ["제목", "내용", "화살표"] },
+    controls: { disable: false, include: ["제목", "화살표"] },
     docs: {
       ...storyDescription("components-popover--placements").docs,
       source: {
         code: withStoryImports(`function PopoverPlacements() {
   return (
     <div className="grid min-h-[420px] grid-cols-3 place-items-center gap-x-24 gap-y-10 px-24 py-16">
-      <Popover content="추가 내용" placement="topLeft" title="Popover" trigger="click">
+      <Popover content="topLeft" placement="topLeft" title="Popover" trigger="click">
         <Button>topLeft</Button>
       </Popover>
-      <Popover content="추가 내용" title="Popover" trigger="click">
+      <Popover content="top" title="Popover" trigger="click">
         <Button>top</Button>
       </Popover>
-      <Popover content="추가 내용" placement="topRight" title="Popover" trigger="click">
+      <Popover content="topRight" placement="topRight" title="Popover" trigger="click">
         <Button>topRight</Button>
       </Popover>
-      <Popover content="추가 내용" placement="leftTop" title="Popover" trigger="click">
+      <Popover content="leftTop" placement="leftTop" title="Popover" trigger="click">
         <Button>leftTop</Button>
       </Popover>
-      <Popover content="추가 내용" placement="rightTop" title="Popover" trigger="click">
+      <Popover content="rightTop" placement="rightTop" title="Popover" trigger="click">
         <Button>rightTop</Button>
       </Popover>
-      <Popover content="추가 내용" placement="left" title="Popover" trigger="click">
+      <Popover content="left" placement="left" title="Popover" trigger="click">
         <Button>left</Button>
       </Popover>
-      <Popover content="추가 내용" placement="right" title="Popover" trigger="click">
+      <Popover content="right" placement="right" title="Popover" trigger="click">
         <Button>right</Button>
       </Popover>
-      <Popover content="추가 내용" placement="leftBottom" title="Popover" trigger="click">
+      <Popover content="leftBottom" placement="leftBottom" title="Popover" trigger="click">
         <Button>leftBottom</Button>
       </Popover>
-      <Popover content="추가 내용" placement="rightBottom" title="Popover" trigger="click">
+      <Popover content="rightBottom" placement="rightBottom" title="Popover" trigger="click">
         <Button>rightBottom</Button>
       </Popover>
-      <Popover content="추가 내용" placement="bottomLeft" title="Popover" trigger="click">
+      <Popover content="bottomLeft" placement="bottomLeft" title="Popover" trigger="click">
         <Button>bottomLeft</Button>
       </Popover>
-      <Popover content="추가 내용" placement="bottom" title="Popover" trigger="click">
+      <Popover content="bottom" placement="bottom" title="Popover" trigger="click">
         <Button>bottom</Button>
       </Popover>
-      <Popover content="추가 내용" placement="bottomRight" title="Popover" trigger="click">
+      <Popover content="bottomRight" placement="bottomRight" title="Popover" trigger="click">
         <Button>bottomRight</Button>
       </Popover>
     </div>
@@ -210,7 +211,7 @@ export const Placements: Story = {
         <Popover
           {...args}
           key={placement}
-          content={args.content ?? "추가 내용"}
+          content={placement}
           placement={placement}
         >
           <Button>{placement}</Button>
@@ -221,7 +222,7 @@ export const Placements: Story = {
 };
 
 export const Triggers: Story = {
-  args: { title: "Popover", placement: "top", arrow: true, color: "#ffffff" },
+  args: { title: "Popover", placement: "top", arrow: true, color: "white" },
   parameters: {
     ...storyDescription("components-popover--triggers"),
     controls: { disable: false, include: ["제목", "위치", "화살표", "배경 색상"] },
@@ -271,7 +272,7 @@ export const Triggers: Story = {
 };
 
 export const Appearance: Story = {
-  args: { placement: "top", trigger: "hover", autoAdjustOverflow: true },
+  args: { placement: "top", trigger: "hover" },
   argTypes: {
     title: { control: false, table: { disable: true } },
     content: { control: false, table: { disable: true } },
@@ -282,7 +283,7 @@ export const Appearance: Story = {
   },
   parameters: {
     ...storyDescription("components-popover--appearance"),
-    controls: { disable: false, include: ["위치", "표시 동작", "위치 자동 보정"] },
+    controls: { disable: false, include: ["위치", "표시 동작"] },
     docs: {
       ...storyDescription("components-popover--appearance").docs,
       source: {
@@ -320,7 +321,7 @@ export const Appearance: Story = {
 };
 
 export const Actions: Story = {
-  args: { title: "항목 삭제", placement: "top", color: "#ffffff", arrow: true },
+  args: { title: "항목 삭제", placement: "top", color: "white", arrow: true },
   parameters: {
     ...storyDescription("components-popover--actions"),
     controls: { disable: false, include: ["제목", "위치", "배경 색상", "화살표"] },
@@ -392,7 +393,7 @@ export const Controlled: Story = {
     title: "제목",
     content: "추가 내용",
     placement: "top",
-    color: "#ffffff",
+    color: "white",
     arrow: true,
   },
   parameters: {

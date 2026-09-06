@@ -16,6 +16,7 @@ import {
   type FloatingPosition,
 } from "./floating-position";
 import { MOTION_DURATION_MID, useMotionPresence } from "./motion";
+import { observeFloatingResize } from "./observe-floating-resize";
 
 export type FloatingTrigger = "hover" | "focus" | "click";
 type FloatingLayerTrigger = FloatingTrigger | "contextMenu";
@@ -33,6 +34,9 @@ interface UseFloatingLayerOptions {
   mouseLeaveDelay?: number;
   targetGap?: number;
   closeOnScroll?: boolean;
+  // Non-search panels may recover when their contents shrink. Search results
+  // leave this off so filtering cannot repeatedly flip the popup's side.
+  recoverOnPopupResize?: boolean;
   onOpenChange?: (open: boolean, source: FloatingOpenSource) => void;
 }
 
@@ -48,6 +52,7 @@ export function useFloatingLayer({
   mouseLeaveDelay = 0.1,
   targetGap,
   closeOnScroll = true,
+  recoverOnPopupResize = false,
   onOpenChange,
 }: UseFloatingLayerOptions) {
   const floatingId = useId();
@@ -58,6 +63,16 @@ export function useFloatingLayer({
   const openTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const contextMenuPointRef = useRef<{ x: number; y: number } | null>(null);
+  const currentPlacementRef = useRef<FloatingPlacement | null>(null);
+  const requestedPlacementRef = useRef(placement);
+  const previousGeometryRef = useRef<{
+    width: number;
+    height: number;
+    viewportWidth: number;
+    viewportHeight: number;
+    popupWidth: number;
+    popupHeight: number;
+  } | null>(null);
   const [innerOpen, setInnerOpen] = useState(defaultOpen);
   const [position, setPosition] = useState<FloatingPosition | null>(null);
   const triggers = useMemo(() => new Set(Array.isArray(trigger) ? trigger : [trigger]), [trigger]);
@@ -100,19 +115,53 @@ export function useFloatingLayer({
 
   const updatePosition = useCallback(() => {
     if (!triggerRef.current || !popupRef.current) return;
+    if (requestedPlacementRef.current !== placement) {
+      requestedPlacementRef.current = placement;
+      currentPlacementRef.current = null;
+    }
     const targetRect = contextMenuPointRef.current
       ? createPointRect(contextMenuPointRef.current.x, contextMenuPointRef.current.y)
       : triggerRef.current.getBoundingClientRect();
-    setPosition(
-      calculateFloatingPosition(targetRect, getLayoutRect(popupRef.current), placement, {
-        autoAdjustOverflow,
-        targetGap,
-      }),
-    );
-  }, [autoAdjustOverflow, placement, targetGap]);
+    const viewportWidth = window.visualViewport?.width ?? window.innerWidth;
+    const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
+    const popupRect = getLayoutRect(popupRef.current);
+    const previous = previousGeometryRef.current;
+    const vertical = placement.startsWith("top") || placement.startsWith("bottom");
+    const recoverPreferredAxis =
+      previous === null ||
+      (vertical ? targetRect.height < previous.height : targetRect.width < previous.width) ||
+      (recoverOnPopupResize &&
+        (popupRect.width < previous.popupWidth || popupRect.height < previous.popupHeight)) ||
+      viewportWidth !== previous.viewportWidth ||
+      viewportHeight !== previous.viewportHeight;
+    previousGeometryRef.current = {
+      width: targetRect.width,
+      height: targetRect.height,
+      viewportWidth,
+      viewportHeight,
+      popupWidth: popupRect.width,
+      popupHeight: popupRect.height,
+    };
+    const nextPosition = calculateFloatingPosition(targetRect, popupRect, placement, {
+      autoAdjustOverflow,
+      currentPlacement: currentPlacementRef.current ?? undefined,
+      // Recover after tags shrink the trigger, not when a temporary search
+      // merely shrinks the result list and would cause repeated side flips.
+      recoverPreferredAxis,
+      targetGap,
+    });
+    currentPlacementRef.current = nextPosition.placement;
+    setPosition(nextPosition);
+  }, [autoAdjustOverflow, placement, recoverOnPopupResize, targetGap]);
 
   useLayoutEffect(() => {
-    if (!isRendered || !isOpen) return;
+    if (!isRendered || !isOpen) {
+      if (!isOpen) {
+        currentPlacementRef.current = null;
+        previousGeometryRef.current = null;
+      }
+      return;
+    }
 
     updatePosition();
     const handleScroll = (event: Event) => {
@@ -127,8 +176,7 @@ export function useFloatingLayer({
     };
     window.addEventListener("resize", updatePosition);
     window.addEventListener("scroll", handleScroll, { capture: true, passive: true });
-    const resizeObserver =
-      typeof ResizeObserver === "undefined" ? null : new ResizeObserver(updatePosition);
+    const resizeObserver = observeFloatingResize(updatePosition);
     if (triggerRef.current) resizeObserver?.observe(triggerRef.current);
     if (popupRef.current) resizeObserver?.observe(popupRef.current);
 

@@ -5,6 +5,21 @@ import { colorTokenNames } from "../../color-tokens";
 import { Icon, iconGalleryNames, iconNames } from "./Icon";
 
 describe("Icon", () => {
+  it("respects preventDefault from a custom keyboard handler", async () => {
+    const onClick = vi.fn();
+    render(
+      <Icon
+        icon="add"
+        data-testid="cancelled-icon"
+        onClick={onClick}
+        onKeyDown={(event) => event.preventDefault()}
+      />,
+    );
+    screen.getByTestId("cancelled-icon").focus();
+    await userEvent.keyboard("{Enter} ");
+    expect(onClick).not.toHaveBeenCalled();
+  });
+
   it("renders every supported icon", () => {
     const { container } = render(
       <>
@@ -179,6 +194,7 @@ describe("Icon", () => {
     rerender(<Icon data-testid="icon" icon="edit" onClick={vi.fn()} />);
     expect(screen.getByTestId("icon")).toHaveClass(
       "cursor-pointer",
+      "duration-200",
       "hover:opacity-75",
       "focus-visible:outline-none",
     );
@@ -208,6 +224,12 @@ describe("Icon", () => {
     expect(icon).not.toHaveClass("cursor-pointer", "hover:opacity-75");
     expect(icon).not.toHaveAttribute("tabindex");
     expect(container.querySelector("path")).toHaveAttribute("fill", "var(--color-disabled)");
+    expect(container.querySelector("path")).toHaveClass(
+      "transition-[fill,stroke]",
+      "duration-200",
+      "ease-out",
+      "motion-reduce:transition-none",
+    );
 
     await user.click(icon);
     expect(onClick).not.toHaveBeenCalled();

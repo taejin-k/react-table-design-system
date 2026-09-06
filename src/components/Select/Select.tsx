@@ -1,4 +1,5 @@
 import { createPortal } from "react-dom";
+import { MultilineText } from "../_internal/MultilineText";
 import {
   Fragment,
   forwardRef,
@@ -9,6 +10,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type Key,
   type ReactNode,
   type UIEvent,
 } from "react";
@@ -19,9 +21,11 @@ import { ErrorMessage } from "../ErrorMessage";
 import { Icon } from "../Icon";
 import { Label } from "../Label";
 import { ScrollFade } from "../_internal/ScrollFade";
-import { getPopupMotionStyle } from "../_internal/motion";
+import { getPopupMotionStyle, useMotionPresence } from "../_internal/motion";
+import { useErrorMessageValidation } from "../_internal/useErrorMessageValidation";
 import { useFloatingLayer } from "../_internal/use-floating-layer";
 import type { SelectOption, SelectProps, SelectRef } from "./Select.types";
+import { matchesTextSearch } from "../_internal/text-search";
 
 const OPTION_HEIGHT = 32;
 const OPTION_GAP = 2;
@@ -32,19 +36,66 @@ const selectTagSizeClasses = {
   sm: "h-4 min-h-0 gap-0.5 px-1 py-0 text-[10px] leading-4 [&>[data-tag-icon]]:size-3 [&>span:not([data-tag-icon])]:whitespace-nowrap",
 } as const;
 type SelectLayoutPosition = { left: number; top: number };
-type SelectValue = string | number;
+type SelectValue = Key;
 type SelectChangeHandler = (
   value: SelectValue | SelectValue[] | undefined,
   option: SelectOption | SelectOption[] | undefined,
 ) => void;
 
-function flattenOptions(options: SelectOption[]): SelectOption[] {
+function SelectSuffix({
+  loading,
+  selfCenter,
+  children,
+}: {
+  loading: boolean;
+  selfCenter?: boolean;
+  children: ReactNode;
+}) {
+  const loadingRef = useRef<HTMLSpanElement>(null);
+  const loadingMotion = useMotionPresence(loading, 200, loadingRef);
+
+  return (
+    <span
+      className={twMerge(
+        "relative inline-flex size-4 shrink-0 items-center justify-center",
+        selfCenter && "self-center",
+      )}
+    >
+      <span
+        className={twMerge(
+          "inline-flex items-center justify-center transition-opacity duration-200 ease-out motion-reduce:transition-none",
+          loading ? "pointer-events-none opacity-0" : "opacity-100",
+        )}
+      >
+        {children}
+      </span>
+      {loadingMotion.rendered ? (
+        <span
+          ref={loadingRef}
+          data-select-loading-icon
+          className={twMerge(
+            "pointer-events-none absolute inset-0 inline-flex items-center justify-center transition-opacity duration-200 ease-out motion-reduce:transition-none",
+            loadingMotion.motionVisible ? "opacity-100" : "opacity-0",
+          )}
+        >
+          <Icon icon="loading" color="gray" />
+        </span>
+      ) : null}
+    </span>
+  );
+}
+
+function flattenOptions(
+  options: SelectOption[],
+  groupLabels: WeakMap<SelectOption, string[]>,
+): SelectOption[] {
   return options.flatMap((option) => {
     if (!option.options) return [option];
-    return flattenOptions(option.options).map((child) => ({
-      ...child,
-      __groupLabel: option.label,
-    }));
+    return flattenOptions(option.options, groupLabels).map((child) => {
+      const flattened = { ...child, __groupLabel: option.label };
+      groupLabels.set(flattened, [optionText(option), ...(groupLabels.get(child) ?? [])]);
+      return flattened;
+    });
   });
 }
 
@@ -53,7 +104,11 @@ function optionText(option: SelectOption, property: string | string[] = "label")
   return properties
     .map((key) => {
       const content = option[key];
-      return typeof content === "string" || typeof content === "number" ? String(content) : "";
+      return typeof content === "string" ||
+        typeof content === "number" ||
+        typeof content === "bigint"
+        ? String(content)
+        : "";
     })
     .join(" ");
 }
@@ -103,7 +158,7 @@ export const Select = forwardRef<SelectRef, SelectProps>(
       required = false,
       readOnly = false,
       disabled = false,
-      allowClear = false,
+      allowClear = true,
       showSearch = mode === "tags",
       searchValue,
       filterOption,
@@ -141,7 +196,13 @@ export const Select = forwardRef<SelectRef, SelectProps>(
     },
     forwardedRef,
   ) => {
-    const normalizedFlatOptions = useMemo(() => flattenOptions(options), [options]);
+    const { normalizedFlatOptions, groupSearchLabels } = useMemo(() => {
+      const groupSearchLabels = new WeakMap<SelectOption, string[]>();
+      return {
+        normalizedFlatOptions: flattenOptions(options, groupSearchLabels),
+        groupSearchLabels,
+      };
+    }, [options]);
     const [createdTagOptions, setCreatedTagOptions] = useState<SelectOption[]>([]);
     const flatOptions = useMemo(
       () => [
@@ -161,6 +222,7 @@ export const Select = forwardRef<SelectRef, SelectProps>(
     const compositeTriggerRef = useRef<HTMLDivElement>(null);
     const searchInputRef = useRef<HTMLInputElement>(null);
     const isComposingRef = useRef(false);
+    const [isSearchComposing, setIsSearchComposing] = useState(false);
     const compositionEnterTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const tagContainerRef = useRef<HTMLSpanElement>(null);
     const tagMeasureRef = useRef<HTMLSpanElement>(null);
@@ -178,6 +240,10 @@ export const Select = forwardRef<SelectRef, SelectProps>(
     const isSearchable = Boolean(showSearch);
     const usesCompositeTrigger = isSearchable || Boolean(mode);
     const interactionBlocked = disabled || loading;
+    const { displayedErrorMessage, hasError, validateErrorMessage } = useErrorMessageValidation(
+      errorMessage,
+      mode ? values : values[0],
+    );
 
     useImperativeHandle(forwardedRef, () => ({
       focus: () =>
@@ -250,24 +316,31 @@ export const Select = forwardRef<SelectRef, SelectProps>(
     }, [maxVisibleTagCount, measureResponsiveTags, selectedOptions.length]);
 
     const getVisibleOptions = useCallback(
-      (searchQuery: string) => {
+      (searchQuery: string, composing = false) => {
         const normalizedQuery = searchQuery.trim().toLocaleLowerCase();
         const filtered = !normalizedQuery
           ? flatOptions
           : flatOptions.filter((option) => {
               if (filterOption) return filterOption(searchQuery, option);
-              return optionText(option, optionFilterProp)
-                .toLocaleLowerCase()
-                .includes(normalizedQuery);
+              return (
+                (groupSearchLabels
+                  .get(option)
+                  ?.some((label) => matchesTextSearch(label, normalizedQuery, composing)) ??
+                  false) ||
+                matchesTextSearch(optionText(option, optionFilterProp), normalizedQuery, composing)
+              );
             });
         return optionsSort
           ? [...filtered].sort((a, b) => optionsSort(a, b, { searchValue: searchQuery }))
           : filtered;
       },
-      [filterOption, flatOptions, optionFilterProp, optionsSort],
+      [filterOption, flatOptions, groupSearchLabels, optionFilterProp, optionsSort],
     );
 
-    const visibleOptions = useMemo(() => getVisibleOptions(query), [getVisibleOptions, query]);
+    const visibleOptions = useMemo(
+      () => getVisibleOptions(query, isSearchComposing),
+      [getVisibleOptions, query, isSearchComposing],
+    );
 
     const floating = useFloatingLayer({
       placement,
@@ -328,10 +401,12 @@ export const Select = forwardRef<SelectRef, SelectProps>(
       );
       if (value === undefined) setInnerValue(nextValues);
       const notifyChange = onChange as SelectChangeHandler | undefined;
+      const outputValue = toOutputValue(nextValues);
       notifyChange?.(
-        toOutputValue(nextValues),
+        outputValue,
         mode ? (nextOptions.filter(Boolean) as SelectOption[]) : nextOptions[0],
       );
+      validateErrorMessage(outputValue);
     };
 
     const clearSearch = () => {
@@ -473,10 +548,12 @@ export const Select = forwardRef<SelectRef, SelectProps>(
         return;
       }
 
+      // hidden creates a scroll container: typing can scroll it to the caret
+      // while its height is still animating. clip keeps the first tag row fixed.
       const animation = trigger.animate(
         [
-          { height: `${startHeight}px`, overflow: "hidden" },
-          { height: `${nextHeight}px`, overflow: "hidden" },
+          { height: `${startHeight}px`, overflow: "clip" },
+          { height: `${nextHeight}px`, overflow: "clip" },
         ],
         {
           duration: 300,
@@ -612,11 +689,18 @@ export const Select = forwardRef<SelectRef, SelectProps>(
       [],
     );
 
+    useLayoutEffect(() => {
+      // Clearing search can grow an upward popup in the same commit. Position
+      // the new result list before paint, not only on the next resize delivery.
+      if (floating.isOpen) floating.updatePosition();
+    }, [floating.isOpen, floating.updatePosition, query, visibleOptions.length]);
+
     const optionList = (
       <OptionList
         options={visibleOptions}
         values={values}
         activeIndex={activeIndex}
+        onActiveIndexChange={setActiveIndex}
         maxSelectedCount={maxSelectedCount}
         height={listHeight}
         virtual={virtual}
@@ -629,19 +713,19 @@ export const Select = forwardRef<SelectRef, SelectProps>(
     const popupContent = visibleOptions.length ? (
       optionList
     ) : (
-      <div className="px-3 py-6 text-center text-gray">{notFoundContent}</div>
+      <div className="px-3 py-6 text-center text-gray">
+        <MultilineText wrap>{notFoundContent}</MultilineText>
+      </div>
     );
 
     const updateSearch = (nextQuery: string) => {
       if (interactionBlocked) return;
-      const separators =
-        typeof tagSeparators === "function" ? tagSeparators(nextQuery) : tagSeparators;
-      if (mode && separators?.some((separator) => nextQuery.includes(separator))) {
-        addTags(splitByTagSeparators(nextQuery, separators));
+      if (mode && tagSeparators?.some((separator) => nextQuery.includes(separator))) {
+        addTags(splitByTagSeparators(nextQuery, tagSeparators));
         return;
       }
       if (searchValue === undefined) setInnerSearchValue(nextQuery);
-      const nextVisibleOptions = getVisibleOptions(nextQuery);
+      const nextVisibleOptions = getVisibleOptions(nextQuery, isComposingRef.current);
       setActiveIndex(
         Math.max(findEnabledOptionIndex(nextVisibleOptions, values, maxSelectedCount), 0),
       );
@@ -671,6 +755,7 @@ export const Select = forwardRef<SelectRef, SelectProps>(
         compositionEnterTimerRef.current = setTimeout(() => {
           compositionEnterTimerRef.current = null;
           isComposingRef.current = false;
+          setIsSearchComposing(false);
           commitTagQuery(searchInputRef.current?.value ?? query);
         }, 0);
         return;
@@ -746,6 +831,33 @@ export const Select = forwardRef<SelectRef, SelectProps>(
         : getSelectedLabel(selectedOptions[0])
       : undefined;
 
+    const suffix = (selfCenter = false) => (
+      <SelectSuffix loading={loading} selfCenter={selfCenter}>
+        {allowClear && values.length && !interactionBlocked && !readOnly ? (
+          <span
+            className="cursor-pointer transition-opacity duration-200 ease-out hover:opacity-75 motion-reduce:transition-none"
+            onClick={(event) => {
+              event.stopPropagation();
+              commitValue([]);
+              onClear?.();
+            }}
+          >
+            <Icon icon="close" color="gray" />
+          </span>
+        ) : (
+          <Icon
+            icon="chevron-down"
+            size={14}
+            color="disabled"
+            className={twMerge(
+              "transition-transform duration-200 ease-out motion-reduce:transition-none",
+              floating.isOpen && "rotate-180",
+            )}
+          />
+        )}
+      </SelectSuffix>
+    );
+
     return (
       <div
         className={twMerge(
@@ -753,12 +865,12 @@ export const Select = forwardRef<SelectRef, SelectProps>(
           width === undefined && "max-w-full",
           className,
         )}
-        style={{ width }}
       >
         {label ? <Label label={label} required={required} size={size} className="mb-1" /> : null}
         <span
           ref={floating.triggerRef}
           className="block w-full max-w-full min-w-0"
+          style={{ width }}
           {...floating.triggerProps}
           onClick={
             usesCompositeTrigger || interactionBlocked ? undefined : floating.triggerProps.onClick
@@ -772,15 +884,16 @@ export const Select = forwardRef<SelectRef, SelectProps>(
                 selectRootVariants({
                   size,
                   variant,
-                  error: Boolean(errorMessage),
+                  error: hasError,
                   readOnly,
                   interactive: !interactionBlocked && !readOnly,
                   disabled,
                 }),
-                loading && "cursor-default",
-                isSearchable
-                  ? "cursor-text focus-within:border-primary"
-                  : "cursor-pointer focus:border-primary focus:outline-none",
+                loading && "cursor-default opacity-70",
+                !interactionBlocked &&
+                  (isSearchable
+                    ? "cursor-text focus-within:border-primary"
+                    : "cursor-pointer outline-none focus:border-primary"),
                 mode &&
                   values.length > 0 && [
                     "items-start",
@@ -788,9 +901,10 @@ export const Select = forwardRef<SelectRef, SelectProps>(
                     size === "sm" ? "py-px" : "py-[3px]",
                   ],
                 maxVisibleTagCount === "responsive" && "overflow-hidden",
+                readOnly && !disabled && "cursor-default",
               )}
               onMouseDown={(event) => {
-                if (isSearchable && event.target !== searchInputRef.current) {
+                if (readOnly || (isSearchable && event.target !== searchInputRef.current)) {
                   event.preventDefault();
                 }
               }}
@@ -843,11 +957,12 @@ export const Select = forwardRef<SelectRef, SelectProps>(
                           key={String(option.value)}
                           data-select-tag
                           data-select-layout-key={`tag:${String(option.value)}`}
-                          color={option.color ?? "grey"}
+                          color={option.color ?? "gray"}
                           variant="filled"
                           className={twMerge(
                             selectTagSizeClasses[size],
                             variant === "filled" && "bg-white",
+                            disabled && "bg-white text-disabled",
                           )}
                           suffixIcon={
                             !closable || interactionBlocked || readOnly ? undefined : (
@@ -898,12 +1013,17 @@ export const Select = forwardRef<SelectRef, SelectProps>(
                             : undefined
                     }
                     className={twMerge(
-                      "font-inherit w-0 max-w-full min-w-8 flex-1 border-0 bg-transparent p-0 text-inherit opacity-100 transition-opacity duration-300 ease-[cubic-bezier(0.645,0.045,0.355,1)] outline-none placeholder:text-gray disabled:cursor-not-allowed motion-reduce:transition-none",
+                      "font-inherit w-0 max-w-full min-w-8 flex-1 border-0 bg-transparent p-0 text-inherit opacity-100 outline-none placeholder:text-disabled disabled:cursor-not-allowed",
+                      mode
+                        ? "transition-none"
+                        : "transition-opacity duration-200 ease-out motion-reduce:transition-none",
                       size === "lg" && "h-8",
                       size === "md" && "h-[22px]",
                       size === "sm" && "h-4",
                       loading && "cursor-default",
                       !mode && singleSelectedLabel !== undefined && "placeholder:text-dark",
+                      disabled && "placeholder:text-disabled",
+                      readOnly && !disabled && "cursor-default",
                       mode &&
                         values.length > 0 &&
                         isSearchInputWrapped &&
@@ -920,10 +1040,13 @@ export const Select = forwardRef<SelectRef, SelectProps>(
                     }}
                     onBlur={(event) => {
                       setIsSearchInputFocused(false);
+                      isComposingRef.current = false;
+                      setIsSearchComposing(false);
                       onBlur?.(event);
                     }}
                     onCompositionStart={() => {
                       isComposingRef.current = true;
+                      setIsSearchComposing(true);
                       if (compositionEnterTimerRef.current !== null) {
                         clearTimeout(compositionEnterTimerRef.current);
                         compositionEnterTimerRef.current = null;
@@ -931,13 +1054,16 @@ export const Select = forwardRef<SelectRef, SelectProps>(
                     }}
                     onCompositionEnd={(event) => {
                       isComposingRef.current = false;
+                      setIsSearchComposing(false);
                       updateSearch(event.currentTarget.value);
                     }}
                     onKeyDown={handleKeyDown}
                     onChange={(event) => updateSearch(event.currentTarget.value)}
                   />
                 ) : selectedOptions.length ? null : (
-                  <span className="min-w-0 flex-1 text-left text-gray">{placeholder}</span>
+                  <span className="min-w-0 flex-1 truncate text-left text-disabled">
+                    {placeholder}
+                  </span>
                 )}
               </span>
               {mode && maxVisibleTagCount === "responsive" && selectedOptions.length ? (
@@ -965,14 +1091,17 @@ export const Select = forwardRef<SelectRef, SelectProps>(
                       <Tag
                         key={String(option.value)}
                         data-select-measure-tag
-                        color={option.color ?? "grey"}
+                        color={option.color ?? "gray"}
                         variant="filled"
                         className={twMerge(
                           selectTagSizeClasses[size],
                           variant === "filled" && "bg-white",
+                          disabled && "bg-white text-disabled",
                         )}
                         suffixIcon={
-                          !closable || readOnly ? undefined : <Icon icon="close" size={12} />
+                          !closable || interactionBlocked || readOnly ? undefined : (
+                            <Icon icon="close" size={12} />
+                          )
                         }
                       >
                         {tagLabel}
@@ -984,30 +1113,7 @@ export const Select = forwardRef<SelectRef, SelectProps>(
                   </span>
                 </span>
               ) : null}
-              {loading ? (
-                <Icon icon="loading" color="gray" className="animate-spin self-center" />
-              ) : allowClear && values.length && !interactionBlocked && !readOnly ? (
-                <span
-                  className="cursor-pointer self-center"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    commitValue([]);
-                    onClear?.();
-                  }}
-                >
-                  <Icon icon="close" color="gray" />
-                </span>
-              ) : (
-                <Icon
-                  icon="chevron-down"
-                  size={14}
-                  color="disabled"
-                  className={twMerge(
-                    "self-center transition-transform",
-                    floating.isOpen && "rotate-180",
-                  )}
-                />
-              )}
+              {suffix(true)}
             </div>
           ) : (
             <button
@@ -1018,45 +1124,31 @@ export const Select = forwardRef<SelectRef, SelectProps>(
                 selectRootVariants({
                   size,
                   variant,
-                  error: Boolean(errorMessage),
+                  error: hasError,
                   readOnly,
                   interactive: !interactionBlocked && !readOnly,
                   disabled,
                 }),
-                loading && "cursor-default",
+                loading && "cursor-default opacity-70",
               )}
               onFocus={onFocus}
               onBlur={onBlur}
               onKeyDown={handleKeyDown}
+              onMouseDown={(event) => {
+                if (readOnly) event.preventDefault();
+              }}
             >
               <span className="min-w-0 flex-1 truncate text-left">
-                {singleSelectedLabel ?? <span className="text-gray">{placeholder}</span>}
+                {singleSelectedLabel ?? <span className="text-disabled">{placeholder}</span>}
               </span>
-              {loading ? (
-                <Icon icon="loading" color="gray" className="animate-spin" />
-              ) : allowClear && values.length && !interactionBlocked && !readOnly ? (
-                <span
-                  className="cursor-pointer"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    commitValue([]);
-                    onClear?.();
-                  }}
-                >
-                  <Icon icon="close" color="gray" />
-                </span>
-              ) : (
-                <Icon
-                  icon="chevron-down"
-                  size={14}
-                  color="disabled"
-                  className={twMerge("transition-transform", floating.isOpen && "rotate-180")}
-                />
-              )}
+              {suffix()}
             </button>
           )}
         </span>
-        <ErrorMessage className={errorMessage ? "mt-0.5" : undefined} errorMessage={errorMessage} />
+        <ErrorMessage
+          className={hasError ? "mt-0.5" : undefined}
+          errorMessage={displayedErrorMessage}
+        />
         {floating.isRendered && typeof document !== "undefined"
           ? createPortal(
               <div
@@ -1106,6 +1198,7 @@ function OptionList({
   options,
   values,
   activeIndex,
+  onActiveIndexChange,
   maxSelectedCount,
   height,
   virtual,
@@ -1116,6 +1209,7 @@ function OptionList({
   options: SelectOption[];
   values: SelectValue[];
   activeIndex: number;
+  onActiveIndexChange: (index: number) => void;
   maxSelectedCount?: number;
   height: number;
   virtual: boolean;
@@ -1124,6 +1218,9 @@ function OptionList({
   onScroll?: (event: UIEvent<HTMLDivElement>) => void;
 }) {
   const [scrollTop, setScrollTop] = useState(0);
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const previousOptionsRef = useRef(options);
+  const pointerActiveIndexRef = useRef<number | null>(null);
   const hasGroups = options.some((option) => option.__groupLabel !== undefined);
   const useVirtualList =
     virtual && !hasGroups && options.length > Math.ceil(height / ITEM_HEIGHT) * 3;
@@ -1131,8 +1228,42 @@ function OptionList({
   const count = useVirtualList ? Math.ceil(height / ITEM_HEIGHT) + 6 : options.length;
   const rendered = options.slice(start, start + count);
 
+  useLayoutEffect(() => {
+    const viewport = viewportRef.current;
+    if (!viewport) return;
+    if (previousOptionsRef.current !== options) {
+      previousOptionsRef.current = options;
+      viewport.scrollTop = 0;
+      setScrollTop(0);
+    }
+    const activatedByPointer = pointerActiveIndexRef.current === activeIndex;
+    pointerActiveIndexRef.current = null;
+    if (activatedByPointer) return;
+    if (activeIndex < 0 || activeIndex >= options.length) return;
+    const active = viewport.querySelector<HTMLElement>(
+      `[data-select-option-index="${activeIndex}"]`,
+    );
+    const top = useVirtualList ? activeIndex * ITEM_HEIGHT : active?.offsetTop;
+    if (top === undefined) return;
+    const bottom = top + (useVirtualList ? OPTION_HEIGHT : (active?.offsetHeight ?? OPTION_HEIGHT));
+    const viewportHeight = viewport.clientHeight || height;
+    const nextTop =
+      top < viewport.scrollTop
+        ? top
+        : bottom > viewport.scrollTop + viewportHeight
+          ? bottom - viewportHeight
+          : viewport.scrollTop;
+    if (nextTop !== viewport.scrollTop) {
+      // Scroll only the option viewport: scrollIntoView can also move the page
+      // and trigger, which would reintroduce the rapid-tag-input jump.
+      viewport.scrollTop = nextTop;
+      setScrollTop(viewport.scrollTop);
+    }
+  }, [activeIndex, height, options, useVirtualList]);
+
   return (
     <ScrollFade
+      ref={viewportRef}
       style={{ maxHeight: height }}
       fadeSize={48}
       onScroll={(event) => {
@@ -1145,13 +1276,19 @@ function OptionList({
         style={{ height: useVirtualList ? options.length * ITEM_HEIGHT : undefined }}
       >
         <div
-          className="grid gap-0.5"
+          className="grid grid-cols-1 gap-0.5"
           style={{ transform: useVirtualList ? `translateY(${start * ITEM_HEIGHT}px)` : undefined }}
         >
           {rendered.map((option, offset) => {
             const index = start + offset;
             const selected = option.value === undefined ? false : values.includes(option.value);
             const disabled = isOptionDisabled(option, values, maxSelectedCount);
+            const activateOption = () => {
+              if (!disabled && option.value !== undefined && index !== activeIndex) {
+                pointerActiveIndexRef.current = index;
+                onActiveIndexChange(index);
+              }
+            };
             const previousOption = options[index - 1];
             const startsGroup =
               option.__groupLabel !== undefined &&
@@ -1160,21 +1297,23 @@ function OptionList({
               <Fragment key={`${String(option.value)}-${index}`}>
                 {startsGroup ? (
                   <div className="px-3 pt-2 pb-1 text-xs font-medium text-gray">
-                    {option.__groupLabel as ReactNode}
+                    <MultilineText wrap>{option.__groupLabel as ReactNode}</MultilineText>
                   </div>
                 ) : null}
                 <button
                   type="button"
+                  data-select-option-index={index}
                   disabled={disabled}
                   className={twMerge(
-                    "flex h-8 w-full cursor-pointer items-center gap-2 rounded px-3 text-left transition-colors",
+                    "flex h-8 w-full cursor-pointer items-center gap-2 rounded px-3 text-left transition-colors duration-200 ease-out outline-none motion-reduce:transition-none",
                     selected && "bg-selected",
                     selected && "font-medium text-primary",
-                    !selected && index === activeIndex && "bg-hover",
-                    !selected && index !== activeIndex && "hover:bg-hover",
+                    !selected && !disabled && index === activeIndex && "bg-hover",
                     disabled && "cursor-not-allowed text-disabled hover:bg-transparent",
                   )}
                   onMouseDown={(event) => event.preventDefault()}
+                  onMouseEnter={activateOption}
+                  onMouseMove={activateOption}
                   onClick={() => onSelect(option)}
                 >
                   <span className="min-w-0 flex-1 truncate">
@@ -1192,7 +1331,7 @@ function OptionList({
 }
 
 const selectRootVariants = cva(
-  "relative flex w-full cursor-pointer items-center gap-2 rounded border border-solid bg-white px-2.5 text-left font-pretendard font-medium text-dark transition-colors focus:border-primary focus:outline-none",
+  "relative flex w-full cursor-pointer items-center gap-2 rounded border border-solid bg-white px-2.5 text-left font-pretendard font-medium text-dark transition-[color,background-color,border-color,opacity] duration-200 ease-out outline-none focus:border-primary motion-reduce:transition-none",
   {
     variants: {
       size: { lg: "min-h-10 text-base", md: "min-h-[30px] text-sm", sm: "min-h-5 text-xs" },
@@ -1213,7 +1352,7 @@ const selectRootVariants = cva(
         false: "",
       },
       disabled: {
-        true: "cursor-not-allowed border-border bg-hover text-gray hover:border-border",
+        true: "cursor-not-allowed border-border bg-hover text-disabled hover:border-border",
         false: "",
       },
     },

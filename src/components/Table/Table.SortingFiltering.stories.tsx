@@ -44,9 +44,9 @@ const filteringColumns: ColumnsType<Member> = [
 ];
 
 const projectFilters = [
-  { text: "5개 이하", value: "low" },
-  { text: "6~9개", value: "middle" },
-  { text: "10개 이상", value: "high" },
+  { label: "5개 이하", value: "low" },
+  { label: "6~9개", value: "middle" },
+  { label: "10개 이상", value: "high" },
 ];
 
 const serverColumns: ColumnsType<Member> = filteringColumns.map((column) => {
@@ -69,15 +69,15 @@ export const ServerTable: Story = {
 ];
 
 const statusFilters = [
-  { text: '활성', value: '활성' },
-  { text: '휴가', value: '휴가' },
-  { text: '대기', value: '대기' },
+  { label: '활성', value: '활성' },
+  { label: '휴가', value: '휴가' },
+  { label: '대기', value: '대기' },
 ];
 
 const projectFilters = [
-  { text: '5개 이하', value: 'low' },
-  { text: '6~9개', value: 'middle' },
-  { text: '10개 이상', value: 'high' },
+  { label: '5개 이하', value: 'low' },
+  { label: '6~9개', value: 'middle' },
+  { label: '10개 이상', value: 'high' },
 ];
 
 const columns = [
@@ -115,7 +115,7 @@ function ServerTable() {
 
   return (
     <>
-      <pre>{JSON.stringify(requestParams, null, 2)}</pre>
+      <pre className="mb-4 overflow-x-auto rounded-lg bg-hover p-4 text-[13px] text-[#333]">{JSON.stringify(requestParams, null, 2)}</pre>
       <Table
         dataSource={members}
         columns={columns}

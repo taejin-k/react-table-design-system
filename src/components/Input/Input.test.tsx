@@ -20,7 +20,7 @@ function EmailInputHarness() {
       label="이메일"
       value={value}
       required
-      validate={(nextValue) =>
+      errorMessage={(nextValue) =>
         /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(nextValue) ? "" : "올바른 이메일을 입력하세요"
       }
       onChange={setValue}
@@ -29,6 +29,20 @@ function EmailInputHarness() {
 }
 
 describe("Input", () => {
+  it("uses the disabled token for its placeholder", () => {
+    render(<Input placeholder="입력하세요" />);
+
+    const input = screen.getByPlaceholderText("입력하세요");
+    expect(input).toHaveClass("placeholder:text-disabled");
+    expect(input).not.toHaveClass("placeholder:text-gray");
+    expect(input.parentElement).toHaveClass(
+      "transition-colors",
+      "duration-200",
+      "ease-out",
+      "motion-reduce:transition-none",
+    );
+  });
+
   it("applies required state and displays an error", () => {
     render(
       <Input label="이메일" value="invalid" required errorMessage="올바른 이메일을 입력하세요" />,
@@ -68,10 +82,12 @@ describe("Input", () => {
 
   it("handles asynchronous validation internally and clears its error while typing", async () => {
     const user = userEvent.setup();
-    const validate = vi.fn(async (nextValue: string) =>
+    const getErrorMessage = vi.fn(async (nextValue: string) =>
       nextValue === "used@example.com" ? "이미 가입된 이메일이에요." : "",
     );
-    render(<Input placeholder="이메일" defaultValue="used@example.com" validate={validate} />);
+    render(
+      <Input placeholder="이메일" defaultValue="used@example.com" errorMessage={getErrorMessage} />,
+    );
 
     const input = screen.getByPlaceholderText("이메일");
 
@@ -111,16 +127,17 @@ describe("Input", () => {
     expect(screen.getByRole("textbox", { name: "검색" })).toHaveValue("");
   });
 
-  it("keeps a read-only value focusable without showing the clear action", async () => {
+  it("does not focus a read-only value by click and hides the clear action", async () => {
     const user = userEvent.setup();
     render(<Input defaultValue="입력값" readOnly allowClear />);
 
     const input = screen.getByDisplayValue("입력값");
     expect(input).toHaveAttribute("readonly");
+    expect(input).toHaveClass("cursor-default");
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
 
     await user.click(input);
-    expect(input).toHaveFocus();
+    expect(input).not.toHaveFocus();
   });
 
   it("shows the character count only when showCount is enabled", () => {
@@ -138,16 +155,39 @@ describe("Input", () => {
     expect(container.firstElementChild).toHaveClass("custom-root");
   });
 
-  it("fills the parent by default and applies a custom width to the root", () => {
+  it("fills the parent by default and applies a custom width only to the input area", () => {
     const { container, rerender } = render(<Input />);
 
     expect(container.firstElementChild).toHaveClass("w-full");
 
     rerender(<Input width={320} />);
-    expect(container.firstElementChild).toHaveStyle({ width: "320px" });
+    expect(container.firstElementChild).not.toHaveStyle({ width: "320px" });
+    expect(screen.getByRole("textbox").parentElement).toHaveStyle({ width: "320px" });
 
     rerender(<Input width={240} />);
-    expect(container.firstElementChild).toHaveStyle({ width: "240px" });
+    expect(container.firstElementChild).not.toHaveStyle({ width: "240px" });
+    expect(screen.getByRole("textbox").parentElement).toHaveStyle({ width: "240px" });
+  });
+
+  it("does not constrain its label or error message to the input width", () => {
+    const { container } = render(
+      <Input
+        width={240}
+        label="입력 너비보다 긴 레이블"
+        errorMessage="입력 너비보다 긴 오류 문구"
+      />,
+    );
+
+    const root = container.firstElementChild;
+    const inputRow = screen.getByRole("textbox").parentElement;
+    const label = screen.getByText("입력 너비보다 긴 레이블");
+    const errorMessage = screen.getByText("입력 너비보다 긴 오류 문구");
+    expect(root).not.toHaveStyle({ width: "240px" });
+    expect(inputRow).toHaveStyle({ width: "240px" });
+    expect(inputRow).not.toContainElement(label);
+    expect(inputRow).not.toContainElement(errorMessage);
+    expect(root).toContainElement(label);
+    expect(root).toContainElement(errorMessage);
   });
 
   it("does not reserve error spacing when there is no error message", () => {
@@ -211,16 +251,20 @@ describe("Input", () => {
   });
 
   it("restores the full rounded border when an underlined input is disabled", () => {
-    const { container } = render(<Input variant="underlined" disabled />);
-    const inputRow = container.querySelector("input")?.parentElement;
+    const { container } = render(<Input variant="underlined" placeholder="입력하세요" disabled />);
+    const input = container.querySelector("input");
+    const inputRow = input?.parentElement;
 
     expect(inputRow).toHaveClass(
       "rounded-[4px]",
+      "cursor-not-allowed",
       "border-border",
       "border-x-border",
       "border-t-border",
       "bg-hover",
     );
+    expect(input).toHaveClass("cursor-not-allowed", "placeholder:text-disabled");
+    expect(input).not.toHaveClass("placeholder:text-gray");
     expect(inputRow).not.toHaveClass("rounded-none");
   });
 
@@ -280,7 +324,7 @@ describe("Input", () => {
     render(<Input label="비밀번호" defaultValue="password" password disabled />);
 
     const input = screen.getByLabelText("비밀번호");
-    expect(input).toHaveClass("text-[14px]", "font-medium", "opacity-100");
+    expect(input).toHaveClass("text-[14px]", "font-medium", "text-disabled", "opacity-100");
     expect(input).not.toHaveClass("font-normal");
   });
 });

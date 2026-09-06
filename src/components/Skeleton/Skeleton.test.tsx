@@ -11,6 +11,7 @@ describe("Skeleton", () => {
   it("renders custom content inside a node skeleton", () => {
     render(<Skeleton.Node>내용</Skeleton.Node>);
     expect(screen.getByText("내용")).toBeInTheDocument();
+    expect(screen.getByText("내용")).toHaveClass("text-gray");
   });
 
   it("supports active element skeletons", () => {

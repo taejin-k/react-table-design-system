@@ -1,13 +1,16 @@
 import type { ReactNode } from "react";
 import type { Dayjs } from "dayjs";
 import type { DisabledTime } from "../TimePicker";
+import type { ValidatableErrorMessage } from "../_internal/useErrorMessageValidation";
 
-export type DatePickerValueType = Dayjs | Dayjs[] | null;
-export type DateRangeValueType = [Dayjs | null, Dayjs | null];
 export type DatePickerSizeType = "md" | "lg";
 export type DatePickerModeType = "date" | "month" | "year";
 export type DatePickerPlacementType = "bottomLeft" | "bottomRight" | "topLeft" | "topRight";
 export type DatePickerVariantType = "default" | "filled";
+export type DatePickerErrorMessage<Multiple extends boolean = false> = ValidatableErrorMessage<
+  Multiple extends true ? Dayjs[] : Dayjs | undefined
+>;
+export type DateRangePickerErrorMessage = ValidatableErrorMessage<[Dayjs, Dayjs] | undefined>;
 
 export interface DatePickerPreset {
   label: ReactNode;
@@ -16,7 +19,7 @@ export interface DatePickerPreset {
 
 export interface DateRangePreset {
   label: ReactNode;
-  value: DateRangeValueType | (() => DateRangeValueType);
+  value: [Dayjs, Dayjs] | (() => [Dayjs, Dayjs]);
 }
 
 export interface DatePickerShowTime {
@@ -32,9 +35,9 @@ export interface DatePickerShowTime {
   changeOnScroll?: boolean;
 }
 
-export interface DatePickerProps {
-  value?: DatePickerValueType;
-  defaultValue?: DatePickerValueType;
+export interface DatePickerProps<Multiple extends boolean = false> {
+  value?: Multiple extends true ? Dayjs[] : Dayjs | undefined;
+  defaultValue?: Multiple extends true ? Dayjs[] : Dayjs | undefined;
   defaultPickerValue?: Dayjs;
   pickerValue?: Dayjs;
   picker?: DatePickerModeType;
@@ -43,13 +46,13 @@ export interface DatePickerProps {
   size?: DatePickerSizeType;
   variant?: DatePickerVariantType;
   label?: ReactNode;
-  errorMessage?: ReactNode;
+  errorMessage?: DatePickerErrorMessage<Multiple>;
   required?: boolean;
   disabled?: boolean;
   readOnly?: boolean;
   width?: number;
   allowClear?: boolean;
-  multiple?: boolean;
+  multiple?: Multiple;
   order?: boolean;
   minDate?: Dayjs;
   maxDate?: Dayjs;
@@ -63,10 +66,9 @@ export interface DatePickerProps {
   cellRender?: (date: Dayjs, origin: ReactNode) => ReactNode;
   presets?: DatePickerPreset[];
   className?: string;
-  onChange?: (value: DatePickerValueType) => void;
-  onCalendarChange?: (value: DatePickerValueType) => void;
+  onChange?: (value: Multiple extends true ? Dayjs[] : Dayjs | undefined) => void;
+  onCalendarChange?: (value: Multiple extends true ? Dayjs[] : Dayjs | undefined) => void;
   onClear?: () => void;
-  onConfirm?: (value: DatePickerValueType) => void;
   onPanelChange?: (value: Dayjs, mode: DatePickerModeType) => void;
   onOpenChange?: (open: boolean) => void;
 }
@@ -74,21 +76,25 @@ export interface DatePickerProps {
 export interface DateRangePickerProps extends Omit<
   DatePickerProps,
   | "defaultValue"
+  | "errorMessage"
   | "multiple"
   | "needConfirm"
   | "onCalendarChange"
   | "onChange"
-  | "onConfirm"
   | "order"
   | "placeholder"
   | "presets"
   | "showTime"
   | "value"
 > {
-  value?: DateRangeValueType;
-  defaultValue?: DateRangeValueType;
+  value?: [Dayjs, Dayjs];
+  defaultValue?: [Dayjs, Dayjs];
+  errorMessage?: DateRangePickerErrorMessage;
   placeholder?: [string, string];
-  onChange?: (value: DateRangeValueType) => void;
+  onChange?: (value: [Dayjs, Dayjs] | undefined) => void;
   presets?: DateRangePreset[];
-  onCalendarChange?: (value: DateRangeValueType, info: { range: "start" | "end" }) => void;
+  onCalendarChange?: (
+    value: [Dayjs | undefined, Dayjs | undefined],
+    info: { range: "start" | "end" },
+  ) => void;
 }

@@ -9,6 +9,8 @@ import {
   type ReactNode,
 } from "react";
 import CSSMotion from "@rc-component/motion";
+import { MultilineText } from "../_internal/MultilineText";
+import { ScrollArea } from "../_internal/ScrollArea";
 import { createRoot, type Root } from "react-dom/client";
 import { createPortal } from "react-dom";
 import { twMerge } from "tailwind-merge";
@@ -17,6 +19,7 @@ import { Icon } from "../Icon";
 import { OverlayCloseButton } from "../_internal/OverlayCloseButton";
 import { MOTION_DURATION_MID } from "../_internal/motion";
 import { lockBodyScroll } from "../_internal/body-scroll-lock";
+import { isTopmostOverlay } from "../_internal/is-topmost-overlay";
 import type {
   ModalComponent,
   ModalFuncConfig,
@@ -78,6 +81,8 @@ function ModalBase({
   confirmLoading = false,
   confirmText = "확인",
   cancelText = "취소",
+  confirmVariant = "primary",
+  cancelVariant = "secondary",
   keyboard = true,
   mask = true,
   scrollLock = true,
@@ -92,6 +97,8 @@ function ModalBase({
   const [rootVisible, setRootVisible] = useState(open);
   const [hasOpened, setHasOpened] = useState(open);
   const panelRef = useRef<HTMLDivElement>(null);
+  const onCancelRef = useRef(onCancel);
+  onCancelRef.current = onCancel;
   const triggerRef = useRef<HTMLElement | null>(null);
   const transformOriginRef = useRef("center center");
   const showClose = closable;
@@ -122,19 +129,24 @@ function ModalBase({
   }, []);
 
   useEffect(() => {
-    if (!open || !keyboard) return;
+    if (!open) return;
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
+      if (event.defaultPrevented || !isTopmostOverlay(panelRef.current)) return;
+      if (event.key === "Escape" && keyboard) {
         event.preventDefault();
         panelRef.current?.focus({ preventScroll: true });
-        onCancel?.(event);
+        onCancelRef.current?.(event);
         return;
       }
       if (event.key !== "Tab" || !panelRef.current) return;
       const elements = panelRef.current.querySelectorAll<HTMLElement>(
-        'button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex="-1"])',
+        'a[href], button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex="-1"])',
       );
-      if (!elements.length) return;
+      if (!elements.length) {
+        event.preventDefault();
+        panelRef.current.focus();
+        return;
+      }
       const first = elements[0];
       const last = elements[elements.length - 1];
       if (event.shiftKey && document.activeElement === first) {
@@ -146,12 +158,14 @@ function ModalBase({
       }
     };
     document.addEventListener("keydown", handleKeyDown);
-    const focusTimer = window.setTimeout(() => panelRef.current?.focus({ preventScroll: true }));
+    const focusTimer = window.setTimeout(() => {
+      if (isTopmostOverlay(panelRef.current)) panelRef.current?.focus({ preventScroll: true });
+    });
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
       window.clearTimeout(focusTimer);
     };
-  }, [keyboard, onCancel, open]);
+  }, [keyboard, open]);
 
   const keepScrollLocked = open || rootVisible;
   useEffect(() => {
@@ -166,17 +180,22 @@ function ModalBase({
 
   const close = (event: MouseEvent<HTMLButtonElement | HTMLDivElement>) => onCancel?.(event);
   const renderCancelButton = () => (
-    <Button variant="secondary" onClick={(event) => close(event)}>
+    <Button className="min-w-0" variant={cancelVariant} onClick={(event) => close(event)}>
       {cancelText}
     </Button>
   );
   const renderConfirmButton = () => (
-    <Button loading={confirmLoading} onClick={onConfirm}>
+    <Button
+      className="min-w-0"
+      variant={confirmVariant}
+      loading={confirmLoading}
+      onClick={onConfirm}
+    >
       {confirmText}
     </Button>
   );
   const defaultFooter = (
-    <div className="flex justify-end gap-2">
+    <div className="flex max-w-full min-w-0 shrink-0 justify-end gap-2">
       {renderCancelButton()}
       {renderConfirmButton()}
     </div>
@@ -188,7 +207,8 @@ function ModalBase({
       data-modal-panel
       tabIndex={-1}
       className={twMerge(
-        "wizard-modal-panel relative max-h-[calc(100vh-48px)] overflow-hidden rounded-lg bg-white px-6 py-5 font-pretendard text-sm leading-[22px] text-dark shadow-2xl outline-none",
+        "wizard-modal-panel relative flex flex-col overflow-hidden rounded-lg bg-white px-6 py-5 font-pretendard text-sm leading-[22px] text-dark shadow-2xl outline-none",
+        centered ? "max-h-[calc(100dvh-48px)]" : "max-h-[calc(100dvh-124px)]",
         "pointer-events-auto min-w-0",
       )}
       style={{
@@ -198,19 +218,33 @@ function ModalBase({
       }}
     >
       {title !== undefined ? (
-        <div className="mb-2 min-w-0 text-base leading-6 font-semibold [overflow-wrap:anywhere] break-words whitespace-pre-wrap">
+        <div
+          className={twMerge(
+            "mb-2 min-w-0 shrink-0 text-base leading-6 font-semibold [overflow-wrap:anywhere] break-all whitespace-pre-wrap",
+            showClose && "pr-6",
+          )}
+        >
           {title}
         </div>
       ) : null}
       {showClose ? <OverlayCloseButton className="absolute top-3 right-3" onClick={close} /> : null}
-      <div className="max-h-[calc(100vh-152px)] min-w-0 overflow-x-hidden overflow-y-auto [overflow-wrap:anywhere] break-words">
+      <ScrollArea
+        verticalOnly
+        viewportMarker="data-modal-scroll-container"
+        className="min-h-0 shrink"
+        contentClassName="[overflow-wrap:anywhere] break-all"
+      >
         {typeof children === "string" || typeof children === "number" ? (
           <span className="whitespace-pre-wrap">{children}</span>
         ) : (
           children
         )}
-      </div>
-      {footerNode !== null ? <div className="mt-3">{footerNode}</div> : null}
+      </ScrollArea>
+      {footerNode !== null ? (
+        <div className="mt-3 max-w-full min-w-0 shrink-0 [overflow-wrap:anywhere] break-all [&>*]:max-w-full [&>*]:min-w-0">
+          <MultilineText wrap>{footerNode}</MultilineText>
+        </div>
+      ) : null}
     </div>
   );
   const content = (
@@ -222,27 +256,26 @@ function ModalBase({
         display: open || rootVisible ? undefined : "none",
       }}
     >
-      {mask ? (
-        <CSSMotion
-          visible={open}
-          motionName="wizard-modal-mask-motion"
-          motionDeadline={MOTION_DURATION_MID + 50}
-          removeOnLeave
-        >
-          {({ className: maskMotionClassName, style: maskMotionStyle }, maskRef) => (
-            <div
-              ref={maskRef}
-              data-modal-mask
-              className={twMerge(
-                "pointer-events-auto absolute inset-0 cursor-pointer bg-black/45",
-                maskMotionClassName,
-              )}
-              style={maskMotionStyle}
-              onClick={close}
-            />
-          )}
-        </CSSMotion>
-      ) : null}
+      <CSSMotion
+        visible={open}
+        motionName="wizard-modal-mask-motion"
+        motionDeadline={MOTION_DURATION_MID + 50}
+        removeOnLeave
+      >
+        {({ className: maskMotionClassName, style: maskMotionStyle }, maskRef) => (
+          <div
+            ref={maskRef}
+            data-modal-mask
+            className={twMerge(
+              "pointer-events-auto absolute inset-0 bg-black/45",
+              mask ? "cursor-pointer" : "cursor-default",
+              maskMotionClassName,
+            )}
+            style={maskMotionStyle}
+            onClick={mask ? close : undefined}
+          />
+        )}
+      </CSSMotion>
       {forceRender || open || hasOpened ? (
         <CSSMotion
           visible={open}
@@ -263,18 +296,20 @@ function ModalBase({
           }}
         >
           {({ className: motionClassName, style: motionStyle }, motionRef) => (
-            <div
+            <ScrollArea
               ref={motionRef}
               data-modal-motion
-              className={twMerge(
-                "pointer-events-none absolute inset-0 flex overflow-x-hidden overflow-y-auto px-4 py-6",
-                centered ? "items-center justify-center" : "items-start justify-center pt-[100px]",
-                motionClassName,
+              viewportMarker="data-modal-outer-scroll-container"
+              verticalOnly
+              className={twMerge("pointer-events-none absolute inset-0", motionClassName)}
+              contentClassName={twMerge(
+                "flex min-h-full justify-center px-4 py-6",
+                centered ? "items-center" : "items-start pt-[100px]",
               )}
               style={motionStyle}
             >
               {panel}
-            </div>
+            </ScrollArea>
           )}
         </CSSMotion>
       ) : null}
@@ -409,17 +444,26 @@ function ConfirmModal({
     try {
       await action?.(closeOnce);
       closeOnce();
+    } catch {
+      // A rejected confirmation keeps the modal open for correction/retry.
     } finally {
       setLoading(false);
     }
   };
   const renderCancelButton = () => (
-    <Button variant="secondary" onClick={() => void run(config.onCancel, false)}>
+    <Button
+      variant={config.cancelVariant ?? "secondary"}
+      onClick={() => void run(config.onCancel, false)}
+    >
       {config.cancelText ?? "취소"}
     </Button>
   );
   const renderConfirmButton = () => (
-    <Button loading={loading} onClick={() => void run(config.onConfirm, true)}>
+    <Button
+      variant={config.confirmVariant ?? "primary"}
+      loading={loading}
+      onClick={() => void run(config.onConfirm, true)}
+    >
       {config.confirmText ?? "확인"}
     </Button>
   );
@@ -457,9 +501,14 @@ function ConfirmModal({
             {config.icon ?? <Icon icon={iconName} color={iconColor} size={28} />}
           </span>
         )}
-        <div className="min-w-0 flex-1 [overflow-wrap:anywhere] break-words">
+        <div className="min-w-0 flex-1 [overflow-wrap:anywhere] break-all">
           {config.title !== undefined ? (
-            <div className="text-base leading-6 font-semibold whitespace-pre-wrap">
+            <div
+              className={twMerge(
+                "text-base leading-6 font-semibold whitespace-pre-wrap",
+                config.closable && "pr-6",
+              )}
+            >
               {config.title}
             </div>
           ) : null}
@@ -483,6 +532,7 @@ let staticRoot: Root | null = null;
 let staticApi: Omit<ModalStaticFunctions, "destroyAll"> | null = null;
 let staticContainer: HTMLDivElement | null = null;
 const queued: Array<(api: Omit<ModalStaticFunctions, "destroyAll">) => void> = [];
+const pendingCancellations = new Set<() => void>();
 
 function StaticModalHost() {
   const [api, holder] = useModalHolder();
@@ -511,8 +561,16 @@ function callStatic(
   let destroyRequested = false;
   const pendingUpdates: Array<ModalFuncConfig | ((previous: ModalFuncConfig) => ModalFuncConfig)> =
     [];
+  let cancelPending = () => {};
   const pending = new Promise<boolean>((resolve) => {
+    cancelPending = () => {
+      destroyRequested = true;
+      resolve(false);
+    };
+    pendingCancellations.add(cancelPending);
     queued.push((api) => {
+      pendingCancellations.delete(cancelPending);
+      if (destroyRequested) return;
       result = api[method](config);
       pendingUpdates.splice(0).forEach((next) => result?.update(next));
       if (destroyRequested) result.destroy();
@@ -524,7 +582,7 @@ function callStatic(
     then: pending.then.bind(pending),
     destroy: () => {
       if (result) result.destroy();
-      else destroyRequested = true;
+      else cancelPending();
     },
     update: (next: ModalFuncConfig | ((previous: ModalFuncConfig) => ModalFuncConfig)) => {
       if (result) result.update(next);
@@ -540,6 +598,9 @@ const staticFunctions: ModalStaticFunctions = {
   warning: (config) => callStatic("warning", config),
   confirm: (config) => callStatic("confirm", config),
   destroyAll: () => {
+    pendingCancellations.forEach((cancel) => cancel());
+    pendingCancellations.clear();
+    queued.splice(0);
     staticRoot?.unmount();
     staticContainer?.remove();
     staticRoot = null;

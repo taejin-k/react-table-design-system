@@ -23,6 +23,13 @@ function id(value: React.Key) {
 function descendants(node: TreeDataNode): string[] {
   return [id(node.key), ...(node.children ?? []).flatMap(descendants)];
 }
+function checkableDescendants(node: TreeDataNode): string[] {
+  if (node.disabled || node.disableCheckbox) return [];
+  return [
+    ...(node.checkable === false ? [] : [id(node.key)]),
+    ...(node.children ?? []).flatMap(checkableDescendants),
+  ];
+}
 function findTreeNodeParent(
   nodes: TreeDataNode[],
   key: React.Key,
@@ -261,6 +268,9 @@ export function Tree({
     checked.forEach((key) => {
       let parent = parentMap.get(key);
       while (parent) {
+        if (parent.disabled || parent.disableCheckbox) break;
+        const child = parent.children?.find((node) => id(node.key) === key);
+        if (child?.disabled || child?.disableCheckbox) break;
         if (!checked.includes(id(parent.key))) result.add(id(parent.key));
         parent = parentMap.get(id(parent.key));
       }
@@ -319,14 +329,15 @@ export function Tree({
         ? [...checked, key]
         : checked.filter((value) => value !== key)
       : nextChecked
-        ? Array.from(new Set([...checked, ...descendants(node)]))
-        : checked.filter((value) => !descendants(node).includes(value));
+        ? Array.from(new Set([...checked, ...checkableDescendants(node)]))
+        : checked.filter((value) => !checkableDescendants(node).includes(value));
     if (!checkStrictly) {
       let parent = parentMap.get(key);
       while (parent) {
-        const childKeys = parent.children?.flatMap(descendants) ?? [];
+        if (parent.disabled || parent.disableCheckbox) break;
+        const childKeys = parent.children?.flatMap(checkableDescendants) ?? [];
         const parentKey = id(parent.key);
-        if (childKeys.every((child) => next.includes(child)))
+        if (parent.checkable !== false && childKeys.every((child) => next.includes(child)))
           next = Array.from(new Set([...next, parentKey]));
         else next = next.filter((value) => value !== parentKey);
         parent = parentMap.get(parentKey);
@@ -531,11 +542,7 @@ export function Tree({
           dragOverPosition = nodeDropState?.position,
           dragOverIndicatorPosition = nodeDropState?.indicatorPosition,
           dragOverLevel = nodeDropState?.level;
-        const switcher = loading.includes(key) ? (
-          <Icon icon="loading" loading size={12} />
-        ) : hasChildren ? (
-          <Icon icon="chevron-right" size={12} />
-        ) : null;
+        const nodeLoading = loading.includes(key);
         return (
           <li key={key} className="relative">
             <div
@@ -656,21 +663,38 @@ export function Tree({
                   data-tree-switcher={key}
                   tabIndex={-1}
                   disabled={nodeDisabled}
-                  className="inline-flex size-6 shrink-0 cursor-pointer items-center justify-center rounded transition-transform duration-200 disabled:cursor-not-allowed"
+                  className="inline-flex size-6 shrink-0 cursor-pointer items-center justify-center rounded transition-transform duration-200 outline-none disabled:cursor-not-allowed"
                   style={{
-                    transform: open && !loading.includes(key) ? "rotate(90deg)" : undefined,
+                    transform: open && !nodeLoading ? "rotate(90deg)" : undefined,
                   }}
                   onClick={(event) => {
                     event.stopPropagation();
                     void toggleExpand(node);
                   }}
                 >
-                  {switcher}
+                  <span className="relative inline-flex size-3 items-center justify-center">
+                    <span
+                      className={twMerge(
+                        "absolute inset-0 inline-flex items-center justify-center transition-opacity duration-200 ease-out motion-reduce:transition-none",
+                        nodeLoading ? "opacity-0" : "opacity-100",
+                      )}
+                    >
+                      <Icon icon="chevron-right" size={12} />
+                    </span>
+                    <span
+                      className={twMerge(
+                        "absolute inset-0 inline-flex items-center justify-center transition-opacity duration-200 ease-out motion-reduce:transition-none",
+                        nodeLoading ? "opacity-100" : "opacity-0",
+                      )}
+                    >
+                      <Icon icon="loading" loading size={12} />
+                    </span>
+                  </span>
                 </button>
               ) : (
                 <span className="size-6 shrink-0" />
               )}
-              {checkable || node.checkable ? (
+              {(node.checkable ?? checkable) ? (
                 <span
                   className="mr-1 inline-flex size-6 shrink-0 items-center justify-center"
                   onClick={(event) => event.stopPropagation()}
@@ -686,7 +710,7 @@ export function Tree({
               <span
                 data-tree-selection-content={key}
                 className={twMerge(
-                  "inline-flex min-h-6 min-w-0 items-center rounded-md transition-colors",
+                  "inline-flex min-h-6 min-w-0 items-center rounded-md transition-colors duration-200 ease-out motion-reduce:transition-none",
                   fullWidth && "flex-1",
                   nodeSelectable && "cursor-pointer hover:bg-hover",
                   isSelected && !nodeDisabled && "bg-selected text-primary",
@@ -705,7 +729,7 @@ export function Tree({
                 ) : null}
                 <span
                   data-tree-title={key}
-                  className="relative -top-px flex min-h-6 min-w-0 items-center px-1 leading-6 whitespace-pre-line"
+                  className="flex min-h-6 max-w-full min-w-0 items-center overflow-hidden px-1 leading-6 [overflow-wrap:anywhere] break-all whitespace-pre-line"
                 >
                   {titleRender?.(node) ?? node.title}
                 </span>
@@ -719,7 +743,7 @@ export function Tree({
               >
                 <div
                   className={twMerge(
-                    "overflow-hidden pt-0 transition-[padding-top] duration-200 ease-[cubic-bezier(0.645,0.045,0.355,1)] motion-reduce:transition-none",
+                    "min-h-0 overflow-clip pt-0 transition-[padding-top] duration-200 ease-[cubic-bezier(0.645,0.045,0.355,1)] motion-reduce:transition-none",
                     open && "pt-1",
                     draggingKey && open && "overflow-visible",
                   )}

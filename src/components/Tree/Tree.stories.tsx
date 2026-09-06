@@ -78,7 +78,7 @@ const draggableTreeData: TreeDataNode[] = [
   },
   { key: "documents", title: "문서" },
   { key: "assets", title: "에셋", icon: <Icon icon="folder-outlined" /> },
-  { key: "guide", title: "가이드.md", icon: <Icon icon="file-outlined" /> },
+  { key: "guide", title: "가이드.md", icon: <Icon icon="file-outlined" />, isLeaf: true },
   { key: "releases", title: "릴리스" },
   { key: "settings", title: "설정", icon: <Icon icon="setting" /> },
   { key: "archive", title: "보관함" },
@@ -113,7 +113,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "중첩된 데이터를 펼치고 접을 수 있는 계층 구조로 보여줘요.  \n단일·다중 선택, 연관 체크, 드래그 이동과 비동기 로드를 지원해요.",
+          "Tree는 폴더 구조처럼 부모와 자식 관계가 있는 항목을 계층형 목록으로 표시해요.  \n펼침·선택·체크·드래그 이동과 비동기 불러오기를 지원해요.",
       },
       page: () => (
         <div className="tree-docs component-docs">
@@ -123,6 +123,8 @@ const meta = {
           <h2>API</h2>
           <Markdown>{`
 ### <span id="tree">Tree</span>
+
+Tree는 계층 데이터를 펼치거나 접을 수 있는 목록으로 표시해요.
 
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
@@ -157,6 +159,8 @@ const meta = {
 
 ### <span id="tree-data-node">TreeDataNode</span>
 
+TreeDataNode는 Tree를 구성하는 하나의 항목과 하위 구조를 정의해요.
+
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
 | \`key\` | 노드를 구분하는 고유한 값이에요. | \`Key\` | - |
@@ -171,12 +175,16 @@ const meta = {
 
 ### <span id="tree-drag-info">TreeDragInfo</span>
 
+TreeDragInfo는 노드를 드래그하는 동안 받는 위치 정보예요.
+
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
 | \`event\` | 원본 드래그 이벤트예요. | \`DragEvent<HTMLDivElement>\` | - |
 | \`dragNode\` | 사용자가 잡아 이동 중인 노드예요. | [\`TreeDataNode\`](#tree-data-node) | - |
 
 ### <span id="tree-drop-info">TreeDropInfo</span>
+
+TreeDropInfo는 노드를 놓았을 때 받는 이동 결과예요.
 
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
@@ -225,14 +233,14 @@ const source = `<Tree
           title: 'components',
           icon: <Icon icon="folder-outlined" />,
           children: [
-            { key: 'button', title: 'Button.tsx', icon: <Icon icon="file-outlined" /> },
+            { key: 'button', title: 'Button.tsx', icon: <Icon icon="file-outlined" />, isLeaf: true },
           ],
         },
-        { key: 'index', title: 'index.ts', icon: <Icon icon="file-outlined" /> },
+        { key: 'index', title: 'index.ts', icon: <Icon icon="file-outlined" />, isLeaf: true },
       ],
     },
-    { key: 'package', title: 'package.json', icon: <Icon icon="file-outlined" /> },
-    { key: 'readme', title: 'README.md' },
+    { key: 'package', title: 'package.json', icon: <Icon icon="file-outlined" />, isLeaf: true },
+    { key: 'readme', title: 'README.md', isLeaf: true },
   ]}
 />`;
 const controlledTreeDataSource = `const treeData = [
@@ -261,7 +269,7 @@ const draggableTreeDataSource = `const data: TreeDataNode[] = [
   },
   { key: 'documents', title: '문서' },
   { key: 'assets', title: '에셋', icon: <Icon icon="folder-outlined" /> },
-  { key: 'guide', title: '가이드.md', icon: <Icon icon="file-outlined" /> },
+  { key: 'guide', title: '가이드.md', icon: <Icon icon="file-outlined" />, isLeaf: true },
   { key: 'releases', title: '릴리스' },
   { key: 'settings', title: '설정', icon: <Icon icon="setting" /> },
   { key: 'archive', title: '보관함' },
@@ -460,7 +468,7 @@ export const Draggable: Story = {
   },
   { key: 'documents', title: '문서' },
   { key: 'assets', title: '에셋', icon: <Icon icon="folder-outlined" /> },
-  { key: 'guide', title: '가이드.md', icon: <Icon icon="file-outlined" /> },
+  { key: 'guide', title: '가이드.md', icon: <Icon icon="file-outlined" />, isLeaf: true },
   { key: 'releases', title: '릴리스' },
   { key: 'settings', title: '설정', icon: <Icon icon="setting" /> },
   { key: 'archive', title: '보관함' },
@@ -657,13 +665,13 @@ export const ControlledState: Story = {
         code: withStoryImports(`${controlledTreeDataSource}
 
 function ControlledTree() {
-  const [expandedKeys, setExpandedKeys] = useState(['src', 'components']);
-  const [selectedKeys, setSelectedKeys] = useState(['button']);
-  const [checkedKeys, setCheckedKeys] = useState(['button']);
+  const [expandedKeys, setExpandedKeys] = useState<Key[]>(['src', 'components']);
+  const [selectedKeys, setSelectedKeys] = useState<Key[]>(['button']);
+  const [checkedKeys, setCheckedKeys] = useState<Key[]>(['button']);
 
   return (
     <div className="grid gap-4">
-      <div className="flex flex-wrap gap-2 text-sm">
+      <div className="flex flex-wrap gap-3 text-sm text-dark-gray">
         <span>선택: {selectedKeys.join(', ') || '-'}</span>
         <span>체크: {checkedKeys.join(', ') || '-'}</span>
       </div>
@@ -777,7 +785,7 @@ export const AsyncLoading: Story = {
       source: {
         type: "code",
         code: withStoryImports(`function AsyncTreeExample() {
-  const [data, setData] = useState([
+  const [data, setData] = useState<TreeDataNode[]>([
     {
       key: 'team',
       title: '팀 문서',
@@ -786,7 +794,7 @@ export const AsyncLoading: Story = {
     },
   ]);
 
-  const loadData = async (node) => {
+  const loadData = async (node: TreeDataNode) => {
     await new Promise((resolve) => window.setTimeout(resolve, 600));
     setData((current) =>
       current.map((item) =>

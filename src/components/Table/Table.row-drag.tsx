@@ -164,7 +164,7 @@ export function SortableTableRow({
   const dragStyle: CSSProperties = {
     ...style,
     transform: CSS.Translate.toString(transform),
-    transition: transition ?? "transform 220ms cubic-bezier(.2,.8,.2,1)",
+    transition: transition ?? "transform 200ms cubic-bezier(.2,.8,.2,1)",
   };
 
   return (
@@ -172,7 +172,10 @@ export function SortableTableRow({
       <Component
         ref={setNodeRef}
         {...props}
-        className={twMerge(className, isDragging && "relative z-10 opacity-90 drop-shadow-md")}
+        className={twMerge(
+          className,
+          isDragging && "relative z-10 bg-white drop-shadow-[var(--shadow-sm)]",
+        )}
         style={dragStyle}
       />
     </RowDragContext.Provider>
@@ -200,12 +203,12 @@ export function SortableTableHeaderCell({
       className={twMerge(
         className,
         "cursor-grab active:cursor-grabbing",
-        isDragging && "relative z-10",
+        isDragging && "relative z-10 drop-shadow-[var(--shadow-sm)]",
       )}
       style={{
         ...style,
         transform: CSS.Translate.toString(horizontalTransform),
-        transition: transition ?? "transform 220ms cubic-bezier(.2,.8,.2,1)",
+        transition: transition ?? "transform 200ms cubic-bezier(.2,.8,.2,1)",
       }}
     />
   );

@@ -1,5 +1,6 @@
-import type { Key, ReactElement, ReactNode } from "react";
+import type { CSSProperties, Key, ReactElement, ReactNode } from "react";
 import type { Dayjs } from "dayjs";
+import type { ColorTokenType } from "../../color-tokens";
 
 export interface CalendarCellInfo {
   originNode: ReactElement;
@@ -16,7 +17,7 @@ export interface CalendarEvent {
   title: ReactNode;
   start: Dayjs;
   end?: Dayjs;
-  color?: string;
+  color?: ColorTokenType | CSSProperties["backgroundColor"];
 }
 
 export interface CalendarProps {

@@ -1,9 +1,9 @@
-import type { HTMLAttributes, ReactNode } from "react";
+import type { HTMLAttributes, Key, ReactNode } from "react";
 
 export type SegmentedSizeType = "lg" | "md" | "sm";
 
 export interface SegmentedItem {
-  value: string | number;
+  value: Key;
   label?: ReactNode;
   icon?: ReactNode;
   disabled?: boolean;
@@ -15,9 +15,9 @@ export interface SegmentedProps extends Omit<
   "onChange" | "defaultValue"
 > {
   options: SegmentedItem[];
-  value?: string | number;
-  defaultValue?: string | number;
-  onChange?: (value: string | number) => void;
+  value?: Key;
+  defaultValue?: Key;
+  onChange?: (value: Key) => void;
   fullWidth?: boolean;
   disabled?: boolean;
   vertical?: boolean;

@@ -27,19 +27,19 @@ const meta = {
   tags: ["autodocs"],
   argTypes: {
     type: { name: "상태", control: "select", options: messageStatuses },
-    duration: { name: "표시 시간", control: { type: "number", min: 0, step: 0.5 } },
+    duration: { name: "표시 시간 (초)", control: { type: "number", min: 0, step: 0.5 } },
     secondaryDuration: {
-      name: "두 번째 표시 시간",
+      name: "두 번째 표시 시간 (초)",
       control: { type: "number", min: 0, step: 0.5 },
     },
-    updateDelay: { name: "갱신 지연", control: { type: "number", min: 0, step: 100 } },
+    updateDelay: { name: "갱신 지연 (초)", control: { type: "number", min: 0, step: 0.1 } },
     pauseOnHover: { name: "Hover 중 정지", control: "boolean" },
   },
   parameters: {
     controls: { disable: false },
     docs: {
       description: {
-        component: "작업 결과나 짧은 안내를 화면 위에 표시해요.",
+        component: "Message는 저장 결과나 짧은 안내를 화면 위에 잠시 표시해요.",
       },
       page: () => (
         <div className="message-docs component-docs">
@@ -50,17 +50,21 @@ const meta = {
           <Markdown>{`
 ### Message
 
+Message는 작업 결과를 화면 위에 잠시 표시해요.
+
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
-| \`open\` | 설정한 내용으로 메시지를 표시해요. | (config: [\`Config\`](#config)) => MessageType | - |
-| \`success\` | 성공 메시지를 표시해요. | (config: [\`Config\`](#config)) => MessageType | - |
-| \`error\` | 오류 메시지를 표시해요. | (config: [\`Config\`](#config)) => MessageType | - |
-| \`info\` | 정보 메시지를 표시해요. | (config: [\`Config\`](#config)) => MessageType | - |
-| \`warning\` | 경고 메시지를 표시해요. | (config: [\`Config\`](#config)) => MessageType | - |
-| \`loading\` | 유지되는 로딩 메시지를 표시해요. | (config: [\`Config\`](#config)) => MessageType | - |
+| \`open\` | 설정한 내용으로 메시지를 표시해요. | (config: [\`MessageConfig\`](#message-config)) => MessageType | - |
+| \`success\` | 성공 메시지를 표시해요. | (config: [\`MessageConfig\`](#message-config)) => MessageType | - |
+| \`error\` | 오류 메시지를 표시해요. | (config: [\`MessageConfig\`](#message-config)) => MessageType | - |
+| \`info\` | 정보 메시지를 표시해요. | (config: [\`MessageConfig\`](#message-config)) => MessageType | - |
+| \`warning\` | 경고 메시지를 표시해요. | (config: [\`MessageConfig\`](#message-config)) => MessageType | - |
+| \`loading\` | 유지되는 로딩 메시지를 표시해요. | (config: [\`MessageConfig\`](#message-config)) => MessageType | - |
 | \`destroy\` | key의 메시지 또는 모든 메시지를 닫아요. | \`(key?) => void\` | - |
 
-### Config
+### <span id="message-config">MessageConfig</span>
+
+MessageConfig는 명령형 호출에 표시할 내용과 동작을 정의해요.
 
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
@@ -75,7 +79,7 @@ const meta = {
       `}</Markdown>
           <h2 className="component-docs-types-heading">Types</h2>
           <h3 id="message-status-type">MessageStatusType</h3>
-          <p>메시지 상태를 선택해요.</p>
+          <p>MessageStatusType은 메시지의 의미와 상태 아이콘을 구분해요.</p>
           <TypeTokens values={messageStatuses} />
         </div>
       ),
@@ -96,7 +100,7 @@ export const Basic: Story = {
     ...storyDescription("components-message--basic"),
     controls: {
       disable: false,
-      include: ["상태", "표시 시간", "Hover 중 정지"],
+      include: ["상태", "표시 시간 (초)", "Hover 중 정지"],
     },
     docs: {
       ...storyDescription("components-message--basic").docs,
@@ -122,7 +126,7 @@ export const Types: Story = {
   args: { duration: 3, pauseOnHover: true },
   parameters: {
     ...storyDescription("components-message--types"),
-    controls: { disable: false, include: ["표시 시간", "Hover 중 정지"] },
+    controls: { disable: false, include: ["표시 시간 (초)", "Hover 중 정지"] },
     docs: {
       ...storyDescription("components-message--types").docs,
       source: {
@@ -252,7 +256,7 @@ export const Duration: Story = {
     ...storyDescription("components-message--duration"),
     controls: {
       disable: false,
-      include: ["표시 시간", "두 번째 표시 시간", "Hover 중 정지"],
+      include: ["표시 시간 (초)", "두 번째 표시 시간 (초)", "Hover 중 정지"],
     },
     docs: {
       ...storyDescription("components-message--duration").docs,
@@ -301,10 +305,10 @@ export const Duration: Story = {
 };
 
 export const Update: Story = {
-  args: { updateDelay: 1200 },
+  args: { updateDelay: 1.2 },
   parameters: {
     ...storyDescription("components-message--update"),
-    controls: { disable: false, include: ["갱신 지연"] },
+    controls: { disable: false, include: ["갱신 지연 (초)"] },
     docs: {
       ...storyDescription("components-message--update").docs,
       source: {
@@ -324,7 +328,7 @@ export const Update: Story = {
     window.clearTimeout(timerRef.current);
     timerRef.current = window.setTimeout(
       () => message.success({ key: 'save', content: '저장했어요.' }),
-      1200,
+      1.2 * 1000,
     );
   };
 
@@ -352,7 +356,7 @@ function MessageUpdateExample({ updateDelay }: Pick<MessageStoryArgs, "updateDel
     window.clearTimeout(timerRef.current);
     timerRef.current = window.setTimeout(
       () => message.success({ key: "save", content: "저장했어요." }),
-      updateDelay,
+      updateDelay * 1000,
     );
   };
 
@@ -363,7 +367,7 @@ export const Promise: Story = {
   args: { duration: 1 },
   parameters: {
     ...storyDescription("components-message--promise"),
-    controls: { disable: false, include: ["표시 시간"] },
+    controls: { disable: false, include: ["표시 시간 (초)"] },
     docs: {
       ...storyDescription("components-message--promise").docs,
       source: {

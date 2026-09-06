@@ -1,6 +1,7 @@
 /// <reference types="vite/client" />
 
 import { describe, expect, it } from "vitest";
+import { colorTokenNames, resolveColorToken, resolveReadableTextColor } from "../color-tokens";
 // The package's public tsconfig intentionally excludes Node types; Vitest still runs in Node.
 // @ts-expect-error -- node:fs is only used by this build-contract test.
 import { readFileSync } from "node:fs";
@@ -23,6 +24,7 @@ const tokens = {
   disabled: "#bbbbbb",
   border: "#dddddd",
   hover: "#f2f2f2",
+  "light-gray": "#fafafa",
   black: "#000000",
   white: "#ffffff",
 } as const;
@@ -44,6 +46,13 @@ const presentationTokenValues = Object.entries(tokens)
   .map(([, value]) => value);
 
 describe("semantic color token contract", () => {
+  it("resolves light-gray and keeps its foreground dark", () => {
+    expect(colorTokenNames).toContain("light-gray");
+    expect(resolveColorToken("light-gray")).toBe("var(--color-light-gray)");
+    expect(resolveReadableTextColor("light-gray")).toBe("var(--color-dark)");
+    expect(resolveReadableTextColor("var(--color-light-gray)")).toBe("var(--color-dark)");
+  });
+
   it("defines every semantic color as a static Tailwind theme token", () => {
     expect(themeCss).toContain("@theme static");
 
@@ -70,6 +79,6 @@ describe("shadow token contract", () => {
     }
     expect(themeCss).toContain("--shadow-xl:");
     expect(themeCss).toContain("--shadow-2xl:");
-    expect(themeCss).toContain("--drop-shadow-md:");
+    expect(themeCss).not.toContain("--drop-shadow-md:");
   });
 });

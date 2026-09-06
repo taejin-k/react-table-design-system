@@ -14,6 +14,23 @@ function DrawerExample() {
 }
 
 describe("Drawer", () => {
+  it("ends a resize on pointercancel and removes document listeners on unmount", () => {
+    const onResize = vi.fn();
+    const onResizeEnd = vi.fn();
+    const { unmount } = render(<Drawer open resizable={{ onResize, onResizeEnd }} />);
+    const handle = document.querySelector("[data-drawer-resize-handle]")!;
+    fireEvent.pointerDown(handle, { pointerId: 1, clientX: 500 });
+    fireEvent.pointerCancel(document);
+    expect(onResizeEnd).toHaveBeenCalledTimes(1);
+    fireEvent.pointerMove(document, { clientX: 400 });
+    expect(onResize).not.toHaveBeenCalled();
+    fireEvent.pointerDown(handle, { pointerId: 2, clientX: 500 });
+    unmount();
+    fireEvent.pointerMove(document, { clientX: 400 });
+    fireEvent.pointerUp(document);
+    expect(onResize).not.toHaveBeenCalled();
+    expect(onResizeEnd).toHaveBeenCalledTimes(1);
+  });
   it("does not render its panel before the first open unless forceRender is true", () => {
     const { rerender } = render(<Drawer open={false}>내용</Drawer>);
 
@@ -91,6 +108,31 @@ describe("Drawer", () => {
 
     expect(onClose).toHaveBeenCalledTimes(1);
     expect(document.activeElement).toBe(panel);
+  });
+
+  it("keeps dimmed and other close controls when mask clicks are disabled", async () => {
+    const onClose = vi.fn();
+    const { rerender } = render(
+      <Drawer open mask={false} onClose={onClose}>
+        내용
+      </Drawer>,
+    );
+    const mask = document.querySelector("[data-drawer-mask]")!;
+    expect(mask).toHaveClass("bg-black/45", "cursor-default");
+    await userEvent.click(mask);
+    expect(onClose).not.toHaveBeenCalled();
+    await userEvent.click(document.querySelector("[data-drawer-panel] button")!);
+    expect(onClose).toHaveBeenCalledTimes(1);
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(onClose).toHaveBeenCalledTimes(2);
+    rerender(
+      <Drawer open mask onClose={onClose}>
+        내용
+      </Drawer>,
+    );
+    expect(document.querySelector("[data-drawer-mask]")).toBe(mask);
+    await userEvent.click(mask);
+    expect(onClose).toHaveBeenCalledTimes(3);
   });
 
   it("closes when the enabled mask is clicked", async () => {
@@ -261,12 +303,18 @@ describe("Drawer", () => {
     );
 
     const title = screen.getByText(/제목 첫 줄\s+제목 둘째 줄/);
-    expect(title).toHaveClass("whitespace-pre-wrap", "[overflow-wrap:anywhere]", "leading-6");
+    expect(title).toHaveClass(
+      "whitespace-pre-wrap",
+      "[overflow-wrap:anywhere]",
+      "break-all",
+      "leading-6",
+    );
     expect(title.parentElement).toHaveClass("py-4");
     expect(document.querySelector("[data-overlay-close-button]")).toHaveClass("self-start");
     expect(screen.getByText(/내용 첫 줄\s+내용 둘째 줄/)).toHaveClass(
       "whitespace-pre-wrap",
       "[overflow-wrap:anywhere]",
+      "break-all",
     );
   });
 });

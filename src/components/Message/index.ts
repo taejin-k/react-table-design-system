@@ -1,7 +1,7 @@
 export { message } from "./Message";
 export type {
   MessageApi,
-  MessageArgsProps,
+  MessageConfig,
   MessageInstance,
   MessageType,
   MessageStatusType,

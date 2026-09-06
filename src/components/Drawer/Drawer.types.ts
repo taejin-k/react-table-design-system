@@ -21,6 +21,7 @@ export interface DrawerProps {
   extra?: ReactNode;
   footer?: ReactNode;
   keyboard?: boolean;
+  /** 배경 클릭으로 닫아요. dimmed는 항상 표시해요. */
   mask?: boolean;
   scrollLock?: boolean;
   forceRender?: boolean;

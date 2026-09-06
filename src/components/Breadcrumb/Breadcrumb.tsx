@@ -1,6 +1,7 @@
 import { forwardRef } from "react";
 import { cva } from "class-variance-authority";
 import { twMerge } from "tailwind-merge";
+import { resolveColorToken } from "../../color-tokens";
 import type { BreadcrumbProps } from "./Breadcrumb.types";
 
 export const Breadcrumb = forwardRef<HTMLElement, BreadcrumbProps>(
@@ -46,7 +47,10 @@ export const Breadcrumb = forwardRef<HTMLElement, BreadcrumbProps>(
                       contentVariants({ interactive: true, current: isCurrent }),
                       itemClassName,
                     )}
-                    style={{ color, ...style }}
+                    style={{
+                      color: color === undefined ? undefined : resolveColorToken(color),
+                      ...style,
+                    }}
                   >
                     {content}
                   </a>
@@ -59,14 +63,20 @@ export const Breadcrumb = forwardRef<HTMLElement, BreadcrumbProps>(
                       "appearance-none border-0 bg-transparent [font:inherit]",
                       itemClassName,
                     )}
-                    style={{ color, ...style }}
+                    style={{
+                      color: color === undefined ? undefined : resolveColorToken(color),
+                      ...style,
+                    }}
                   >
                     {content}
                   </button>
                 ) : (
                   <span
                     className={twMerge(contentVariants({ current: isCurrent }), itemClassName)}
-                    style={{ color, ...style }}
+                    style={{
+                      color: color === undefined ? undefined : resolveColorToken(color),
+                      ...style,
+                    }}
                   >
                     {content}
                   </span>
@@ -87,7 +97,7 @@ const contentVariants = cva(
   {
     variants: {
       interactive: {
-        true: "cursor-pointer no-underline transition-[color,background-color] hover:bg-hover hover:text-dark focus-visible:bg-hover focus-visible:text-dark focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary motion-reduce:transition-none",
+        true: "cursor-pointer no-underline transition-[color,background-color] duration-200 ease-out outline-none hover:bg-hover hover:text-dark focus-visible:bg-hover focus-visible:text-dark motion-reduce:transition-none",
         false: "",
       },
       current: {

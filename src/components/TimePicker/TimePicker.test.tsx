@@ -1,10 +1,57 @@
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import dayjs from "dayjs";
-import { describe, expect, it, vi } from "vitest";
+import dayjs, { type Dayjs } from "dayjs";
+import { describe, expect, expectTypeOf, it, vi } from "vitest";
 import { TimePicker } from "./TimePicker";
 
 describe("TimePicker", () => {
+  it("infers single and multiple values and formatted strings", () => {
+    const single = (
+      <TimePicker
+        onChange={(value, text) => {
+          expectTypeOf(value).toEqualTypeOf<Dayjs | undefined>();
+          expectTypeOf(text).toEqualTypeOf<string>();
+        }}
+      />
+    );
+    const multiple = (
+      <TimePicker
+        multiple
+        onChange={(value, text) => {
+          expectTypeOf(value).toEqualTypeOf<Dayjs[]>();
+          expectTypeOf(text).toEqualTypeOf<string[]>();
+        }}
+      />
+    );
+    // @ts-expect-error A single picker does not accept an array.
+    const invalid = <TimePicker value={[dayjs()]} />;
+    expect([single, multiple, invalid]).toHaveLength(3);
+  });
+
+  it("emits undefined on clear and clears a controlled undefined value", () => {
+    const onChange = vi.fn();
+    const { rerender } = render(
+      <TimePicker value={dayjs("2026-08-20 09:00:00")} onChange={onChange} />,
+    );
+    const trigger = screen.getByRole("button", { name: "09:00:00" });
+    fireEvent.click(trigger.querySelector("span.cursor-pointer")!);
+    expect(onChange).toHaveBeenCalledWith(undefined, "");
+    rerender(<TimePicker value={undefined} onChange={onChange} />);
+    expect(screen.getByRole("button", { name: "시간을 선택하세요" })).toBeInTheDocument();
+  });
+
+  it("applies width only to the trigger", () => {
+    const { container } = render(
+      <TimePicker width={240} label="긴 레이블" errorMessage="긴 오류 문구" />,
+    );
+
+    const triggerWrapper = screen.getByRole("button").parentElement;
+    expect(container.firstElementChild).not.toHaveStyle({ width: "240px" });
+    expect(triggerWrapper).toHaveStyle({ width: "240px" });
+    expect(triggerWrapper).not.toContainElement(screen.getByText("긴 레이블"));
+    expect(triggerWrapper).not.toContainElement(screen.getByText("긴 오류 문구"));
+  });
+
   it("normalizes serialized legacy values without crashing", () => {
     render(<TimePicker multiple defaultValue={["09:00:00", "13:30:00"] as never} />);
 
@@ -68,11 +115,23 @@ describe("TimePicker", () => {
     expect(within(popup).getByRole("button", { name: "AM" })).toHaveClass("bg-selected");
   });
 
+  it("uses the disabled token for its placeholder", () => {
+    render(<TimePicker placeholder="시간 선택" />);
+
+    expect(screen.getByText("시간 선택")).toHaveClass("text-disabled");
+    expect(screen.getByText("시간 선택")).not.toHaveClass("text-gray");
+  });
+
   it("resets the open time panel when the value is cleared", async () => {
     const user = userEvent.setup();
     render(<TimePicker defaultValue={dayjs("2026-08-20 10:25:10")} />);
 
     const trigger = screen.getByRole("button", { name: /10:25:10/ });
+    expect(trigger.querySelector("span.cursor-pointer")).toHaveClass(
+      "transition-opacity",
+      "duration-200",
+      "hover:opacity-75",
+    );
     await user.click(trigger);
     await user.click(trigger.querySelector("svg") as Element);
 
@@ -113,6 +172,24 @@ describe("TimePicker", () => {
     await user.click(tens[0]);
     expect(onChange.mock.calls[0]?.[0].format("HH:mm:ss")).toBe("10:00:00");
     expect(onChange.mock.calls[0]?.[1]).toBe("10:00:00");
+  });
+
+  it("uses an async errorMessage function to validate a changed time", async () => {
+    const user = userEvent.setup();
+    const getErrorMessage = vi.fn(async (nextValue) =>
+      !Array.isArray(nextValue) && nextValue?.hour() === 10 ? "10시는 선택할 수 없어요." : "",
+    );
+    render(
+      <TimePicker defaultValue={dayjs("2026-08-20 09:00:00")} errorMessage={getErrorMessage} />,
+    );
+
+    await user.click(screen.getByRole("button", { name: /09:00:00/ }));
+    const popup = document.querySelector("[data-timepicker-popup]") as HTMLElement;
+    await user.click(within(popup).getAllByRole("button", { name: "10" })[0]);
+
+    expect(await screen.findByText("10시는 선택할 수 없어요.")).toBeInTheDocument();
+    expect(getErrorMessage.mock.calls[getErrorMessage.mock.calls.length - 1]?.[0].hour()).toBe(10);
+    expect(screen.getByRole("button", { name: /10:00:00/ })).toHaveClass("border-danger");
   });
 
   it("adds and orders multiple time values after confirmation", async () => {
@@ -186,14 +263,15 @@ describe("TimePicker", () => {
     const trigger = screen.getByRole("button", { name: /08:30:00/ });
     expect(trigger).not.toBeDisabled();
     expect(trigger).toHaveClass(
+      "cursor-default",
       "border-hover",
       "bg-hover",
       "focus:border-primary",
-      "focus:outline-none",
+      "outline-none",
     );
 
     await user.click(trigger);
-    expect(trigger).toHaveFocus();
+    expect(trigger).not.toHaveFocus();
     expect(document.querySelector("[data-timepicker-popup]")).not.toBeInTheDocument();
   });
 

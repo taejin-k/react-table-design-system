@@ -35,7 +35,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "여러 선택지 중 하나를 선택해요.  \n레이블을 표시하고 오류·비활성 상태를 설정할 수 있어요.",
+          "Radio는 여러 선택지 중 하나를 고를 때 사용해요.  \n레이블을 붙이고 오류·비활성 상태를 표현할 수 있어요.",
       },
       page: () => (
         <div className="radio-docs component-docs">
@@ -45,6 +45,8 @@ const meta = {
           <h2>API</h2>
           <Markdown>{`
 ### Radio
+
+Radio는 여러 선택지 중 하나를 선택하게 해요.
 
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |

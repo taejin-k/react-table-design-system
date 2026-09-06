@@ -27,13 +27,19 @@ export const Toggle = forwardRef<HTMLButtonElement, ToggleProps>(
         className={twMerge(trackVariants({ size, checked, loading }), className)}
       >
         <span key={size} className={knobVariants({ size, checked })}>
-          {loading ? (
+          <span
+            data-toggle-loading-icon
+            className={twMerge(
+              "inline-flex items-center justify-center transition-opacity duration-200 ease-out motion-reduce:transition-none",
+              loading ? "opacity-100" : "opacity-0",
+            )}
+          >
             <Icon
-              color={checked ? "#6ea0fa" : "gray"}
+              color={checked ? "primary" : "gray"}
               icon="loading"
               size={loadingIconSizes[size]}
             />
-          ) : null}
+          </span>
         </span>
       </button>
     );
@@ -49,7 +55,7 @@ const loadingIconSizes = {
 } as const;
 
 const trackVariants = cva(
-  "relative inline-flex shrink-0 cursor-pointer items-center rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none",
+  "relative inline-flex shrink-0 cursor-pointer items-center rounded-full transition-[background-color,opacity] duration-200 ease-out outline-none disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none",
   {
     variants: {
       size: {
@@ -62,12 +68,11 @@ const trackVariants = cva(
         false: "bg-border",
       },
       loading: {
-        true: "cursor-default",
+        true: "cursor-default opacity-70",
         false: "",
       },
     },
     compoundVariants: [
-      { checked: true, loading: true, className: "bg-[#6ea0fa]" },
       { size: "lg", className: "w-[50px]" },
       { size: "md", className: "w-[40px]" },
       { size: "sm", className: "w-[32px]" },

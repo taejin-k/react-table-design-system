@@ -4,11 +4,32 @@ import { afterEach, describe, expect, it } from "vitest";
 import { notification } from "./Notification";
 
 describe("notification", () => {
+  it("keeps the default notification card styling", async () => {
+    act(() =>
+      notification.info({ description: "맞춤 알림", duration: 0 }),
+    );
+    await screen.findByText("맞춤 알림");
+    expect(document.querySelector(".wizard-notification-card")).toHaveClass("rounded-lg");
+  });
   afterEach(async () => {
     act(() => notification.destroy());
     await waitFor(() =>
       expect(document.querySelectorAll(".wizard-notification-card")).toHaveLength(0),
     );
+  });
+
+  it("replaces the loading icon without leaving a blue overlay", async () => {
+    act(() => notification.loading({ key: "color", description: "저장 중", duration: 0 }));
+    await screen.findByText("저장 중");
+    const card = document.querySelector(".wizard-notification-card")!;
+    const loading = card.querySelector("svg.animate-spin");
+    expect(loading).toBeInTheDocument();
+    act(() => notification.success({ key: "color", description: "저장 완료", duration: 0 }));
+    await screen.findByText("저장 완료");
+    expect(document.querySelector(".wizard-notification-card")).toBe(card);
+    expect(loading).not.toBeInTheDocument();
+    expect(card.querySelector('path[fill="var(--color-success)"]')).toBeInTheDocument();
+    expect(card.querySelector('path[fill="var(--color-primary)"]')).not.toBeInTheDocument();
   });
 
   it("opens and updates a keyed notification", async () => {
@@ -140,6 +161,29 @@ describe("notification", () => {
     });
   });
 
+  it("constrains a nested action row and allows long buttons to shrink", async () => {
+    act(() =>
+      notification.info({
+        description: "액션 영역",
+        duration: 0,
+        actions: (
+          <div data-testid="actions">
+            <button>{"1234567890".repeat(30)}</button>
+            <button>확인</button>
+          </div>
+        ),
+      }),
+    );
+    const row = await screen.findByTestId("actions");
+    expect(row.parentElement).toHaveClass(
+      "min-w-0",
+      "max-w-full",
+      "[&>*]:min-w-0",
+      "[&>*]:max-w-full",
+      "[&_button]:min-w-0",
+    );
+  });
+
   it("uses filled 28px status icons", async () => {
     render(
       <button
@@ -163,6 +207,21 @@ describe("notification", () => {
     });
     expect(icon).toHaveAttribute("width", "28");
     expect(icon).toHaveAttribute("height", "28");
+  });
+
+  it("clips the full-width progress bar to the card corners", async () => {
+    act(() => notification.info({ description: "진행 표시", showProgress: true, duration: 10 }));
+    await screen.findByText("진행 표시");
+    const card = document.querySelector(".wizard-notification-card")!;
+    const progress = card.querySelector('[style*="wizard-notification-progress"]')!;
+    expect(progress).toHaveClass("inset-x-0", "bottom-0");
+    expect(progress.parentElement).toHaveClass(
+      "inset-0",
+      "overflow-hidden",
+      "rounded-[inherit]",
+      "pointer-events-none",
+    );
+    expect(card).toHaveClass("overflow-visible");
   });
 
   it("shows a persistent animated loading notification", async () => {
@@ -266,9 +325,9 @@ describe("notification", () => {
 
     expect(await screen.findByText(/제목 첫 줄\s+제목 둘째 줄/)).toHaveClass("whitespace-pre-wrap");
     expect(screen.getByText(/내용 첫 줄\s+내용 둘째 줄/)).toHaveClass("whitespace-pre-wrap");
-    expect(document.querySelector('[data-icon="info-circle-filled"]')?.parentElement).toHaveClass(
-      "-mt-0.5",
-    );
+    expect(
+      document.querySelector('[data-icon="info-circle-filled"]')?.parentElement?.parentElement,
+    ).toHaveClass("items-start");
   });
 
   it("keeps the newest rapidly opened card fully visible in a collapsed stack", async () => {

@@ -1,4 +1,5 @@
 import type { CSSProperties, ImgHTMLAttributes, ReactNode } from "react";
+import type { ColorTokenType } from "../../color-tokens";
 
 export type AvatarSizeType = "md" | "lg";
 export type AvatarShapeType = "circle" | "square";
@@ -9,8 +10,8 @@ export interface AvatarProps extends Omit<
 > {
   src?: ReactNode;
   icon?: ReactNode;
-  color?: CSSProperties["backgroundColor"];
-  label?: boolean;
+  color?: ColorTokenType;
+  showLabel?: boolean;
   labelWidth?: number;
   size?: AvatarSizeType;
   shape?: AvatarShapeType;

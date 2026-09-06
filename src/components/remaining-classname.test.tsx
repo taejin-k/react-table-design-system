@@ -20,7 +20,7 @@ describe("remaining component className convention", () => {
     const { container } = render(
       <div>
         <Avatar className="avatar-root">A</Avatar>
-        <Badge className="badge-root" status="success" />
+        <Badge className="badge-root" color="success" />
         <Calendar className="calendar-root" fullscreen={false} />
         <Collapse className="collapse-root" />
         <ColorPicker className="color-picker-root" />

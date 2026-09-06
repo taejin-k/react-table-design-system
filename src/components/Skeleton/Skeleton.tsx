@@ -22,7 +22,7 @@ function AvatarSkeleton({
   return (
     <span
       className={twMerge(
-        "inline-block h-8 w-8 shrink-0",
+        "inline-block h-[30px] w-[30px] shrink-0",
         base(active),
         shapeClass(shape),
         className,
@@ -41,8 +41,8 @@ function ButtonSkeleton({
   return (
     <span
       className={twMerge(
-        "inline-block h-8",
-        shape === "circle" ? "w-8" : "w-16",
+        "inline-block h-[30px]",
+        shape === "circle" ? "w-[30px]" : "w-16",
         base(active),
         shapeClass(shape),
         className,
@@ -63,7 +63,7 @@ function InputSkeleton({
 }: SkeletonElementProps) {
   return (
     <span
-      className={twMerge("inline-block h-8 w-40", base(active), shapeClass(shape), className)}
+      className={twMerge("inline-block h-[30px] w-40", base(active), shapeClass(shape), className)}
       style={{ width, height: heightProp }}
     />
   );
@@ -78,7 +78,7 @@ function ImageSkeleton({
   return (
     <span
       className={twMerge(
-        "inline-flex h-24 w-24 items-center justify-center text-disabled",
+        "inline-flex h-24 w-24 items-center justify-center text-gray",
         base(active),
         shapeClass(shape),
         className,
@@ -102,7 +102,7 @@ function NodeSkeleton({
   return (
     <span
       className={twMerge(
-        "inline-flex h-24 w-24 items-center justify-center",
+        "inline-flex h-24 w-24 items-center justify-center text-gray",
         base(active),
         shapeClass(shape),
         className,

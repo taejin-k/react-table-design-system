@@ -92,7 +92,6 @@ const preview: Preview = {
             if (id === "components-table--documentation") return 0;
             if (id.startsWith("components-table--")) return 1;
             if (id === "components-table-api-compatibility--fixed-table-height") return 2.4;
-            if (id === "components-table-api-compatibility--sticky-header") return 2.5;
             if (id === "components-table-api-compatibility--fixed-columns") return 2.6;
             if (id === "components-table-layout--virtual-thousand-rows") return 2.7;
             if (id === "components-table-api-compatibility--imperative-scroll-to") return 2.7;

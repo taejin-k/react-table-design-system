@@ -13,13 +13,13 @@ describe("Dropdown", () => {
   it("opens on hover and closes when the page scrolls", async () => {
     const user = userEvent.setup();
     render(
-      <Dropdown menu={{ items }} mouseEnterDelay={0}>
+      <Dropdown menu={{ items }}>
         <button type="button">메뉴</button>
       </Dropdown>,
     );
 
     await user.hover(screen.getByRole("button", { name: "메뉴" }));
-    expect(screen.getByRole("button", { name: "수정" })).toHaveClass("cursor-pointer");
+    expect(await screen.findByRole("button", { name: "수정" })).toHaveClass("cursor-pointer");
     expect(screen.getByRole("button", { name: "이동" })).toHaveClass("cursor-not-allowed");
 
     fireEvent.scroll(window);
@@ -31,7 +31,7 @@ describe("Dropdown", () => {
   it("supports an array of trigger events", async () => {
     const user = userEvent.setup();
     render(
-      <Dropdown menu={{ items }} mouseEnterDelay={0} trigger={["focus", "click"]}>
+      <Dropdown menu={{ items }} trigger={["focus", "click"]}>
         <button type="button">메뉴</button>
       </Dropdown>,
     );
@@ -39,7 +39,7 @@ describe("Dropdown", () => {
     const trigger = screen.getByRole("button", { name: "메뉴" });
     await user.tab();
     expect(trigger).toHaveFocus();
-    expect(screen.getByRole("button", { name: "수정" })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "수정" })).toBeInTheDocument();
 
     fireEvent.scroll(window);
     await waitFor(() =>
@@ -118,6 +118,24 @@ describe("Dropdown", () => {
     expect(screen.getByRole("button", { name: "수정" })).toBeInTheDocument();
   });
 
+  it("supports numeric item keys", async () => {
+    const user = userEvent.setup();
+    const onSelect = vi.fn();
+    render(
+      <Dropdown
+        menu={{ items: [{ value: 1, label: "숫자 항목" }], selectable: true, onSelect }}
+        trigger="click"
+      >
+        <button type="button">메뉴</button>
+      </Dropdown>,
+    );
+
+    await user.click(screen.getByRole("button", { name: "메뉴" }));
+    await user.click(screen.getByRole("button", { name: "숫자 항목" }));
+
+    expect(onSelect).toHaveBeenCalledWith({ value: 1, selectedValues: [1] });
+  });
+
   it("does not open when disabled", async () => {
     const user = userEvent.setup();
     render(
@@ -157,9 +175,31 @@ describe("Dropdown", () => {
     await user.click(screen.getByRole("button", { name: "메뉴" }));
     expect(screen.getByText("문서 작업")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "수정" }));
-    expect(onItemClick).toHaveBeenCalledWith(
-      expect.objectContaining({ value: "edit", valuePath: ["edit", "actions"] }),
+    expect(onItemClick).toHaveBeenCalledWith(expect.objectContaining({ value: "edit" }));
+  });
+
+  it("does not expose a disabled item's submenu on hover", async () => {
+    render(
+      <Dropdown
+        menu={{
+          items: [
+            {
+              value: "disabled-parent",
+              label: "비활성 메뉴",
+              disabled: true,
+              children: [{ value: "child", label: "하위 메뉴" }],
+            },
+          ],
+        }}
+        trigger="click"
+      >
+        <button type="button">메뉴</button>
+      </Dropdown>,
     );
+
+    await userEvent.click(screen.getByRole("button", { name: "메뉴" }));
+    const disabledParent = screen.getByRole("button", { name: "비활성 메뉴" }).parentElement;
+    expect(disabledParent).not.toHaveClass("group/submenu");
   });
 
   it("renders an arrow when requested", async () => {

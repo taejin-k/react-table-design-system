@@ -14,6 +14,7 @@ import { twMerge } from "tailwind-merge";
 import { Icon } from "../Icon";
 import { Skeleton } from "../Skeleton";
 import { lockBodyScroll } from "../_internal/body-scroll-lock";
+import { isTopmostOverlay } from "../_internal/is-topmost-overlay";
 import { MOTION_DURATION_SLOW } from "../_internal/motion";
 import type {
   ImageActions,
@@ -61,6 +62,8 @@ function Preview({
   const [active, setActive] = useState(Math.max(0, sources.indexOf(src)));
   const [transform, setTransform] = useState(initialTransform);
   const [dragging, setDragging] = useState(false);
+  const [previewImage, setPreviewImage] = useState<HTMLImageElement | null>(null);
+  const previewRootRef = useRef<HTMLDivElement>(null);
   const unlockScrollRef = useRef<(() => void) | null>(null);
   const dragRef = useRef<{ clientX: number; clientY: number; x: number; y: number } | undefined>(
     undefined,
@@ -68,7 +71,7 @@ function Preview({
   const dragFrameRef = useRef<number | undefined>(undefined);
   const pendingDragRef = useRef<{ x: number; y: number } | undefined>(undefined);
   const current = sources[active] ?? src;
-  const maskEnabled = config.mask !== false;
+  const closeOnMaskClick = config.mask !== false;
   const minScale = 0.25;
   const maxScale = 50;
   const step = 0.5;
@@ -127,6 +130,23 @@ function Preview({
   const zoomOutDisabled = transform.scale <= minScale;
   const zoomInDisabled = transform.scale >= maxScale;
   useEffect(() => {
+    if (!open || !previewImage) return;
+    const onWheel = (event: WheelEvent) => {
+      if (!isTopmostOverlay(previewRootRef.current)) return;
+      event.preventDefault();
+      if (!Number.isFinite(event.deltaY) || event.deltaY === 0) return;
+      const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? window.innerHeight : 1;
+      const delta = Math.max(-100, Math.min(100, event.deltaY * unit));
+      const factor = Math.exp(-delta * 0.006);
+      setTransform((currentTransform) => ({
+        ...currentTransform,
+        scale: Math.max(minScale, Math.min(maxScale, currentTransform.scale * factor)),
+      }));
+    };
+    previewImage.addEventListener("wheel", onWheel, { passive: false });
+    return () => previewImage.removeEventListener("wheel", onWheel);
+  }, [open, previewImage]);
+  useEffect(() => {
     if (open) setTransform(initialTransform);
   }, [open, current]);
   useEffect(
@@ -149,7 +169,11 @@ function Preview({
   useEffect(() => {
     if (!open) return;
     const key = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
+      if (event.defaultPrevented || !isTopmostOverlay(previewRootRef.current)) return;
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onClose();
+      }
       if (event.key === "ArrowLeft" && active > 0) actions.onActive(active - 1);
       if (event.key === "ArrowRight" && active < sources.length - 1) actions.onActive(active + 1);
     };
@@ -158,11 +182,11 @@ function Preview({
   });
   if (typeof document === "undefined") return null;
   const actionClassName =
-    "pointer-events-auto inline-flex size-[42px] cursor-pointer items-center justify-center border-0 bg-transparent p-3 text-white/[0.65] transition-colors hover:text-white/[0.85] disabled:cursor-not-allowed disabled:text-white/[0.25] motion-reduce:transition-none";
+    "pointer-events-auto inline-flex size-[42px] cursor-pointer items-center justify-center border-0 bg-transparent p-3 text-white/[0.65] outline-none transition-colors duration-200 ease-out hover:text-white/[0.85] disabled:cursor-not-allowed disabled:text-white/[0.25] motion-reduce:transition-none";
   const toolbar = (
     <div
       data-image-preview-actions
-      className="flex h-[42px] items-center gap-3 rounded-full bg-black/10 px-6"
+      className="flex h-[42px] items-center gap-3 rounded-full bg-black/20 px-6"
     >
       <button
         type="button"
@@ -228,7 +252,11 @@ function Preview({
     >
       {({ className, style }, motionRef) => (
         <div
-          ref={motionRef}
+          ref={(node) => {
+            previewRootRef.current = node;
+            if (typeof motionRef === "function") motionRef(node);
+            else if (motionRef) motionRef.current = node;
+          }}
           data-image-preview-root
           className={twMerge(
             "pointer-events-none fixed inset-0 flex items-center justify-center font-pretendard",
@@ -236,18 +264,17 @@ function Preview({
           )}
           style={{ zIndex: config.zIndex ?? 1080, ...style }}
         >
-          {maskEnabled ? (
-            <div
-              className={twMerge(
-                "wizard-image-preview-mask pointer-events-auto absolute inset-0 cursor-pointer bg-black/45",
-              )}
-              onClick={onClose}
-            />
-          ) : null}
+          <div
+            className={twMerge(
+              "wizard-image-preview-mask pointer-events-auto absolute inset-0 bg-black/45",
+              closeOnMaskClick ? "cursor-pointer" : "cursor-default",
+            )}
+            onClick={closeOnMaskClick ? onClose : undefined}
+          />
           <button
             type="button"
             data-image-preview-close
-            className="pointer-events-auto absolute top-3 right-3 z-[2] inline-flex size-[42px] cursor-pointer items-center justify-center rounded-full border-0 bg-black/10 p-3 text-white transition-colors hover:bg-black/20 motion-reduce:transition-none"
+            className="pointer-events-auto absolute top-3 right-3 z-[2] inline-flex size-[42px] cursor-pointer items-center justify-center rounded-full border-0 bg-black/20 p-3 text-white transition-colors duration-200 ease-out outline-none hover:bg-black/30 motion-reduce:transition-none"
             onClick={onClose}
           >
             <Icon icon="close" size={18} />
@@ -258,7 +285,7 @@ function Preview({
                 type="button"
                 data-image-preview-previous
                 disabled={active === 0}
-                className="pointer-events-auto absolute left-3 z-[2] inline-flex size-[42px] cursor-pointer items-center justify-center rounded-full border-0 bg-black/10 p-3 text-white transition-colors hover:bg-black/20 disabled:cursor-not-allowed disabled:bg-transparent disabled:text-white/[0.25] motion-reduce:transition-none"
+                className="pointer-events-auto absolute left-3 z-[2] inline-flex size-[42px] cursor-pointer items-center justify-center rounded-full border-0 bg-black/10 p-3 text-white transition-colors duration-200 ease-out outline-none hover:bg-black/20 disabled:cursor-not-allowed disabled:bg-transparent disabled:text-white/[0.25] motion-reduce:transition-none"
                 onClick={() => actions.onActive(active - 1)}
               >
                 <Icon icon="chevron-left" size={18} />
@@ -267,7 +294,7 @@ function Preview({
                 type="button"
                 data-image-preview-next
                 disabled={active === sources.length - 1}
-                className="pointer-events-auto absolute right-3 z-[2] inline-flex size-[42px] cursor-pointer items-center justify-center rounded-full border-0 bg-black/10 p-3 text-white transition-colors hover:bg-black/20 disabled:cursor-not-allowed disabled:bg-transparent disabled:text-white/[0.25] motion-reduce:transition-none"
+                className="pointer-events-auto absolute right-3 z-[2] inline-flex size-[42px] cursor-pointer items-center justify-center rounded-full border-0 bg-black/10 p-3 text-white transition-colors duration-200 ease-out outline-none hover:bg-black/20 disabled:cursor-not-allowed disabled:bg-transparent disabled:text-white/[0.25] motion-reduce:transition-none"
                 onClick={() => actions.onActive(active + 1)}
               >
                 <Icon icon="chevron-right" size={18} />
@@ -280,6 +307,7 @@ function Preview({
             style={{ transformOrigin: origin ? `${origin.x}px ${origin.y}px` : "center center" }}
           >
             <img
+              ref={setPreviewImage}
               src={current}
               alt=""
               draggable={false}
@@ -330,11 +358,6 @@ function Preview({
                 pendingDragRef.current = undefined;
                 setDragging(false);
               }}
-              onWheel={(event) => {
-                event.preventDefault();
-                if (event.deltaY < 0) actions.onZoomIn();
-                else actions.onZoomOut();
-              }}
             />
           </div>
           <div className="absolute bottom-8 z-[2] flex flex-col items-center gap-3">
@@ -364,6 +387,7 @@ function ImageBase({
   alt = "",
   onLoad,
   onError,
+  onClick,
   ...rest
 }: ImageProps) {
   const group = useContext(GroupContext);
@@ -410,6 +434,8 @@ function ImageBase({
     config.onOpenChange?.(next, previous);
   };
   const openPreview: ImageProps["onClick"] = (event) => {
+    onClick?.(event);
+    if (event.defaultPrevented) return;
     if (!actualSrc || preview === false) return;
     const rect = event.currentTarget.getBoundingClientRect();
     const origin = {
@@ -461,11 +487,11 @@ function ImageBase({
       {preview !== false && !loading && config.cover !== false ? (
         <span
           data-image-preview-cover
-          className="pointer-events-none absolute inset-0 flex min-w-0 items-center justify-center overflow-hidden bg-black/0 px-2 text-center text-white opacity-0 transition-[background-color,opacity] duration-300 group-hover:bg-black/45 group-hover:opacity-100"
+          className="pointer-events-none absolute inset-0 flex min-w-0 items-center justify-center overflow-hidden bg-black/0 px-2 text-center text-white opacity-0 transition-[background-color,opacity] duration-200 group-hover:bg-black/45 group-hover:opacity-100"
         >
           <span className="inline-flex max-w-full min-w-0 items-center">
             <Icon icon="eye" size={20} className="shrink-0" />
-            <span className="ml-2 min-w-0 text-sm [overflow-wrap:anywhere] break-words whitespace-pre-wrap">
+            <span className="ml-2 min-w-0 text-sm [overflow-wrap:anywhere] break-all whitespace-pre-wrap">
               미리보기
             </span>
           </span>

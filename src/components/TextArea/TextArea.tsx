@@ -4,13 +4,9 @@ import { twMerge } from "tailwind-merge";
 import { ErrorMessage } from "../ErrorMessage";
 import { Label } from "../Label";
 import { filterAllowedCharacters } from "../_internal/filterAllowedCharacters";
+import { useErrorMessageValidation } from "../_internal/useErrorMessageValidation";
 import type { TextAreaProps } from "./TextArea.types";
-
-function getInitialValidationError(validate: TextAreaProps["validate"], value: string): string {
-  if (!validate || validate.constructor.name === "AsyncFunction") return "";
-  const result = validate(value);
-  return typeof result === "string" ? result : "";
-}
+import { useTextAreaScrollbar } from "./use-textarea-scrollbar";
 
 export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
   (
@@ -22,6 +18,7 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
       label,
       errorMessage,
       required = false,
+      readOnly = false,
       disabled = false,
       autoSize = false,
       allowOnly,
@@ -32,11 +29,11 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
       id,
       width,
       className,
-      validate,
       onChange,
       onBlur,
       onEnter,
       onKeyDown,
+      onMouseDown,
       ...rest
     },
     forwardedRef,
@@ -44,69 +41,77 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
     const generatedId = useId();
     const textareaId = id ?? generatedId;
     const innerRef = useRef<HTMLTextAreaElement | null>(null);
-    const validationRequestRef = useRef(0);
     const [innerValue, setInnerValue] = useState(() => String(defaultValue ?? ""));
-    const [hasVerticalOverflow, setHasVerticalOverflow] = useState(false);
     const currentValue = value ?? innerValue;
-    const [validationError, setValidationError] = useState(() =>
-      getInitialValidationError(validate, String(value ?? defaultValue ?? "")),
-    );
-    const displayedErrorMessage = errorMessage || validationError;
-    const hasError = Boolean(displayedErrorMessage);
+    const { clearValidationError, displayedErrorMessage, hasError, validateErrorMessage } =
+      useErrorMessageValidation(errorMessage, String(value ?? defaultValue ?? ""));
     const autoSizeOptions = typeof autoSize === "object" ? autoSize : {};
+    const countText =
+      maxLength === undefined
+        ? String(currentValue.length)
+        : `${currentValue.length} / ${maxLength}`;
 
     useLayoutEffect(() => {
       if (!autoSize || !innerRef.current) return;
       const textarea = innerRef.current;
-      const computedStyle = getComputedStyle(textarea);
-      const lineHeight = Number.parseFloat(computedStyle.lineHeight) || 22;
-      const minRows = autoSizeOptions.minRows ?? 1;
-      const maxRows = autoSizeOptions.maxRows ?? Number.POSITIVE_INFINITY;
-      const singleRowHeight = autoSizeSingleRowHeights[size];
-      const minAutoHeight = singleRowHeight + lineHeight * (minRows - 1);
-      const maxAutoHeight = singleRowHeight + lineHeight * (maxRows - 1);
-      textarea.style.height = "auto";
-      const contentHeight = textarea.scrollHeight;
-      textarea.style.height = `${Math.min(Math.max(contentHeight, minAutoHeight), maxAutoHeight)}px`;
-      textarea.style.overflowY = contentHeight > maxAutoHeight ? "auto" : "hidden";
+      const resizeToContent = () => {
+        const computedStyle = getComputedStyle(textarea);
+        const lineHeight = Number.parseFloat(computedStyle.lineHeight) || 22;
+        const minRows = autoSizeOptions.minRows ?? 1;
+        const maxRows = autoSizeOptions.maxRows ?? Number.POSITIVE_INFINITY;
+        const singleRowHeight = autoSizeSingleRowHeights[size];
+        const minAutoHeight = singleRowHeight + lineHeight * (minRows - 1);
+        const maxAutoHeight = singleRowHeight + lineHeight * (maxRows - 1);
+        textarea.style.height = "auto";
+        const contentHeight = textarea.scrollHeight;
+        textarea.style.height = `${Math.min(Math.max(contentHeight, minAutoHeight), maxAutoHeight)}px`;
+        textarea.style.overflowY = contentHeight > maxAutoHeight ? "auto" : "hidden";
+      };
+      resizeToContent();
+      let previousWidth = textarea.getBoundingClientRect().width;
+      const observer =
+        typeof ResizeObserver === "undefined"
+          ? undefined
+          : new ResizeObserver(() => {
+              const width = textarea.getBoundingClientRect().width;
+              // Height changes caused by autoSize must not retrigger the observer.
+              if (width === previousWidth) return;
+              previousWidth = width;
+              resizeToContent();
+            });
+      observer?.observe(textarea);
+      return () => {
+        observer?.disconnect();
+        textarea.style.height = "";
+        textarea.style.overflowY = "";
+      };
     }, [autoSize, autoSizeOptions.maxRows, autoSizeOptions.minRows, currentValue, size]);
 
-    useLayoutEffect(() => {
-      const textarea = innerRef.current;
-      if (!textarea) return;
-
-      const updateOverflow = () => {
-        setHasVerticalOverflow(textarea.scrollHeight > textarea.clientHeight + 1);
-      };
-
-      updateOverflow();
-      if (typeof ResizeObserver === "undefined") return;
-
-      const observer = new ResizeObserver(updateOverflow);
-      observer.observe(textarea);
-      return () => observer.disconnect();
-    }, [autoSize, currentValue, rows, size]);
+    const scrollbar = useTextAreaScrollbar(
+      innerRef,
+      currentValue,
+      resize && !autoSize && !disabled,
+    );
 
     const changeValue = (nextValue: string) => {
       if (maxLength !== undefined && nextValue.length > maxLength) return;
       if (value === undefined) setInnerValue(nextValue);
       onChange?.(nextValue);
-      validationRequestRef.current += 1;
-      setValidationError("");
+      clearValidationError();
     };
 
     return (
-      <div className={twMerge("flex w-full flex-col", className)} style={{ width }}>
+      <div className={twMerge("flex w-full flex-col", className)}>
         {label ? (
           <Label
             label={label}
-            htmlFor={textareaId}
+            htmlFor={readOnly ? undefined : textareaId}
             required={required}
             size={size}
             className="mb-1"
           />
         ) : null}
-        <div className="relative">
+        <div className="w-full" style={{ width }}>
           <div className={twMerge(textAreaRootVariants({ variant, error: hasError, disabled }))}>
             <textarea
               {...rest}
@@ -120,37 +125,19 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
               rows={autoSize ? 1 : rows}
               value={currentValue}
               required={required}
+              readOnly={readOnly}
               disabled={disabled}
               maxLength={maxLength}
               className={twMerge(
                 textAreaVariants({ size, disabled, autoSize: Boolean(autoSize) }),
                 !resize && "resize-none",
-                hasVerticalOverflow && overflowPaddingBySize[size],
+                readOnly && !disabled && "cursor-default",
               )}
               onChange={(event) =>
                 changeValue(filterAllowedCharacters(event.target.value, allowOnly))
               }
               onBlur={(event) => {
-                if (validate) {
-                  const requestId = ++validationRequestRef.current;
-                  const result = validate(currentValue);
-
-                  if (typeof result === "string") {
-                    setValidationError(result);
-                  } else {
-                    void result
-                      .then((nextError) => {
-                        if (validationRequestRef.current === requestId) {
-                          setValidationError(nextError);
-                        }
-                      })
-                      .catch(() => {
-                        if (validationRequestRef.current === requestId) {
-                          setValidationError("");
-                        }
-                      });
-                  }
-                }
+                validateErrorMessage(currentValue);
                 onBlur?.(event);
               }}
               onKeyDown={(event) => {
@@ -164,22 +151,65 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
                   onEnter?.();
                 }
               }}
+              onMouseDown={(event) => {
+                onMouseDown?.(event);
+                if (readOnly) event.preventDefault();
+              }}
             />
+            {scrollbar.visible && (
+              <div
+                ref={scrollbar.trackRef}
+                data-textarea-scrollbar-track
+                className="absolute top-1 right-0 w-2 cursor-pointer touch-none"
+                style={{ bottom: scrollbar.bottom }}
+                onPointerDown={scrollbar.onTrackPointerDown}
+              >
+                <div
+                  data-textarea-scrollbar-thumb
+                  className="absolute right-px w-1.5 cursor-grab touch-none rounded-full bg-disabled transition-colors duration-200 ease-out hover:bg-disabled active:cursor-grabbing motion-reduce:transition-none"
+                  style={{
+                    height: scrollbar.thumbHeight,
+                    transform: `translateY(${scrollbar.top}px)`,
+                  }}
+                  onPointerDown={scrollbar.onThumbPointerDown}
+                  onPointerMove={scrollbar.onThumbPointerMove}
+                  onPointerUp={scrollbar.onThumbPointerEnd}
+                  onPointerCancel={scrollbar.onThumbPointerEnd}
+                  onLostPointerCapture={scrollbar.onThumbPointerEnd}
+                />
+              </div>
+            )}
+          </div>
+        </div>
+        <div className="relative w-full">
+          <div
+            className={twMerge(
+              "grid items-start",
+              showCount ? "grid-cols-[minmax(0,1fr)_auto] gap-x-2" : "grid-cols-1",
+            )}
+          >
+            <ErrorMessage
+              className={twMerge("min-w-0", hasError && "pt-1")}
+              errorMessage={displayedErrorMessage}
+            />
+            {showCount ? (
+              <span
+                data-textarea-count-spacer
+                className="invisible h-0 shrink-0 overflow-hidden font-pretendard text-xs whitespace-nowrap"
+              >
+                {countText}
+              </span>
+            ) : null}
           </div>
           {showCount ? (
-            <div className="pointer-events-none absolute top-full right-0 mt-1 flex items-center justify-end">
-              <span className="font-pretendard text-xs whitespace-nowrap text-gray">
-                {maxLength === undefined
-                  ? currentValue.length
-                  : `${currentValue.length} / ${maxLength}`}
-              </span>
-            </div>
+            <span
+              data-textarea-count
+              className="pointer-events-none absolute top-1 right-0 font-pretendard text-xs whitespace-nowrap text-disabled"
+            >
+              {countText}
+            </span>
           ) : null}
         </div>
-        <ErrorMessage
-          className={hasError ? "mt-1" : undefined}
-          errorMessage={displayedErrorMessage}
-        />
       </div>
     );
   },
@@ -188,7 +218,7 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
 TextArea.displayName = "TextArea";
 
 const textAreaRootVariants = cva(
-  "relative overflow-hidden rounded bg-white ring-1 transition-[box-shadow,background-color] ring-inset focus-within:ring-primary",
+  "relative overflow-hidden rounded bg-white ring-1 transition-[box-shadow,background-color] duration-200 ease-out ring-inset focus-within:ring-primary motion-reduce:transition-none",
   {
     variants: {
       variant: {
@@ -203,15 +233,18 @@ const textAreaRootVariants = cva(
 );
 
 const textAreaVariants = cva(
-  "block w-full resize-y border-0 bg-transparent font-pretendard leading-[1.6] font-medium text-dark outline-none placeholder:text-gray",
+  "block w-full resize-y border-0 bg-transparent font-pretendard leading-[1.6] font-medium text-dark outline-none placeholder:text-disabled",
   {
     variants: {
       size: {
-        lg: "px-3 text-base",
-        md: "px-2.5 text-sm",
-        sm: "px-2 text-xs",
+        lg: "pr-1 pl-3 text-base",
+        md: "pr-0.5 pl-2.5 text-sm",
+        sm: "pr-0 pl-2 text-xs",
       },
-      disabled: { true: "resize-none font-normal text-gray", false: "" },
+      disabled: {
+        true: "resize-none font-normal text-disabled placeholder:text-disabled",
+        false: "",
+      },
       autoSize: { true: "resize-none", false: "" },
     },
     compoundVariants: [
@@ -230,10 +263,4 @@ const autoSizeSingleRowHeights = {
   lg: 40,
   md: 30,
   sm: 20,
-} as const;
-
-const overflowPaddingBySize = {
-  lg: "pr-1",
-  md: "pr-0.5",
-  sm: "pr-0",
 } as const;

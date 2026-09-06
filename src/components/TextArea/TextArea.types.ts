@@ -1,8 +1,10 @@
 import type { ReactNode, TextareaHTMLAttributes } from "react";
-import type { InputSizeType } from "../Input";
 import type { AllowedCharacterType } from "../_internal/filterAllowedCharacters";
+import type { ValidatableErrorMessage } from "../_internal/useErrorMessageValidation";
 
+export type TextAreaSizeType = "lg" | "md" | "sm";
 export type TextAreaVariantType = "default" | "filled";
+export type TextAreaErrorMessage = ValidatableErrorMessage<string>;
 
 export interface TextAreaAutoSize {
   minRows?: number;
@@ -15,16 +17,15 @@ export interface TextAreaProps extends Omit<
 > {
   value?: string;
   width?: number;
-  size?: InputSizeType;
+  size?: TextAreaSizeType;
   variant?: TextAreaVariantType;
   label?: ReactNode;
-  errorMessage?: ReactNode;
+  errorMessage?: TextAreaErrorMessage;
   autoSize?: boolean | TextAreaAutoSize;
   allowOnly?: AllowedCharacterType;
   resize?: boolean;
   showCount?: boolean;
   className?: string;
-  validate?: (value: string) => string | Promise<string>;
   onChange?: (value: string) => void;
   onEnter?: () => void;
 }

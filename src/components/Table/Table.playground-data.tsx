@@ -123,10 +123,10 @@ export const members: Member[] = [
 ];
 
 export const teamFilters = ["Design", "Platform", "Growth", "Data", "Product", "Mobile"].map(
-  (value) => ({ text: value, value }),
+  (value) => ({ label: value, value }),
 );
 
-export const statusFilters = ["활성", "휴가", "대기"].map((value) => ({ text: value, value }));
+export const statusFilters = ["활성", "휴가", "대기"].map((value) => ({ label: value, value }));
 
 export const columns: ColumnsType<Member> = [
   {

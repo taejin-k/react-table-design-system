@@ -35,7 +35,7 @@ export const ErrorMessage = forwardRef<HTMLDivElement, ErrorMessageProps>(
         <div className="overflow-hidden">
           <div
             id={id}
-            className="flex min-w-0 items-start pl-[4px] font-pretendard text-[12px] break-words whitespace-pre-line text-danger"
+            className="flex min-w-0 items-start pl-[4px] font-pretendard text-[12px] break-all whitespace-pre-line text-danger"
           >
             {lastErrorMessage}
           </div>

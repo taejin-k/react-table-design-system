@@ -14,12 +14,12 @@
     90deg,
     var(--color-hover) 0%,
     var(--color-hover) 38%,
-    color-mix(in srgb, var(--color-white) 50%, transparent) 50%,
+    color-mix(in srgb, var(--color-border) 50%, var(--color-hover)) 50%,
     var(--color-hover) 62%,
     var(--color-hover) 100%
   );
   background-size: 300% 100%;
-  animation: wizard-skeleton-loading 1.5s ease-in-out infinite;
+  animation: wizard-skeleton-loading 1.2s ease-in-out infinite;
 }
 
 .wizard-color-hue {

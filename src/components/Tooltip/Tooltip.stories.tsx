@@ -36,14 +36,7 @@ const meta = {
     placement: { name: "위치", control: "select", options: placements },
     trigger: { name: "표시 동작", control: "select", options: triggers },
     arrow: { name: "화살표", control: "boolean" },
-    color: { name: "배경 색상", control: "color" },
-    autoAdjustOverflow: {
-      name: "위치 자동 보정",
-      control: false,
-      table: { disable: true },
-    },
-    mouseEnterDelay: { name: "표시 지연(초)", control: "number" },
-    mouseLeaveDelay: { name: "숨김 지연(초)", control: "number" },
+    color: { name: "배경 색상", control: "text" },
     children: { control: false, table: { disable: true } },
     open: { control: false, table: { disable: true } },
     defaultOpen: { control: false, table: { disable: true } },
@@ -57,7 +50,7 @@ const meta = {
       source: { transform: formatTooltipStorySource },
       description: {
         component:
-          "요소의 기능이나 의미를 짧은 문구로 설명해요.  \n표시 위치와 동작, 배경 색상, 화살표와 표시 상태를 설정할 수 있어요.",
+          "버튼이나 아이콘에 짧은 설명을 표시해요.  \n위치, 표시 동작, 배경 색상과 화살표를 설정할 수 있어요.",
       },
       page: () => (
         <div className="tooltip-docs component-docs">
@@ -68,33 +61,32 @@ const meta = {
           <Markdown>{`
 ### Tooltip
 
+대상에 마우스를 올리거나 포커스하면 짧은 설명을 표시해요.
+
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
-| \`title\` | 표시할 내용을 설정해요. 비어 있으면 표시하지 않아요. | \`ReactNode\` | - |
-| \`children\` | Tooltip을 연결할 하나의 요소예요. | \`ReactElement\` | - |
-| \`placement\` | 대상을 기준으로 Tooltip이 표시될 위치를 설정해요. | [\`TooltipPlacementType\`](#tooltip-placement-type) | \`top\` |
-| \`trigger\` | hover, focus, click, contextMenu로 표시해요. | [\`TooltipTriggerType\`](#tooltip-trigger-type) \\| [\`TooltipTriggerType[]\`](#tooltip-trigger-type) | \`hover\` |
+| \`title\` | Tooltip에 표시할 내용이에요. | \`ReactNode\` | - |
+| \`children\` | Tooltip을 연결할 요소예요. | \`ReactElement\` | - |
+| \`placement\` | Tooltip이 표시될 위치를 설정해요. | [\`TooltipPlacementType\`](#tooltip-placement-type) | \`top\` |
+| \`trigger\` | Tooltip을 표시할 동작을 설정해요. | [\`TooltipTriggerType\`](#tooltip-trigger-type) \\| [\`TooltipTriggerType[]\`](#tooltip-trigger-type) | \`hover\` |
 | \`arrow\` | 대상 방향을 가리키는 화살표를 표시해요. | \`boolean\` | \`true\` |
-| \`color\` | Tooltip의 배경 색상을 설정해요. | \`CSSProperties['backgroundColor']\` | \`var(--color-dark)\` |
+| \`color\` | Tooltip의 배경 색상을 설정해요. | [\`ColorTokenType\`](./iframe.html?id=components-color--documentation&viewMode=docs#color-token-type) \\| \`CSSProperties['backgroundColor']\` | \`dark\` |
 | \`open\` | Tooltip의 표시 상태를 외부에서 관리해요. | \`boolean\` | - |
-| \`defaultOpen\` | 처음 렌더링할 때 Tooltip을 표시해요. | \`boolean\` | \`false\` |
-| \`autoAdjustOverflow\` | 화면을 벗어나면 반대 위치로 전환하고 안쪽으로 이동해요. | \`boolean\` | \`true\` |
-| \`mouseEnterDelay\` | hover 후 표시되기까지의 시간을 초 단위로 설정해요. | \`number\` | \`0.1\` |
-| \`mouseLeaveDelay\` | hover가 끝난 뒤 숨기기까지의 시간을 초 단위로 설정해요. | \`number\` | \`0.1\` |
+| \`defaultOpen\` | 처음부터 Tooltip을 표시해요. | \`boolean\` | \`false\` |
 | \`zIndex\` | Tooltip이 겹쳐지는 순서를 설정해요. | \`number\` | \`1070\` |
-| \`className\` | 대상을 감싸는 요소에 Tailwind 클래스를 추가해요. | \`string\` | - |
-| \`onOpenChange\` | Tooltip의 표시 상태가 바뀔 때 실행할 함수예요. | \`(open: boolean) => void\` | - |
+| \`className\` | 대상 래퍼에 Tailwind 클래스를 추가해요. | \`string\` | - |
+| \`onOpenChange\` | 표시 상태 변경 시 실행해요. | \`(open: boolean) => void\` | - |
           `}</Markdown>
           <h2 className="component-docs-types-heading">Types</h2>
           <h3 id="tooltip-placement-type">TooltipPlacementType</h3>
-          <p>대상을 기준으로 Tooltip이 표시될 위치를 선택해요.</p>
+          <p>Tooltip이 대상 주변에 표시될 위치를 구분해요.</p>
           <div className="flex flex-wrap gap-2">
             {placements.map((placement) => (
               <TooltipTypeCode key={placement} value={placement} />
             ))}
           </div>
           <h3 id="tooltip-trigger-type">TooltipTriggerType</h3>
-          <p>Tooltip을 표시할 동작을 선택해요.</p>
+          <p>Tooltip을 표시할 사용자 동작을 구분해요.</p>
           <div className="flex flex-wrap gap-2">
             {triggers.map((trigger) => (
               <TooltipTypeCode key={trigger} value={trigger} />
@@ -123,23 +115,12 @@ export const Basic: Story = {
     placement: "top",
     trigger: "hover",
     arrow: true,
-    autoAdjustOverflow: true,
-    mouseEnterDelay: 0.1,
-    mouseLeaveDelay: 0.1,
   },
   parameters: {
     ...storyDescription("components-tooltip--basic"),
     controls: {
       disable: false,
-      include: [
-        "내용",
-        "위치",
-        "표시 동작",
-        "화살표",
-        "배경 색상",
-        "표시 지연(초)",
-        "숨김 지연(초)",
-      ],
+      include: ["내용", "위치", "표시 동작", "화살표", "배경 색상"],
     },
   },
   render: (args) => (
@@ -231,7 +212,7 @@ export const Triggers: Story = {
   },
   parameters: {
     ...storyDescription("components-tooltip--triggers"),
-    controls: { disable: false, include: ["표시 지연(초)", "숨김 지연(초)"] },
+    controls: { disable: true },
     docs: {
       ...storyDescription("components-tooltip--triggers").docs,
       source: {
@@ -317,7 +298,7 @@ export const Appearance: Story = {
 };
 
 export const Controlled: Story = {
-  args: { title: "Tooltip", placement: "top", arrow: true, color: "var(--color-dark)" },
+  args: { title: "Tooltip", placement: "top", arrow: true, color: "dark" },
   parameters: {
     ...storyDescription("components-tooltip--controlled"),
     controls: { disable: false, include: ["내용", "위치", "화살표", "배경 색상"] },
@@ -328,11 +309,13 @@ export const Controlled: Story = {
   const [open, setOpen] = useState(false);
 
   return (
-    <Tooltip open={open} title="Tooltip" onOpenChange={setOpen}>
-      <Button onClick={() => setOpen((current) => !current)}>
-        {open ? '닫기' : '열기'}
-      </Button>
-    </Tooltip>
+    <div className="flex min-h-28 items-center justify-center">
+      <Tooltip open={open} title="Tooltip" onOpenChange={setOpen}>
+        <Button onClick={() => setOpen((current) => !current)}>
+          {open ? '닫기' : '열기'}
+        </Button>
+      </Tooltip>
+    </div>
   );
 }`),
       },

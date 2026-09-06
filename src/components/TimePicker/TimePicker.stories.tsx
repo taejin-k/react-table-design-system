@@ -1,5 +1,5 @@
 import { useState } from "react";
-import dayjs from "dayjs";
+import dayjs, { type Dayjs } from "dayjs";
 import { Description, Markdown, Stories, Title } from "@storybook/addon-docs/blocks";
 import type { Meta, StoryObj } from "@storybook/react";
 import { storyDescriptions } from "../../storybook/story-descriptions";
@@ -9,7 +9,6 @@ import { TimePicker } from "./TimePicker";
 import type {
   TimePickerPlacementType,
   TimePickerSizeType,
-  TimePickerValueType,
   TimePickerVariantType,
 } from "./TimePicker.types";
 
@@ -21,7 +20,6 @@ const timePickerPlacements: TimePickerPlacementType[] = [
   "bottomLeft",
   "bottomRight",
 ];
-const timePickerValueTypes = ["Dayjs", "Dayjs[]", "null"];
 
 const storyDescription = (id: string) => ({
   docs: { description: { story: storyDescriptions[id] } },
@@ -47,7 +45,7 @@ const meta = {
       control: "select",
       options: timePickerVariants,
     },
-    placeholder: { name: "안내 문구", control: "text" },
+    placeholder: { name: "placeholder", control: "text" },
     label: { name: "레이블", control: "text" },
     errorMessage: { name: "오류 문구", control: "text" },
     required: { name: "필수 표시", control: "boolean" },
@@ -69,7 +67,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "목록에서 시·분·초를 선택할 수 있어요.  \n비활성 시간·12시간제·간격·확인 버튼과 시간 범위를 설정할 수 있어요.",
+          "TimePicker는 입력창과 목록에서 시·분·초를 선택할 때 사용해요.  \n선택 불가 시간·12시간제·시간 간격·확인 버튼과 다중 선택을 지원해요.",
       },
       page: () => (
         <div className="timepicker-docs component-docs">
@@ -80,11 +78,13 @@ const meta = {
           <Markdown>{`
 ### TimePicker
 
+TimePicker는 시간을 선택하고 입력값으로 표시해요.
+
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
-| \`value\` | 선택한 시간을 관리해요. | [\`TimePickerValueType\`](#time-picker-value-type) | - |
-| \`defaultValue\` | 처음 선택할 시간을 설정해요. | [\`TimePickerValueType\`](#time-picker-value-type) | - |
-| \`placeholder\` | 선택 전 안내 문구를 설정해요. | \`string\` | \`시간을 선택하세요\` |
+| \`value\` | 선택한 시간을 관리해요. | \`Dayjs \\| undefined\` (multiple: \`Dayjs[]\`) | - |
+| \`defaultValue\` | 처음 선택할 시간을 설정해요. | \`Dayjs \\| undefined\` (multiple: \`Dayjs[]\`) | - |
+| \`placeholder\` | 선택 전 표시할 placeholder를 설정해요. | \`string\` | \`시간을 선택하세요\` |
 | \`format\` | 표시할 시간 형식을 설정해요. | \`string\` | \`HH:mm:ss\` |
 | \`size\` | TimePicker의 크기를 설정해요. | [\`TimePickerSizeType\`](#time-picker-size-type) | \`md\` |
 | \`variant\` | 배경과 테두리 표현 방식을 설정해요. | [\`TimePickerVariantType\`](#time-picker-variant-type) | \`default\` |
@@ -110,14 +110,16 @@ const meta = {
 | \`defaultOpen\` | 처음 시간 목록을 표시할지 설정해요. | \`boolean\` | \`false\` |
 | \`placement\` | 목록이 표시될 위치를 설정해요. | [\`TimePickerPlacementType\`](#time-picker-placement-type) | \`bottomLeft\` |
 | \`label\` | TimePicker 위에 레이블을 표시해요. | \`ReactNode\` | - |
-| \`errorMessage\` | TimePicker 아래에 오류 문구를 표시해요. | \`ReactNode\` | - |
+| \`errorMessage\` | 오류 문구를 표시하거나 선택값을 검사해요. | \`ReactNode \\| ((value: Dayjs \\| Dayjs[] \\| undefined) => string \\| Promise<string>)\` | - |
 | \`required\` | 레이블에 필수 표시를 추가해요. | \`boolean\` | \`false\` |
 | \`className\` | 최상위 요소에 Tailwind 클래스를 추가해요. | \`string\` | - |
-| \`onChange\` | 선택값과 화면 형식의 문자열을 전달해요. | \`(value: TimePickerValueType, timeString: string \\| string[]) => void\` | - |
+| \`onChange\` | 선택값과 화면 형식의 문자열을 전달해요. | \`(value: Dayjs \\| Dayjs[] \\| undefined, timeString: string \\| string[]) => void\` | - |
 | \`onClear\` | 선택값을 지울 때 실행할 함수예요. | \`() => void\` | - |
 | \`onOpenChange\` | 목록 표시 상태가 바뀔 때 실행할 함수예요. | \`(open: boolean) => void\` | - |
 
 ### DisabledTime
+
+DisabledTime은 TimePicker에서 선택할 수 없는 시, 분과 초를 정의해요.
 
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
@@ -127,6 +129,8 @@ const meta = {
 
 ### <span id="time-picker-cell-info">TimePickerCellInfo</span>
 
+TimePickerCellInfo는 시간 셀을 직접 렌더링할 때 받는 정보예요.
+
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
 | \`originNode\` | 기본 시간 항목이에요. | \`ReactNode\` | - |
@@ -135,17 +139,14 @@ const meta = {
           `}</Markdown>
           <h2 className="component-docs-types-heading">Types</h2>
           <h3 id="time-picker-size-type">TimePickerSizeType</h3>
-          <p>TimePicker 크기를 선택해요.</p>
+          <p>TimePickerSizeType은 TimePicker의 높이와 글자 크기를 구분해요.</p>
           <TypeTokens values={timePickerSizes} />
           <h3 id="time-picker-variant-type">TimePickerVariantType</h3>
-          <p>배경과 테두리 표현을 선택해요.</p>
+          <p>TimePickerVariantType은 TimePicker의 배경과 테두리 표현 방식을 구분해요.</p>
           <TypeTokens values={timePickerVariants} />
           <h3 id="time-picker-placement-type">TimePickerPlacementType</h3>
-          <p>시간 패널 위치를 선택해요.</p>
+          <p>TimePickerPlacementType은 입력창을 기준으로 시간 패널이 열릴 위치를 구분해요.</p>
           <TypeTokens values={timePickerPlacements} />
-          <h3 id="time-picker-value-type">TimePickerValueType</h3>
-          <p>TimePicker의 선택값이에요.</p>
-          <TypeTokens values={timePickerValueTypes} />
         </div>
       ),
     },
@@ -179,7 +180,7 @@ export const Basic: Story = {
       include: [
         "크기",
         "표현 방식",
-        "안내 문구",
+        "placeholder",
         "레이블",
         "오류 문구",
         "필수 표시",
@@ -199,10 +200,32 @@ export const Basic: Story = {
 };
 
 export const Sizes: Story = {
+  args: {
+    variant: "default",
+    placeholder: "시간을 선택하세요",
+    label: "",
+    errorMessage: "",
+    required: false,
+    allowClear: true,
+    readOnly: false,
+    disabled: false,
+  },
   argTypes: { size: { control: false, table: { disable: true } } },
   parameters: {
     ...storyDescription("components-timepicker--sizes"),
-    controls: { disable: true },
+    controls: {
+      disable: false,
+      include: [
+        "표현 방식",
+        "placeholder",
+        "레이블",
+        "오류 문구",
+        "필수 표시",
+        "지우기",
+        "읽기 전용",
+        "비활성",
+      ],
+    },
     docs: {
       ...storyDescription("components-timepicker--sizes").docs,
       source: {
@@ -224,9 +247,31 @@ export const Sizes: Story = {
 };
 
 export const Widths: Story = {
+  args: {
+    size: "md",
+    variant: "default",
+    label: "",
+    errorMessage: "",
+    required: false,
+    allowClear: true,
+    readOnly: false,
+    disabled: false,
+  },
   parameters: {
     ...storyDescription("components-timepicker--widths"),
-    controls: { disable: true },
+    controls: {
+      disable: false,
+      include: [
+        "크기",
+        "표현 방식",
+        "레이블",
+        "오류 문구",
+        "필수 표시",
+        "지우기",
+        "읽기 전용",
+        "비활성",
+      ],
+    },
     docs: {
       ...storyDescription("components-timepicker--widths").docs,
       source: {
@@ -238,11 +283,11 @@ export const Widths: Story = {
       },
     },
   },
-  render: () => (
+  render: (args) => (
     <div className="grid max-w-xl gap-3">
-      <TimePicker placeholder="부모 너비 100%" />
-      <TimePicker width={240} placeholder="가로 길이 240px" />
-      <TimePicker width={320} placeholder="가로 길이 320px" />
+      <TimePicker {...args} placeholder="부모 너비 100%" />
+      <TimePicker {...args} width={240} placeholder="가로 길이 240px" />
+      <TimePicker {...args} width={320} placeholder="가로 길이 320px" />
     </div>
   ),
 };
@@ -251,20 +296,24 @@ export const States: Story = {
   args: {
     size: "md",
     variant: "default",
+    width: 320,
+    label: "",
+    errorMessage: "",
+    required: false,
   },
   parameters: {
     ...storyDescription("components-timepicker--states"),
     controls: {
       disable: false,
-      include: ["크기", "표현 방식", "가로 길이"],
+      include: ["크기", "표현 방식", "가로 길이", "레이블", "오류 문구", "필수 표시"],
     },
     docs: {
       ...storyDescription("components-timepicker--states").docs,
       source: {
         code: withStoryImports(`<div className="grid max-w-xs gap-3">
-  <TimePicker placeholder="기본" />
-  <TimePicker readOnly defaultValue={dayjs('2026-08-20 08:30:00')} />
-  <TimePicker disabled defaultValue={dayjs('2026-08-20 09:00:00')} />
+  <TimePicker width={320} placeholder="기본" />
+  <TimePicker width={320} readOnly defaultValue={dayjs('2026-08-20 08:30:00')} />
+  <TimePicker width={320} disabled defaultValue={dayjs('2026-08-20 09:00:00')} />
 </div>`),
       },
     },
@@ -288,6 +337,9 @@ export const Variants: Story = {
     readOnly: false,
     disabled: false,
     width: 320,
+    label: "",
+    errorMessage: "",
+    required: false,
   },
   argTypes: { placeholder: { control: false, table: { disable: true } } },
   parameters: {
@@ -302,14 +354,17 @@ export const Variants: Story = {
         "읽기 전용",
         "비활성",
         "가로 길이",
+        "레이블",
+        "오류 문구",
+        "필수 표시",
       ],
     },
     docs: {
       ...storyDescription("components-timepicker--variants").docs,
       source: {
         code: withStoryImports(`<div className="grid max-w-xs gap-3">
-  <TimePicker placeholder="기본" />
-  <TimePicker variant="filled" placeholder="채움" />
+  <TimePicker width={320} placeholder="기본" />
+  <TimePicker width={320} variant="filled" placeholder="채움" />
 </div>`),
       },
     },
@@ -574,7 +629,7 @@ export const Controlled: Story = {
     ...storySource(
       "components-timepicker--controlled",
       `function ControlledTimePicker() {
-  const [time, setTime] = useState<TimePickerValueType>(dayjs('2026-08-20 09:00:00'));
+  const [time, setTime] = useState<Dayjs | undefined>(dayjs('2026-08-20 09:00:00'));
 
   return <TimePicker width={320} value={time} onChange={setTime} />;
 }`,
@@ -594,8 +649,16 @@ export const Controlled: Story = {
     },
   },
   render: function ControlledTimeStory(args) {
-    const [time, setTime] = useState<TimePickerValueType>(dayjs("2026-08-20 09:00:00"));
-    return <TimePicker {...args} value={time} onChange={setTime} />;
+    const [time, setTime] = useState<Dayjs | undefined>(dayjs("2026-08-20 09:00:00"));
+    return (
+      <TimePicker<false>
+        {...args}
+        multiple={false}
+        defaultValue={undefined}
+        value={time}
+        onChange={setTime}
+      />
+    );
   },
 };
 
@@ -604,20 +667,20 @@ export const Placements: Story = {
     ...storySource(
       "components-timepicker--placements",
       `<div className="grid max-w-2xl grid-cols-2 gap-3">
-  <TimePicker placement="topLeft" />
-  <TimePicker placement="topRight" />
-  <TimePicker />
-  <TimePicker placement="bottomRight" />
+  <TimePicker placement="topLeft" placeholder="topLeft" />
+  <TimePicker placement="topRight" placeholder="topRight" />
+  <TimePicker placeholder="bottomLeft" />
+  <TimePicker placement="bottomRight" placeholder="bottomRight" />
 </div>`,
     ),
     controls: { disable: true },
   },
   render: (args) => (
     <div className="grid max-w-2xl grid-cols-2 gap-3">
-      <TimePicker {...args} placement="topLeft" />
-      <TimePicker {...args} placement="topRight" />
-      <TimePicker {...args} placement="bottomLeft" />
-      <TimePicker {...args} placement="bottomRight" />
+      <TimePicker {...args} placement="topLeft" placeholder="topLeft" />
+      <TimePicker {...args} placement="topRight" placeholder="topRight" />
+      <TimePicker {...args} placement="bottomLeft" placeholder="bottomLeft" />
+      <TimePicker {...args} placement="bottomRight" placeholder="bottomRight" />
     </div>
   ),
 };

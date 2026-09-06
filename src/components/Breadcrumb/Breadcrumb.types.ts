@@ -5,6 +5,7 @@ import type {
   MouseEventHandler,
   ReactNode,
 } from "react";
+import type { ColorTokenType } from "../../color-tokens";
 
 export interface BreadcrumbItem extends Omit<
   AnchorHTMLAttributes<HTMLAnchorElement>,
@@ -18,8 +19,8 @@ export interface BreadcrumbItem extends Omit<
   onClick?: MouseEventHandler<HTMLElement>;
   /** 경로 이름 앞에 표시할 아이콘. */
   icon?: ReactNode;
-  /** 해당 item의 글자와 아이콘 색상. */
-  color?: CSSProperties["color"];
+  /** 해당 item의 글자와 아이콘에 적용할 색상 토큰 이름 또는 CSS 색상. */
+  color?: ColorTokenType | CSSProperties["color"];
 }
 
 export interface BreadcrumbProps extends Omit<HTMLAttributes<HTMLElement>, "children"> {

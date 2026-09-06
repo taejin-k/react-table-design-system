@@ -1,6 +1,6 @@
 {
   "name": "@taejin-k/wizard-design",
-  "version": "0.10.4",
+  "version": "0.10.5",
   "description": "Wizard 디자인 시스템",
   "license": "UNLICENSED",
   "publishConfig": {
@@ -38,6 +38,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "vitest run",
+    "test:package": "pnpm build && node scripts/verify-release.mjs && vitest run --config vitest.package.config.mts",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
   },

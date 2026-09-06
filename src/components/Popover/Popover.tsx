@@ -1,10 +1,12 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { twMerge } from "tailwind-merge";
+import { resolveColorToken, resolveReadableTextColor } from "../../color-tokens";
+import { getFloatingTransformOrigin } from "../_internal/floating-position";
 import { useFloatingLayer } from "../_internal/use-floating-layer";
-import type { PopoverPlacementType, PopoverProps } from "./Popover.types";
+import type { PopoverProps } from "./Popover.types";
 
-const MOTION_DURATION = 100;
+const MOTION_DURATION = 200;
 
 export function Popover({
   children,
@@ -13,16 +15,14 @@ export function Popover({
   placement = "top",
   trigger = "hover",
   arrow = true,
-  color = "#ffffff",
+  color = "white",
   open,
   defaultOpen = false,
-  autoAdjustOverflow = true,
-  mouseEnterDelay = 0.1,
-  mouseLeaveDelay = 0.1,
   zIndex = 1030,
   className,
   onOpenChange,
 }: PopoverProps) {
+  const resolvedColor = resolveColorToken(color);
   const enabled = content !== null && content !== undefined;
   const floating = useFloatingLayer({
     enabled,
@@ -30,9 +30,6 @@ export function Popover({
     trigger,
     open,
     defaultOpen,
-    autoAdjustOverflow,
-    mouseEnterDelay,
-    mouseLeaveDelay,
     onOpenChange: (nextOpen) => onOpenChange?.(nextOpen),
   });
   const motionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -76,7 +73,7 @@ export function Popover({
     <>
       <span
         ref={floating.triggerRef}
-        className={twMerge("inline-flex min-w-0", className)}
+        className={twMerge("inline-flex max-w-full min-w-0", className)}
         {...floating.triggerProps}
       >
         {children}
@@ -107,19 +104,25 @@ export function Popover({
                       : "wizard-zoom-big-fast-leave",
                 )}
                 style={{
-                  transformOrigin: getTransformOrigin(renderPosition?.placement ?? placement),
+                  transformOrigin: getFloatingTransformOrigin(
+                    renderPosition?.placement ?? placement,
+                    renderPosition?.arrowStyle,
+                  ),
                 }}
               >
                 <div
                   className="relative max-w-full min-w-0 rounded-lg px-3 py-2.5 shadow-2xl"
-                  style={{ backgroundColor: color, color: getTextColor(color) }}
+                  style={{
+                    backgroundColor: resolvedColor,
+                    color: resolveReadableTextColor(color),
+                  }}
                 >
                   {title !== null && title !== undefined && title !== "" ? (
-                    <div className="mb-1 min-w-0 font-semibold [overflow-wrap:anywhere] break-words whitespace-pre-wrap">
+                    <div className="mb-1 min-w-0 font-semibold [overflow-wrap:anywhere] break-all whitespace-pre-wrap">
                       {title}
                     </div>
                   ) : null}
-                  <div className="min-w-0 [overflow-wrap:anywhere] break-words whitespace-pre-wrap">
+                  <div className="min-w-0 [overflow-wrap:anywhere] break-all whitespace-pre-wrap">
                     {content}
                   </div>
                 </div>
@@ -127,7 +130,7 @@ export function Popover({
                   <span
                     data-popover-arrow
                     className="absolute size-2 rotate-45"
-                    style={{ backgroundColor: color, ...renderPosition?.arrowStyle }}
+                    style={{ backgroundColor: resolvedColor, ...renderPosition?.arrowStyle }}
                   />
                 ) : null}
               </div>
@@ -137,35 +140,4 @@ export function Popover({
         : null}
     </>
   );
-}
-
-function getTransformOrigin(placement: PopoverPlacementType) {
-  if (placement.startsWith("top")) {
-    if (placement.endsWith("Left")) return "16px bottom";
-    if (placement.endsWith("Right")) return "calc(100% - 16px) bottom";
-    return "center bottom";
-  }
-  if (placement.startsWith("bottom")) {
-    if (placement.endsWith("Left")) return "16px top";
-    if (placement.endsWith("Right")) return "calc(100% - 16px) top";
-    return "center top";
-  }
-  if (placement.startsWith("left")) {
-    if (placement.endsWith("Top")) return "right 16px";
-    if (placement.endsWith("Bottom")) return "right calc(100% - 16px)";
-    return "right center";
-  }
-  if (placement.endsWith("Top")) return "left 16px";
-  if (placement.endsWith("Bottom")) return "left calc(100% - 16px)";
-  return "left center";
-}
-
-function getTextColor(color: string) {
-  const hex = color.trim().match(/^#([\da-f]{3}|[\da-f]{6})$/i)?.[1];
-  if (!hex) return "var(--color-dark)";
-  const normalized = hex.length === 3 ? [...hex].map((value) => value + value).join("") : hex;
-  const red = Number.parseInt(normalized.slice(0, 2), 16);
-  const green = Number.parseInt(normalized.slice(2, 4), 16);
-  const blue = Number.parseInt(normalized.slice(4, 6), 16);
-  return red * 0.299 + green * 0.587 + blue * 0.114 > 160 ? "var(--color-dark)" : "#ffffff";
 }

@@ -1,11 +1,14 @@
 import type { ReactNode } from "react";
 import type { Dayjs } from "dayjs";
 import type { InputSizeType } from "../Input";
+import type { ValidatableErrorMessage } from "../_internal/useErrorMessageValidation";
 
-export type TimePickerValueType = Dayjs | Dayjs[] | null;
 export type TimePickerSizeType = InputSizeType;
 export type TimePickerPlacementType = "bottomLeft" | "bottomRight" | "topLeft" | "topRight";
 export type TimePickerVariantType = "default" | "filled";
+export type TimePickerErrorMessage<Multiple extends boolean = false> = ValidatableErrorMessage<
+  Multiple extends true ? Dayjs[] : Dayjs | undefined
+>;
 
 export interface DisabledTime {
   disabledHours?: () => number[];
@@ -18,21 +21,21 @@ export interface TimePickerCellInfo {
   subType: "hour" | "minute" | "second";
 }
 
-export interface TimePickerProps {
-  value?: TimePickerValueType;
-  defaultValue?: TimePickerValueType;
+export interface TimePickerProps<Multiple extends boolean = false> {
+  value?: Multiple extends true ? Dayjs[] : Dayjs | undefined;
+  defaultValue?: Multiple extends true ? Dayjs[] : Dayjs | undefined;
   placeholder?: string;
   format?: string;
   size?: TimePickerSizeType;
   variant?: TimePickerVariantType;
   label?: ReactNode;
-  errorMessage?: ReactNode;
+  errorMessage?: TimePickerErrorMessage<Multiple>;
   required?: boolean;
   disabled?: boolean;
   readOnly?: boolean;
   width?: number;
   allowClear?: boolean | { clearIcon?: ReactNode };
-  multiple?: boolean;
+  multiple?: Multiple;
   order?: boolean;
   use12Hours?: boolean;
   showSecond?: boolean;
@@ -50,7 +53,10 @@ export interface TimePickerProps {
   defaultOpen?: boolean;
   placement?: TimePickerPlacementType;
   className?: string;
-  onChange?: (value: TimePickerValueType, timeString: string | string[]) => void;
+  onChange?: (
+    value: Multiple extends true ? Dayjs[] : Dayjs | undefined,
+    timeString: Multiple extends true ? string[] : string,
+  ) => void;
   onClear?: () => void;
   onOpenChange?: (open: boolean) => void;
 }

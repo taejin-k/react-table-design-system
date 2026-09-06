@@ -2,7 +2,7 @@ import type { Key, ReactNode } from "react";
 
 export type MessageStatusType = "success" | "error" | "info" | "warning" | "loading";
 
-export interface MessageArgsProps {
+export interface MessageConfig {
   content: ReactNode;
   type?: MessageStatusType;
   duration?: number;
@@ -18,12 +18,12 @@ export interface MessageType extends PromiseLike<boolean> {
 }
 
 export interface MessageInstance {
-  open: (config: MessageArgsProps) => MessageType;
-  success: (config: MessageArgsProps) => MessageType;
-  error: (config: MessageArgsProps) => MessageType;
-  info: (config: MessageArgsProps) => MessageType;
-  warning: (config: MessageArgsProps) => MessageType;
-  loading: (config: MessageArgsProps) => MessageType;
+  open: (config: MessageConfig) => MessageType;
+  success: (config: MessageConfig) => MessageType;
+  error: (config: MessageConfig) => MessageType;
+  info: (config: MessageConfig) => MessageType;
+  warning: (config: MessageConfig) => MessageType;
+  loading: (config: MessageConfig) => MessageType;
   destroy: (key?: Key) => void;
 }
 

@@ -15,6 +15,7 @@
   --color-disabled: #bbbbbb;
   --color-border: #dddddd;
   --color-hover: #f2f2f2;
+  --color-light-gray: #fafafa;
   --color-black: #000000;
   --color-white: #ffffff;
   --shadow-xs: 0 1px 2px rgb(0 0 0 / 0.12);
@@ -24,6 +25,5 @@
   --shadow-xl:
     0 6px 16px rgb(0 0 0 / 0.06), 0 3px 6px -4px rgb(0 0 0 / 0.08), 0 9px 28px 8px rgb(0 0 0 / 0.03);
   --shadow-2xl:
-    0 6px 16px rgb(0 0 0 / 0.08), 0 3px 6px -4px rgb(0 0 0 / 0.12), 0 9px 28px 8px rgb(0 0 0 / 0.05);
-  --drop-shadow-md: 0 3px 8px rgb(0 0 0 / 0.12);
+    0 5px 18px rgb(0 0 0 / 0.08), 0 3px 6px -4px rgb(0 0 0 / 0.12), 0 9px 28px 8px rgb(0 0 0 / 0.05);
 }

@@ -15,7 +15,7 @@ describe("Label", () => {
 
     const label = screen.getByText("이름");
     expect(label).toHaveAttribute("for", "name");
-    expect(label).toHaveClass("text-[12px]");
+    expect(label).toHaveClass("text-[12px]", "text-dark");
     expect(ref.current).toBe(label);
   });
 
@@ -37,5 +37,15 @@ describe("Label", () => {
     render(<Label label={"첫 줄\n둘째 줄"} />);
 
     expect(screen.getByText(/첫 줄\s+둘째 줄/)).toHaveClass("whitespace-pre-line");
+  });
+
+  it("wraps continuous English letters and numbers", () => {
+    render(<Label label="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789" />);
+
+    expect(screen.getByText("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")).toHaveClass(
+      "max-w-full",
+      "min-w-0",
+      "break-all",
+    );
   });
 });

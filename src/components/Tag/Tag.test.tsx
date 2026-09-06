@@ -16,6 +16,12 @@ describe("Tag", () => {
     expect(tag).toHaveTextContent("활성");
     expect(tag).toHaveAttribute("title", "상태");
     expect(tag).toHaveClass("bg-hover", "text-dark");
+    expect(tag).toHaveClass(
+      "transition-[color,background-color,box-shadow]",
+      "duration-200",
+      "ease-out",
+      "motion-reduce:transition-none",
+    );
     expect(ref.current).toBe(tag);
   });
 
@@ -35,7 +41,7 @@ describe("Tag", () => {
 
   it("applies color, variant, and an external class", () => {
     render(
-      <Tag className="custom-tag" color="red" data-testid="tag" variant="outlined">
+      <Tag className="custom-tag" color="danger" data-testid="tag" variant="outlined">
         오류
       </Tag>,
     );
@@ -45,7 +51,7 @@ describe("Tag", () => {
 
   it("renders a solid tag with a saturated background", () => {
     render(
-      <Tag color="blue" data-testid="tag" variant="solid">
+      <Tag color="primary" data-testid="tag" variant="solid">
         정보
       </Tag>,
     );
@@ -77,9 +83,15 @@ describe("Tag", () => {
     );
   });
 
-  it("preserves newlines in text children", () => {
+  it("keeps text on one line and truncates it when the tag width is constrained", () => {
     render(<Tag>{"첫 줄\n둘째 줄"}</Tag>);
 
-    expect(screen.getByText(/첫 줄\s+둘째 줄/)).toHaveClass("whitespace-pre-line");
+    const tag = screen.getByText(/첫 줄\s+둘째 줄/).parentElement;
+    expect(tag).toHaveClass("min-w-0", "max-w-full", "overflow-hidden");
+    expect(screen.getByText(/첫 줄\s+둘째 줄/)).toHaveClass(
+      "min-w-0",
+      "flex-1",
+      "truncate",
+    );
   });
 });

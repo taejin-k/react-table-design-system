@@ -62,7 +62,7 @@ const navVariants = cva(
 );
 
 const itemSizeVariants = cva(
-  "inline-flex cursor-pointer items-center justify-center rounded border border-transparent text-dark transition-none duration-0 hover:bg-hover disabled:pointer-events-none disabled:cursor-not-allowed disabled:!border-transparent disabled:!bg-transparent disabled:opacity-40 disabled:!ring-transparent",
+  "inline-flex cursor-pointer items-center justify-center rounded border border-transparent text-dark transition-none duration-0 outline-none hover:bg-hover disabled:cursor-not-allowed disabled:!border-transparent disabled:!bg-transparent disabled:!text-disabled disabled:opacity-100 disabled:!ring-transparent",
   {
     variants: {
       size: {
@@ -75,8 +75,11 @@ const itemSizeVariants = cva(
   },
 );
 
+// Keep selection colors instant; animate the separate hover background only.
+const pageItemClassName =
+  "relative isolate hover:bg-transparent before:pointer-events-none before:absolute before:-inset-px before:-z-10 before:rounded-[inherit] before:bg-hover before:opacity-0 before:transition-opacity before:duration-200 before:ease-out before:content-[''] enabled:hover:before:opacity-100 disabled:before:!opacity-0 disabled:before:transition-none motion-reduce:before:transition-none";
 const activeItemClassName =
-  "border-primary bg-primary text-white hover:bg-primary disabled:!bg-primary disabled:!opacity-60";
+  "border-primary bg-primary text-white hover:bg-primary before:!opacity-0 before:transition-none";
 
 export function Pagination({
   config,
@@ -178,7 +181,9 @@ export function Pagination({
       data-pagination-compact={compact ? "" : undefined}
     >
       {config.showTotal && (
-        <span className="shrink-0 text-gray">{config.showTotal(total, [start, end])}</span>
+        <span className="max-w-full min-w-0 shrink [overflow-wrap:anywhere] text-gray">
+          {config.showTotal(total, [start, end])}
+        </span>
       )}
       <div className="flex shrink-0 items-center gap-1">
         {prev}
@@ -208,7 +213,7 @@ export function Pagination({
                 <Button
                   variant="ghost"
                   size={buttonSize}
-                  className={twMerge(itemClassName, "text-gray hover:text-dark")}
+                  className={twMerge(directionButtonClassName, "text-gray hover:text-dark")}
                   data-pagination-jump={item}
                   disabled={disabled}
                   onClick={() => jump(target)}
@@ -222,7 +227,11 @@ export function Pagination({
               <Button
                 variant="ghost"
                 size={buttonSize}
-                className={twMerge(itemClassName, item === page && activeItemClassName)}
+                className={twMerge(
+                  itemClassName,
+                  pageItemClassName,
+                  item === page && activeItemClassName,
+                )}
                 data-pagination-page={item}
                 disabled={disabled}
                 onClick={() => jump(item)}
@@ -238,13 +247,14 @@ export function Pagination({
       {sizeChanger && (
         <span className="shrink-0">
           <Select
+            allowClear={false}
             options={pageSizeOptions.map((value) => ({
               label: `${value} / 페이지`,
               value,
             }))}
             disabled={disabled}
             value={pageSize}
-            width={112}
+            width={128}
             onChange={(value) => {
               if (Array.isArray(value) || value == null || typeof value === "object") return;
               const nextSize = Number(value);

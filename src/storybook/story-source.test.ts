@@ -88,8 +88,8 @@ function SelectExample() {
 
   it("imports DatePicker and TimePicker value types used by controlled examples", () => {
     const source = withStoryImports(`function PickerExample() {
-  const [date, setDate] = useState<DatePickerValueType>(null);
-  const [time, setTime] = useState<TimePickerValueType>(null);
+  const [date, setDate] = useState<Dayjs>();
+  const [time, setTime] = useState<Dayjs>();
 
   return (
     <>
@@ -100,8 +100,9 @@ function SelectExample() {
 }`);
 
     expect(source).toContain(
-      "import type { DatePickerValueType, TimePickerValueType } from '@taejin-k/wizard-design';",
+      "import type { Dayjs } from 'dayjs';",
     );
+    expect(source).toContain("import type { Dayjs } from 'dayjs';");
   });
 
   it("imports UploadFile used by a copyable upload example", () => {
@@ -140,9 +141,6 @@ describe("formatTooltipStorySource", () => {
   it("omits Tooltip props that already use component defaults", () => {
     const source = formatTooltipStorySource(`<Tooltip
   arrow
-  autoAdjustOverflow={true}
-  mouseEnterDelay={0.1}
-  mouseLeaveDelay={0.1}
   placement="top"
   title="도움말"
   trigger="hover"
@@ -154,9 +152,6 @@ describe("formatTooltipStorySource", () => {
     expect(source).toContain('<Tooltip title="도움말">');
     expect(source).not.toContain("placement=");
     expect(source).not.toContain("trigger=");
-    expect(source).not.toContain("autoAdjustOverflow");
-    expect(source).not.toContain("mouseEnterDelay");
-    expect(source).not.toContain("mouseLeaveDelay");
     expect(source).not.toMatch(/\sarrow(?:\s|=)/);
   });
 

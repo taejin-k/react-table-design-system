@@ -14,6 +14,7 @@ import { Label } from "../Label";
 import { ErrorMessage } from "../ErrorMessage";
 import { Icon } from "../Icon";
 import { filterAllowedCharacters } from "../_internal/filterAllowedCharacters";
+import { useErrorMessageValidation } from "../_internal/useErrorMessageValidation";
 import type { InputProps } from "./Input.types";
 
 /** prefixIcon/suffixIcon에 onClick이 붙어있어도 무시하도록 제거한다(장식 목적). */
@@ -21,12 +22,6 @@ function stripOnClick(node: ReactNode): ReactNode {
   if (isValidElement<{ onClick?: unknown }>(node))
     return cloneElement(node, { onClick: undefined });
   return node;
-}
-
-function getInitialValidationError(validate: InputProps["validate"], value: string): string {
-  if (!validate || validate.constructor.name === "AsyncFunction") return "";
-  const result = validate(value);
-  return typeof result === "string" ? result : "";
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
@@ -58,10 +53,10 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       inputMode,
       width,
       className,
-      validate,
       onBlur,
       onEnter,
       onKeyDown,
+      onMouseDown,
       ...rest
     },
     ref,
@@ -69,24 +64,29 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     const generatedId = useId();
     const inputId = id ?? generatedId;
     const inputRef = useRef<HTMLInputElement>(null);
-    const validationRequestRef = useRef(0);
     const [passwordVisible, setPasswordVisible] = useState(false);
     const [uncontrolledValue, setUncontrolledValue] = useState(() => String(defaultValue ?? ""));
     const currentValue = value ?? uncontrolledValue;
-    const [validationError, setValidationError] = useState(() =>
-      getInitialValidationError(validate, String(value ?? defaultValue ?? "")),
-    );
-    const displayedErrorMessage = errorMessage || validationError;
-    const hasError = Boolean(displayedErrorMessage);
+    const { clearValidationError, displayedErrorMessage, hasError, validateErrorMessage } =
+      useErrorMessageValidation(errorMessage, String(value ?? defaultValue ?? ""));
     const hasValue = currentValue.length > 0;
     useImperativeHandle(ref, () => inputRef.current as HTMLInputElement);
 
     return (
-      <div className={twMerge("flex w-full flex-col", className)} style={{ width }}>
+      <div className={twMerge("flex w-full flex-col", className)}>
         {label && (
-          <Label label={label} size={size} required={required} htmlFor={inputId} className="mb-1" />
+          <Label
+            label={label}
+            size={size}
+            required={required}
+            htmlFor={readOnly ? undefined : inputId}
+            className="mb-1"
+          />
         )}
-        <div className={twMerge(inputRowVariants({ size, variant, error: hasError, disabled }))}>
+        <div
+          className={twMerge(inputRowVariants({ size, variant, error: hasError, disabled }))}
+          style={{ width }}
+        >
           {prefixIcon && (
             <span className="flex size-4 shrink-0 items-center justify-center">
               {stripOnClick(prefixIcon)}
@@ -108,39 +108,20 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             inputMode={inputMode ?? (allowOnly === "number" ? "numeric" : undefined)}
             className={twMerge(
               inputVariants({ size, disabled }),
-              "min-w-0 flex-1 bg-transparent outline-none placeholder:text-gray",
+              "min-w-0 flex-1 bg-transparent outline-none",
+              readOnly && !disabled && "cursor-default",
             )}
             onBlur={(event) => {
-              if (validate) {
-                const requestId = ++validationRequestRef.current;
-                const result = validate(currentValue);
-
-                if (typeof result === "string") {
-                  setValidationError(result);
-                } else {
-                  void result
-                    .then((nextError) => {
-                      if (validationRequestRef.current === requestId) {
-                        setValidationError(nextError);
-                      }
-                    })
-                    .catch(() => {
-                      if (validationRequestRef.current === requestId) {
-                        setValidationError("");
-                      }
-                    });
-                }
-              }
+              validateErrorMessage(currentValue);
               onBlur?.(event);
             }}
             onChange={(event) => {
               const nextValue = filterAllowedCharacters(event.target.value, allowOnly);
               // 한글 등 IME 조합 중에는 네이티브 maxLength가 강제되지 않아 직접 막는다.
               if (maxLength !== undefined && nextValue.length > maxLength) return;
-              validationRequestRef.current += 1;
               if (value === undefined) setUncontrolledValue(nextValue);
               onChange?.(nextValue);
-              setValidationError("");
+              clearValidationError();
             }}
             onKeyDown={(event) => {
               onKeyDown?.(event);
@@ -151,6 +132,10 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
               ) {
                 onEnter?.();
               }
+            }}
+            onMouseDown={(event) => {
+              onMouseDown?.(event);
+              if (readOnly) event.preventDefault();
             }}
             {...rest}
           />
@@ -167,10 +152,9 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
               className="shrink-0 text-gray"
               onMouseDown={(event) => event.preventDefault()}
               onClick={() => {
-                validationRequestRef.current += 1;
                 if (value === undefined) setUncontrolledValue("");
                 onChange?.("");
-                setValidationError("");
+                clearValidationError();
                 inputRef.current?.focus();
               }}
             />
@@ -202,7 +186,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
 Input.displayName = "Input";
 
 const inputRowVariants = cva(
-  "flex w-full items-center gap-[6px] rounded-[4px] border border-solid bg-white transition-colors focus-within:border-primary",
+  "flex w-full items-center gap-[6px] rounded-[4px] border border-solid bg-white transition-colors duration-200 ease-out focus-within:border-primary motion-reduce:transition-none",
   {
     variants: {
       size: {
@@ -222,7 +206,7 @@ const inputRowVariants = cva(
         false: "",
       },
       disabled: {
-        true: "border-border bg-hover",
+        true: "cursor-not-allowed border-border bg-hover",
         false: "",
       },
     },
@@ -255,20 +239,23 @@ const inputRowVariants = cva(
   },
 );
 
-const inputVariants = cva("font-pretendard leading-[1.6] font-medium text-dark", {
-  variants: {
-    size: {
-      lg: "text-[16px]",
-      md: "text-[14px]",
-      sm: "text-[12px]",
+const inputVariants = cva(
+  "font-pretendard leading-[1.6] font-medium text-dark placeholder:text-disabled",
+  {
+    variants: {
+      size: {
+        lg: "text-[16px]",
+        md: "text-[14px]",
+        sm: "text-[12px]",
+      },
+      disabled: {
+        true: "cursor-not-allowed text-disabled opacity-100 placeholder:text-disabled",
+        false: "",
+      },
     },
-    disabled: {
-      true: "text-gray opacity-100",
-      false: "",
+    defaultVariants: {
+      size: "md",
+      disabled: false,
     },
   },
-  defaultVariants: {
-    size: "md",
-    disabled: false,
-  },
-});
+);

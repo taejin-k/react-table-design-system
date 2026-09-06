@@ -33,7 +33,19 @@ const headerAndIconItems: CollapseItem[] = [
     key: "extra",
     label: "추가 정보와 오른쪽 아이콘",
     children: "extra와 아이콘 위치를 함께 설정할 수 있어요.",
-    extra: <Tag color="blue">Beta</Tag>,
+    extra: <Tag color="primary">Beta</Tag>,
+  },
+  {
+    key: "text-extra",
+    label: "일반 텍스트 extra",
+    children: "태그 없이 문자열을 extra로 전달할 수 있어요.",
+    extra: "최근 업데이트: 2026-09-06",
+  },
+  {
+    key: "long-text-extra",
+    label: "긴 텍스트 extra",
+    children: "긴 extra는 제목 공간을 남기고 줄바꿈해요.",
+    extra: "1234567890".repeat(12),
   },
   {
     key: "without-arrow",
@@ -82,7 +94,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "관련 콘텐츠를 접을 수 있는 패널로 나눠 필요한 정보만 표시해요.  \n다중·아코디언 펼침, 애니메이션, 크기, 아이콘 위치와 테두리 없는 모드를 지원해요.",
+          "Collapse는 긴 설명이나 설정을 접고 펼칠 수 있는 패널로 나눠요.  \n여러 패널 펼침·아코디언·크기·아이콘 위치와 테두리 없는 모드를 지원해요.",
       },
       page: () => (
         <div className="collapse-docs component-docs">
@@ -92,6 +104,8 @@ const meta = {
           <h2>API</h2>
           <Markdown>{`
 ### Collapse
+
+Collapse는 여러 콘텐츠 패널을 접거나 펼쳐 표시해요.
 
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
@@ -108,6 +122,8 @@ const meta = {
 
 ### <span id="collapse-item">CollapseItem</span>
 
+CollapseItem은 하나의 패널에 표시할 제목과 내용을 정의해요.
+
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
 | \`key\` | 패널을 구분하는 고유한 값이에요. | \`Key\` | - |
@@ -119,13 +135,13 @@ const meta = {
           `}</Markdown>
           <h2 className="component-docs-types-heading">Types</h2>
           <h3 id="collapse-size-type">CollapseSizeType</h3>
-          <p>패널 크기를 선택해요.</p>
+          <p>CollapseSizeType은 패널 헤더와 본문의 여백 크기를 구분해요.</p>
           <TypeTokens values={collapseSizes} />
           <h3 id="collapse-collapsible-type">CollapseCollapsibleType</h3>
-          <p>패널을 여는 영역을 선택해요.</p>
+          <p>CollapseCollapsibleType은 패널을 열 수 있는 헤더 영역을 구분해요.</p>
           <TypeTokens values={collapseModes} />
           <h3 id="collapse-expand-icon-placement-type">CollapseExpandIconPlacementType</h3>
-          <p>펼침 아이콘 위치를 선택해요.</p>
+          <p>CollapseExpandIconPositionType은 펼침 아이콘이 놓일 위치를 구분해요.</p>
           <TypeTokens values={collapseIconPlacements} />
         </div>
       ),
@@ -317,7 +333,7 @@ export const Collapsible: Story = {
       ...storyDescription("components-collapse--collapsible").docs,
       source: {
         type: "code",
-        code: withStoryImports(`const items = [
+        code: withStoryImports(`const items: CollapseItem[] = [
   {
     key: 'header',
     label: '헤더 전체로 열기',
@@ -383,7 +399,19 @@ export const HeaderAndIcons: Story = {
     key: 'extra',
     label: '추가 정보와 오른쪽 아이콘',
     children: 'extra와 아이콘 위치를 함께 설정할 수 있어요.',
-    extra: <Tag color="blue">Beta</Tag>,
+    extra: <Tag color="primary">Beta</Tag>,
+  },
+  {
+    key: 'text-extra',
+    label: '일반 텍스트 extra',
+    children: '태그 없이 문자열을 extra로 전달할 수 있어요.',
+    extra: '최근 업데이트: 2026-09-06',
+  },
+  {
+    key: 'long-text-extra',
+    label: '긴 텍스트 extra',
+    children: '긴 extra는 제목 공간을 남기고 줄바꿈해요.',
+    extra: '1234567890'.repeat(12),
   },
   {
     key: 'without-arrow',

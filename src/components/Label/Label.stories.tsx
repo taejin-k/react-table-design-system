@@ -26,7 +26,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "입력 항목의 이름을 표시해요.  \n글자 크기를 선택하고 필수 표시를 추가할 수 있어요.",
+          "Label은 Input이나 Select 위에 이름을 표시해요.  \n글자 크기를 선택하고 필수 입력 표시를 추가할 수 있어요.",
       },
       page: () => (
         <div className="label-docs component-docs">
@@ -37,6 +37,8 @@ const meta = {
           <Markdown>{`
 ### Label
 
+Label은 Input이나 Select 위에 이름과 필수 여부를 표시해요.
+
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
 | \`label\` | 화면에 표시할 레이블이에요. | \`ReactNode\` | - |
@@ -46,7 +48,7 @@ const meta = {
           `}</Markdown>
           <h2 className="component-docs-types-heading">Types</h2>
           <h3 id="label-size">LabelSizeType</h3>
-          <p>Label의 글자 크기를 선택해요.</p>
+          <p>LabelSizeType은 연결할 Input이나 Select에 맞는 글자 크기를 구분해요.</p>
           <div className="flex flex-wrap gap-2">
             {sizes.map((size) => (
               <LabelSizeCode key={size} size={size} />
@@ -96,9 +98,13 @@ export const Sizes: Story = {
 };
 
 export const Required: Story = {
-  args: { label: "레이블", size: "md", required: true },
+  args: { label: "레이블", required: true, size: "md" },
   parameters: {
     ...storyDescription("components-label--required"),
     controls: { disable: false, include: ["레이블", "크기", "필수 표시"] },
+    docs: {
+      ...storyDescription("components-label--required").docs,
+      source: { code: withStoryImports(`<Label label="레이블" required />`) },
+    },
   },
 };

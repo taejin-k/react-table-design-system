@@ -149,6 +149,14 @@ body.sb-show-main {
   width: 12%;
 }
 
+.avatar-docs table :is(th, td):nth-child(3) {
+  width: 20%;
+}
+
+.avatar-docs table :is(th, td):nth-child(4) {
+  width: 27%;
+}
+
 .tree-docs table :is(th, td):nth-child(1) {
   width: 19.5%;
 }
@@ -395,12 +403,16 @@ body.sb-show-main {
   width: 25%;
 }
 
+.breadcrumb-docs table :is(th, td):nth-child(1) {
+  width: 12%;
+}
+
 .breadcrumb-docs table :is(th, td):nth-child(2) {
-  width: 40%;
+  width: 38%;
 }
 
 .breadcrumb-docs table :is(th, td):nth-child(3) {
-  width: 28%;
+  width: 38%;
 }
 
 .input-docs table :is(th, td):nth-child(1) {
@@ -484,19 +496,24 @@ body.sb-show-main {
 }
 
 .datepicker-docs table :is(th, td):nth-child(1) {
-  width: 17%;
+  width: 18.5%;
+}
+
+.datepicker-docs p a[href="#datepicker"],
+.datepicker-docs p a[href="#datepicker"]:hover {
+  text-decoration: none !important;
 }
 
 .datepicker-docs table :is(th, td):nth-child(2) {
-  width: 28%;
+  width: 26%;
 }
 
 .datepicker-docs table :is(th, td):nth-child(3) {
-  width: 33%;
+  width: 40%;
 }
 
 .datepicker-docs table :is(th, td):nth-child(4) {
-  width: 22%;
+  width: 15.5%;
 }
 
 .modal-docs table :is(th, td):nth-child(2) {
@@ -515,8 +532,12 @@ body.sb-show-main {
   width: 38%;
 }
 
+.message-docs table :is(th, td):nth-child(2) {
+  width: 30%;
+}
+
 .message-docs table :is(th, td):nth-child(3) {
-  width: 28%;
+  width: 36%;
 }
 
 .message-docs table :is(th, td):nth-child(4) {
@@ -552,11 +573,11 @@ body.sb-show-main {
 }
 
 .tooltip-docs table :is(th, td):nth-child(2) {
-  width: 36%;
+  width: 28%;
 }
 
 .tooltip-docs table :is(th, td):nth-child(3) {
-  width: 36.5%;
+  width: 44.5%;
 }
 
 .tooltip-docs table :is(th, td):nth-child(4) {
@@ -603,11 +624,11 @@ body.sb-show-main {
 }
 
 .popover-docs table :is(th, td):nth-child(1) {
-  width: 19.5%;
+  width: 14%;
 }
 
 .popover-docs table :is(th, td):nth-child(2) {
-  width: 32%;
+  width: 30%;
 }
 
 .popover-docs table :is(th, td):nth-child(4) {
@@ -631,7 +652,7 @@ body.sb-show-main {
 }
 
 .popover-docs table :is(th, td):nth-child(3) {
-  width: 38%;
+  width: 45.5%;
 }
 
 .dropdown-docs table :is(th, td),

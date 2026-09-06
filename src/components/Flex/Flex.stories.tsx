@@ -73,7 +73,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "요소를 가로 또는 세로로 배치해요.  \n정렬·간격·줄바꿈과 렌더링 요소를 설정할 수 있어요.",
+          "Flex는 여러 자식 요소를 가로 또는 세로로 배치해요.  \n정렬·간격·줄바꿈과 최상위 HTML 요소를 지정할 수 있어요.",
       },
       page: () => (
         <div className="component-docs">
@@ -84,13 +84,15 @@ const meta = {
           <Markdown>{`
 ### Flex
 
+Flex는 자식 요소를 가로 또는 세로 방향으로 정렬해요.
+
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
 | \`vertical\` | 요소를 세로 방향으로 배치해요. | \`boolean\` | \`false\` |
 | \`wrap\` | 줄바꿈 방식을 설정해요. | \`CSSProperties['flexWrap'] \\| boolean\` | \`nowrap\` |
 | \`justify\` | 주축 정렬을 설정해요. | \`CSSProperties['justifyContent']\` | \`normal\` |
 | \`align\` | 교차축 정렬을 설정해요. | \`CSSProperties['alignItems']\` | \`normal\` |
-| \`flex\` | CSS flex 축약 값을 설정해요. | \`CSSProperties['flex']\` | \`normal\` |
+| \`flex\` | CSS flex 축약 값을 설정해요. | \`CSSProperties['flex']\` | \`0 1 auto\` |
 | \`gap\` | 요소 사이 간격을 px 단위로 설정해요. | \`number\` | - |
 | \`component\` | 렌더링할 요소를 설정해요. | \`ElementType\` | \`div\` |
 | \`className\` | 최상위 요소에 Tailwind 클래스를 추가해요. | \`string\` | - |
@@ -107,8 +109,7 @@ type Story = StoryObj<typeof meta>;
 export const Basic: Story = {
   args: {
     vertical: false,
-    wrap: false,
-    justify: "flex-start",
+    justify: "normal",
     align: "center",
     gap: 8,
   },
@@ -116,7 +117,7 @@ export const Basic: Story = {
     ...storyDescription("components-flex--basic"),
     controls: {
       disable: false,
-      include: ["세로 배치", "줄바꿈", "주축 정렬", "교차축 정렬", "간격"],
+      include: ["세로 배치", "주축 정렬", "교차축 정렬", "간격"],
     },
     docs: {
       ...storyDescription("components-flex--basic").docs,
@@ -155,7 +156,7 @@ export const Vertical: Story = {
     <div className="grid gap-6">
       <div className="grid gap-2">
         <p className="m-0 text-sm font-medium text-[#555]">vertical=false</p>
-        <Flex vertical={false} gap={8}>
+        <Flex vertical={false} gap={8} align="flex-start">
           <Button>첫 번째</Button>
           <Button>두 번째</Button>
           <Button>세 번째</Button>
@@ -198,10 +199,10 @@ export const Vertical: Story = {
 };
 
 export const Wrap: Story = {
-  args: { gap: 8, align: "center" },
+  args: { gap: 8 },
   parameters: {
     ...storyDescription("components-flex--wrap"),
-    controls: { disable: false, include: ["교차축 정렬", "간격"] },
+    controls: { disable: false, include: ["간격"] },
     docs: {
       ...storyDescription("components-flex--wrap").docs,
       source: {
@@ -292,7 +293,7 @@ export const Justify: Story = {
     docs: {
       ...storyDescription("components-flex--justify").docs,
       source: {
-        code: withStoryImports(`const itemClass = "flex h-12 min-w-20 items-center justify-center rounded bg-selected px-4 text-sm text-primary";
+        code: withStoryImports(`const itemClass = "flex h-12 min-w-20 items-center justify-center rounded bg-selected px-4 text-center text-sm text-primary";
 const rowClass = "rounded border border-border p-3";
 const labelClass = "m-0 text-sm font-medium text-[#555]";
 
@@ -366,7 +367,7 @@ function FlexJustify() {
 };
 
 export const Align: Story = {
-  args: { gap: 8, justify: "flex-start" },
+  args: { gap: 8, justify: "normal" },
   parameters: {
     ...storyDescription("components-flex--align"),
     controls: { disable: false, include: ["주축 정렬", "간격"] },
@@ -495,15 +496,15 @@ export const FlexValue: Story = {
   args: { gap: 8, align: "center" },
   parameters: {
     ...storyDescription("components-flex--flex"),
-    controls: { disable: false, include: ["교차축 정렬", "간격"] },
+    controls: { disable: false, include: ["간격"] },
     docs: {
       ...storyDescription("components-flex--flex").docs,
       source: {
-        code: withStoryImports(`const itemClass = "h-12 min-w-20 rounded bg-selected px-4 text-sm text-primary";
+        code: withStoryImports(`const itemClass = "h-12 min-w-20 rounded bg-selected px-4 text-center text-sm text-primary";
 
 function FlexValue() {
   return (
-    <Flex gap={8}>
+    <Flex gap={8} align="center">
       <Flex flex={1} align="center" justify="center" className={itemClass}>
         flex=1
       </Flex>

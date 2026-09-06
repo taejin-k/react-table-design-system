@@ -7,13 +7,13 @@ describe("Popover", () => {
   it("opens on hover and stays open while the pointer is over the card", async () => {
     const user = userEvent.setup();
     render(
-      <Popover content="추가 내용" mouseEnterDelay={0} title="제목">
+      <Popover content="추가 내용" title="제목">
         <button type="button">대상</button>
       </Popover>,
     );
 
     await user.hover(screen.getByRole("button", { name: "대상" }));
-    expect(screen.getByText("추가 내용")).toBeInTheDocument();
+    expect(await screen.findByText("추가 내용")).toBeInTheDocument();
 
     await user.hover(screen.getByText("추가 내용"));
     expect(screen.getByText("추가 내용")).toBeInTheDocument();
@@ -91,7 +91,7 @@ describe("Popover", () => {
   it("supports multiple trigger events", async () => {
     const user = userEvent.setup();
     render(
-      <Popover content="추가 내용" mouseEnterDelay={0} trigger={["hover", "focus"]}>
+      <Popover content="추가 내용" trigger={["hover", "focus"]}>
         <button type="button">대상</button>
       </Popover>,
     );
@@ -103,7 +103,7 @@ describe("Popover", () => {
   it("does not render when content is empty", async () => {
     const user = userEvent.setup();
     render(
-      <Popover content={null} mouseEnterDelay={0}>
+      <Popover content={null}>
         <button type="button">대상</button>
       </Popover>,
     );
@@ -122,16 +122,31 @@ describe("Popover", () => {
     expect(await screen.findByText(/제목 첫 줄\s+제목 둘째 줄/)).toHaveClass(
       "whitespace-pre-wrap",
       "[overflow-wrap:anywhere]",
+      "break-all",
     );
     expect(screen.getByText(/내용 첫 줄\s+내용 둘째 줄/)).toHaveClass(
       "whitespace-pre-wrap",
       "[overflow-wrap:anywhere]",
+      "break-all",
     );
     expect(document.querySelector("[data-popover]")).toHaveClass(
       "w-max",
       "max-w-[min(320px,calc(100vw-16px))]",
       "min-w-[min(177px,calc(100vw-16px))]",
     );
+  });
+
+  it("resolves design token backgrounds and text contrast", () => {
+    render(
+      <Popover color="primary" content="토큰 내용" open>
+        <button type="button">대상</button>
+      </Popover>,
+    );
+
+    expect(screen.getByText("토큰 내용").parentElement).toHaveStyle({
+      backgroundColor: "var(--color-primary)",
+      color: "var(--color-white)",
+    });
   });
 
   it("uses leftTop when leftBottom cannot preserve its bottom alignment", async () => {
@@ -158,10 +173,39 @@ describe("Popover", () => {
     await waitFor(() =>
       expect(document.querySelector("[data-popover]")).toHaveAttribute("data-placement", "leftTop"),
     );
-    expect(document.querySelector("[data-popover-arrow]")).toHaveStyle({
+    const arrow = document.querySelector("[data-popover-arrow]");
+    expect(arrow).toHaveStyle({
       right: "-4px",
       top: "12px",
     });
+
+    getBoundingClientRect.mockRestore();
+  });
+
+  it("prefers top for leftTop when neither horizontal side fits", async () => {
+    const user = userEvent.setup();
+    Object.defineProperty(window, "innerWidth", { configurable: true, value: 1000 });
+    Object.defineProperty(window, "innerHeight", { configurable: true, value: 700 });
+    const getBoundingClientRect = vi
+      .spyOn(Element.prototype, "getBoundingClientRect")
+      .mockImplementation(function (this: Element) {
+        if (this instanceof HTMLSpanElement)
+          return createRect({ left: 450, top: 300, width: 100, height: 40 });
+        if (this instanceof HTMLElement && this.dataset.popover !== undefined)
+          return createRect({ width: 500, height: 100 });
+        return createRect({});
+      });
+
+    render(
+      <Popover content="추가 내용" placement="leftTop" trigger="click">
+        <button type="button">대상</button>
+      </Popover>,
+    );
+
+    await user.click(screen.getByRole("button", { name: "대상" }));
+    await waitFor(() =>
+      expect(document.querySelector("[data-popover]")).toHaveAttribute("data-placement", "top"),
+    );
 
     getBoundingClientRect.mockRestore();
   });

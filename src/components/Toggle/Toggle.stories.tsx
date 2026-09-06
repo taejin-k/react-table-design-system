@@ -27,7 +27,8 @@ const meta = {
     controls: { disable: false },
     docs: {
       description: {
-        component: "설정을 켜거나 꺼요.  \n크기를 선택하고 켜짐·비활성 상태를 설정할 수 있어요.",
+        component:
+          "Toggle은 기능이나 설정을 켜고 끌 때 사용해요.  \n크기와 켜짐·로딩·비활성 상태를 표현할 수 있어요.",
       },
       page: () => (
         <div className="toggle-docs component-docs">
@@ -37,6 +38,8 @@ const meta = {
           <h2>API</h2>
           <Markdown>{`
 ### Toggle
+
+Toggle은 기능이나 설정의 켜짐·꺼짐 상태를 표시하고 변경해요.
 
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
@@ -49,7 +52,7 @@ const meta = {
           `}</Markdown>
           <h2 className="component-docs-types-heading">Types</h2>
           <h3 id="toggle-size">ToggleSizeType</h3>
-          <p>Toggle의 크기를 선택해요.</p>
+          <p>ToggleSizeType은 Toggle의 트랙과 thumb 크기를 구분해요.</p>
           <div className="flex flex-wrap gap-2">
             {sizes.map((size) => (
               <ToggleSizeCode key={size} size={size} />
@@ -73,9 +76,10 @@ function ToggleSizeCode({ size }: { size: ToggleSizeType }) {
 }
 
 export const Sizes: Story = {
+  args: { disabled: false },
   parameters: {
     ...storyDescription("components-toggle--sizes"),
-    controls: { disable: true },
+    controls: { disable: false, include: ["비활성"] },
     docs: {
       ...storyDescription("components-toggle--sizes").docs,
       source: {
@@ -95,10 +99,10 @@ export const Sizes: Story = {
       },
     },
   },
-  render: () => (
+  render: (args) => (
     <div className="flex flex-wrap items-center gap-8">
       {sizes.map((size) => (
-        <ControlledToggle key={size} size={size} />
+        <ControlledToggle {...args} key={size} size={size} />
       ))}
     </div>
   ),
@@ -158,15 +162,11 @@ export const Loading: Story = {
     return () => clearTimeout(timeout);
   }, [pendingChecked]);
 
-  const handleChange = (nextChecked: boolean) => {
-    setPendingChecked(nextChecked);
-  };
-
   return (
     <Toggle
       checked={checked}
       loading={pendingChecked !== null}
-      onChange={handleChange}
+      onChange={setPendingChecked}
     />
   );
 }`),
@@ -190,16 +190,12 @@ function LoadingToggle({ args }: { args: Partial<ToggleProps> }) {
     return () => clearTimeout(timeout);
   }, [pendingChecked]);
 
-  const handleChange = (nextChecked: boolean) => {
-    setPendingChecked(nextChecked);
-  };
-
   return (
     <Toggle
       {...args}
       checked={checked}
       loading={pendingChecked !== null || args.loading}
-      onChange={handleChange}
+      onChange={setPendingChecked}
     />
   );
 }

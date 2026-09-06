@@ -39,11 +39,11 @@ describe("ColorPicker", () => {
 
     const trigger = screen.getByRole("button", { name: /#0062DF/ });
     expect(trigger).not.toBeDisabled();
-    expect(trigger).toHaveClass("cursor-default", "focus:border-primary", "focus:outline-none");
+    expect(trigger).toHaveClass("cursor-default", "outline-none", "focus:border-primary");
 
     await userEvent.click(trigger);
 
-    expect(trigger).toHaveFocus();
+    expect(trigger).not.toHaveFocus();
     expect(document.querySelector("[data-colorpicker-popup]")).not.toBeInTheDocument();
     expect(onOpenChange).not.toHaveBeenCalled();
     expect(onChange).not.toHaveBeenCalled();
@@ -116,7 +116,9 @@ describe("ColorPicker", () => {
       />,
     );
     await userEvent.click(screen.getByRole("button"));
-    const preset = (await screen.findByText("브랜드")).nextElementSibling?.querySelector("button");
+    const preset = (
+      await screen.findByText("브랜드")
+    ).parentElement?.nextElementSibling?.querySelector("button");
     await userEvent.click(preset!);
     expect(onChange).toHaveBeenCalledWith("#ff0000");
     expect(onChange.mock.calls[0]).toHaveLength(1);

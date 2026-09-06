@@ -4,6 +4,13 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { message } from "./Message";
 
 describe("message", () => {
+  it("keeps the default message card styling", async () => {
+    act(() => {
+      message.info({ content: "맞춤 메시지", duration: 0 });
+    });
+    await screen.findByText("맞춤 메시지");
+    expect(document.querySelector(".wizard-message-card")).toHaveClass("rounded-lg");
+  });
   afterEach(async () => {
     act(() => message.destroy());
     await waitFor(() => expect(document.querySelectorAll(".wizard-message-card")).toHaveLength(0));
@@ -15,6 +22,47 @@ describe("message", () => {
     );
     await userEvent.click(screen.getByText("열기"));
     expect(await screen.findByText("저장했어요")).toBeInTheDocument();
+  });
+
+  it("replaces the loading icon immediately without leaving a blue overlay", async () => {
+    act(() => void message.loading({ key: "save", content: "저장 중" }));
+    await screen.findByText("저장 중");
+    const card = document.querySelector(".wizard-message-card")!;
+    const loadingIcon = card.querySelector("svg");
+
+    act(() => void message.success({ key: "save", content: "저장 완료", duration: 0 }));
+    await screen.findByText("저장 완료");
+    expect(document.querySelector(".wizard-message-card")).toBe(card);
+    const successPath = card.querySelector('path[fill="var(--color-success)"]')!;
+    expect(successPath).toBeInTheDocument();
+    expect(successPath.closest("svg")).not.toBe(loadingIcon);
+    expect(card.querySelectorAll("svg")).toHaveLength(1);
+    expect(card.querySelector('path[fill="var(--color-primary)"]')).not.toBeInTheDocument();
+    expect(loadingIcon).not.toBeInTheDocument();
+  });
+
+  it("measures the new content width on updates while keeping the same card", async () => {
+    let width = 100;
+    const measure = vi
+      .spyOn(HTMLElement.prototype, "offsetWidth", "get")
+      .mockImplementation(function (this: HTMLElement) {
+        return this.classList.contains("wizard-message-content") ? width : 0;
+      });
+    try {
+      act(() => void message.info({ key: "width", content: "짧게", duration: 0 }));
+      await screen.findByText("짧게");
+      const card = document.querySelector(".wizard-message-card")!;
+      expect(card).toHaveStyle({ width: "100px" });
+      width = 260;
+      act(() => void message.success({ key: "width", content: "길어진 메시지 내용", duration: 0 }));
+      expect(document.querySelector(".wizard-message-card")).toBe(card);
+      expect(card).toHaveStyle({ width: "260px" });
+      width = 80;
+      act(() => void message.success({ key: "width", content: "완료", duration: 0 }));
+      expect(card).toHaveStyle({ width: "80px" });
+    } finally {
+      measure.mockRestore();
+    }
   });
 
   it("destroys only the message with the matching numeric key", async () => {
@@ -36,7 +84,12 @@ describe("message", () => {
     });
 
     const content = await screen.findByText(/첫 줄\s+둘째 줄/);
-    expect(content).toHaveClass("leading-5", "whitespace-pre-wrap", "[overflow-wrap:anywhere]");
+    expect(content).toHaveClass(
+      "leading-5",
+      "whitespace-pre-wrap",
+      "[overflow-wrap:anywhere]",
+      "break-all",
+    );
     expect(content.parentElement).toHaveClass("items-start");
   });
 

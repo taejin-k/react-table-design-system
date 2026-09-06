@@ -6,6 +6,50 @@ import { canDropTreeNode, getTreeDropPosition, Tree } from "./Tree";
 const treeData = [{ key: "parent", title: "상위", children: [{ key: "child", title: "하위" }] }];
 
 describe("Tree", () => {
+  it("honors a node's checkable=false inside a checkable tree", () => {
+    render(
+      <Tree
+        checkable
+        treeData={[
+          { key: "hidden", title: "숨김", checkable: false },
+          { key: "shown", title: "표시" },
+        ]}
+      />,
+    );
+    expect(document.querySelector('[data-tree-node="hidden"] input')).not.toBeInTheDocument();
+    expect(document.querySelector('[data-tree-node="shown"] input')).toBeInTheDocument();
+  });
+
+  it("does not change disabled descendants when checking a parent", async () => {
+    const onCheck = vi.fn();
+    render(
+      <Tree
+        checkable
+        defaultExpandAll
+        onCheck={onCheck}
+        treeData={[
+          {
+            key: "parent",
+            title: "부모",
+            children: [
+              { key: "enabled", title: "선택 가능" },
+              {
+                key: "disabled",
+                title: "비활성",
+                disabled: true,
+                children: [{ key: "blocked-child", title: "비활성 하위" }],
+              },
+              { key: "locked", title: "체크 금지", disableCheckbox: true },
+            ],
+          },
+        ]}
+      />,
+    );
+    await userEvent.click(document.querySelector('[data-tree-node="parent"] input')!);
+    expect(onCheck).toHaveBeenLastCalledWith(["parent", "enabled"]);
+    await userEvent.click(document.querySelector('[data-tree-node="enabled"] input')!);
+    expect(onCheck).toHaveBeenLastCalledWith([]);
+  });
   it("applies className to the outermost element", () => {
     const { container } = render(<Tree className="tree-custom w-full" treeData={treeData} />);
 
@@ -99,7 +143,7 @@ describe("Tree", () => {
   it("checks descendants together", async () => {
     const onCheck = vi.fn();
     render(<Tree checkable defaultExpandAll treeData={treeData} onCheck={onCheck} />);
-    expect(screen.getAllByRole("checkbox")[0].parentElement?.parentElement).toHaveClass("mr-1");
+    expect(screen.getAllByRole("checkbox")[0].closest("span.mr-1")).toHaveClass("mr-1");
     await userEvent.click(screen.getAllByRole("checkbox")[0]);
     expect(onCheck).toHaveBeenCalledWith(expect.arrayContaining(["parent", "child"]));
   });
@@ -119,7 +163,8 @@ describe("Tree", () => {
     const title = screen.getByText("하위");
     expect(title.parentElement).toHaveClass("bg-selected");
     expect(title).not.toHaveClass("bg-selected");
-    expect(title).toHaveClass("relative", "-top-px");
+    expect(title).not.toHaveClass("relative", "-top-px");
+    expect(title).toHaveClass("[overflow-wrap:anywhere]", "break-all");
 
     rerender(
       <Tree

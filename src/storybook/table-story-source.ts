@@ -32,6 +32,7 @@ const tablePropOrder = [
   "stickyHeader",
   "stickyHeaderOffset",
   "virtual",
+  "scrollBarHeight",
   "stickyScrollBar",
   "stickyScrollBarOffset",
   "scroll",
@@ -66,6 +67,18 @@ const objectPropOrder = [
 ];
 
 const memberPropOrder = ["id", "name", "role", "team", "status", "projects", "joinedAt"];
+
+// Omit only values that are actually the Table defaults. In particular, md is
+// not the default size (lg), so it must remain in copied examples.
+const tableDefaults: Record<string, unknown> = {
+  bordered: false,
+  loading: false,
+  size: "lg",
+  showHeader: true,
+  rowHoverable: true,
+  textSelectable: true,
+  scrollBarHeight: 8,
+};
 
 const functionProp = (name: string) =>
   name.startsWith("on") || ["render", "sorter", "showTotal"].includes(name);
@@ -194,6 +207,19 @@ export function formatTableDataSourceDeclaration(dataSource: unknown[], variable
   })};`;
 }
 
+// Virtual-scroll examples already use a generator rather than a literal row list.
+export function formatTableVirtualDataSourceDeclaration(length: number) {
+  return `const members = Array.from({ length: ${length} }, (_, index) => ({
+  id: \`V-\${index + 1}\`,
+  name: \`구성원 \${String(index + 1).padStart(4, '0')}\`,
+  role: index % 2 ? 'Frontend Engineer' : 'Product Designer',
+  team: ['Design', 'Platform', 'Growth'][index % 3],
+  status: index % 7 === 0 ? '휴가' : '활성',
+  projects: index % 15,
+  joinedAt: \`202\${index % 5}-0\${(index % 9) + 1}-12\`,
+}));`;
+}
+
 function filterConstantName(column: Record<string, unknown>, index: number) {
   const dataIndex = typeof column.dataIndex === "string" ? column.dataIndex : `column${index + 1}`;
   return `${dataIndex}Filters`;
@@ -217,6 +243,14 @@ export function formatTableStorySource(source: string, context: StorySourceConte
   const declarations: string[] = [];
   const dataSource = Array.isArray(args.dataSource) ? args.dataSource : undefined;
   const columns = Array.isArray(args.columns) ? args.columns : undefined;
+  const resolvedDefaults: Record<string, unknown> = {
+    ...tableDefaults,
+    bordered:
+      columns?.some(
+        (column) =>
+          isPlainObject(column) && Array.isArray(column.children) && column.children.length > 0,
+      ) ?? false,
+  };
 
   if (columns) {
     columns.forEach((column, index) => {
@@ -225,7 +259,7 @@ export function formatTableStorySource(source: string, context: StorySourceConte
       declarations.push(
         `const ${name} = ${serialize(column.filters, 0, {
           arrayReferences,
-          preferredKeys: ["text", "value", "children"],
+          preferredKeys: ["label", "value", "children"],
         })};`,
       );
       arrayReferences.set(column.filters, name);
@@ -242,13 +276,21 @@ export function formatTableStorySource(source: string, context: StorySourceConte
       ? `// ${context.parameters.tableColumnsComment}\n`
       : "";
     declarations.push(
-      `${columnsComment}const columns = ${serialize(columns, 0, { arrayReferences })};`,
+      `${columnsComment}const columns: ColumnsType<${dataSource?.length ? "(typeof members)[number]" : "Record<string, unknown>"}> = ${serialize(columns, 0, { arrayReferences })};`,
     );
     arrayReferences.set(columns, "columns");
   }
 
   const keys = sortKeys(
-    Object.keys(args).filter((key) => args[key] !== undefined),
+    Object.keys(args).filter(
+      (key) =>
+        args[key] !== undefined &&
+        !(
+          componentName === "Table" &&
+          key in resolvedDefaults &&
+          args[key] === resolvedDefaults[key]
+        ),
+    ),
     tablePropOrder,
   );
   const props = keys.map((key) => {

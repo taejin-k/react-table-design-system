@@ -46,7 +46,7 @@ const meta = {
       options: variants,
     },
     value: { name: "입력값", control: "text" },
-    placeholder: { name: "안내 문구", control: "text" },
+    placeholder: { name: "placeholder", control: "text" },
     label: { name: "레이블", control: "text" },
     errorMessage: { name: "오류 문구", control: "text" },
     required: { name: "필수 표시", control: "boolean" },
@@ -65,7 +65,6 @@ const meta = {
     prefixIcon: { control: false, table: { disable: true } },
     suffixIcon: { control: false, table: { disable: true } },
     className: { control: false, table: { disable: true } },
-    validate: { control: false, table: { disable: true } },
     onBlur: { control: false, table: { disable: true } },
     onChange: { control: false, table: { disable: true } },
     onEnter: { control: false, table: { disable: true } },
@@ -75,7 +74,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "사용자가 값을 입력하거나 수정할 수 있어요.  \n레이블·오류 문구·아이콘과 글자 수 표시를 함께 사용할 수 있어요.",
+          "Input은 이름이나 검색어 같은 한 줄 텍스트를 입력할 때 사용해요.  \n레이블·오류 문구·아이콘과 글자 수를 함께 표시할 수 있어요.",
       },
       page: () => (
         <div className="input-docs component-docs">
@@ -85,6 +84,8 @@ const meta = {
           <h2>API</h2>
           <Markdown>{`
 ### Input
+
+Input은 한 줄 텍스트를 입력하고, 값에 문제가 있으면 오류 문구를 표시해요.
 
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
@@ -96,7 +97,7 @@ const meta = {
 | \`width\` | Input의 가로 길이를 px 단위로 설정해요. | \`number\` | \`100%\` |
 | \`maxLength\` | 입력할 수 있는 최대 글자 수를 설정해요. | \`number\` | - |
 | \`label\` | Input 위에 레이블을 표시해요. | \`ReactNode\` | - |
-| \`errorMessage\` | Input 아래에 오류 문구를 표시해요. | \`ReactNode\` | - |
+| \`errorMessage\` | 오류 문구를 표시하거나 입력값을 동기·비동기로 검사해 반환된 오류 문구를 표시해요. | \`ReactNode \\| ((value: string) => string \\| Promise<string>)\` | - |
 | \`required\` | 레이블에 필수 표시를 추가해요. | \`boolean\` | \`false\` |
 | \`password\` | 입력값을 가리고 눈 아이콘으로 표시 상태를 전환해요. | \`boolean\` | \`false\` |
 | \`allowOnly\` | 입력할 수 있는 문자 종류를 제한해요. | [\`AllowedCharacterType\`](#allowed-character-type) | - |
@@ -105,28 +106,27 @@ const meta = {
 | \`readOnly\` | 입력값을 읽기 전용으로 표시해요. | \`boolean\` | \`false\` |
 | \`prefixIcon\` | 입력 영역 앞에 아이콘을 표시해요. | \`ReactNode\` | - |
 | \`suffixIcon\` | 입력 영역 뒤에 아이콘을 표시해요. | \`ReactNode\` | - |
-| \`validate\` | 포커스가 빠지면 입력값을 동기·비동기로 검사해요. | \`(value: string) => string \\| Promise<string>\` | - |
 | \`className\` | 최상위 요소에 Tailwind 클래스를 추가해요. | \`string\` | - |
 | \`onChange\` | 입력값이 바뀌면 변경값을 전달해요. | \`(value: string) => void\` | - |
 | \`onEnter\` | Enter를 누를 때 실행할 함수예요. | \`() => void\` | - |
           `}</Markdown>
           <h2 className="component-docs-types-heading">Types</h2>
           <h3 id="input-size">InputSizeType</h3>
-          <p>Input의 크기를 선택해요.</p>
+          <p>InputSizeType은 Input의 높이와 글자 크기를 구분해요.</p>
           <div className="flex flex-wrap gap-2">
             {sizes.map((size) => (
               <InputTypeCode key={size} value={size} />
             ))}
           </div>
           <h3 id="input-variant">InputVariantType</h3>
-          <p>Input의 배경과 테두리 표현 방식을 선택해요.</p>
+          <p>InputVariantType은 Input의 배경과 테두리 표현 방식을 구분해요.</p>
           <div className="flex flex-wrap gap-2">
             {variants.map((variant) => (
               <InputTypeCode key={variant} value={variant} />
             ))}
           </div>
           <h3 id="allowed-character-type">AllowedCharacterType</h3>
-          <p>입력을 허용할 문자 종류를 선택해요.</p>
+          <p>AllowedCharacterType은 Input에 입력할 수 있는 문자 종류를 제한해요.</p>
           <div className="flex flex-wrap gap-2">
             {allowedCharacterTypes.map((type) => (
               <InputTypeCode key={type} value={type} />
@@ -154,9 +154,29 @@ function InputTypeCode({
 }
 
 export const Sizes: Story = {
+  args: {
+    variant: "default",
+    placeholder: "입력하세요",
+    label: "",
+    errorMessage: "",
+    required: false,
+    readOnly: false,
+    disabled: false,
+  },
   parameters: {
     ...storyDescription("components-input--sizes"),
-    controls: { disable: true },
+    controls: {
+      disable: false,
+      include: [
+        "표현 방식",
+        "placeholder",
+        "레이블",
+        "오류 문구",
+        "필수 표시",
+        "읽기 전용",
+        "비활성",
+      ],
+    },
     docs: {
       ...storyDescription("components-input--sizes").docs,
       source: {
@@ -168,19 +188,31 @@ export const Sizes: Story = {
       },
     },
   },
-  render: () => (
+  render: (args) => (
     <div className="grid max-w-xl gap-4">
-      <Input placeholder="입력하세요" size="lg" />
-      <Input placeholder="입력하세요" size="md" />
-      <Input placeholder="입력하세요" size="sm" />
+      <Input {...args} size="lg" />
+      <Input {...args} size="md" />
+      <Input {...args} size="sm" />
     </div>
   ),
 };
 
 export const Widths: Story = {
+  args: {
+    size: "md",
+    variant: "default",
+    label: "",
+    errorMessage: "",
+    required: false,
+    readOnly: false,
+    disabled: false,
+  },
   parameters: {
     ...storyDescription("components-input--widths"),
-    controls: { disable: true },
+    controls: {
+      disable: false,
+      include: ["크기", "표현 방식", "레이블", "오류 문구", "필수 표시", "읽기 전용", "비활성"],
+    },
     docs: {
       ...storyDescription("components-input--widths").docs,
       source: {
@@ -192,19 +224,31 @@ export const Widths: Story = {
       },
     },
   },
-  render: () => (
+  render: (args) => (
     <div className="grid max-w-xl gap-4">
-      <Input placeholder="부모 너비 100%" />
-      <Input width={240} placeholder="가로 길이 240px" />
-      <Input width={320} placeholder="가로 길이 320px" />
+      <Input {...args} placeholder="부모 너비 100%" />
+      <Input {...args} width={240} placeholder="가로 길이 240px" />
+      <Input {...args} width={320} placeholder="가로 길이 320px" />
     </div>
   ),
 };
 
 export const Variants: Story = {
+  args: {
+    size: "md",
+    width: undefined,
+    label: "",
+    errorMessage: "",
+    required: false,
+    readOnly: false,
+    disabled: false,
+  },
   parameters: {
     ...storyDescription("components-input--variants"),
-    controls: { disable: true },
+    controls: {
+      disable: false,
+      include: ["크기", "가로 길이", "레이블", "오류 문구", "필수 표시", "읽기 전용", "비활성"],
+    },
     docs: {
       ...storyDescription("components-input--variants").docs,
       source: {
@@ -217,12 +261,12 @@ export const Variants: Story = {
       },
     },
   },
-  render: () => (
+  render: (args) => (
     <div className="grid max-w-xl gap-4">
-      <Input placeholder="기본" />
-      <Input placeholder="채움" variant="filled" />
-      <Input placeholder="테두리 없음" variant="borderless" />
-      <Input placeholder="밑줄" variant="underlined" />
+      <Input {...args} placeholder="기본" variant="default" />
+      <Input {...args} placeholder="채움" variant="filled" />
+      <Input {...args} placeholder="테두리 없음" variant="borderless" />
+      <Input {...args} placeholder="밑줄" variant="underlined" />
     </div>
   ),
 };
@@ -232,12 +276,15 @@ export const States: Story = {
     size: "md",
     variant: "default",
     width: undefined,
+    label: "",
+    errorMessage: "",
+    required: false,
   },
   parameters: {
     ...storyDescription("components-input--states"),
     controls: {
       disable: false,
-      include: ["크기", "표현 방식", "가로 길이"],
+      include: ["크기", "표현 방식", "가로 길이", "레이블", "오류 문구", "필수 표시"],
     },
     docs: {
       ...storyDescription("components-input--states").docs,
@@ -260,9 +307,31 @@ export const States: Story = {
 };
 
 export const AllowedCharacters: Story = {
+  args: {
+    size: "md",
+    variant: "default",
+    width: undefined,
+    label: "",
+    errorMessage: "",
+    required: false,
+    readOnly: false,
+    disabled: false,
+  },
   parameters: {
     ...storyDescription("components-input--allowed-characters"),
-    controls: { disable: true },
+    controls: {
+      disable: false,
+      include: [
+        "크기",
+        "표현 방식",
+        "가로 길이",
+        "레이블",
+        "오류 문구",
+        "필수 표시",
+        "읽기 전용",
+        "비활성",
+      ],
+    },
     docs: {
       ...storyDescription("components-input--allowed-characters").docs,
       source: {
@@ -274,26 +343,45 @@ export const AllowedCharacters: Story = {
       },
     },
   },
-  render: () => (
+  render: (args) => (
     <div className="grid max-w-xl gap-4">
-      <Input allowOnly="korean" placeholder="한글만 입력하세요" />
-      <Input allowOnly="english" placeholder="영어만 입력하세요" />
-      <Input allowOnly="number" placeholder="숫자만 입력하세요" />
+      <Input {...args} allowOnly="korean" placeholder="한글만 입력하세요" />
+      <Input {...args} allowOnly="english" placeholder="영어만 입력하세요" />
+      <Input {...args} allowOnly="number" placeholder="숫자만 입력하세요" />
     </div>
   ),
 };
 
 export const Password: Story = {
   args: {
+    size: "md",
+    variant: "default",
+    width: undefined,
     label: "비밀번호",
+    errorMessage: "",
+    required: false,
     password: true,
     placeholder: "",
+    allowClear: false,
+    readOnly: false,
     disabled: false,
   },
   parameters: {
     controls: {
       disable: false,
-      include: ["placeholder", "레이블", "비밀번호", "비활성"],
+      include: [
+        "크기",
+        "표현 방식",
+        "가로 길이",
+        "placeholder",
+        "레이블",
+        "오류 문구",
+        "필수 표시",
+        "비밀번호",
+        "지우기",
+        "읽기 전용",
+        "비활성",
+      ],
     },
     docs: {
       description: { story: storyDescriptions["components-input--password"] },
@@ -319,11 +407,30 @@ export const IconsAndCount: Story = {
     suffixIcon: <Icon icon="edit" />,
     value: "검색어",
     placeholder: "",
+    width: undefined,
+    label: "",
+    errorMessage: "",
+    required: false,
+    readOnly: false,
+    disabled: false,
   },
   parameters: {
     controls: {
       disable: false,
-      include: ["placeholder", "입력값", "크기", "지우기", "글자 수", "최대 글자 수"],
+      include: [
+        "placeholder",
+        "입력값",
+        "크기",
+        "가로 길이",
+        "레이블",
+        "오류 문구",
+        "필수 표시",
+        "지우기",
+        "글자 수",
+        "최대 글자 수",
+        "읽기 전용",
+        "비활성",
+      ],
     },
     docs: {
       description: { story: storyDescriptions["components-input--icons-and-count"] },
@@ -542,15 +649,30 @@ function CountExamples({
 
 export const StaticError: Story = {
   args: {
+    size: "md",
+    variant: "default",
+    width: undefined,
     errorMessage: "이메일을 확인해 주세요.",
     label: "이메일",
     placeholder: "",
     required: true,
+    readOnly: false,
+    disabled: false,
   },
   parameters: {
     controls: {
       disable: false,
-      include: ["placeholder", "레이블", "오류 문구", "필수 표시"],
+      include: [
+        "크기",
+        "표현 방식",
+        "가로 길이",
+        "placeholder",
+        "레이블",
+        "오류 문구",
+        "필수 표시",
+        "읽기 전용",
+        "비활성",
+      ],
     },
     docs: {
       description: { story: storyDescriptions["components-input--static-error"] },
@@ -569,14 +691,30 @@ export const StaticError: Story = {
 
 export const ClientError: Story = {
   args: {
+    size: "md",
+    variant: "default",
+    width: undefined,
+    placeholder: "",
     label: "이메일",
     required: true,
     value: "email",
+    readOnly: false,
+    disabled: false,
   },
   parameters: {
     controls: {
       disable: false,
-      include: ["placeholder", "입력값", "레이블", "필수 표시"],
+      include: [
+        "크기",
+        "표현 방식",
+        "가로 길이",
+        "placeholder",
+        "입력값",
+        "레이블",
+        "필수 표시",
+        "읽기 전용",
+        "비활성",
+      ],
     },
     docs: {
       description: { story: storyDescriptions["components-input--client-error"] },
@@ -596,10 +734,9 @@ function EmailInput() {
   return (
     <Input
       label="이메일"
-      placeholder="입력하세요"
       required
       value={email}
-      validate={validateEmail}
+      errorMessage={validateEmail}
       onChange={setEmail}
     />
   );
@@ -617,7 +754,7 @@ function EmailInput() {
       <Input
         {...inputProps}
         value={value}
-        validate={validateEmail}
+        errorMessage={validateEmail}
         onChange={(nextValue) => {
           setValue(nextValue);
           onChange?.(nextValue);
@@ -631,16 +768,29 @@ export const ServerError: Story = {
   args: {
     label: "이메일",
     value: "member@example.com",
+    placeholder: "",
     size: "md",
     variant: "default",
     width: 360,
+    required: false,
+    readOnly: false,
     disabled: false,
   },
   parameters: {
     ...storyDescription("components-input--server-error"),
     controls: {
       disable: false,
-      include: ["레이블", "입력값", "크기", "표현 방식", "가로 길이", "비활성"],
+      include: [
+        "크기",
+        "표현 방식",
+        "가로 길이",
+        "placeholder",
+        "입력값",
+        "레이블",
+        "필수 표시",
+        "읽기 전용",
+        "비활성",
+      ],
     },
     docs: {
       ...storyDescription("components-input--server-error").docs,
@@ -656,8 +806,9 @@ function ServerErrorInput() {
   return (
     <Input
       label="이메일"
+      width={360}
       value={email}
-      validate={checkEmailAvailability}
+      errorMessage={checkEmailAvailability}
       onChange={setEmail}
     />
   );
@@ -673,5 +824,7 @@ function ServerErrorInput(args: InputProps) {
 
   useEffect(() => setEmail(args.value ?? ""), [args.value]);
 
-  return <Input {...args} value={email} validate={checkEmailAvailability} onChange={setEmail} />;
+  return (
+    <Input {...args} value={email} errorMessage={checkEmailAvailability} onChange={setEmail} />
+  );
 }

@@ -14,6 +14,52 @@ function ModalExample() {
 }
 
 describe("Modal", () => {
+  it("applies independent footer button variants and supports updates", () => {
+    const { rerender } = render(<Modal open confirmVariant="danger" cancelVariant="dark" />);
+    expect(screen.getByText("확인").closest("button")).toHaveClass("bg-danger");
+    expect(screen.getByText("취소").closest("button")).toHaveClass("bg-dark");
+    rerender(<Modal open confirmVariant="secondary" cancelVariant="primary" />);
+    expect(screen.getByText("확인").closest("button")).toHaveClass("bg-white");
+    expect(screen.getByText("취소").closest("button")).toHaveClass("bg-primary");
+  });
+
+  it.each(["info", "success", "error", "warning", "confirm"] as const)(
+    "applies button variants to Modal.%s and its updates",
+    async (method) => {
+      let modal!: ReturnType<typeof Modal.confirm>;
+      act(() => {
+        modal = Modal[method]({
+          title: "버튼 종류",
+          confirmVariant: "danger",
+          cancelVariant: "dark",
+        });
+      });
+      await screen.findByText("버튼 종류");
+      expect(screen.getByText("확인").closest("button")).toHaveClass("bg-danger");
+      if (method === "confirm")
+        expect(screen.getByText("취소").closest("button")).toHaveClass("bg-dark");
+      act(() => modal.update({ confirmVariant: "secondary", cancelVariant: "primary" }));
+      expect(screen.getByText("확인").closest("button")).toHaveClass("bg-white");
+      if (method === "confirm")
+        expect(screen.getByText("취소").closest("button")).toHaveClass("bg-primary");
+    },
+  );
+
+  it("keeps a rejected static confirmation open and allows retry", async () => {
+    const onConfirm = vi
+      .fn()
+      .mockRejectedValueOnce(new Error("retry"))
+      .mockResolvedValueOnce(undefined);
+    act(() => {
+      Modal.confirm({ title: "다시 확인", onConfirm });
+    });
+    await userEvent.click(await screen.findByText("확인"));
+    expect(screen.getByText("다시 확인")).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByText("확인").closest("button")).not.toBeDisabled());
+    await userEvent.click(screen.getByText("확인"));
+    await waitFor(() => expect(screen.queryByText("다시 확인")).not.toBeInTheDocument());
+    expect(onConfirm).toHaveBeenCalledTimes(2);
+  });
   afterEach(() => act(() => Modal.destroyAll()));
 
   it("does not render its panel before the first open unless forceRender is true", () => {
@@ -62,6 +108,31 @@ describe("Modal", () => {
     await waitFor(() => expect(document.body.style.overflow).toBe(""));
   });
 
+  it("keeps dimmed and other close controls when mask clicks are disabled", async () => {
+    const onClose = vi.fn();
+    const { rerender } = render(
+      <Modal open mask={false} onCancel={onClose}>
+        내용
+      </Modal>,
+    );
+    const mask = document.querySelector("[data-modal-mask]")!;
+    expect(mask).toHaveClass("bg-black/45", "cursor-default");
+    await userEvent.click(mask);
+    expect(onClose).not.toHaveBeenCalled();
+    await userEvent.click(document.querySelector("[data-modal-panel] button")!);
+    expect(onClose).toHaveBeenCalledTimes(1);
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(onClose).toHaveBeenCalledTimes(2);
+    rerender(
+      <Modal open mask onCancel={onClose}>
+        내용
+      </Modal>,
+    );
+    expect(document.querySelector("[data-modal-mask]")).toBe(mask);
+    await userEvent.click(mask);
+    expect(onClose).toHaveBeenCalledTimes(3);
+  });
+
   it("closes when the enabled mask is clicked", async () => {
     render(<ModalExample />);
 
@@ -95,7 +166,7 @@ describe("Modal", () => {
     );
   });
 
-  it("does not render a mask for a static modal when mask is false", async () => {
+  it("keeps a static modal dimmed without closing on mask clicks when mask is false", async () => {
     render(
       <button onClick={() => Modal.info({ title: "안내", content: "내용", mask: false })}>
         열기
@@ -104,7 +175,12 @@ describe("Modal", () => {
     await userEvent.click(screen.getByText("열기"));
     await waitFor(() => expect(screen.getByText("안내")).toBeInTheDocument());
 
-    expect(document.querySelector("[data-modal-mask]")).not.toBeInTheDocument();
+    expect(document.querySelector("[data-modal-mask]")).toHaveClass(
+      "bg-black/45",
+      "cursor-default",
+    );
+    await userEvent.click(document.querySelector("[data-modal-mask]")!);
+    expect(document.querySelector("[data-modal-panel]")).toBeInTheDocument();
   });
 
   it("uses the opening click position as the zoom origin after the panel is measurable", async () => {
@@ -232,6 +308,32 @@ describe("Modal", () => {
     );
   });
 
+  it("wraps long text inside custom footer elements", () => {
+    render(
+      <Modal
+        open
+        footer={(origin) => (
+          <div data-testid="long-footer" className="flex items-center justify-between">
+            <span>{"1234567890".repeat(30)}</span>
+            {origin}
+          </div>
+        )}
+      >
+        내용
+      </Modal>,
+    );
+    expect(screen.getByTestId("long-footer").parentElement).toHaveClass(
+      "min-w-0",
+      "max-w-full",
+      "[overflow-wrap:anywhere]",
+      "break-all",
+    );
+    expect(screen.getByText("확인").closest("button")?.parentElement).toHaveClass(
+      "shrink-0",
+      "max-w-full",
+    );
+  });
+
   it("hides the close button when closable is false", () => {
     render(
       <Modal open closable={false} onCancel={() => undefined}>
@@ -252,8 +354,11 @@ describe("Modal", () => {
     expect(screen.getByText(/제목 첫 줄\s+제목 둘째 줄/)).toHaveClass(
       "whitespace-pre-wrap",
       "[overflow-wrap:anywhere]",
+      "break-all",
     );
-    expect(screen.getByText(/내용 첫 줄\s+내용 둘째 줄/)).toHaveClass("whitespace-pre-wrap");
+    const content = screen.getByText(/내용 첫 줄\s+내용 둘째 줄/);
+    expect(content).toHaveClass("whitespace-pre-wrap");
+    expect(content.parentElement).toHaveClass("break-all");
   });
 
   it("aligns a static status icon with the first title line", async () => {
@@ -275,7 +380,7 @@ describe("Modal", () => {
     const title = await screen.findByText(/제목 첫 줄\s+제목 둘째 줄/);
     expect(title.parentElement?.parentElement?.firstElementChild).toHaveClass("-mt-0.5", "mr-2.5");
     expect(title).toHaveClass("whitespace-pre-wrap");
-    expect(title.parentElement).toHaveClass("[overflow-wrap:anywhere]");
+    expect(title.parentElement).toHaveClass("[overflow-wrap:anywhere]", "break-all");
     expect(screen.getByText(/내용 첫 줄\s+내용 둘째 줄/)).toHaveClass("whitespace-pre-wrap");
   });
 

@@ -187,7 +187,7 @@ function PaginationHideOnSinglePageTable() {
         hideOnSinglePage: {String(hideOnSinglePage)}
       </Button>
       <Table
-        dataSource={singlePageDataSource}
+        dataSource={members}
         columns={columns}
         pagination={{ hideOnSinglePage }}
       />

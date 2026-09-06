@@ -20,7 +20,7 @@ export type ColumnFilterModeType = "menu" | "tree";
 export type TableScrollAlignType = "start" | "center" | "end" | "nearest";
 
 export type FilterItem = {
-  text: ReactNode;
+  label: ReactNode;
   value: FilterKey;
   children?: FilterItem[];
 };
@@ -176,6 +176,7 @@ export type TableProps<T extends object> = Omit<
   rowDrag?: boolean | RowDragConfig<T>;
   columnDrag?: boolean | ColumnDragConfig<T>;
   expandable?: ExpandableConfig<T>;
+  /** 그룹 열이 있으면 기본 true, 그 외에는 false예요. */
   bordered?: boolean;
   loading?: boolean | TableLoadingConfig;
   size?: TableSizeType;
@@ -187,6 +188,8 @@ export type TableProps<T extends object> = Omit<
   stickyHeader?: boolean;
   stickyHeaderOffset?: number;
   virtual?: boolean;
+  /** 일반·고정 가로 스크롤바 높이(px). 기본 8, 범위 8~16이에요. */
+  scrollBarHeight?: number;
   stickyScrollBar?: boolean;
   stickyScrollBarOffset?: number;
   scroll?: { x?: string | number | true; y?: string | number };

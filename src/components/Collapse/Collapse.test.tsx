@@ -67,10 +67,12 @@ describe("Collapse", () => {
     expect(screen.getByText(/제목 첫 줄\s+제목 둘째 줄/)).toHaveClass(
       "whitespace-pre-wrap",
       "[overflow-wrap:anywhere]",
+      "break-all",
     );
     expect(screen.getByText(/내용 첫 줄\s+내용 둘째 줄/)).toHaveClass(
       "whitespace-pre-wrap",
       "[overflow-wrap:anywhere]",
+      "break-all",
     );
   });
 
@@ -116,17 +118,22 @@ describe("Collapse", () => {
     expect(screen.getByText("내용")).toHaveClass("px-6", "py-4");
   });
 
-  it("keeps rounded corners and reserves a transparent border without a visible border", () => {
+  it("reserves border space without painting the background underneath it", () => {
     const { container } = render(
       <Collapse bordered={false} items={[{ key: "one", label: "제목" }]} />,
     );
 
-    expect(container.firstChild).toHaveClass("rounded-lg", "border", "border-transparent");
-    expect(container.firstChild).not.toHaveClass("border-border");
+    expect(container.firstChild).toHaveClass(
+      "rounded-lg",
+      "border",
+      "border-transparent",
+      "bg-clip-padding",
+    );
+    expect(container.firstChild).not.toHaveClass("border-hover");
   });
 
-  it("reserves transparent panel dividers when bordered is false", () => {
-    const { container } = render(
+  it("keeps border and divider space when toggling bordered and ghost", () => {
+    const { container, rerender } = render(
       <Collapse
         bordered={false}
         items={[
@@ -137,6 +144,19 @@ describe("Collapse", () => {
     );
 
     expect(container.querySelectorAll("section")[1]).toHaveClass("border-t", "border-transparent");
+    for (const props of [{ bordered: true }, { bordered: false }, { ghost: true }]) {
+      rerender(
+        <Collapse
+          {...props}
+          items={[
+            { key: "one", label: "첫 번째" },
+            { key: "two", label: "두 번째" },
+          ]}
+        />,
+      );
+      expect(container.firstChild).toHaveClass("border", "bg-clip-padding");
+      expect(container.querySelectorAll("section")[1]).toHaveClass("border-t");
+    }
   });
 
   it("applies className to the top-level element and supports Tailwind overrides", () => {
@@ -234,10 +254,30 @@ describe("Collapse", () => {
     expect(screen.getByText("제목").closest("[tabindex]")?.querySelector("svg")).toBeNull();
   });
 
+  it("constrains long extra text without toggling the panel on extra clicks", async () => {
+    const extra = "1234567890".repeat(30);
+    render(<Collapse items={[{ key: "one", label: "제목", extra, children: "본문" }]} />);
+    expect(screen.getByText(extra)).toHaveClass("min-w-0", "max-w-[50%]", "break-all");
+    await userEvent.click(screen.getByText(extra));
+    expect(screen.queryByText("본문")).not.toBeInTheDocument();
+    await userEvent.click(screen.getByText("제목"));
+    expect(screen.getByText("본문")).toBeVisible();
+  });
+
+  it("renders a numeric zero extra", () => {
+    render(<Collapse items={[{ key: "one", label: "제목", extra: 0 }]} />);
+    expect(screen.getByText("0")).toBeInTheDocument();
+  });
+
   it("applies ghost styles", () => {
     const { container } = render(<Collapse ghost items={[{ key: "one", label: "제목" }]} />);
 
     expect(container.firstElementChild).toHaveClass("bg-transparent");
-    expect(container.firstElementChild).not.toHaveClass("rounded-lg", "border", "bg-hover");
+    expect(container.firstElementChild).toHaveClass(
+      "border",
+      "border-transparent",
+      "bg-clip-padding",
+    );
+    expect(container.firstElementChild).not.toHaveClass("rounded-lg", "border-hover", "bg-hover");
   });
 });

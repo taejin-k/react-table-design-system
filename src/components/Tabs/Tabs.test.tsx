@@ -6,6 +6,32 @@ import { reorderTabItems, Tabs } from "./Tabs";
 import type { TabItemType } from "./Tabs.types";
 
 describe("Tabs", () => {
+  it("removes the active indicator when the final tab is removed", () => {
+    const { rerender } = render(<Tabs items={[{ key: "only", label: "탭" }]} />);
+    expect(document.querySelector("[data-tabs-indicator]")).toBeInTheDocument();
+    rerender(<Tabs items={[]} />);
+    expect(document.querySelector("[data-tabs-indicator]")).not.toBeInTheDocument();
+  });
+  it("clips a long active indicator to the scroll viewport, including after scrolling", () => {
+    let scrollLeft = 0;
+    const rect = vi
+      .spyOn(HTMLElement.prototype, "getBoundingClientRect")
+      .mockImplementation(function (this: HTMLElement) {
+        return this.hasAttribute("data-tabs-item")
+          ? new DOMRect(10 - scrollLeft, 0, 1000, 30)
+          : new DOMRect(10, 0, 300, 30);
+      });
+    try {
+      render(<Tabs items={[{ key: "long", label: "1".repeat(120) }]} />);
+      const indicator = document.querySelector("[data-tabs-indicator]");
+      expect(indicator).toHaveStyle({ width: "300px", transform: "translate3d(0px, -2px, 0)" });
+      scrollLeft = 800;
+      fireEvent.scroll(document.querySelector(".wizard-scrollbar-hidden")!);
+      expect(indicator).toHaveStyle({ width: "200px" });
+    } finally {
+      rect.mockRestore();
+    }
+  });
   it("changes the active tab and renders its panel", async () => {
     const onChange = vi.fn();
     render(
@@ -52,7 +78,9 @@ describe("Tabs", () => {
     await userEvent.click(document.querySelector("[data-tabs-add]")!);
     expect(screen.getByRole("button", { name: /사용자 탭/ })).toBeInTheDocument();
 
-    await userEvent.click(document.querySelector('[data-tab-close="one"]')!);
+    const closeButton = document.querySelector('[data-tab-close="one"]')!;
+    expect(closeButton).toHaveClass("transition-opacity", "duration-200", "hover:opacity-75");
+    await userEvent.click(closeButton);
     expect(screen.queryByRole("button", { name: /문서/ })).not.toBeInTheDocument();
   });
 
@@ -134,7 +162,7 @@ describe("Tabs", () => {
     );
     const closeButton = document.querySelector('[data-tab-close="disabled"]')!;
 
-    expect(closeButton).toHaveClass("cursor-not-allowed", "opacity-40");
+    expect(closeButton).toHaveClass("cursor-not-allowed", "text-disabled");
     fireEvent.click(closeButton);
     expect(onDelete).not.toHaveBeenCalled();
   });
@@ -173,10 +201,10 @@ describe("Tabs", () => {
     expect(document.querySelector('[data-tabs-item="activity"]')).toHaveClass(
       "h-10",
       "px-4",
-      "bg-hover",
+      "bg-light-gray",
     );
     expect(document.querySelector("[data-tabs-card-bridge]")).toHaveStyle({
-      transition: "width 300ms, height 300ms, transform 300ms",
+      transition: "width 200ms, height 200ms, transform 200ms",
     });
   });
 
@@ -195,7 +223,7 @@ describe("Tabs", () => {
     render(<Tabs animated={false} items={[{ key: "one", label: "문서", children: "내용" }]} />);
     expect(document.querySelector("[data-tabs-indicator]")).toHaveClass("top-0", "left-0");
     expect(document.querySelector("[data-tabs-indicator]")).toHaveStyle({
-      transition: "width 300ms, height 300ms, transform 300ms",
+      transition: "width 200ms, height 200ms, transform 200ms",
     });
   });
 

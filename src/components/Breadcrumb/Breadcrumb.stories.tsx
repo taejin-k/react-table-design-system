@@ -7,11 +7,13 @@ import { Icon } from "../Icon";
 import { Breadcrumb } from "./Breadcrumb";
 import type { BreadcrumbItem, BreadcrumbProps } from "./Breadcrumb.types";
 
+const colorTokenTypeHref = `${typeof window === "undefined" ? "" : window.location.origin}/iframe.html?id=components-color--documentation&viewMode=docs#color-token-type`;
+
 interface BreadcrumbStoryArgs extends BreadcrumbProps {
   showIcons?: boolean;
-  firstColor?: string;
-  secondColor?: string;
-  currentColor?: string;
+  firstColor?: BreadcrumbItem["color"];
+  secondColor?: BreadcrumbItem["color"];
+  currentColor?: BreadcrumbItem["color"];
 }
 
 const handleItemClick = () => alert("Breadcrumb 항목을 클릭했어요.");
@@ -55,7 +57,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "페이지 내 현재 위치와 이동 경로를 한눈에 보여줘요.  \n1단계부터 4단계 이상의 경로를 표시할 수 있고, 각 항목에 아이콘·링크·클릭 동작·색상을 설정할 수 있어요.",
+          "Breadcrumb는 홈부터 현재 페이지까지의 이동 경로를 표시해요.  \n각 경로에 이름·아이콘·링크·클릭 동작과 색상을 지정할 수 있어요.",
       },
       page: () => (
         <div className="breadcrumb-docs component-docs">
@@ -66,20 +68,22 @@ const meta = {
           <Markdown>{`
 ### Breadcrumb
 
+Breadcrumb는 현재 페이지까지 이어지는 이동 경로를 표시해요.
+
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
 | \`items\` | 왼쪽의 상위 경로부터 현재 위치까지 순서대로 전달해요. | [\`BreadcrumbItem[]\`](#breadcrumb-item) | \`[]\` |
 | \`className\` | 외부에서 Tailwind 클래스를 추가해요. | \`string\` | - |
           `}</Markdown>
           <h3 id="breadcrumb-item">BreadcrumbItem</h3>
-          <p>items 배열의 각 경로 항목에 사용할 속성을 설정해요.</p>
+          <p>BreadcrumbItem은 이동 경로 하나에 표시할 내용과 동작을 정의해요.</p>
           <Markdown>{`
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
 | \`title\` | 화면에 표시할 경로 이름이에요. 아이콘만 표시할 때는 생략해요. | \`ReactNode\` | - |
 | \`href\` | 이동할 주소예요. 값이 있으면 링크와 호버 디자인을 적용해요. | \`string\` | - |
 | \`icon\` | 경로 이름 앞에 표시할 아이콘이에요. | \`ReactNode\` | - |
-| \`color\` | 해당 항목의 글자와 아이콘 색상이에요. | \`CSSProperties['color']\` | - |
+| \`color\` | 이 경로 항목의 글자와 아이콘 색상을 지정해요. | [\`ColorTokenType\`](${colorTokenTypeHref}) \\| \`CSSProperties['color']\` | - |
 | \`onClick\` | 클릭할 때 실행할 함수예요. 값이 있으면 호버 디자인을 적용해요. | \`MouseEventHandler<HTMLElement>\` | - |
           `}</Markdown>
         </div>
@@ -185,13 +189,9 @@ export const WithIcons: Story = {
 };
 
 export const SingleIcon: Story = {
-  args: { showIcons: true },
-  argTypes: {
-    showIcons: { name: "아이콘 표시", control: "boolean" },
-  },
   parameters: {
     ...storyDescription("components-breadcrumb--single-icon"),
-    controls: { disable: false, include: ["아이콘 표시"] },
+    controls: { disable: true },
     docs: {
       ...storyDescription("components-breadcrumb--single-icon").docs,
       source: {
@@ -210,10 +210,10 @@ export const SingleIcon: Story = {
       },
     },
   },
-  render: ({ showIcons }) => (
+  render: () => (
     <Breadcrumb
       items={[
-        { icon: showIcons ? <Icon icon="home-outlined" /> : undefined, href: "#" },
+        { icon: <Icon icon="home-outlined" />, href: "#" },
         { title: "프로젝트", href: "#projects" },
         { title: "디자인 시스템" },
       ]}
@@ -222,11 +222,11 @@ export const SingleIcon: Story = {
 };
 
 export const ItemColors: Story = {
-  args: { firstColor: "#0062df", secondColor: "#4f19c4", currentColor: "#ff4d4f" },
+  args: { firstColor: "#0062df", secondColor: "#4f19c4", currentColor: "danger" },
   argTypes: {
-    firstColor: { name: "첫 번째 항목 색상", control: "color" },
-    secondColor: { name: "두 번째 항목 색상", control: "color" },
-    currentColor: { name: "현재 위치 색상", control: "color" },
+    firstColor: { name: "첫 번째 항목 색상", control: "text" },
+    secondColor: { name: "두 번째 항목 색상", control: "text" },
+    currentColor: { name: "현재 위치 색상", control: "text" },
   },
   parameters: {
     ...storyDescription("components-breadcrumb--item-colors"),
@@ -254,7 +254,7 @@ export const ItemColors: Story = {
           icon: <Icon icon="folder-outlined" />,
           color: '#4f19c4',
         },
-        { title: '현재 위치', icon: <Icon icon="edit" />, color: '#ff4d4f' },
+        { title: '현재 위치', icon: <Icon icon="edit" />, color: 'danger' },
       ]}
     />
   );

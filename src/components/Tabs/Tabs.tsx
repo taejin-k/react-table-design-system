@@ -15,6 +15,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { MultilineText } from "../_internal/MultilineText";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { CSSProperties, Key, MouseEvent, ReactNode } from "react";
 import { twMerge } from "tailwind-merge";
@@ -46,11 +47,15 @@ interface TabsSortContextProps {
 
 function TabsSortContext({ children, enabled, items, vertical, onDragEnd }: TabsSortContextProps) {
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
+  const [detachedAccessibilityContainer] = useState<Element | undefined>(() =>
+    typeof document === "undefined" ? undefined : document.createElement("div"),
+  );
 
   return (
     <DndContext
       sensors={sensors}
       collisionDetection={closestCenter}
+      accessibility={{ container: detachedAccessibilityContainer, restoreFocus: false }}
       autoScroll={false}
       modifiers={[vertical ? restrictToVerticalAxis : restrictToHorizontalAxis]}
       onDragEnd={enabled ? onDragEnd : undefined}
@@ -162,18 +167,32 @@ export function Tabs(props: TabsProps) {
     const updateInk = () => {
       const node = selected === undefined ? undefined : refs.current.get(selected);
       const root = headerRef.current;
-      if (!node || !root) return;
+      if (!node || !root) {
+        setInk((current) =>
+          current.ready ? { left: 0, top: 0, width: 0, height: 0, ready: false } : current,
+        );
+        return;
+      }
       const nodeRect = node.getBoundingClientRect();
       const rootRect = root.getBoundingClientRect();
-      const origin = vertical ? nodeRect.height : nodeRect.width;
+      const viewportRect = tabListRef.current?.getBoundingClientRect() ?? rootRect;
+      // The indicator lives outside the scroll container. Only paint the visible part of a tab.
+      const viewportStart = vertical ? viewportRect.top : viewportRect.left;
+      const viewportEnd = vertical ? viewportRect.bottom : viewportRect.right;
+      const visibleStart = Math.min(
+        Math.max(vertical ? nodeRect.top : nodeRect.left, viewportStart),
+        viewportEnd,
+      );
+      const visibleEnd = Math.min(vertical ? nodeRect.bottom : nodeRect.right, viewportEnd);
+      const origin = Math.max(0, visibleEnd - visibleStart);
       setInk({
         left: vertical
           ? placement === "start"
             ? root.clientWidth - 2
             : 0
-          : nodeRect.left - rootRect.left,
+          : visibleStart - rootRect.left,
         top: vertical
-          ? nodeRect.top - rootRect.top
+          ? visibleStart - rootRect.top
           : placement === "bottom"
             ? 0
             : root.clientHeight - 2,
@@ -234,7 +253,7 @@ export function Tabs(props: TabsProps) {
     : placement === "bottom"
       ? "rounded-b-md border-t-0"
       : "rounded-t-md border-b-0";
-  const indicatorTransition = "width 300ms, height 300ms, transform 300ms";
+  const indicatorTransition = "width 200ms, height 200ms, transform 200ms";
   const sortingEnabled = type === "card" && onDrag !== undefined;
   const handleDragEnd = ({ active, over }: DragEndEvent) => {
     if (!sortingEnabled || !onDrag || !over || active.id === over.id) return;
@@ -290,11 +309,11 @@ export function Tabs(props: TabsProps) {
               key={item.key}
               active={Object.is(item.key, selected)}
               className={twMerge(
-                "relative inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 whitespace-nowrap text-dark-gray hover:text-primary disabled:cursor-not-allowed disabled:text-disabled motion-reduce:transition-none",
+                "relative inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 whitespace-nowrap text-dark-gray outline-none hover:text-primary disabled:cursor-not-allowed disabled:text-disabled motion-reduce:transition-none",
                 Object.is(item.key, selected) && "font-medium text-primary",
                 type === "line"
                   ? `${linePadding} transition-colors duration-200`
-                  : `${cardSize} border border-border bg-hover ${cardEdge} transition-[background-color,border-color,color] duration-300 ease-[cubic-bezier(0.645,0.045,0.355,1)]`,
+                  : `${cardSize} border border-border bg-light-gray ${cardEdge} transition-[background-color,border-color,color] duration-200 ease-[cubic-bezier(0.645,0.045,0.355,1)]`,
                 type !== "line" && Object.is(item.key, selected) && "z-[1] bg-white",
                 type !== "line" && vertical ? "w-full" : "",
               )}
@@ -315,7 +334,9 @@ export function Tabs(props: TabsProps) {
                   data-tab-close={String(item.key)}
                   className={twMerge(
                     "inline-flex rounded p-0.5",
-                    item.disabled ? "cursor-not-allowed opacity-40" : "cursor-pointer",
+                    item.disabled
+                      ? "cursor-not-allowed text-disabled"
+                      : "cursor-pointer transition-opacity duration-200 ease-out hover:opacity-75 motion-reduce:transition-none",
                   )}
                   onPointerDown={(event) => event.stopPropagation()}
                   onClick={(event) => {
@@ -334,7 +355,7 @@ export function Tabs(props: TabsProps) {
               type="button"
               data-tabs-add=""
               className={twMerge(
-                "inline-flex shrink-0 cursor-pointer items-center justify-center border border-border bg-hover text-dark transition-[background-color,border-color,color] duration-300 ease-[cubic-bezier(0.645,0.045,0.355,1)] hover:border-primary hover:text-primary motion-reduce:transition-none",
+                "inline-flex shrink-0 cursor-pointer items-center justify-center border border-border bg-light-gray text-dark transition-[background-color,border-color,color] duration-200 ease-[cubic-bezier(0.645,0.045,0.355,1)] outline-none hover:border-primary hover:text-primary motion-reduce:transition-none",
                 cardSize,
                 vertical
                   ? "w-full"
@@ -377,17 +398,17 @@ export function Tabs(props: TabsProps) {
                   top: 0,
                   [placement === "start" ? "right" : "left"]: -1,
                   width: 1,
-                  height: ink.height,
-                  transform: `translate3d(0, ${ink.top}px, 0)`,
+                  height: Math.max(0, ink.height - 2),
+                  transform: `translate3d(0, ${ink.top + 1}px, 0)`,
                   transition: indicatorTransition,
                   transitionTimingFunction: "cubic-bezier(0.645, 0.045, 0.355, 1)",
                 }
               : {
                   [placement === "bottom" ? "top" : "bottom"]: -1,
                   left: 0,
-                  width: ink.width,
+                  width: Math.max(0, ink.width - 2),
                   height: 1,
-                  transform: `translate3d(${ink.left}px, 0, 0)`,
+                  transform: `translate3d(${ink.left + 1}px, 0, 0)`,
                   transition: indicatorTransition,
                   transitionTimingFunction: "cubic-bezier(0.645, 0.045, 0.355, 1)",
                 }
@@ -410,7 +431,7 @@ export function Tabs(props: TabsProps) {
       {tabBar}
       <div
         className={twMerge(
-          "min-w-0 flex-1 [overflow-wrap:anywhere] break-words",
+          "min-w-0 flex-1 [overflow-wrap:anywhere] break-all",
           vertical ? "px-6" : "py-4",
         )}
       >
@@ -428,7 +449,7 @@ export function Tabs(props: TabsProps) {
                   "animate-[wizard-tab-pane-in_0.3s_cubic-bezier(0.23,1,0.32,1)] motion-reduce:animate-none",
               )}
             >
-              {item.children}
+              <MultilineText>{item.children}</MultilineText>
             </div>
           );
         })}

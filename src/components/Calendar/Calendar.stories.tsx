@@ -74,7 +74,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "월간 달력에서 날짜를 탐색하고 선택해요.  \n전체·카드 레이아웃, 선택 범위, 사용자 정의 셀과 헤더를 지원해요.",
+          "Calendar는 월간 달력에서 날짜를 탐색하고 일정이나 선택 상태를 표시해요.  \n전체·카드 레이아웃, 선택 제한, 사용자 정의 셀과 헤더를 지원해요.",
       },
       page: () => (
         <div className="calendar-docs component-docs">
@@ -84,6 +84,8 @@ const meta = {
           <h2>API</h2>
           <Markdown>{`
 ### Calendar
+
+Calendar는 날짜를 탐색하고 일정이나 선택 상태를 표시해요.
 
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
@@ -104,12 +106,16 @@ const meta = {
 
 ### <span id="calendar-header-config">CalendarHeaderConfig</span>
 
+CalendarHeaderConfig는 달력 헤더의 이동 버튼과 연·월 선택 영역을 구성해요.
+
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
 | \`value\` | 헤더에 표시 중인 날짜예요. | \`Dayjs\` | - |
 | \`onChange\` | 헤더에서 표시할 날짜를 바꿔요. | \`(date: Dayjs) => void\` | - |
 
 ### <span id="calendar-cell-info">CalendarCellInfo</span>
+
+CalendarCellInfo는 날짜 셀을 직접 렌더링할 때 받는 정보예요.
 
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
@@ -118,7 +124,7 @@ const meta = {
 
 ### <span id="calendar-event">CalendarEvent</span>
 
-종료일은 일정에 포함되며, 주를 넘어가는 일정은 다음 줄에서 이어서 표시해요.
+CalendarEvent는 달력에 표시할 일정의 제목과 기간을 정의해요. 주를 넘는 일정은 다음 줄에 이어져요.
 
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
@@ -126,7 +132,7 @@ const meta = {
 | \`title\` | 일정 막대에 표시할 내용이에요. | \`ReactNode\` | - |
 | \`start\` | 일정 시작일이에요. | \`Dayjs\` | - |
 | \`end\` | 일정 종료일이에요. | \`Dayjs\` | \`start\` |
-| \`color\` | 일정 막대의 배경색이에요. | \`string\` | \`#0062df\` |
+| \`color\` | 일정 막대의 배경색이에요. | [\`ColorTokenType\`](./iframe.html?id=components-color--documentation&viewMode=docs#color-token-type) \\| \`CSSProperties['backgroundColor']\` | \`primary\` |
           `}</Markdown>
         </div>
       ),
@@ -206,14 +212,14 @@ export const CellRender: Story = {
       ...storyDescription("components-calendar--cell-render").docs,
       source: {
         type: "code",
-        code: withStoryImports(`const schedules = {
+        code: withStoryImports(`const schedules: Record<string, string[]> = {
   '2026-08-07': ['디자인 리뷰', '주간 회의', '요구사항 점검', '화면 검수', '회고'],
   '2026-08-14': ['배포 일정', '배포 전 점검', '릴리스 노트 작성'],
   '2026-08-21': ['회고', '다음 스프린트 계획'],
   '2026-08-28': ['프로덕션 배포 전 최종 점검\\n검수 결과 확인'],
 };
 
-const dateKey = (date) => date.format('YYYY-MM-DD');
+const dateKey = (date: ReturnType<typeof dayjs>) => date.format('YYYY-MM-DD');
 
 <Calendar
   defaultValue={dayjs('2026-08-12')}
@@ -230,9 +236,9 @@ const dateKey = (date) => date.format('YYYY-MM-DD');
             {dailySchedules.map((schedule) => (
               <Badge
                 key={schedule}
-                status="processing"
-                text={schedule}
-                className="w-full min-w-0 gap-1.5 text-xs leading-4 [&>span:first-child]:mt-[5px] [&>span:last-child]:max-h-8 [&>span:last-child]:min-w-0 [&>span:last-child]:overflow-hidden [&>span:last-child]:break-words"
+                color="primary"
+                label={schedule}
+                className="w-full min-w-0 gap-1.5 text-xs leading-4 [&>span:first-child]:mt-[5px] [&>span:last-child]:max-h-8 [&>span:last-child]:min-w-0 [&>span:last-child]:overflow-hidden [&>span:last-child]:break-all"
               />
             ))}
           </div>
@@ -261,9 +267,9 @@ const dateKey = (date) => date.format('YYYY-MM-DD');
                 {dailySchedules.map((schedule) => (
                   <Badge
                     key={schedule}
-                    status="processing"
-                    text={schedule}
-                    className="w-full min-w-0 gap-1.5 text-xs leading-4 [&>span:first-child]:mt-[5px] [&>span:last-child]:max-h-8 [&>span:last-child]:min-w-0 [&>span:last-child]:overflow-hidden [&>span:last-child]:break-words"
+                    color="primary"
+                    label={schedule}
+                    className="w-full min-w-0 gap-1.5 text-xs leading-4 [&>span:first-child]:mt-[5px] [&>span:last-child]:max-h-8 [&>span:last-child]:min-w-0 [&>span:last-child]:overflow-hidden [&>span:last-child]:break-all"
                   />
                 ))}
               </div>

@@ -2,7 +2,10 @@ import type { ComponentType } from "react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { storyDescriptions } from "../../storybook/story-descriptions";
 import { withStoryImports } from "../../storybook/story-source";
-import { formatTableStorySource } from "../../storybook/table-story-source";
+import {
+  formatTableVirtualDataSourceDeclaration,
+  formatTableStorySource,
+} from "../../storybook/table-story-source";
 import { columns, largeData, members, type Member } from "./Table.playground-data";
 import { Table } from "./Table";
 import type { TableProps } from "./Table.types";
@@ -60,15 +63,9 @@ export const VirtualThousandRows: Story = {
     docs: {
       ...storyDescription("components-table-layout--virtual-thousand-rows").docs,
       source: {
-        code: withStoryImports(`const members = Array.from({ length: 1000 }, (_, index) => ({
-  id: \`M-\${index + 1}\`,
-  name: \`구성원 \${index + 1}\`,
-  role: 'Product Designer',
-  team: 'Design',
-  projects: index,
-}));
+        code: withStoryImports(`${formatTableVirtualDataSourceDeclaration(1000)}
 
-const columns = [
+const columns: ColumnsType<(typeof members)[number]> = [
   { key: 'name', dataIndex: 'name', title: '이름', width: 150 },
   { key: 'role', dataIndex: 'role', title: '직무', minWidth: 190 },
   { key: 'team', dataIndex: 'team', title: '팀', width: 120 },

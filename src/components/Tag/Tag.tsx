@@ -17,14 +17,14 @@ const IconSocket = ({ children }: { children: ReactNode }) => (
 
 export const Tag = forwardRef<HTMLSpanElement, TagProps>(
   (
-    { color = "black", variant = "filled", prefixIcon, suffixIcon, className, children, ...rest },
+    { color = "dark", variant = "filled", prefixIcon, suffixIcon, className, children, ...rest },
     ref,
   ) => {
     return (
       <span ref={ref} className={twMerge(tagVariants({ color, variant }), className)} {...rest}>
         {hasContent(prefixIcon) ? <IconSocket>{prefixIcon}</IconSocket> : null}
         {typeof children === "string" || typeof children === "number" ? (
-          <span className="whitespace-pre-line">{children}</span>
+          <span className="min-w-0 flex-1 truncate">{children}</span>
         ) : (
           children
         )}
@@ -37,17 +37,17 @@ export const Tag = forwardRef<HTMLSpanElement, TagProps>(
 Tag.displayName = "Tag";
 
 const tagVariants = cva(
-  "inline-flex min-h-[22px] items-center gap-1 rounded px-[6px] py-0.5 font-pretendard text-[11px] leading-[1.6] font-medium",
+  "inline-flex min-h-[22px] min-w-0 max-w-full items-center gap-1 overflow-hidden rounded px-[6px] py-0.5 font-pretendard text-[11px] leading-[1.6] font-medium transition-[color,background-color,box-shadow] duration-200 ease-out motion-reduce:transition-none",
   {
     variants: {
       color: {
-        green: "",
+        success: "",
         navy: "",
-        red: "",
-        grey: "",
-        black: "",
+        danger: "",
+        gray: "",
+        dark: "",
         purple: "",
-        blue: "",
+        primary: "",
       },
       variant: {
         filled: "",
@@ -57,15 +57,15 @@ const tagVariants = cva(
       },
     },
     compoundVariants: [
-      { color: "green", variant: "filled", className: "bg-[#eff5ee] text-success" },
+      { color: "success", variant: "filled", className: "bg-[#eff5ee] text-success" },
       {
-        color: "green",
+        color: "success",
         variant: "outlined",
         className: "text-success ring-1 ring-success ring-inset",
       },
-      { color: "green", variant: "solid", className: "bg-success text-white" },
+      { color: "success", variant: "solid", className: "bg-success text-white" },
       {
-        color: "green",
+        color: "success",
         variant: "soft-outlined",
         className: "bg-[#eff5ee] text-success shadow-[inset_0_0_0_1px_#b7d9b4]",
       },
@@ -81,39 +81,39 @@ const tagVariants = cva(
         variant: "soft-outlined",
         className: "bg-[#eef0f8] text-navy shadow-[inset_0_0_0_1px_#bdc9e7]",
       },
-      { color: "red", variant: "filled", className: "bg-[#faefef] text-danger" },
+      { color: "danger", variant: "filled", className: "bg-[#faefef] text-danger" },
       {
-        color: "red",
+        color: "danger",
         variant: "outlined",
         className: "text-danger ring-1 ring-danger ring-inset",
       },
-      { color: "red", variant: "solid", className: "bg-danger text-white" },
+      { color: "danger", variant: "solid", className: "bg-danger text-white" },
       {
-        color: "red",
+        color: "danger",
         variant: "soft-outlined",
         className: "bg-[#faefef] text-danger shadow-[inset_0_0_0_1px_#efbcbc]",
       },
-      { color: "grey", variant: "filled", className: "bg-hover text-gray" },
+      { color: "gray", variant: "filled", className: "bg-hover text-gray" },
       {
-        color: "grey",
+        color: "gray",
         variant: "outlined",
         className: "text-gray shadow-[inset_0_0_0_1px_var(--color-gray)]",
       },
-      { color: "grey", variant: "solid", className: "bg-gray text-white" },
+      { color: "gray", variant: "solid", className: "bg-gray text-white" },
       {
-        color: "grey",
+        color: "gray",
         variant: "soft-outlined",
         className: "bg-hover text-gray shadow-[inset_0_0_0_1px_#d5d5d5]",
       },
-      { color: "black", variant: "filled", className: "bg-hover text-dark" },
+      { color: "dark", variant: "filled", className: "bg-hover text-dark" },
       {
-        color: "black",
+        color: "dark",
         variant: "outlined",
         className: "text-dark ring-1 ring-dark ring-inset",
       },
-      { color: "black", variant: "solid", className: "bg-dark text-white" },
+      { color: "dark", variant: "solid", className: "bg-dark text-white" },
       {
-        color: "black",
+        color: "dark",
         variant: "soft-outlined",
         className: "bg-hover text-dark shadow-[inset_0_0_0_1px_#d0d0d0]",
       },
@@ -129,21 +129,21 @@ const tagVariants = cva(
         variant: "soft-outlined",
         className: "bg-[#f5f2fd] text-purple shadow-[inset_0_0_0_1px_#d7c8f4]",
       },
-      { color: "blue", variant: "filled", className: "bg-[#ebf4ff] text-primary" },
+      { color: "primary", variant: "filled", className: "bg-[#ebf4ff] text-primary" },
       {
-        color: "blue",
+        color: "primary",
         variant: "outlined",
         className: "text-primary ring-1 ring-primary ring-inset",
       },
-      { color: "blue", variant: "solid", className: "bg-primary text-white" },
+      { color: "primary", variant: "solid", className: "bg-primary text-white" },
       {
-        color: "blue",
+        color: "primary",
         variant: "soft-outlined",
         className: "bg-[#ebf4ff] text-primary shadow-[inset_0_0_0_1px_#bdd8f7]",
       },
     ],
     defaultVariants: {
-      color: "black",
+      color: "dark",
       variant: "filled",
     },
   },

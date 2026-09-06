@@ -1,4 +1,4 @@
-import type { ReactElement, ReactNode } from "react";
+import type { Key, MouseEvent, ReactElement, ReactNode } from "react";
 import type { FloatingPlacement } from "../_internal/floating-position";
 import type { FloatingTrigger } from "../_internal/use-floating-layer";
 
@@ -7,18 +7,17 @@ export type DropdownTriggerType = FloatingTrigger | "contextMenu";
 export type DropdownItemType = "item" | "divider" | "group";
 
 export interface DropdownClickInfo {
-  value: string;
-  valuePath: string[];
-  event: React.MouseEvent<HTMLElement>;
+  value: Key;
+  event: MouseEvent<HTMLElement>;
 }
 
 export interface DropdownSelectInfo {
-  value: string;
-  selectedValues: string[];
+  value: Key;
+  selectedValues: Key[];
 }
 
 export interface DropdownItem {
-  value: string;
+  value: Key;
   label?: ReactNode;
   icon?: ReactNode;
   extra?: ReactNode;
@@ -32,8 +31,8 @@ export interface DropdownMenu {
   items: DropdownItem[];
   selectable?: boolean;
   multiple?: boolean;
-  selectedValues?: string[];
-  defaultSelectedValues?: string[];
+  selectedValues?: Key[];
+  defaultSelectedValues?: Key[];
   onClick?: (info: DropdownClickInfo) => void;
   onSelect?: (info: DropdownSelectInfo) => void;
 }
@@ -49,9 +48,6 @@ export interface DropdownProps {
   disabled?: boolean;
   open?: boolean;
   defaultOpen?: boolean;
-  autoAdjustOverflow?: boolean;
-  mouseEnterDelay?: number;
-  mouseLeaveDelay?: number;
   zIndex?: number;
   className?: string;
   onOpenChange?: (open: boolean) => void;

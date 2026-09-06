@@ -36,7 +36,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     const hasIcon = Boolean(prefixIcon || suffixIcon || loading);
     const effectiveIconOnly = iconOnly && hasIcon;
     const loadingIcon = (
-      <span className="inline-flex size-4 shrink-0 animate-[wizard-button-loading-in_160ms_ease-out] items-center justify-center motion-reduce:animate-none">
+      <span className="inline-flex size-4 shrink-0 animate-[wizard-button-loading-in_200ms_ease-out] items-center justify-center motion-reduce:animate-none">
         <Icon icon="loading" />
       </span>
     );
@@ -90,7 +90,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         {...rest}
       >
         {displayedPrefixIcon}
-        {!effectiveIconOnly && children}
+        {!effectiveIconOnly && <span className="min-w-0 truncate">{children}</span>}
         {displayedSuffixIcon}
       </button>
     );
@@ -100,21 +100,21 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 Button.displayName = "Button";
 
 const buttonVariants = cva(
-  "inline-flex cursor-pointer items-center justify-center gap-1 rounded font-pretendard font-medium whitespace-nowrap duration-200 ease-out disabled:cursor-not-allowed motion-reduce:transition-none",
+  "inline-flex max-w-full cursor-pointer items-center justify-center gap-1 rounded font-pretendard font-medium whitespace-nowrap duration-200 ease-out outline-none disabled:cursor-not-allowed motion-reduce:transition-none",
   {
     variants: {
       variant: {
         primary:
-          "bg-primary text-white ring-1 ring-transparent ring-inset hover:bg-[#227cef] disabled:bg-hover disabled:text-gray disabled:ring-border",
+          "bg-primary text-white ring-1 ring-transparent ring-inset hover:bg-[#227cef] disabled:bg-hover disabled:text-disabled disabled:ring-border",
         danger:
-          "bg-danger text-white ring-1 ring-transparent ring-inset hover:bg-[#ff7875] disabled:bg-hover disabled:text-gray disabled:ring-border",
+          "bg-danger text-white ring-1 ring-transparent ring-inset hover:bg-[#ff7875] disabled:bg-hover disabled:text-disabled disabled:ring-border",
         secondary:
-          "bg-white text-dark ring-1 ring-border ring-inset hover:bg-hover disabled:bg-hover disabled:text-gray disabled:ring-border",
+          "bg-white text-dark ring-1 ring-border ring-inset hover:bg-hover disabled:bg-hover disabled:text-disabled disabled:ring-border",
         tertiary:
-          "bg-hover text-dark ring-1 ring-transparent ring-inset hover:ring-border disabled:text-gray disabled:ring-border",
-        dark: "bg-dark text-white ring-1 ring-transparent ring-inset hover:bg-[#303030] disabled:bg-hover disabled:text-gray disabled:ring-border",
+          "bg-hover text-dark ring-1 ring-transparent ring-inset hover:ring-border disabled:text-disabled disabled:ring-border",
+        dark: "bg-dark text-white ring-1 ring-transparent ring-inset hover:bg-[#303030] disabled:bg-hover disabled:text-disabled disabled:ring-border",
         ghost:
-          "bg-transparent text-dark ring-1 ring-transparent ring-inset hover:bg-hover disabled:bg-hover disabled:text-gray disabled:ring-border",
+          "bg-transparent text-dark ring-1 ring-transparent ring-inset hover:bg-hover disabled:bg-hover disabled:text-disabled disabled:ring-border",
       },
       size: {
         lg: "h-10 px-3.5 text-base",
@@ -162,12 +162,12 @@ const buttonVariants = cva(
       {
         shadow: true,
         size: "lg",
-        className: "shadow-lg",
+        className: "shadow-sm",
       },
       {
         loading: true,
         variant: "primary",
-        className: "bg-[#6ea0fa] opacity-100 hover:bg-[#6ea0fa]",
+        className: "hover:bg-primary",
       },
       {
         loading: true,

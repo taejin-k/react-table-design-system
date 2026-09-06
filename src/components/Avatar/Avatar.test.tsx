@@ -2,13 +2,14 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import { Avatar } from "./Avatar";
+import type { ColorTokenType } from "../../color-tokens";
 
 describe("Avatar", () => {
   it("applies className to each public root without adding ARIA attributes", () => {
     const { container } = render(
       <>
         <Avatar className="ring-1">K</Avatar>
-        <Avatar label className="bg-red-50">
+        <Avatar showLabel className="bg-red-50">
           Kim
         </Avatar>
         <Avatar.Group className="gap-1">
@@ -23,9 +24,62 @@ describe("Avatar", () => {
     expect(container.innerHTML).not.toMatch(/\saria-[\w-]+=/);
   });
 
+  it("defaults to primary only when a label is shown and honors explicit color", () => {
+    const { container, rerender } = render(<Avatar showLabel>Kim</Avatar>);
+    expect(screen.getByText("K").parentElement).toHaveStyle({
+      backgroundColor: "var(--color-primary)",
+      color: "var(--color-white)",
+    });
+    expect(container.firstChild).toHaveClass("bg-hover");
+
+    rerender(
+      <Avatar showLabel color="hover">
+        Kim
+      </Avatar>,
+    );
+    expect(screen.getByText("K").parentElement).toHaveStyle({
+      backgroundColor: "var(--color-hover)",
+      color: "var(--color-dark)",
+    });
+
+    rerender(<Avatar>Kim</Avatar>);
+    expect(container.firstChild).toHaveClass("bg-hover");
+    expect((container.firstChild as HTMLElement).style.backgroundColor).toBe("");
+  });
+
   it("applies color as the avatar background", () => {
-    const { container } = render(<Avatar color="#722ed1">KT</Avatar>);
-    expect(container.firstChild).toHaveStyle({ backgroundColor: "#722ed1" });
+    const { container } = render(<Avatar color="purple">KT</Avatar>);
+    expect(container.firstChild).toHaveStyle({ backgroundColor: "var(--color-purple)" });
+  });
+
+  it("resolves a design token background", () => {
+    const { container } = render(<Avatar color="primary">KT</Avatar>);
+    expect(container.firstChild).toHaveStyle({ backgroundColor: "var(--color-primary)" });
+  });
+
+  it.each<[ColorTokenType, string]>([
+    ["primary", "white"],
+    ["gray", "white"],
+    ["disabled", "white"],
+    ["purple", "white"],
+    ["dark", "white"],
+    ["white", "dark"],
+    ["light-gray", "dark"],
+    ["hover", "dark"],
+    ["selected", "dark"],
+  ])("uses readable text for the %s background", (color, foreground) => {
+    const { container, rerender } = render(<Avatar color={color}>Kim</Avatar>);
+    expect(container.firstChild).toHaveStyle({ color: `var(--color-${foreground})` });
+
+    rerender(
+      <Avatar color={color} showLabel>
+        Kim
+      </Avatar>,
+    );
+    expect(screen.getByText("K").parentElement).toHaveStyle({
+      color: `var(--color-${foreground})`,
+    });
+    expect(container.firstChild).toHaveClass("text-dark");
   });
 
   it("uses children as the image fallback", () => {
@@ -67,6 +121,42 @@ describe("Avatar", () => {
     expect(container.querySelector("svg")).toBeInTheDocument();
   });
 
+  it.each([false, true])(
+    "keeps image backgrounds neutral until failure (preview=%s)",
+    (preview) => {
+      const { container, rerender } = render(
+        <Avatar src="avatar.png" showLabel preview={preview}>
+          Kim
+        </Avatar>,
+      );
+      const avatar = () => container.firstElementChild!.firstElementChild;
+      expect(avatar()).toHaveStyle({ backgroundColor: "var(--color-hover)" });
+      fireEvent.load(container.querySelector("img")!);
+      expect(avatar()).toHaveStyle({ backgroundColor: "var(--color-hover)" });
+
+      rerender(
+        <Avatar src="broken.png" showLabel preview={preview} color="purple">
+          Kim
+        </Avatar>,
+      );
+      expect(avatar()).toHaveStyle({ backgroundColor: "var(--color-hover)" });
+      fireEvent.error(container.querySelector("img")!);
+      expect(avatar()).toHaveStyle({
+        backgroundColor: "var(--color-purple)",
+        color: "var(--color-white)",
+      });
+
+      rerender(
+        <Avatar src="new.png" showLabel preview={preview}>
+          Kim
+        </Avatar>,
+      );
+      expect(avatar()).toHaveStyle({ backgroundColor: "var(--color-hover)" });
+      fireEvent.error(container.querySelector("img")!);
+      expect(avatar()).toHaveStyle({ backgroundColor: "var(--color-primary)" });
+    },
+  );
+
   it("uses 30px for md and 40px for lg", () => {
     const { container } = render(
       <>
@@ -91,7 +181,7 @@ describe("Avatar", () => {
 
   it("opens the image preview from a label avatar", async () => {
     render(
-      <Avatar label src="avatar.png" alt="사용자" preview>
+      <Avatar showLabel src="avatar.png" alt="사용자" preview>
         manhat
       </Avatar>,
     );
@@ -111,15 +201,46 @@ describe("Avatar", () => {
     expect(document.querySelector("[data-image-preview-root]")).not.toBeInTheDocument();
   });
 
-  it("shows the full text beside the avatar when label is true", () => {
-    render(<Avatar label>manhat</Avatar>);
+  it("shows the full text beside the avatar when showLabel is true", () => {
+    render(<Avatar showLabel>manhat</Avatar>);
     expect(screen.getByText("m")).toBeInTheDocument();
     expect(screen.getByText("manhat")).toBeInTheDocument();
   });
 
+  it("reserves padding inside labeled avatars and restores standalone size", () => {
+    const { container, rerender } = render(<Avatar>김민준</Avatar>);
+    expect(screen.queryByText("김민준")).not.toBeInTheDocument();
+    rerender(<Avatar showLabel>김민준</Avatar>);
+    expect(screen.getByText("김민준")).toBeInTheDocument();
+    expect(screen.getByText("김").parentElement).toHaveStyle({ width: "22px", height: "22px" });
+    rerender(<Avatar showLabel={false}>김민준</Avatar>);
+    expect(screen.queryByText("김민준")).not.toBeInTheDocument();
+    expect(container.firstChild).toHaveStyle({ width: "30px", height: "30px" });
+  });
+
+  it("keeps labeled avatars at 30px for md and 40px for lg", () => {
+    const { container } = render(
+      <>
+        <Avatar showLabel size="md">
+          Kim
+        </Avatar>
+        <Avatar showLabel size="lg">
+          Lee
+        </Avatar>
+      </>,
+    );
+    expect(container.children[0]).toHaveClass("h-[30px]");
+    expect(container.children[1]).toHaveClass("h-10");
+    expect(screen.getByText("K").parentElement).toHaveStyle({ width: "22px", height: "22px" });
+    expect(screen.getByText("L").parentElement).toHaveStyle({ width: "32px", height: "32px" });
+    for (const avatar of Array.from(container.children)) {
+      expect(avatar).toHaveClass("p-1");
+    }
+  });
+
   it("limits label width and truncates overflowing text", () => {
     const { container } = render(
-      <Avatar label labelWidth={120}>
+      <Avatar showLabel labelWidth={120}>
         매우 긴 사용자 이름
       </Avatar>,
     );

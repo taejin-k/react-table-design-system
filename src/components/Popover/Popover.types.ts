@@ -1,4 +1,5 @@
 import type { CSSProperties, ReactElement, ReactNode } from "react";
+import type { ColorTokenType } from "../../color-tokens";
 import type { FloatingPlacement } from "../_internal/floating-position";
 import type { FloatingTrigger } from "../_internal/use-floating-layer";
 
@@ -15,12 +16,9 @@ export interface PopoverProps {
   placement?: PopoverPlacementType;
   trigger?: PopoverTriggerType | PopoverTriggerType[];
   arrow?: boolean;
-  color?: CSSProperties["backgroundColor"];
+  color?: ColorTokenType | CSSProperties["backgroundColor"];
   open?: boolean;
   defaultOpen?: boolean;
-  autoAdjustOverflow?: boolean;
-  mouseEnterDelay?: number;
-  mouseLeaveDelay?: number;
   zIndex?: number;
   className?: string;
   onOpenChange?: (open: boolean) => void;

@@ -387,7 +387,7 @@ export function Icon({
         "shrink-0",
         resolvedIcon === "loading" && "animate-spin motion-reduce:animate-none",
         isInteractive
-          ? "cursor-pointer transition-opacity outline-none hover:opacity-75 focus:outline-none focus-visible:outline-none motion-reduce:transition-none"
+          ? "cursor-pointer transition-opacity duration-200 outline-none hover:opacity-75 focus:outline-none focus-visible:outline-none motion-reduce:transition-none"
           : undefined,
         disabled && "cursor-not-allowed",
         loading && "cursor-default",
@@ -399,7 +399,11 @@ export function Icon({
           ? undefined
           : (event) => {
               onKeyDown?.(event);
-              if (isInteractive && (event.key === "Enter" || event.key === " ")) {
+              if (
+                !event.defaultPrevented &&
+                isInteractive &&
+                (event.key === "Enter" || event.key === " ")
+              ) {
                 event.preventDefault();
                 event.currentTarget.dispatchEvent(
                   new globalThis.MouseEvent("click", { bubbles: true }),
@@ -421,6 +425,7 @@ export function Icon({
             <path
               key={index}
               {...pathProps}
+              className="transition-[fill,stroke] duration-200 ease-out motion-reduce:transition-none"
               clipRule={pathProps.fillRule}
               fill={stroked ? "none" : effectiveColor}
               stroke={stroked ? effectiveColor : undefined}

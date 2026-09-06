@@ -48,7 +48,7 @@ const meta = {
     size: { name: "크기", control: "select", options: ["default", "large"] },
     closable: { name: "닫기 버튼", control: "boolean" },
     keyboard: { name: "Escape 닫기", control: "boolean" },
-    mask: { name: "배경 마스크", control: "boolean" },
+    mask: { name: "배경 클릭 닫기", control: "boolean" },
     scrollLock: { name: "스크롤 잠금", control: "boolean" },
     open: { control: false, table: { disable: true } },
     children: { control: false, table: { disable: true } },
@@ -59,7 +59,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "화면 가장자리에서 추가 정보나 작업 영역을 열어요.  \n방향·크기·중첩·리사이즈와 header·footer를 설정할 수 있어요.",
+          "Drawer는 현재 화면을 유지한 채 가장자리에서 보조 정보나 작업 영역을 열어요.  \n열리는 방향·크기·중첩·크기 조절과 header·footer를 지원해요.",
       },
       page: () => (
         <div className="drawer-docs component-docs">
@@ -69,6 +69,8 @@ const meta = {
           <h2>API</h2>
           <Markdown>{`
 ### Drawer
+
+Drawer는 화면 가장자리에서 열리는 보조 패널이에요.
 
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
@@ -81,7 +83,7 @@ const meta = {
 | \`extra\` | header 오른쪽에 작업을 추가해요. | \`ReactNode\` | - |
 | \`footer\` | footer 내용을 설정해요. | \`ReactNode\` | - |
 | \`keyboard\` | Escape로 닫을 수 있게 해요. | \`boolean\` | \`true\` |
-| \`mask\` | 배경 마스크를 표시해요. | \`boolean\` | \`true\` |
+| \`mask\` | 배경 클릭으로 닫아요. | \`boolean\` | \`true\` |
 | \`scrollLock\` | 열려 있는 동안 문서 스크롤을 잠가요. | \`boolean\` | \`true\` |
 | \`forceRender\` | 닫힌 상태에서도 내용을 미리 렌더링해요. | \`boolean\` | \`false\` |
 | \`destroyOnHidden\` | 닫힌 뒤 내용을 제거해요. | \`boolean\` | \`false\` |
@@ -94,6 +96,8 @@ const meta = {
 
 ### <span id="drawer-resizable-config">DrawerResizableConfig</span>
 
+DrawerResizableConfig는 사용자가 조절할 수 있는 Drawer 크기 범위를 정의해요.
+
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
 | \`min\` | 줄일 수 있는 최소 크기예요. | \`number\` | \`180\` |
@@ -104,10 +108,10 @@ const meta = {
       `}</Markdown>
           <h2 className="component-docs-types-heading">Types</h2>
           <h3 id="drawer-placement-type">DrawerPlacementType</h3>
-          <p>Drawer가 열리는 방향을 선택해요.</p>
+          <p>DrawerPlacementType은 화면에서 Drawer가 열리는 방향을 구분해요.</p>
           <TypeTokens values={drawerPlacements} />
           <h3 id="drawer-size-type">DrawerSizeType</h3>
-          <p>기본 크기, px 숫자 또는 CSS 길이를 사용해요.</p>
+          <p>DrawerSizeType은 미리 정한 크기나 직접 지정한 CSS 길이를 사용해요.</p>
           <TypeTokens values={drawerSizes} />
         </div>
       ),
@@ -131,7 +135,15 @@ export const Basic: Story = {
   parameters: {
     ...storyDescription("components-drawer--basic"),
     controls: {
-      include: ["제목", "위치", "크기", "닫기 버튼", "Escape 닫기", "배경 마스크", "스크롤 잠금"],
+      include: [
+        "제목",
+        "위치",
+        "크기",
+        "닫기 버튼",
+        "Escape 닫기",
+        "배경 클릭 닫기",
+        "스크롤 잠금",
+      ],
     },
     docs: {
       ...storyDescription("components-drawer--basic").docs,
@@ -171,7 +183,7 @@ export const Placements: Story = {
   parameters: {
     ...storyDescription("components-drawer--placements"),
     controls: {
-      include: ["크기", "닫기 버튼", "Escape 닫기", "배경 마스크", "스크롤 잠금"],
+      include: ["크기", "닫기 버튼", "Escape 닫기", "배경 클릭 닫기", "스크롤 잠금"],
     },
     docs: {
       ...storyDescription("components-drawer--placements").docs,
@@ -249,7 +261,7 @@ export const Sizes: Story = {
   parameters: {
     ...storyDescription("components-drawer--sizes"),
     controls: {
-      include: ["위치", "닫기 버튼", "Escape 닫기", "배경 마스크", "스크롤 잠금"],
+      include: ["위치", "닫기 버튼", "Escape 닫기", "배경 클릭 닫기", "스크롤 잠금"],
     },
     docs: {
       ...storyDescription("components-drawer--sizes").docs,
@@ -316,7 +328,7 @@ export const Resizable: Story = {
   parameters: {
     ...storyDescription("components-drawer--resizable"),
     controls: {
-      include: ["닫기 버튼", "Escape 닫기", "배경 마스크", "스크롤 잠금"],
+      include: ["닫기 버튼", "Escape 닫기", "배경 클릭 닫기", "스크롤 잠금"],
     },
     docs: {
       ...storyDescription("components-drawer--resizable").docs,
@@ -413,6 +425,86 @@ function ResizableExample(args: Partial<DrawerProps>) {
   );
 }
 
+export const Extra: Story = {
+  args: { extra: "읽기 전용" },
+  argTypes: { extra: { name: "추가 텍스트", control: "text" } },
+  parameters: {
+    ...storyDescription("components-drawer--extra"),
+    controls: { include: ["추가 텍스트"] },
+    docs: {
+      ...storyDescription("components-drawer--extra").docs,
+      source: {
+        code: withStoryImports(`function ExtraDrawer() {
+  const [open, setOpen] = useState(false);
+  const [showAction, setShowAction] = useState(false);
+
+  return (
+    <>
+      <div className="flex flex-wrap gap-2">
+        <Button onClick={() => { setShowAction(false); setOpen(true); }}>텍스트 Extra</Button>
+        <Button onClick={() => { setShowAction(true); setOpen(true); }}>버튼 Extra</Button>
+      </div>
+      <Drawer
+        open={open}
+        title="구성원 정보"
+        extra={showAction ? <Button variant="primary" onClick={() => setOpen(false)}>저장</Button> : "읽기 전용"}
+        onClose={() => setOpen(false)}
+      >
+        헤더 오른쪽에 추가 정보나 작업 버튼을 표시해요.
+      </Drawer>
+    </>
+  );
+}`),
+      },
+    },
+  },
+  render: (args) => <ExtraDrawerExample {...args} />,
+};
+
+function ExtraDrawerExample({ extra = "읽기 전용" }: Partial<DrawerProps>) {
+  const [open, setOpen] = useState(false);
+  const [showAction, setShowAction] = useState(false);
+
+  return (
+    <>
+      <div className="flex flex-wrap gap-2">
+        <Button
+          onClick={() => {
+            setShowAction(false);
+            setOpen(true);
+          }}
+        >
+          텍스트 Extra
+        </Button>
+        <Button
+          onClick={() => {
+            setShowAction(true);
+            setOpen(true);
+          }}
+        >
+          버튼 Extra
+        </Button>
+      </div>
+      <Drawer
+        open={open}
+        title="구성원 정보"
+        extra={
+          showAction ? (
+            <Button variant="primary" onClick={() => setOpen(false)}>
+              저장
+            </Button>
+          ) : (
+            extra
+          )
+        }
+        onClose={() => setOpen(false)}
+      >
+        헤더 오른쪽에 추가 정보나 작업 버튼을 표시해요.
+      </Drawer>
+    </>
+  );
+}
+
 export const HeaderAndFooter: Story = {
   args: {
     placement: "right",
@@ -425,7 +517,7 @@ export const HeaderAndFooter: Story = {
   parameters: {
     ...storyDescription("components-drawer--header-footer"),
     controls: {
-      include: ["위치", "크기", "닫기 버튼", "Escape 닫기", "배경 마스크", "스크롤 잠금"],
+      include: ["위치", "크기", "닫기 버튼", "Escape 닫기", "배경 클릭 닫기", "스크롤 잠금"],
     },
     docs: {
       ...storyDescription("components-drawer--header-footer").docs,
@@ -493,7 +585,7 @@ export const ScrollableContent: Story = {
   parameters: {
     ...storyDescription("components-drawer--scrollable"),
     controls: {
-      include: ["위치", "크기", "닫기 버튼", "Escape 닫기", "배경 마스크", "스크롤 잠금"],
+      include: ["위치", "크기", "닫기 버튼", "Escape 닫기", "배경 클릭 닫기", "스크롤 잠금"],
     },
     docs: {
       ...storyDescription("components-drawer--scrollable").docs,
@@ -567,7 +659,7 @@ export const Nested: Story = {
   parameters: {
     ...storyDescription("components-drawer--nested"),
     controls: {
-      include: ["위치", "크기", "닫기 버튼", "Escape 닫기", "배경 마스크", "스크롤 잠금"],
+      include: ["위치", "크기", "닫기 버튼", "Escape 닫기", "배경 클릭 닫기", "스크롤 잠금"],
     },
     docs: {
       ...storyDescription("components-drawer--nested").docs,

@@ -27,7 +27,7 @@ const items = [
   { type: "divider" as const, key: "divider" },
   { key: "settings", label: "설정", icon: <Icon icon="setting" /> },
 ];
-const itemsSource = `const items = [
+const itemsSource = `const items: MenuItemType[] = [
   { key: 'home', label: '홈', icon: <Icon icon="home-outlined" /> },
   {
     key: 'workspace',
@@ -67,7 +67,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "페이지 이동이나 작업 메뉴를 단계별로 보여줘요.  \n세로형과 인라인형, 한 개·여러 개 선택과 펼침 상태 제어를 지원해요.",
+          "Menu는 페이지 이동이나 작업 실행을 위한 항목을 목록으로 표시해요.  \n세로형·인라인형, 단일·다중 선택과 하위 메뉴 펼침을 지원해요.",
       },
       page: () => (
         <div className="menu-docs component-docs">
@@ -77,6 +77,8 @@ const meta = {
           <h2>API</h2>
           <Markdown>{`
 ### Menu
+
+Menu는 탐색이나 작업을 위한 항목 목록을 표시해요.
 
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
@@ -98,6 +100,8 @@ const meta = {
 
 ### <span id="menu-item-type">MenuItemType</span>
 
+MenuItemType은 하나의 메뉴 항목과 하위 구조를 정의해요.
+
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
 | \`key\` | 항목을 구분하는 고유 값이에요. | \`Key\` | - |
@@ -115,12 +119,16 @@ const meta = {
 
 ### <span id="menu-click-info">MenuClickInfo</span>
 
+MenuClickInfo는 메뉴 항목을 클릭했을 때 받는 정보예요.
+
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
 | \`key\` | 누른 메뉴 항목의 키예요. | \`Key\` | - |
 | \`event\` | 메뉴 항목에서 발생한 마우스 이벤트예요. | \`MouseEvent<HTMLElement>\` | - |
 
 ### <span id="menu-select-info">MenuSelectInfo</span>
+
+MenuSelectInfo는 메뉴 선택 상태가 바뀔 때 받는 정보예요.
 
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
@@ -130,13 +138,13 @@ const meta = {
           `}</Markdown>
           <h2 className="component-docs-types-heading">Types</h2>
           <h3 id="menu-mode-type">MenuModeType</h3>
-          <p>세로형 또는 인라인형을 선택해요.</p>
+          <p>MenuModeType은 메뉴가 펼쳐지는 세로형과 인라인형을 구분해요.</p>
           <TypeTokens values={menuModes} />
           <h3 id="menu-trigger-type">MenuTriggerType</h3>
-          <p>클릭 또는 호버 중 여는 방법을 선택해요.</p>
+          <p>MenuTriggerType은 하위 메뉴를 클릭이나 호버로 여는 방식을 구분해요.</p>
           <TypeTokens values={menuTriggers} />
           <h3 id="menu-item-kind-type">MenuItemKindType</h3>
-          <p>일반 항목, 그룹 또는 구분선을 선택해요.</p>
+          <p>MenuItemKind는 일반 항목·그룹·구분선의 구조를 구분해요.</p>
           <TypeTokens values={menuItemKinds} />
         </div>
       ),
@@ -276,7 +284,7 @@ export const ItemStates: Story = {
         type: "code",
         code: withStoryImports(`<Menu
   mode="inline"
-  defaultOpenKeys={['workspace']}
+  defaultSelectedKeys={['overview']}
   items={[
     {
       type: 'group',

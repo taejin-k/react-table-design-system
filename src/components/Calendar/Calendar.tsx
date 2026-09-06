@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import dayjs from "dayjs";
 import { twMerge } from "tailwind-merge";
+import { resolveColorToken } from "../../color-tokens";
 import { Select } from "../Select";
 import type { CalendarEvent, CalendarProps } from "./Calendar.types";
 
@@ -129,8 +130,10 @@ export function Calendar({
     <div className="flex flex-wrap items-center justify-end px-2 py-2 max-[480px]:grid max-[480px]:grid-cols-2 max-[480px]:gap-2">
       <Select
         value={panel.getFullYear()}
+        allowClear={false}
         size="md"
-        width={80}
+        width={108}
+        className="w-auto"
         options={Array.from({ length: 20 }, (_, index) => panel.getFullYear() - 10 + index).map(
           (year) => ({ label: String(year), value: year }),
         )}
@@ -138,9 +141,10 @@ export function Calendar({
       />
       <Select
         value={panel.getMonth()}
+        allowClear={false}
         size="md"
-        width={70}
-        className="ml-2 max-[480px]:ml-0"
+        width={88}
+        className="ml-2 w-auto max-[480px]:ml-0"
         options={months.map((month, index) => ({ label: month, value: index }))}
         onChange={(nextMonth) => changePanel(new Date(panel.getFullYear(), Number(nextMonth), 1))}
       />
@@ -190,7 +194,7 @@ export function Calendar({
                       type="button"
                       disabled={disabled}
                       className={twMerge(
-                        "relative flex w-full cursor-pointer transition-colors duration-300 disabled:cursor-not-allowed disabled:text-disabled motion-reduce:transition-none",
+                        "relative flex w-full cursor-pointer transition-colors duration-200 ease-out outline-none disabled:cursor-not-allowed disabled:text-disabled motion-reduce:transition-none",
                         fullscreen
                           ? "mx-1 h-[90px] w-[calc(100%-8px)] items-start justify-end border-t-2 border-hover px-2 pt-1 hover:bg-hover"
                           : "size-8 items-center justify-center rounded p-0 hover:bg-hover",
@@ -241,14 +245,17 @@ export function Calendar({
                       type="button"
                       data-calendar-event-key={String(event.key)}
                       className={twMerge(
-                        "absolute z-[2] h-[18px] overflow-hidden rounded-full px-2 text-left text-xs leading-[18px] whitespace-nowrap text-white shadow-xs",
+                        "absolute z-[2] h-[18px] overflow-hidden rounded-full px-2 text-left text-xs leading-[18px] text-ellipsis whitespace-nowrap text-white shadow-xs transition-[filter] duration-200 ease-out outline-none motion-reduce:transition-none",
                         onEventClick ? "cursor-pointer hover:brightness-95" : "pointer-events-none",
                       )}
                       style={{
                         top: 32 + lane * 20,
                         left: `calc(${(startIndex * 100) / 7}% + 8px)`,
                         width: `calc(${(span * 100) / 7}% - 16px)`,
-                        backgroundColor: event.color ?? "var(--color-primary)",
+                        backgroundColor:
+                          event.color === undefined
+                            ? "var(--color-primary)"
+                            : resolveColorToken(event.color),
                       }}
                       onClick={onEventClick ? () => onEventClick(event) : undefined}
                     >

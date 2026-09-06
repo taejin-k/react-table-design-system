@@ -4,6 +4,7 @@ export interface ImagePreviewConfig {
   open?: boolean;
   src?: string;
   cover?: boolean;
+  /** 배경 클릭으로 미리보기를 닫아요. dimmed는 항상 표시해요. */
   mask?: boolean;
   zIndex?: number;
   onOpenChange?: (open: boolean, previousOpen: boolean) => void;

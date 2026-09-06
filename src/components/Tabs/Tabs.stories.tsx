@@ -103,7 +103,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "같은 영역 안의 연관된 콘텐츠를 탭으로 전환해요.  \n선·카드 모드, 네 방향 배치, 탭 추가·삭제·드래그 정렬과 콘텐츠 전환 애니메이션을 지원해요.",
+          "Tabs는 같은 영역에 있는 여러 화면을 탭으로 나눠 전환해요.  \n선·카드 모드, 네 방향 배치, 추가·삭제·드래그 정렬과 전환 애니메이션을 지원해요.",
       },
       page: () => (
         <div className="tabs-docs component-docs">
@@ -113,6 +113,8 @@ const meta = {
           <h2>API</h2>
           <Markdown>{`
 ### <span id="tabs">Tabs</span>
+
+Tabs는 여러 콘텐츠 영역을 탭으로 나누어 전환하게 해요.
 
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
@@ -134,6 +136,8 @@ const meta = {
 
 ### <span id="tab-item-type">TabItemType</span>
 
+TabItemType은 하나의 탭에 표시할 레이블과 내용을 정의해요.
+
 | Name | Description | Type | Default |
 | --- | --- | --- | --- |
 | \`key\` | 탭을 구분하는 고유한 값이에요. | \`Key\` | - |
@@ -145,13 +149,13 @@ const meta = {
           `}</Markdown>
           <h2 className="component-docs-types-heading">Types</h2>
           <h3 id="tabs-type">TabsType</h3>
-          <p>탭의 표현 방식을 선택해요.</p>
+          <p>TabsType은 탭의 선형과 카드형 표현 방식을 구분해요.</p>
           <TypeTokens values={tabsTypes} />
           <h3 id="tabs-size-type">TabsSizeType</h3>
-          <p>탭 크기를 선택해요.</p>
+          <p>TabsSizeType은 탭의 높이와 글자 크기를 구분해요.</p>
           <TypeTokens values={tabsSizes} />
           <h3 id="tabs-placement-type">TabsPlacementType</h3>
-          <p>탭 목록 위치를 선택해요.</p>
+          <p>TabsPlacementType은 콘텐츠를 기준으로 탭 목록이 놓일 방향을 구분해요.</p>
           <TypeTokens values={tabsPlacements} />
         </div>
       ),
@@ -585,7 +589,7 @@ function ControlledTabs() {
           활동 열기
         </Button>
       </div>
-      <span className="text-sm text-dark-gray">현재 탭: {activeKey}</span>
+      <span className="text-sm text-dark-gray">현재 탭: {String(activeKey)}</span>
       <Tabs activeKey={activeKey} items={items} onChange={setActiveKey} />
     </div>
   );
@@ -609,7 +613,7 @@ function ControlledTabsExample(args: Partial<TabsProps>) {
           활동 열기
         </Button>
       </div>
-      <span className="text-sm text-dark-gray">현재 탭: {activeKey}</span>
+      <span className="text-sm text-dark-gray">현재 탭: {String(activeKey)}</span>
       <Tabs {...args} activeKey={activeKey} items={items} onChange={setActiveKey} />
     </div>
   );

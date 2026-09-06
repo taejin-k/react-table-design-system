@@ -1,6 +1,7 @@
 export { Select } from "./Select";
 export type {
   SelectBasicProps,
+  SelectErrorMessage,
   SelectModeType,
   SelectOption,
   SelectPlacementType,
@@ -8,5 +9,6 @@ export type {
   SelectRef,
   SelectSizeType,
   SelectTagProps,
+  SelectValueType,
   SelectVariantType,
 } from "./Select.types";

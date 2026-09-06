@@ -118,6 +118,24 @@ describe("Menu", () => {
     await waitFor(() => expect(popup).toHaveClass("opacity-0"));
   });
 
+  it("does not open a disabled popup submenu", async () => {
+    render(
+      <Menu
+        items={[
+          {
+            key: "disabled-parent",
+            label: "비활성 메뉴",
+            disabled: true,
+            children: [{ key: "child", label: "하위 메뉴" }],
+          },
+        ]}
+      />,
+    );
+
+    await userEvent.hover(screen.getByRole("button", { name: "비활성 메뉴" }));
+    expect(document.body.querySelector("[data-menu-popup]")).not.toBeInTheDocument();
+  });
+
   it("keeps collapsed content mounted while its width and opacity transition", () => {
     const menuItems = [
       {
