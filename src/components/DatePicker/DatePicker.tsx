@@ -9,7 +9,7 @@ import { ErrorMessage } from "../ErrorMessage";
 import { Dropdown } from "../Dropdown";
 import { Icon } from "../Icon";
 import { Label } from "../Label";
-import { TimePanel } from "../TimePicker/TimePicker";
+import { resolveSelectableTime, TimePanel } from "../TimePicker/TimePicker";
 import { getPopupMotionStyle } from "../_internal/motion";
 import { useErrorMessageValidation } from "../_internal/useErrorMessageValidation";
 import { useFloatingLayer } from "../_internal/use-floating-layer";
@@ -46,35 +46,10 @@ function resolveAvailableTime(value: string, config: DatePickerShowTime, showSec
   const [preferredHour = 0, preferredMinute = 0, preferredSecond = 0] = value
     .split(":")
     .map(Number);
-  const disabled = config.disabledTime?.() ?? {};
-  const availableValue = (
-    length: number,
-    step: number | undefined,
-    preferred: number,
-    disabledValues: number[],
-  ) => {
-    const values = Array.from(
-      { length: Math.ceil(length / Math.max(step ?? 1, 1)) },
-      (_, index) => index * Math.max(step ?? 1, 1),
-    );
-    if (values.includes(preferred) && !disabledValues.includes(preferred)) return preferred;
-    return values.find((item) => !disabledValues.includes(item)) ?? preferred;
-  };
-  const hour = availableValue(24, config.hourStep, preferredHour, disabled.disabledHours?.() ?? []);
-  const minute = availableValue(
-    60,
-    config.minuteStep,
-    preferredMinute,
-    disabled.disabledMinutes?.(hour) ?? [],
+  const { hour, minute, second } = resolveSelectableTime(
+    { hour: preferredHour, minute: preferredMinute, second: preferredSecond },
+    { ...config, showSecond },
   );
-  const second = showSecond
-    ? availableValue(
-        60,
-        config.secondStep,
-        preferredSecond,
-        disabled.disabledSeconds?.(hour, minute) ?? [],
-      )
-    : 0;
   return `${pad(hour)}:${pad(minute)}${showSecond ? `:${pad(second)}` : ""}`;
 }
 

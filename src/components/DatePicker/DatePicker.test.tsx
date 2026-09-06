@@ -180,12 +180,7 @@ describe("DatePicker", () => {
 
   it("uses an errorMessage function to validate an initial date range", () => {
     const getErrorMessage = vi.fn((nextValue) => (nextValue ? "" : "종료일을 선택해 주세요."));
-    render(
-      <DatePicker.RangePicker
-        defaultValue={undefined}
-        errorMessage={getErrorMessage}
-      />,
-    );
+    render(<DatePicker.RangePicker defaultValue={undefined} errorMessage={getErrorMessage} />);
 
     expect(screen.getByText("종료일을 선택해 주세요.")).toBeInTheDocument();
     expect(getErrorMessage).toHaveBeenCalledOnce();
@@ -379,6 +374,35 @@ describe("DatePicker", () => {
     expect(within(hourColumn).getByRole("button", { name: "03" })).toHaveClass("bg-selected");
     expect(within(minuteColumn).getByRole("button", { name: "00" })).toHaveClass("bg-selected");
     expect(within(secondColumn).getByRole("button", { name: "00" })).toHaveClass("bg-selected");
+  });
+
+  it("moves disabled dependent time parts to the earliest selectable values", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(
+      <DatePicker
+        defaultValue={dayjs("2026-08-11 06:00:00")}
+        showTime={{
+          disabledTime: () => ({
+            disabledMinutes: (hour) => (hour === 9 ? [0, 1, 2] : []),
+            disabledSeconds: (hour, minute) => (hour === 9 && minute === 3 ? [0, 1] : []),
+          }),
+        }}
+        onChange={onChange}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: /2026-08-11 06:00:00/ }));
+    const popup = document.querySelector("[data-datepicker-popup]") as HTMLElement;
+    const hourColumn = popup.querySelector('[data-time-column="hour"]') as HTMLElement;
+    const minuteColumn = popup.querySelector('[data-time-column="minute"]') as HTMLElement;
+    const secondColumn = popup.querySelector('[data-time-column="second"]') as HTMLElement;
+    await user.click(within(hourColumn).getByRole("button", { name: "09" }));
+
+    expect(within(minuteColumn).getByRole("button", { name: "03" })).toHaveClass("bg-selected");
+    expect(within(secondColumn).getByRole("button", { name: "02" })).toHaveClass("bg-selected");
+    await user.click(within(popup).getByRole("button", { name: "확인" }));
+    expect(onChange.mock.calls[0]?.[0].format("YYYY-MM-DD HH:mm:ss")).toBe("2026-08-11 09:03:02");
   });
 
   it("selects a date and time with confirmation", async () => {

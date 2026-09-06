@@ -395,6 +395,23 @@ describe("TimePicker", () => {
     expect(screen.getByRole("button", { name: /09:03:02/ })).toBeInTheDocument();
   });
 
+  it("finds the earliest selectable PM time when every AM hour is disabled", () => {
+    render(
+      <TimePicker
+        defaultOpen
+        use12Hours
+        disabledTime={() => ({
+          disabledHours: () => Array.from({ length: 12 }, (_, hour) => hour),
+        })}
+      />,
+    );
+
+    const popup = document.querySelector("[data-timepicker-popup]") as HTMLElement;
+    const hourColumn = popup.querySelector('[data-time-column="hour"]') as HTMLElement;
+    expect(within(hourColumn).getByRole("button", { name: "12" })).toHaveClass("bg-selected");
+    expect(within(popup).getByRole("button", { name: "PM" })).toHaveClass("bg-selected");
+  });
+
   it("does not allow the current-time shortcut when that time is disabled", async () => {
     const user = userEvent.setup();
     const currentHour = new Date().getHours();

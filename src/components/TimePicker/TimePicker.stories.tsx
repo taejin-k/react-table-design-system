@@ -167,6 +167,7 @@ export const Basic: Story = {
     order: true,
     use12Hours: false,
     showSecond: true,
+    needConfirm: undefined,
     readOnly: false,
     disabled: false,
   },

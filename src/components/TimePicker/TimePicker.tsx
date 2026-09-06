@@ -14,7 +14,7 @@ import { useErrorMessageValidation } from "../_internal/useErrorMessageValidatio
 import { useFloatingLayer } from "../_internal/use-floating-layer";
 import type { TimePickerProps } from "./TimePicker.types";
 
-interface TimeParts {
+export interface TimeParts {
   hour: number;
   minute: number;
   second: number;
@@ -101,27 +101,10 @@ function resolveInitialTime({
   TimePickerProps,
   "use12Hours" | "showSecond" | "hourStep" | "minuteStep" | "secondStep" | "disabledTime"
 >): TimeParts {
-  const disabled = disabledTime?.(dayjs()) ?? {};
-  const disabledHours = disabled.disabledHours?.() ?? [];
-  const hourValues = use12Hours
-    ? numberSteps(13, hourStep ?? 1, 1).map((hour) => toTwentyFourHour(hour, false))
-    : numberSteps(24, hourStep ?? 1);
-  const hour = hourValues.find((value) => !disabledHours.includes(value)) ?? hourValues[0] ?? 0;
-  const disabledMinutes = disabled.disabledMinutes?.(hour) ?? [];
-  const minuteValues = numberSteps(60, minuteStep ?? 1);
-  const minute =
-    minuteValues.find((value) => value === 0 && !disabledMinutes.includes(value)) ??
-    minuteValues.find((value) => !disabledMinutes.includes(value)) ??
-    0;
-  const disabledSeconds = disabled.disabledSeconds?.(hour, minute) ?? [];
-  const secondValues = numberSteps(60, secondStep ?? 1);
-  const second = showSecond
-    ? (secondValues.find((value) => value === 0 && !disabledSeconds.includes(value)) ??
-      secondValues.find((value) => !disabledSeconds.includes(value)) ??
-      0)
-    : 0;
-
-  return { hour, minute, second };
+  return resolveSelectableTime(
+    { hour: use12Hours ? 1 : 0, minute: 0, second: 0 },
+    { use12Hours, showSecond, hourStep, minuteStep, secondStep, disabledTime },
+  );
 }
 
 function isTimeDisabled(
@@ -143,7 +126,7 @@ function isTimeDisabled(
   );
 }
 
-function resolveSelectableTime(
+export function resolveSelectableTime(
   preferred: TimeParts,
   {
     use12Hours,
