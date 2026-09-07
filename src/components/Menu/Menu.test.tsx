@@ -109,6 +109,7 @@ describe("Menu", () => {
     });
     expect(popup).toBeInTheDocument();
     expect(popup).toHaveClass("fixed");
+    expect(popup?.firstElementChild).toHaveClass("w-[184px]");
     expect(container.querySelector("[data-menu-popup]")).not.toBeInTheDocument();
     await waitFor(() => expect(popup).toHaveStyle({ visibility: "visible" }));
     await waitFor(() => expect(popup).toHaveClass("opacity-100"));

@@ -675,15 +675,15 @@ export function Tree({
                   <span className="relative inline-flex size-3 items-center justify-center">
                     <span
                       className={twMerge(
-                        "absolute inset-0 inline-flex items-center justify-center transition-opacity duration-200 ease-out motion-reduce:transition-none",
+                        "pointer-events-none absolute inset-0 inline-flex items-center justify-center transition-opacity duration-200 ease-out motion-reduce:transition-none",
                         nodeLoading ? "opacity-0" : "opacity-100",
                       )}
                     >
-                      <Icon icon="chevron-right" size={12} className="cursor-pointer" />
+                      <Icon icon="chevron-right" size={12} />
                     </span>
                     <span
                       className={twMerge(
-                        "absolute inset-0 inline-flex items-center justify-center transition-opacity duration-200 ease-out motion-reduce:transition-none",
+                        "pointer-events-none absolute inset-0 inline-flex items-center justify-center transition-opacity duration-200 ease-out motion-reduce:transition-none",
                         nodeLoading ? "opacity-100" : "opacity-0",
                       )}
                     >

@@ -248,7 +248,7 @@ export function Menu({
         !groupContent && level === 0 && mode === "inline" && "overflow-hidden",
         !groupContent && level === 0 && (mode === "inline" && inlineCollapsed ? "w-16" : "w-64"),
         level > 0 && mode === "inline" && !popup && "pb-0",
-        popup && !groupContent && "w-[220px] max-w-full rounded-lg bg-white shadow-2xl",
+        popup && !groupContent && "w-[184px] max-w-full rounded-lg bg-white shadow-2xl",
         groupContent && "p-0",
       )}
     >

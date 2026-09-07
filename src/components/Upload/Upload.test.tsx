@@ -6,6 +6,8 @@ import { message } from "../Message";
 import {
   DOWNLOAD_LOADING_DELAY,
   getDroppedUploadFiles,
+  hasDroppedDirectory,
+  hasDroppedRegularFile,
   getSortableUploadItemClassName,
   getSortableUploadItemTransition,
   reorderUploadFiles,
@@ -15,12 +17,21 @@ import {
 import type { UploadChangeParam, UploadFile } from "./Upload.types";
 
 describe("Upload", () => {
+  it("enables native folder selection only when directory is true", () => {
+    const { container, rerender } = render(<Upload directory />);
+
+    expect(container.querySelector('input[type="file"]')).toHaveAttribute("webkitdirectory", "");
+
+    rerender(<Upload directory={false} />);
+    expect(container.querySelector('input[type="file"]')).not.toHaveAttribute("webkitdirectory");
+  });
+
   it("expands a dropped folder only when directory is enabled", async () => {
     const nestedFile = new File(["nested"], "nested.txt");
     const nestedEntry = {
       isDirectory: false,
       isFile: true,
-      file: (resolve: (file: File) => void) => resolve(nestedFile),
+      file: (resolve: (file: File) => void) => queueMicrotask(() => resolve(nestedFile)),
     };
     let read = false;
     const folderEntry = {
@@ -42,6 +53,78 @@ describe("Upload", () => {
     expect((await getDroppedUploadFiles(dataTransfer, true)).map((file) => file.name)).toEqual([
       "nested.txt",
     ]);
+  });
+
+  it("accepts only folder contents when directory is enabled", async () => {
+    const regularFile = new File(["regular"], "regular.txt");
+    const nestedFile = new File(["nested"], "nested.txt");
+    const regularEntry = {
+      isDirectory: false,
+      isFile: true,
+      file: (resolve: (file: File) => void) => queueMicrotask(() => resolve(regularFile)),
+    };
+    const nestedEntry = {
+      isDirectory: false,
+      isFile: true,
+      file: (resolve: (file: File) => void) => queueMicrotask(() => resolve(nestedFile)),
+    };
+    let read = false;
+    const folderEntry = {
+      isDirectory: true,
+      isFile: false,
+      createReader: () => ({
+        readEntries: (resolve: (entries: (typeof nestedEntry)[]) => void) => {
+          resolve(read ? [] : ((read = true), [nestedEntry]));
+        },
+      }),
+    };
+    const dataTransfer = {
+      files: [regularFile],
+      items: [{ webkitGetAsEntry: () => regularEntry }, { webkitGetAsEntry: () => folderEntry }],
+    } as unknown as DataTransfer;
+
+    expect(hasDroppedRegularFile(dataTransfer)).toBe(true);
+    expect((await getDroppedUploadFiles(dataTransfer, true)).map((file) => file.name)).toEqual([
+      "nested.txt",
+    ]);
+  });
+
+  it("warns and skips a dropped folder when directory is disabled", async () => {
+    const onChange = vi.fn();
+    const { container } = render(<Upload.Dragger onChange={onChange} />);
+    const folderEntry = { isDirectory: true, isFile: false };
+    const dataTransfer = {
+      files: [new File([], "folder")],
+      items: [{ webkitGetAsEntry: () => folderEntry }],
+    } as unknown as DataTransfer;
+
+    expect(hasDroppedDirectory(dataTransfer)).toBe(true);
+    fireEvent.drop(container.querySelector("[data-upload-dragger-area]")!, { dataTransfer });
+
+    expect(await screen.findByText("폴더는 업로드할 수 없어요.")).toBeInTheDocument();
+    expect(onChange).not.toHaveBeenCalled();
+    message.destroy();
+  });
+
+  it("warns and skips a regular file when directory is enabled", async () => {
+    const onChange = vi.fn();
+    const { container } = render(<Upload.Dragger directory onChange={onChange} />);
+    const regularFile = new File(["regular"], "regular.txt");
+    const fileEntry = {
+      isDirectory: false,
+      isFile: true,
+      file: (resolve: (file: File) => void) => resolve(regularFile),
+    };
+    const dataTransfer = {
+      files: [regularFile],
+      items: [{ webkitGetAsEntry: () => fileEntry }],
+    } as unknown as DataTransfer;
+
+    fireEvent.drop(container.querySelector("[data-upload-dragger-area]")!, { dataTransfer });
+
+    expect(await screen.findByText("폴더만 업로드할 수 있어요.")).toBeInTheDocument();
+    expect(onChange).not.toHaveBeenCalled();
+    message.destroy();
   });
 
   it("does not emit after pending validation finishes on an unmounted upload", async () => {
@@ -267,6 +350,8 @@ describe("Upload", () => {
     expect(getSortableUploadItemClassName("text", true)).toContain("z-[1000]");
     expect(getSortableUploadItemClassName("picture", true)).toContain("z-[1000]");
     expect(getSortableUploadItemClassName("picture", true)).toContain("shadow-sm");
+    expect(getSortableUploadItemClassName("picture", true).split(" ")).toContain("rounded-lg");
+    expect(getSortableUploadItemClassName("picture", true).split(" ")).not.toContain("rounded");
     expect(getSortableUploadItemClassName("picture", false)).toContain("shadow-none");
     expect(getSortableUploadItemTransition("transform 200ms ease")).toBe(
       "transform 200ms ease, box-shadow 200ms ease-out",

@@ -71,6 +71,16 @@ describe("Tree", () => {
     expect(onSelect).toHaveBeenCalledWith(["child"]);
   });
 
+  it("keeps the switcher button as the pointer target above icon transition layers", () => {
+    const { container } = render(<Tree treeData={treeData} />);
+    const switcher = container.querySelector('[data-tree-switcher="parent"]')!;
+
+    expect(switcher).toHaveClass("cursor-pointer");
+    switcher.querySelectorAll(":scope > span > span").forEach((layer) => {
+      expect(layer).toHaveClass("pointer-events-none");
+    });
+  });
+
   it("keeps a node collapsed when async loading fails and allows retrying", async () => {
     const loadData = vi
       .fn()

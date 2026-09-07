@@ -5,6 +5,7 @@ import {
   type CSSProperties,
   type ElementType,
   type HTMLAttributes,
+  type MouseEvent as ReactMouseEvent,
   type ReactNode,
 } from "react";
 import {
@@ -59,6 +60,17 @@ type RowDragContextValue = Pick<
 >;
 
 const RowDragContext = createContext<RowDragContextValue | null>(null);
+type ActiveTableDrag = { id: UniqueIdentifier; type: string };
+type TableDragState = {
+  active: ActiveTableDrag | null;
+  clearRetainedRow: (id: UniqueIdentifier) => void;
+  retainedRowId: UniqueIdentifier | null;
+};
+const TableDragStateContext = createContext<TableDragState>({
+  active: null,
+  clearRetainedRow: () => undefined,
+  retainedRowId: null,
+});
 
 const tableCollisionDetection: CollisionDetection = (args) => {
   const dragType = args.active.data.current?.dragType;
@@ -100,7 +112,8 @@ function EnabledTableDragProvider({
   children,
   onDragEnd,
 }: Omit<TableDragProviderProps, "enabled">) {
-  const [activeType, setActiveType] = useState<string | null>(null);
+  const [activeDrag, setActiveDrag] = useState<ActiveTableDrag | null>(null);
+  const [retainedRowId, setRetainedRowId] = useState<UniqueIdentifier | null>(null);
   const [detachedAccessibilityContainer] = useState<Element | undefined>(() =>
     typeof document === "undefined" ? undefined : document.createElement("div"),
   );
@@ -108,6 +121,7 @@ function EnabledTableDragProvider({
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
+  const finishDrag = () => requestAnimationFrame(() => setActiveDrag(null));
 
   return (
     <DndContext
@@ -115,15 +129,31 @@ function EnabledTableDragProvider({
       collisionDetection={tableCollisionDetection}
       modifiers={[restrictRowToTableBody]}
       accessibility={{ container: detachedAccessibilityContainer, restoreFocus: false }}
-      autoScroll={activeType === "row" ? { canScroll: canTableAutoScroll } : false}
-      onDragStart={({ active }) => setActiveType(String(active.data.current?.dragType ?? ""))}
-      onDragCancel={() => setActiveType(null)}
+      autoScroll={activeDrag?.type === "row" ? { canScroll: canTableAutoScroll } : false}
+      onDragStart={({ active }) => {
+        setRetainedRowId(null);
+        setActiveDrag({ id: active.id, type: String(active.data.current?.dragType ?? "") });
+      }}
+      onDragCancel={() => {
+        setRetainedRowId(null);
+        finishDrag();
+      }}
       onDragEnd={(event) => {
+        if (event.active.data.current?.dragType === "row") setRetainedRowId(event.active.id);
         onDragEnd(event);
-        requestAnimationFrame(() => setActiveType(null));
+        finishDrag();
       }}
     >
-      {children}
+      <TableDragStateContext.Provider
+        value={{
+          active: activeDrag,
+          clearRetainedRow: (id) =>
+            setRetainedRowId((current) => (current === id ? null : current)),
+          retainedRowId,
+        }}
+      >
+        {children}
+      </TableDragStateContext.Provider>
     </DndContext>
   );
 }
@@ -159,12 +189,15 @@ export function SortableTableRow({
   style,
   ...props
 }: SortableTableRowProps) {
+  const { active: activeDrag, clearRetainedRow, retainedRowId } = useContext(TableDragStateContext);
   const { listeners, setActivatorNodeRef, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: dragId, data: { dragType: "row" } });
+  const movementTransition = transition ?? "transform 200ms cubic-bezier(.2,.8,.2,1)";
   const dragStyle: CSSProperties = {
     ...style,
+    filter: isDragging ? "drop-shadow(var(--shadow-sm))" : "drop-shadow(0 0 0 rgb(0 0 0 / 0))",
     transform: CSS.Translate.toString(transform),
-    transition: isDragging ? undefined : (transition ?? "transform 200ms cubic-bezier(.2,.8,.2,1)"),
+    transition: `${movementTransition}, filter 200ms ease-out`,
   };
 
   return (
@@ -174,9 +207,16 @@ export function SortableTableRow({
         {...props}
         className={twMerge(
           className,
-          isDragging && "relative z-10 bg-white drop-shadow-[var(--shadow-sm)]",
+          activeDrag?.type === "row" && "pointer-events-none",
+          ((activeDrag?.type === "row" && activeDrag.id === dragId) || retainedRowId === dragId) &&
+            "[&>td]:bg-hover",
+          isDragging && "relative z-10 bg-white",
         )}
         style={dragStyle}
+        onMouseLeave={(event: ReactMouseEvent<HTMLTableRowElement>) => {
+          props.onMouseLeave?.(event);
+          clearRetainedRow(dragId);
+        }}
       />
     </RowDragContext.Provider>
   );

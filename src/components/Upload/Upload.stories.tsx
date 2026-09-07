@@ -89,7 +89,7 @@ Upload는 사용자가 파일을 선택하고 업로드 상태를 확인하게 �
 | \`capture\` | 모바일에서 카메라나 마이크 입력을 요청해요. | \`boolean\` | \`false\` |
 | \`multiple\` | 파일을 여러 개 선택해요. | \`boolean\` | \`false\` |
 | \`maxCount\` | 최대 파일 수를 정하고 초과 시 안내해요. | \`number\` | - |
-| \`directory\` | 폴더를 드롭하면 내부 파일을 함께 추가해요. | \`boolean\` | \`false\` |
+| \`directory\` | 폴더만 선택하거나 드롭하고 내부 파일을 추가해요. | \`boolean\` | \`false\` |
 | \`disabled\` | 파일 선택과 제거를 비활성화해요. | \`boolean\` | \`false\` |
 | \`fileList\` | 표시할 파일 목록을 제어해요. | [\`UploadFile[]\`](#upload-file) | - |
 | \`defaultFileList\` | 처음 표시할 파일 목록을 정해요. | [\`UploadFile[]\`](#upload-file) | \`[]\` |
@@ -360,6 +360,7 @@ function SortableListsExample(args: Partial<UploadProps>) {
 
 export const DragAndDrop: Story = {
   args: {
+    multiple: undefined,
     disabled: false,
     showUploadList: true,
     directory: false,
@@ -391,15 +392,21 @@ export const DragAndDrop: Story = {
   },
   render: (args) => {
     const controlledMultiple = args.multiple;
+    const textArgs = { ...args, listType: "text" as const, multiple: controlledMultiple ?? false };
+    const pictureArgs = {
+      ...args,
+      listType: "picture" as const,
+      multiple: controlledMultiple ?? true,
+    };
     return (
       <div className="grid gap-8 lg:grid-cols-2">
         <div className="flex flex-col gap-3">
           <strong>Text</strong>
-          <Upload.Dragger {...args} listType="text" multiple={controlledMultiple ?? false} />
+          <Upload.Dragger {...textArgs} />
         </div>
         <div className="flex flex-col gap-3">
           <strong>Picture</strong>
-          <Upload.Dragger {...args} listType="picture" multiple={controlledMultiple ?? true} />
+          <Upload.Dragger {...pictureArgs} />
         </div>
       </div>
     );

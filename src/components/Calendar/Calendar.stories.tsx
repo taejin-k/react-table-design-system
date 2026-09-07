@@ -271,7 +271,7 @@ export const RangeEvents: Story = {
   const [clickedEvent, setClickedEvent] = useState<string>();
 
   return (
-    <>
+    <div className="grid gap-3">
       <Calendar
         defaultValue={dayjs('2026-08-01')}
         events={[
@@ -305,8 +305,10 @@ export const RangeEvents: Story = {
         ]}
         onEventClick={(event) => setClickedEvent(String(event.title))}
       />
-      <p>{clickedEvent ? clickedEvent + ' 일정 선택됨' : '기간 일정을 선택하세요.'}</p>
-    </>
+      <p className="text-sm text-gray">
+        {clickedEvent ? clickedEvent + ' 일정 선택됨' : '기간 일정을 선택하세요.'}
+      </p>
+    </div>
   );
 }`),
       },

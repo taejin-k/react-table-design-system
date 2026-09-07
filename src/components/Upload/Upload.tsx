@@ -18,7 +18,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { MultilineText } from "../_internal/MultilineText";
 import { CSSMotionList } from "@rc-component/motion";
 import { useEffect, useRef, useState } from "react";
-import type { CSSProperties, ReactNode, RefObject } from "react";
+import type { CSSProperties, InputHTMLAttributes, ReactNode, RefObject } from "react";
 import { twMerge } from "tailwind-merge";
 import { Icon } from "../Icon";
 import { Image } from "../Image";
@@ -99,10 +99,13 @@ interface FileSystemEntryLike {
 }
 
 function readEntryFile(entry: FileSystemEntryLike) {
-  return new Promise<File>(
-    (resolve, reject) =>
-      entry.file?.(resolve, reject) ?? reject(new DOMException("파일을 읽을 수 없어요.")),
-  );
+  return new Promise<File>((resolve, reject) => {
+    if (!entry.file) {
+      reject(new DOMException("파일을 읽을 수 없어요."));
+      return;
+    }
+    entry.file(resolve, reject);
+  });
 }
 
 async function readDirectoryEntries(entry: FileSystemEntryLike): Promise<FileSystemEntryLike[]> {
@@ -125,6 +128,34 @@ async function readDroppedEntry(entry: FileSystemEntryLike): Promise<File[]> {
   return (await Promise.all(entries.map(readDroppedEntry))).flat();
 }
 
+export function hasDroppedDirectory(dataTransfer: DataTransfer) {
+  const hasDirectoryEntry = Array.from(dataTransfer.items ?? []).some((item) => {
+    const entry = (
+      item as DataTransferItem & { webkitGetAsEntry?: () => FileSystemEntryLike | null }
+    ).webkitGetAsEntry?.();
+    return Boolean(entry?.isDirectory);
+  });
+  if (hasDirectoryEntry) return true;
+  return Array.from(dataTransfer.files ?? []).some((file) =>
+    file.webkitRelativePath?.includes("/"),
+  );
+}
+
+export function hasDroppedRegularFile(dataTransfer: DataTransfer) {
+  const entries = Array.from(dataTransfer.items ?? [])
+    .map(
+      (item) =>
+        (
+          item as DataTransferItem & { webkitGetAsEntry?: () => FileSystemEntryLike | null }
+        ).webkitGetAsEntry?.() as FileSystemEntryLike | null | undefined,
+    )
+    .filter((entry): entry is FileSystemEntryLike => entry != null);
+  if (entries.length) return entries.some((entry) => entry.isFile);
+  return Array.from(dataTransfer.files ?? []).some(
+    (file) => !file.webkitRelativePath?.includes("/"),
+  );
+}
+
 export async function getDroppedUploadFiles(dataTransfer: DataTransfer, directory: boolean) {
   const entries = Array.from(dataTransfer.items ?? [])
     .map(
@@ -134,8 +165,14 @@ export async function getDroppedUploadFiles(dataTransfer: DataTransfer, director
         ).webkitGetAsEntry?.() as FileSystemEntryLike | null | undefined,
     )
     .filter((entry): entry is FileSystemEntryLike => entry != null);
-  if (!entries.length) return Array.from(dataTransfer.files);
-  if (directory) return (await Promise.all(entries.map(readDroppedEntry))).flat();
+  if (!entries.length) {
+    const files = Array.from(dataTransfer.files);
+    return directory ? files.filter((file) => file.webkitRelativePath?.includes("/")) : files;
+  }
+  if (directory)
+    return (
+      await Promise.all(entries.filter((entry) => entry.isDirectory).map(readDroppedEntry))
+    ).flat();
   return (await Promise.all(entries.filter((entry) => entry.isFile).map(readDroppedEntry))).flat();
 }
 
@@ -219,8 +256,9 @@ interface SortableUploadItemProps {
 export function getSortableUploadItemClassName(listType: "text" | "picture", isDragging: boolean) {
   return twMerge(
     "relative shadow-none",
+    listType === "text" && "rounded",
     listType === "picture" && "rounded-lg",
-    isDragging && ["z-[1000] rounded", "bg-white opacity-100 shadow-sm"],
+    isDragging && ["z-[1000]", "bg-white opacity-100 shadow-sm"],
   );
 }
 
@@ -713,6 +751,18 @@ function UploadBase({
       onDrop={(event) => {
         event.preventDefault();
         if (!disabled) {
+          if (!directory && hasDroppedDirectory(event.dataTransfer)) {
+            message.warning({
+              key: "upload-directory-disabled",
+              content: "폴더는 업로드할 수 없어요.",
+            });
+          }
+          if (directory && hasDroppedRegularFile(event.dataTransfer)) {
+            message.warning({
+              key: "upload-files-disabled",
+              content: "폴더만 업로드할 수 있어요.",
+            });
+          }
           void getDroppedUploadFiles(event.dataTransfer, directory).then(processFiles);
           onDrop?.(event);
         }
@@ -726,6 +776,9 @@ function UploadBase({
         capture={capture}
         multiple={multiple}
         disabled={disabled}
+        {...({
+          webkitdirectory: directory ? "" : undefined,
+        } as InputHTMLAttributes<HTMLInputElement>)}
         onChange={(event) => {
           if (event.target.files) void processFiles(event.target.files);
           event.target.value = "";
