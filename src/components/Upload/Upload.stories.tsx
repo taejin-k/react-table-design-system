@@ -360,7 +360,6 @@ function SortableListsExample(args: Partial<UploadProps>) {
 
 export const DragAndDrop: Story = {
   args: {
-    multiple: false,
     disabled: false,
     showUploadList: true,
     directory: false,
@@ -390,18 +389,21 @@ export const DragAndDrop: Story = {
       },
     },
   },
-  render: (args) => (
-    <div className="grid gap-8 lg:grid-cols-2">
-      <div className="flex flex-col gap-3">
-        <strong>Text</strong>
-        <Upload.Dragger {...args} listType="text" multiple={false} />
+  render: (args) => {
+    const controlledMultiple = args.multiple;
+    return (
+      <div className="grid gap-8 lg:grid-cols-2">
+        <div className="flex flex-col gap-3">
+          <strong>Text</strong>
+          <Upload.Dragger {...args} listType="text" multiple={controlledMultiple ?? false} />
+        </div>
+        <div className="flex flex-col gap-3">
+          <strong>Picture</strong>
+          <Upload.Dragger {...args} listType="picture" multiple={controlledMultiple ?? true} />
+        </div>
       </div>
-      <div className="flex flex-col gap-3">
-        <strong>Picture</strong>
-        <Upload.Dragger {...args} listType="picture" multiple />
-      </div>
-    </div>
-  ),
+    );
+  },
 };
 
 export const SelectionRules: Story = {
