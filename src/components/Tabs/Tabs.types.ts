@@ -1,4 +1,4 @@
-import type { Key, MouseEvent, ReactElement, ReactNode } from "react";
+import type { Key, MouseEvent, ReactNode } from "react";
 
 export type TabsPlacementType = "top" | "end" | "bottom" | "start";
 export type TabsSizeType = "lg" | "md" | "sm";
@@ -28,5 +28,4 @@ export interface TabsProps {
   onDelete?: (items: TabItemType[]) => void;
   onDrag?: (items: TabItemType[]) => void;
   onTabClick?: (key: Key, event: MouseEvent<HTMLElement>) => void;
-  renderTabBar?: (props: TabsProps, DefaultTabBar: () => ReactElement) => ReactElement;
 }

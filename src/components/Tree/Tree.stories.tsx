@@ -739,8 +739,8 @@ export const CustomTitles: Story = {
   defaultExpandAll
   treeData={treeData}
   titleRender={(node) => (
-    <span className="flex items-center gap-2">
-      <span>{node.title}</span>
+    <span className="flex min-w-0 items-center gap-2">
+      <span className="shrink-0 whitespace-nowrap">{node.title}</span>
       {node.isLeaf ? (
         <span className="rounded bg-hover px-1.5 text-xs text-dark-gray">파일</span>
       ) : null}
@@ -755,8 +755,8 @@ export const CustomTitles: Story = {
       {...args}
       treeData={controlledTreeData}
       titleRender={(node) => (
-        <span className="flex items-center gap-2">
-          <span>{node.title}</span>
+        <span className="flex min-w-0 items-center gap-2">
+          <span className="shrink-0 whitespace-nowrap">{node.title}</span>
           {node.isLeaf ? (
             <span className="rounded bg-hover px-1.5 text-xs text-dark-gray">파일</span>
           ) : null}

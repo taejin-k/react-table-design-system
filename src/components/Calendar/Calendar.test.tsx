@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import dayjs from "dayjs";
 import { describe, expect, it, vi } from "vitest";
@@ -34,7 +34,7 @@ describe("Calendar", () => {
     const compactDisabledDate = screen
       .getAllByRole("button", { name: "21" })
       .find((button) => button.hasAttribute("disabled"))!;
-    expect(compactDisabledDate).toHaveClass("text-disabled", "hover:bg-transparent");
+    expect(compactDisabledDate).toHaveClass("text-border", "hover:bg-transparent");
     expect(compactDisabledDate.parentElement).toHaveClass("bg-hover");
   });
 
@@ -95,7 +95,33 @@ describe("Calendar", () => {
       <Calendar defaultValue={dayjs("2026-08-20")} disabledDate={(date) => date.date() === 21} />,
     );
 
-    expect(screen.getByRole("button", { name: "21" })).toHaveClass("hover:bg-transparent");
+    expect(screen.getByRole("button", { name: "21" })).toHaveClass(
+      "disabled:text-border",
+      "hover:bg-transparent",
+    );
+  });
+
+  it("selects a date when custom cell text is clicked but preserves text dragging", async () => {
+    const onSelect = vi.fn();
+    render(
+      <Calendar
+        defaultValue={dayjs("2026-08-20")}
+        onSelect={onSelect}
+        cellRender={(date) =>
+          date.format("YYYY-MM-DD") === "2026-08-21" ? <span>선택 가능한 일정</span> : null
+        }
+      />,
+    );
+
+    const text = screen.getByText("선택 가능한 일정");
+    await userEvent.click(text);
+    expect(onSelect.mock.calls[0]?.[0].format("YYYY-MM-DD")).toBe("2026-08-21");
+
+    onSelect.mockClear();
+    fireEvent.pointerDown(text, { button: 0, clientX: 10, clientY: 10 });
+    fireEvent.pointerMove(text, { clientX: 30, clientY: 10 });
+    fireEvent.click(text);
+    expect(onSelect).not.toHaveBeenCalled();
   });
 
   it("splits range events across weeks and reports event clicks", async () => {
@@ -118,6 +144,10 @@ describe("Calendar", () => {
     const segments = screen.getAllByText("릴리스 기간");
     expect(segments).toHaveLength(2);
     expect(segments[0]).toHaveStyle({ backgroundColor: "#1677ff" });
+    expect(segments[0]).toHaveClass("rounded-l-full");
+    expect(segments[0]).not.toHaveClass("rounded-r-full");
+    expect(segments[1]).not.toHaveClass("rounded-l-full");
+    expect(segments[1]).toHaveClass("rounded-r-full");
 
     await userEvent.click(segments[0]!);
     expect(onEventClick).toHaveBeenCalledWith(rangeEvent);

@@ -99,9 +99,7 @@ function SelectExample() {
   );
 }`);
 
-    expect(source).toContain(
-      "import type { Dayjs } from 'dayjs';",
-    );
+    expect(source).toContain("import type { Dayjs } from 'dayjs';");
     expect(source).toContain("import type { Dayjs } from 'dayjs';");
   });
 

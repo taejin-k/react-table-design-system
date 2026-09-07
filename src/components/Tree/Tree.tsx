@@ -679,7 +679,7 @@ export function Tree({
                         nodeLoading ? "opacity-0" : "opacity-100",
                       )}
                     >
-                      <Icon icon="chevron-right" size={12} />
+                      <Icon icon="chevron-right" size={12} className="cursor-pointer" />
                     </span>
                     <span
                       className={twMerge(

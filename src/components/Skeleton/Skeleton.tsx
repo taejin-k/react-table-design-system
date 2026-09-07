@@ -5,18 +5,14 @@ function base(active?: boolean) {
   return twMerge("bg-hover", active && "wizard-skeleton-active");
 }
 function shapeClass(shape: SkeletonElementProps["shape"]) {
-  return shape === "circle" || shape === "round"
-    ? "rounded-full"
-    : shape === "square"
-      ? "rounded-none"
-      : "rounded-md";
+  return shape === "round" ? "rounded-full" : shape === "square" ? "rounded-none" : "rounded-md";
 }
 
 function AvatarSkeleton({
   active,
   width,
   height,
-  shape = "circle",
+  shape = "round",
   className,
 }: SkeletonElementProps) {
   return (
@@ -42,13 +38,13 @@ function ButtonSkeleton({
     <span
       className={twMerge(
         "inline-block h-[30px]",
-        shape === "circle" ? "w-[30px]" : "w-16",
+        shape === "round" ? "w-[30px]" : "w-16",
         base(active),
         shapeClass(shape),
         className,
       )}
       style={{
-        width: width ?? (shape === "circle" ? heightProp : undefined),
+        width: width ?? (shape === "round" ? heightProp : undefined),
         height: heightProp,
       }}
     />
@@ -78,7 +74,7 @@ function ImageSkeleton({
   return (
     <span
       className={twMerge(
-        "inline-flex h-24 w-24 items-center justify-center text-gray",
+        "inline-flex h-24 w-24 items-center justify-center overflow-hidden text-gray",
         base(active),
         shapeClass(shape),
         className,
@@ -102,7 +98,7 @@ function NodeSkeleton({
   return (
     <span
       className={twMerge(
-        "inline-flex h-24 w-24 items-center justify-center text-gray",
+        "inline-flex h-24 w-24 items-center justify-center overflow-hidden text-gray",
         base(active),
         shapeClass(shape),
         className,

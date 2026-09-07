@@ -112,7 +112,7 @@ function SortableTabButton({
       className={twMerge(
         className,
         enabled && !disabled && "active:cursor-grabbing",
-        isDragging && "z-10 opacity-40",
+        isDragging && "z-20 bg-white opacity-100 shadow-sm",
       )}
       style={
         {
@@ -144,7 +144,6 @@ export function Tabs(props: TabsProps) {
     onDelete,
     onDrag,
     onTabClick,
-    renderTabBar,
   } = props;
   const vertical = placement === "start" || placement === "end";
   const [innerActive, setInnerActive] = useState(
@@ -163,6 +162,33 @@ export function Tabs(props: TabsProps) {
   const headerRef = useRef<HTMLDivElement>(null);
   const tabListRef = useRef<HTMLDivElement>(null);
   const [ink, setInk] = useState({ left: 0, top: 0, width: 0, height: 0, ready: false });
+  const [scrollEdge, setScrollEdge] = useState({ left: false, right: false });
+  useLayoutEffect(() => {
+    const tabList = tabListRef.current;
+    if (!tabList || vertical) {
+      setScrollEdge({ left: false, right: false });
+      return;
+    }
+    const updateScrollEdge = () => {
+      const next = {
+        left: tabList.scrollLeft > 1,
+        right: tabList.scrollLeft + tabList.clientWidth < tabList.scrollWidth - 1,
+      };
+      setScrollEdge((current) =>
+        current.left === next.left && current.right === next.right ? current : next,
+      );
+    };
+    updateScrollEdge();
+    const observer =
+      typeof ResizeObserver === "undefined" ? null : new ResizeObserver(updateScrollEdge);
+    observer?.observe(tabList);
+    if (tabList.firstElementChild) observer?.observe(tabList.firstElementChild);
+    tabList.addEventListener("scroll", updateScrollEdge, { passive: true });
+    return () => {
+      observer?.disconnect();
+      tabList.removeEventListener("scroll", updateScrollEdge);
+    };
+  }, [items, vertical]);
   useLayoutEffect(() => {
     const updateInk = () => {
       const node = selected === undefined ? undefined : refs.current.get(selected);
@@ -212,7 +238,7 @@ export function Tabs(props: TabsProps) {
       observer?.disconnect();
       tabList?.removeEventListener("scroll", updateInk);
     };
-  }, [selected, items, vertical, placement]);
+  }, [selected, items, vertical, placement, centered]);
   const change = (key: Key, event: React.MouseEvent<HTMLElement>) => {
     onTabClick?.(key, event);
     const item = items.find((entry) => Object.is(entry.key, key));
@@ -329,7 +355,10 @@ export function Tabs(props: TabsProps) {
             >
               {item.icon}
               <span>{item.label}</span>
-              {type === "card" && onDelete !== undefined && item.closable !== false ? (
+              {type === "card" &&
+              onDelete !== undefined &&
+              !item.disabled &&
+              item.closable !== false ? (
                 <span
                   data-tab-close={String(item.key)}
                   className={twMerge(
@@ -373,6 +402,24 @@ export function Tabs(props: TabsProps) {
           ) : null}
         </div>
       </TabsSortContext>
+      {!vertical ? (
+        <span
+          data-tabs-scroll-fade="left"
+          className={twMerge(
+            "pointer-events-none absolute inset-y-0 left-0 z-[3] w-8 bg-gradient-to-r from-white via-white/70 to-transparent transition-opacity duration-200 ease-out motion-reduce:transition-none",
+            scrollEdge.left ? "opacity-100" : "opacity-0",
+          )}
+        />
+      ) : null}
+      {!vertical ? (
+        <span
+          data-tabs-scroll-fade="right"
+          className={twMerge(
+            "pointer-events-none absolute inset-y-0 right-0 z-[3] w-8 bg-gradient-to-l from-white via-white/70 to-transparent transition-opacity duration-200 ease-out motion-reduce:transition-none",
+            scrollEdge.right ? "opacity-100" : "opacity-0",
+          )}
+        />
+      ) : null}
       {type === "line" && ink.ready ? (
         <span
           data-tabs-indicator=""
@@ -417,7 +464,6 @@ export function Tabs(props: TabsProps) {
       ) : null}
     </div>
   );
-  const tabBar = renderTabBar?.(props, DefaultTabBar) ?? DefaultTabBar();
   return (
     <div
       className={twMerge(
@@ -428,7 +474,7 @@ export function Tabs(props: TabsProps) {
         className,
       )}
     >
-      {tabBar}
+      {DefaultTabBar()}
       <div
         className={twMerge(
           "min-w-0 flex-1 [overflow-wrap:anywhere] break-all",

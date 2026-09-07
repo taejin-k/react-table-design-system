@@ -22,10 +22,8 @@ export interface MenuItemType {
   disabled?: boolean;
   children?: MenuItemType[];
   type?: MenuItemKindType;
-  popupClassName?: string;
-  popupOffset?: [number, number];
   onClick?: (info: MenuClickInfo) => void;
-  onTitleClick?: (info: { key: Key; event: MouseEvent<HTMLElement> }) => void;
+  onTitleClick?: (info: MenuClickInfo) => void;
 }
 
 export interface MenuProps {

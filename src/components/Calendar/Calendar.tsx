@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, type MouseEvent, type PointerEvent } from "react";
 import dayjs from "dayjs";
 import { twMerge } from "tailwind-merge";
 import { resolveColorToken } from "../../color-tokens";
+import { ScrollArea } from "../_internal/ScrollArea";
 import { Select } from "../Select";
 import type { CalendarEvent, CalendarProps } from "./Calendar.types";
 
@@ -43,6 +44,8 @@ interface CalendarEventSegment {
   startIndex: number;
   endIndex: number;
   lane: number;
+  continuesBefore: boolean;
+  continuesAfter: boolean;
 }
 
 function eventSegmentsForWeek(days: Date[], events: CalendarEvent[]): CalendarEventSegment[] {
@@ -61,6 +64,8 @@ function eventSegmentsForWeek(days: Date[], events: CalendarEvent[]): CalendarEv
         event,
         startIndex: days.findIndex((date) => sameDate(date, visibleStart)),
         endIndex: days.findIndex((date) => sameDate(date, visibleEnd)),
+        continuesBefore: start < weekStart,
+        continuesAfter: end > weekEnd,
       };
     })
     .filter((segment): segment is Omit<CalendarEventSegment, "lane"> => segment !== null)
@@ -96,6 +101,7 @@ export function Calendar({
 }: CalendarProps) {
   const today = new Date();
   const [innerValue, setInnerValue] = useState(() => parseDate(defaultValue) ?? new Date());
+  const cellPointerRef = useRef<{ x: number; y: number; moved: boolean } | null>(null);
   const selected = parseDate(value) ?? innerValue;
   const [panel, setPanel] = useState(() => new Date(selected));
   const rangeStart = parseDate(validRange?.[0]);
@@ -125,6 +131,29 @@ export function Calendar({
     if (!sameDate(date, selected)) onChange?.(nextValue);
     onSelect?.(nextValue);
     if (date.getMonth() !== panel.getMonth()) changePanel(date);
+  };
+  const handleCellPointerDown = (event: PointerEvent<HTMLDivElement>) => {
+    if (event.button !== 0) return;
+    cellPointerRef.current = { x: event.clientX, y: event.clientY, moved: false };
+  };
+  const handleCellPointerMove = (event: PointerEvent<HTMLDivElement>) => {
+    const start = cellPointerRef.current;
+    if (!start || start.moved) return;
+    start.moved = Math.hypot(event.clientX - start.x, event.clientY - start.y) > 4;
+  };
+  const handleCellContentClick = (event: MouseEvent<HTMLDivElement>, date: Date) => {
+    const moved = cellPointerRef.current?.moved ?? false;
+    cellPointerRef.current = null;
+    if (moved || event.defaultPrevented) return;
+    const target = event.target;
+    if (
+      target instanceof Element &&
+      target.closest(
+        "button, a, input, select, textarea, [contenteditable='true'], [data-scroll-track], [data-scroll-thumb]",
+      )
+    )
+      return;
+    choose(date);
   };
   const defaultHeader = (
     <div className="flex flex-wrap items-center justify-end px-2 py-2 max-[480px]:grid max-[480px]:grid-cols-2 max-[480px]:gap-2">
@@ -194,22 +223,22 @@ export function Calendar({
                       type="button"
                       disabled={disabled}
                       className={twMerge(
-                        "relative flex w-full cursor-pointer transition-colors duration-200 ease-out outline-none disabled:cursor-not-allowed disabled:text-disabled motion-reduce:transition-none",
+                        "relative flex w-full cursor-pointer transition-colors duration-200 ease-out outline-none disabled:cursor-not-allowed disabled:text-border motion-reduce:transition-none",
                         fullscreen
-                          ? "mx-1 h-[90px] w-[calc(100%-8px)] items-start justify-end border-t-2 border-hover px-2 pt-1 hover:bg-hover"
-                          : "size-8 items-center justify-center rounded p-0 hover:bg-hover",
+                          ? "mx-1 h-[90px] w-[calc(100%-8px)] items-start justify-end border-t-2 border-hover px-2 pt-1 group-hover/calendar-cell:bg-hover hover:bg-hover"
+                          : "size-8 items-center justify-center rounded p-0 group-hover/calendar-cell:bg-hover hover:bg-hover",
                         outside && "text-disabled",
                         fullscreen && sameDate(date, today) && "border-t-primary",
                         sameDate(date, selected) &&
                           (fullscreen
-                            ? "bg-selected hover:bg-selected"
-                            : "bg-selected text-primary hover:bg-selected"),
+                            ? "bg-selected group-hover/calendar-cell:bg-selected hover:bg-selected"
+                            : "bg-selected text-primary group-hover/calendar-cell:bg-selected hover:bg-selected"),
                         fullscreen &&
                           disabled &&
                           (sameDate(date, selected) ? "hover:bg-selected" : "hover:bg-transparent"),
                         !fullscreen &&
                           disabled &&
-                          "bg-transparent text-disabled hover:bg-transparent [&_*]:text-disabled!",
+                          "bg-transparent text-border hover:bg-transparent [&_*]:text-border!",
                       )}
                       onClick={() => choose(date)}
                     >
@@ -223,46 +252,82 @@ export function Calendar({
                     </button>
                   );
                   const info = { originNode: origin, today: dayjs(today) } as const;
+                  const fullCell = fullCellRender?.(dayjs(date), info);
+                  const cellContent = cellRender?.(dayjs(date), info);
+                  const hasCellContent = cellContent !== null && cellContent !== undefined;
+                  const handlesCellContentClick = fullCell == null && hasCellContent;
                   return (
                     <div
                       key={date.toISOString()}
+                      data-calendar-cell
                       className={twMerge(
-                        !fullscreen && "relative my-0.5 flex h-8 items-center justify-center",
+                        "relative",
+                        !disabled && "group/calendar-cell cursor-pointer",
+                        !fullscreen && "my-0.5 flex h-8 items-center justify-center",
                         !fullscreen && disabled && "bg-hover",
                       )}
+                      onPointerDownCapture={
+                        handlesCellContentClick ? handleCellPointerDown : undefined
+                      }
+                      onPointerMoveCapture={
+                        handlesCellContentClick ? handleCellPointerMove : undefined
+                      }
+                      onClick={
+                        handlesCellContentClick
+                          ? (event) => handleCellContentClick(event, date)
+                          : undefined
+                      }
                     >
-                      {fullCellRender?.(dayjs(date), info) ??
-                        cellRender?.(dayjs(date), info) ??
-                        origin}
+                      {fullCell ?? origin}
+                      {fullCell == null && hasCellContent && fullscreen && (
+                        <ScrollArea
+                          verticalOnly
+                          viewportMarker="data-calendar-schedule-scroll-container"
+                          className="absolute inset-x-3 top-7 bottom-1"
+                          viewportClassName="overscroll-contain pr-2"
+                          contentClassName="grid auto-rows-min content-start gap-0.5"
+                        >
+                          {cellContent}
+                        </ScrollArea>
+                      )}
+                      {fullCell == null && hasCellContent && !fullscreen ? cellContent : null}
                     </div>
                   );
                 })}
-                {eventSegments.map(({ event, startIndex, endIndex, lane }) => {
-                  const span = endIndex - startIndex + 1;
-                  return (
-                    <button
-                      key={`${String(event.key)}-${weekKey}`}
-                      type="button"
-                      data-calendar-event-key={String(event.key)}
-                      className={twMerge(
-                        "absolute z-[2] h-[18px] overflow-hidden rounded-full px-2 text-left text-xs leading-[18px] text-ellipsis whitespace-nowrap text-white shadow-xs transition-[filter] duration-200 ease-out outline-none motion-reduce:transition-none",
-                        onEventClick ? "cursor-pointer hover:brightness-95" : "pointer-events-none",
-                      )}
-                      style={{
-                        top: 32 + lane * 20,
-                        left: `calc(${(startIndex * 100) / 7}% + 8px)`,
-                        width: `calc(${(span * 100) / 7}% - 16px)`,
-                        backgroundColor:
-                          event.color === undefined
-                            ? "var(--color-primary)"
-                            : resolveColorToken(event.color),
-                      }}
-                      onClick={onEventClick ? () => onEventClick(event) : undefined}
-                    >
-                      {event.title}
-                    </button>
-                  );
-                })}
+                {eventSegments.map(
+                  ({ event, startIndex, endIndex, lane, continuesBefore, continuesAfter }) => {
+                    const span = endIndex - startIndex + 1;
+                    const startInset = continuesBefore ? 0 : 8;
+                    const endInset = continuesAfter ? 0 : 8;
+                    return (
+                      <button
+                        key={`${String(event.key)}-${weekKey}`}
+                        type="button"
+                        data-calendar-event-key={String(event.key)}
+                        className={twMerge(
+                          "absolute z-[2] h-[18px] overflow-hidden px-2 text-left text-xs leading-[18px] text-ellipsis whitespace-nowrap text-white shadow-xs transition-[filter,opacity] duration-200 ease-out outline-none motion-reduce:transition-none",
+                          !continuesBefore && "rounded-l-full",
+                          !continuesAfter && "rounded-r-full",
+                          onEventClick
+                            ? "cursor-pointer hover:brightness-95"
+                            : "pointer-events-none",
+                        )}
+                        style={{
+                          top: 32 + lane * 20,
+                          left: `calc(${(startIndex * 100) / 7}% + ${startInset}px)`,
+                          width: `calc(${(span * 100) / 7}% - ${startInset + endInset}px)`,
+                          backgroundColor:
+                            event.color === undefined
+                              ? "var(--color-primary)"
+                              : resolveColorToken(event.color),
+                        }}
+                        onClick={onEventClick ? () => onEventClick(event) : undefined}
+                      >
+                        {event.title}
+                      </button>
+                    );
+                  },
+                )}
               </div>
             );
           })}

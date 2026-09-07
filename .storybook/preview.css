@@ -178,12 +178,16 @@ body.sb-show-main {
   width: 38%;
 }
 
+.calendar-docs table :is(th, td):nth-child(1) {
+  width: 19%;
+}
+
 .calendar-docs table :is(th, td):nth-child(2) {
-  width: 30%;
+  width: 29%;
 }
 
 .calendar-docs table :is(th, td):nth-child(3) {
-  width: 38%;
+  width: 40%;
 }
 
 .component-docs table :is(th, td) {
@@ -330,11 +334,11 @@ body.sb-show-main {
 }
 
 .button-docs table :is(th, td):nth-child(2) {
-  width: 31%;
+  width: 34%;
 }
 
 .button-docs table :is(th, td):nth-child(3) {
-  width: 43%;
+  width: 40%;
 }
 
 .button-docs table :is(th, td):nth-child(4) {
@@ -346,11 +350,11 @@ body.sb-show-main {
 }
 
 .tag-docs table :is(th, td):nth-child(2) {
-  width: 28%;
+  width: 32%;
 }
 
 .tag-docs table :is(th, td):nth-child(3) {
-  width: 46%;
+  width: 42%;
 }
 
 .tag-docs table :is(th, td):nth-child(4) {
@@ -384,15 +388,71 @@ body.sb-show-main {
 }
 
 .radio-docs table :is(th, td):nth-child(2) {
+  width: 39%;
+}
+
+.radio-docs table :is(th, td):nth-child(4) {
+  width: 10%;
+}
+
+.checkbox-docs table :is(th, td):nth-child(1) {
+  width: 18%;
+}
+
+.checkbox-docs table :is(th, td):nth-child(2) {
   width: 37%;
 }
 
+.checkbox-docs table :is(th, td):nth-child(3) {
+  width: 35%;
+}
+
+.checkbox-docs table :is(th, td):nth-child(4) {
+  width: 10%;
+}
+
 .toggle-docs table :is(th, td):nth-child(2) {
-  width: 41%;
+  width: 43%;
 }
 
 .toggle-docs table :is(th, td):nth-child(3) {
   width: 27%;
+}
+
+.toggle-docs table :is(th, td):nth-child(1) {
+  width: 18%;
+}
+
+.label-docs table :is(th, td):nth-child(2) {
+  width: 36%;
+}
+
+.label-docs table :is(th, td):nth-child(3) {
+  width: 32%;
+}
+
+.badge-docs table :is(th, td):nth-child(2) {
+  width: 36%;
+}
+
+.badge-docs table :is(th, td):nth-child(3) {
+  width: 32%;
+}
+
+.upload-docs table :is(th, td):nth-child(1) {
+  width: 17%;
+}
+
+.upload-docs table :is(th, td):nth-child(2) {
+  width: 30%;
+}
+
+.upload-docs table :is(th, td):nth-child(3) {
+  width: 42%;
+}
+
+.upload-docs table :is(th, td):nth-child(4) {
+  width: 11%;
 }
 
 .error-message-docs table :is(th, td):nth-child(2) {
@@ -614,71 +674,6 @@ body.sb-show-main {
   }
 }
 
-.dropdown-docs table,
-.popover-docs table {
-  min-width: 1120px;
-}
-
-.dropdown-docs table :is(th, td):nth-child(1),
-.popover-docs table :is(th, td):nth-child(1) {
-  width: 18%;
-}
-
-.dropdown-docs table :is(th, td):nth-child(2),
-.popover-docs table :is(th, td):nth-child(2) {
-  width: 42%;
-}
-
-.dropdown-docs table :is(th, td):nth-child(3),
-.popover-docs table :is(th, td):nth-child(3) {
-  width: 31%;
-}
-
-.dropdown-docs table :is(th, td):nth-child(4),
-.popover-docs table :is(th, td):nth-child(4) {
-  width: 9%;
-}
-
-.popover-docs table :is(th, td):nth-child(1) {
-  width: 14%;
-}
-
-.popover-docs table :is(th, td):nth-child(2) {
-  width: 30%;
-}
-
-.popover-docs table :is(th, td):nth-child(4) {
-  width: 10.5%;
-}
-
-.dropdown-docs table :is(th, td):nth-child(1) {
-  width: 21%;
-}
-
-.dropdown-docs table :is(th, td):nth-child(2) {
-  width: 27.5%;
-}
-
-.dropdown-docs table :is(th, td):nth-child(4) {
-  width: 12.5%;
-}
-
-.dropdown-docs table :is(th, td):nth-child(3) {
-  width: 39%;
-}
-
-.popover-docs table :is(th, td):nth-child(3) {
-  width: 45.5%;
-}
-
-.dropdown-docs table :is(th, td),
-.dropdown-docs table td code,
-.popover-docs table :is(th, td),
-.popover-docs table td code {
-  white-space: nowrap;
-  overflow-wrap: normal;
-}
-
 .select-docs table :is(th, td):nth-child(1) {
   width: 19.5%;
 }
@@ -696,16 +691,4 @@ body.sb-show-main {
 }
 
 @media (max-width: 1500px) {
-  .dropdown-docs table,
-  .popover-docs table {
-    min-width: 0;
-  }
-
-  .dropdown-docs table :is(th, td),
-  .dropdown-docs table td code,
-  .popover-docs table :is(th, td),
-  .popover-docs table td code {
-    white-space: normal;
-    overflow-wrap: anywhere;
-  }
 }

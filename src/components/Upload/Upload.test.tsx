@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 import { message } from "../Message";
 import {
   DOWNLOAD_LOADING_DELAY,
+  getDroppedUploadFiles,
   getSortableUploadItemClassName,
   getSortableUploadItemTransition,
   reorderUploadFiles,
@@ -14,6 +15,35 @@ import {
 import type { UploadChangeParam, UploadFile } from "./Upload.types";
 
 describe("Upload", () => {
+  it("expands a dropped folder only when directory is enabled", async () => {
+    const nestedFile = new File(["nested"], "nested.txt");
+    const nestedEntry = {
+      isDirectory: false,
+      isFile: true,
+      file: (resolve: (file: File) => void) => resolve(nestedFile),
+    };
+    let read = false;
+    const folderEntry = {
+      isDirectory: true,
+      isFile: false,
+      createReader: () => ({
+        readEntries: (resolve: (entries: (typeof nestedEntry)[]) => void) => {
+          resolve(read ? [] : ((read = true), [nestedEntry]));
+        },
+      }),
+    };
+    const dataTransfer = {
+      files: [new File([], "folder")],
+      items: [{ webkitGetAsEntry: () => folderEntry }],
+    } as unknown as DataTransfer;
+
+    expect((await getDroppedUploadFiles(dataTransfer, false)).map((file) => file.name)).toEqual([]);
+    read = false;
+    expect((await getDroppedUploadFiles(dataTransfer, true)).map((file) => file.name)).toEqual([
+      "nested.txt",
+    ]);
+  });
+
   it("does not emit after pending validation finishes on an unmounted upload", async () => {
     let finish!: (allowed: boolean) => void;
     const onChange = vi.fn();
@@ -211,10 +241,7 @@ describe("Upload", () => {
 
     rerender(<Upload defaultFileList={files} draggable disabled />);
     expect(screen.getByText("kept-file.txt").closest("[data-upload-list-item]")).toBe(originalRow);
-    expect(container.querySelector("[data-upload-drag-handle-disabled]")).toHaveAttribute(
-      "data-upload-drag-handle-disabled",
-      "true",
-    );
+    expect(container.querySelector("[data-upload-drag-handle]")).not.toBeInTheDocument();
   });
 
   it("keeps actions visible when switching between picture and text lists", () => {
@@ -237,7 +264,7 @@ describe("Upload", () => {
   });
 
   it("styles sortable items by list type and disables hover on inactive text rows", () => {
-    expect(getSortableUploadItemClassName("text", true)).toContain("z-10");
+    expect(getSortableUploadItemClassName("text", true)).toContain("z-[1000]");
     expect(getSortableUploadItemClassName("picture", true)).toContain("z-[1000]");
     expect(getSortableUploadItemClassName("picture", true)).toContain("shadow-sm");
     expect(getSortableUploadItemClassName("picture", false)).toContain("shadow-none");

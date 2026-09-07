@@ -132,7 +132,6 @@ Tabs는 여러 콘텐츠 영역을 탭으로 나누어 전환하게 해요.
 | \`onDelete\` | 닫기 버튼을 표시하고 삭제된 목록을 전달해요. | <code>(items: <a href="#tab-item-type">TabItemType[]</a>) =&gt; void</code> | - |
 | \`onDrag\` | card 탭을 드래그해 정렬하고 변경된 목록을 전달해요. | <code>(items: <a href="#tab-item-type">TabItemType[]</a>) =&gt; void</code> | - |
 | \`onTabClick\` | 탭을 누를 때 실행해요. | \`(key: Key, event: MouseEvent<HTMLElement>) => void\` | - |
-| \`renderTabBar\` | 탭 목록 전체를 사용자 정의해요. | <code>(props: <a href="#tabs">TabsProps</a>, DefaultTabBar: () =&gt; ReactElement) =&gt; ReactElement</code> | - |
 
 ### <span id="tab-item-type">TabItemType</span>
 
@@ -290,7 +289,7 @@ export const OnAdd: Story = {
         type: "code",
         code: withStoryImports(`${itemsSource}
 
-function EditableTabsExample() {
+export default function OnAddExample() {
   const [editableItems, setEditableItems] = useState(items);
   const handleAdd = (current: TabItemType[]) => {
     const newItem: TabItemType = {
@@ -308,9 +307,7 @@ function EditableTabsExample() {
       onAdd={handleAdd}
     />
   );
-}
-
-<EditableTabsExample />`),
+}`),
       },
     },
   },
@@ -335,7 +332,7 @@ export const OnDelete: Story = {
         type: "code",
         code: withStoryImports(`${itemsSource}
 
-function DeletableTabsExample() {
+export default function OnDeleteExample() {
   const [deletableItems, setDeletableItems] = useState(items);
 
   return (
@@ -345,13 +342,40 @@ function DeletableTabsExample() {
       onDelete={setDeletableItems}
     />
   );
-}
-
-<DeletableTabsExample />`),
+}`),
       },
     },
   },
   render: (args) => <EditableTabsExample {...args} addable={false} deletable />,
+};
+
+export const Draggable: Story = {
+  args: {
+    size: "md",
+    placement: "top",
+    animated: false,
+    centered: false,
+  },
+  parameters: {
+    ...storyDescription("components-tabs--draggable"),
+    controls: {
+      include: ["크기", "위치", "애니메이션", "가운데 정렬"],
+    },
+    docs: {
+      ...storyDescription("components-tabs--draggable").docs,
+      source: {
+        type: "code",
+        code: withStoryImports(`${draggableItemsSource}
+
+export default function DraggableTabsExample() {
+  const [items, setItems] = useState(initialItems);
+
+  return <Tabs type="card" items={items} onDrag={setItems} />;
+}`),
+      },
+    },
+  },
+  render: (args) => <DraggableTabsExample {...args} />,
 };
 
 export const OnAddAndDelete: Story = {
@@ -372,7 +396,7 @@ export const OnAddAndDelete: Story = {
         type: "code",
         code: withStoryImports(`${itemsSource}
 
-function EditableTabsExample() {
+export default function OnAddAndDeleteExample() {
   const [editableItems, setEditableItems] = useState(items);
   const handleAdd = (current: TabItemType[]) => {
     const newItem: TabItemType = {
@@ -391,9 +415,7 @@ function EditableTabsExample() {
       onDelete={setEditableItems}
     />
   );
-}
-
-<EditableTabsExample />`),
+}`),
       },
     },
   },
@@ -418,7 +440,7 @@ export const AddDragDelete: Story = {
         type: "code",
         code: withStoryImports(`${itemsSource}
 
-function EditableTabsExample() {
+export default function AddDragDeleteExample() {
   const [editableItems, setEditableItems] = useState(items);
   const handleAdd = (current: TabItemType[]) => {
     const newItem: TabItemType = {
@@ -438,44 +460,11 @@ function EditableTabsExample() {
       onDelete={setEditableItems}
     />
   );
-}
-
-<EditableTabsExample />`),
+}`),
       },
     },
   },
   render: (args) => <EditableTabsExample {...args} deletable draggable />,
-};
-
-export const Draggable: Story = {
-  args: {
-    size: "md",
-    placement: "top",
-    animated: false,
-    centered: false,
-  },
-  parameters: {
-    ...storyDescription("components-tabs--draggable"),
-    controls: {
-      include: ["크기", "위치", "애니메이션", "가운데 정렬"],
-    },
-    docs: {
-      ...storyDescription("components-tabs--draggable").docs,
-      source: {
-        type: "code",
-        code: withStoryImports(`${draggableItemsSource}
-
-function DraggableTabsExample() {
-  const [items, setItems] = useState(initialItems);
-
-  return <Tabs type="card" items={items} onDrag={setItems} />;
-}
-
-<DraggableTabsExample />`),
-      },
-    },
-  },
-  render: (args) => <DraggableTabsExample {...args} />,
 };
 
 export const Placements: Story = {

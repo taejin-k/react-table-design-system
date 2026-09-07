@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Description, Markdown, Stories, Title } from "@storybook/addon-docs/blocks";
 import type { Meta, StoryObj } from "@storybook/react";
 import dayjs, { type Dayjs } from "dayjs";
@@ -94,15 +95,15 @@ Calendar는 날짜를 탐색하고 일정이나 선택 상태를 표시해요.
 | \`fullscreen\` | 전체 너비 또는 카드형 레이아웃을 정해요. | \`boolean\` | \`true\` |
 | \`validRange\` | 선택할 수 있는 날짜 범위를 정해요. | \`[Dayjs, Dayjs]\` | - |
 | \`disabledDate\` | 특정 날짜 선택을 막아요. | \`(date: Dayjs) => boolean\` | - |
-| \`cellRender\` | 기본 셀 내용을 감싸거나 추가 내용을 표시해요. | <code>(date: Dayjs, info: <a href="#calendar-cell-info">CalendarCellInfo</a>) =&gt; ReactNode</code> | - |
+| \`cellRender\` | 날짜 아래에 표시할 콘텐츠를 반환해요. 내용이 넘치면 자동으로 스크롤돼요. | <code>(date: Dayjs, info: <a href="#calendar-cell-info">CalendarCellInfo</a>) =&gt; ReactNode</code> | - |
 | \`fullCellRender\` | 날짜 셀 전체를 사용자 정의해요. | <code>(date: Dayjs, info: <a href="#calendar-cell-info">CalendarCellInfo</a>) =&gt; ReactNode</code> | - |
 | \`headerRender\` | 달력 헤더 전체를 사용자 정의해요. | <code>(config: <a href="#calendar-header-config">CalendarHeaderConfig</a>) =&gt; ReactNode</code> | - |
 | \`events\` | 전체 너비 달력에 기간 일정을 표시해요. | <a href="#calendar-event"><code>CalendarEvent[]</code></a> | \`[]\` |
+| \`className\` | 최상위 요소에 Tailwind 클래스를 추가해요. | \`string\` | - |
 | \`onChange\` | 선택 날짜가 바뀔 때 실행해요. | \`(date: Dayjs) => void\` | - |
 | \`onSelect\` | 날짜를 선택할 때 실행해요. | \`(date: Dayjs) => void\` | - |
 | \`onPanelChange\` | 표시 중인 달이 바뀔 때 실행해요. | \`(date: Dayjs) => void\` | - |
 | \`onEventClick\` | 기간 일정을 클릭할 때 실행해요. | <code>(event: <a href="#calendar-event">CalendarEvent</a>) =&gt; void</code> | - |
-| \`className\` | 최상위 요소에 Tailwind 클래스를 추가해요. | \`string\` | - |
 
 ### <span id="calendar-header-config">CalendarHeaderConfig</span>
 
@@ -223,28 +224,16 @@ const dateKey = (date: ReturnType<typeof dayjs>) => date.format('YYYY-MM-DD');
 
 <Calendar
   defaultValue={dayjs('2026-08-12')}
-  cellRender={(date, { originNode }) => {
+  cellRender={(date) => {
     const dailySchedules = schedules[dateKey(date)] ?? [];
-    return (
-      <div className="relative">
-        {originNode}
-        {dailySchedules.length > 0 ? (
-          <div
-            data-calendar-schedule-scroll-container
-            className="absolute inset-x-3 top-7 bottom-1 grid auto-rows-min content-start gap-0.5 overflow-y-auto overscroll-contain pr-1"
-          >
-            {dailySchedules.map((schedule) => (
-              <Badge
-                key={schedule}
-                color="primary"
-                label={schedule}
-                className="w-full min-w-0 gap-1.5 text-xs leading-4 [&>span:first-child]:mt-[5px] [&>span:last-child]:max-h-8 [&>span:last-child]:min-w-0 [&>span:last-child]:overflow-hidden [&>span:last-child]:break-all"
-              />
-            ))}
-          </div>
-        ) : null}
-      </div>
-    );
+    return dailySchedules.map((schedule) => (
+      <Badge
+        key={schedule}
+        color="primary"
+        label={schedule}
+        className="w-full gap-1.5 text-xs leading-4 [&>span:first-child]:mt-[5px]"
+      />
+    ));
   }}
 />`),
       },
@@ -254,28 +243,16 @@ const dateKey = (date: ReturnType<typeof dayjs>) => date.format('YYYY-MM-DD');
     <Calendar
       {...args}
       defaultValue={dayjs("2026-08-12")}
-      cellRender={(date, { originNode }) => {
+      cellRender={(date) => {
         const dailySchedules = calendarEvents[dateKey(date)] ?? [];
-        return (
-          <div className="relative">
-            {originNode}
-            {dailySchedules.length > 0 ? (
-              <div
-                data-calendar-schedule-scroll-container
-                className="absolute inset-x-3 top-7 bottom-1 grid auto-rows-min content-start gap-0.5 overflow-y-auto overscroll-contain pr-1"
-              >
-                {dailySchedules.map((schedule) => (
-                  <Badge
-                    key={schedule}
-                    color="primary"
-                    label={schedule}
-                    className="w-full min-w-0 gap-1.5 text-xs leading-4 [&>span:first-child]:mt-[5px] [&>span:last-child]:max-h-8 [&>span:last-child]:min-w-0 [&>span:last-child]:overflow-hidden [&>span:last-child]:break-all"
-                  />
-                ))}
-              </div>
-            ) : null}
-          </div>
-        );
+        return dailySchedules.map((schedule) => (
+          <Badge
+            key={schedule}
+            color="primary"
+            label={schedule}
+            className="w-full gap-1.5 text-xs leading-4 [&>span:first-child]:mt-[5px]"
+          />
+        ));
       }}
     />
   ),
@@ -290,9 +267,14 @@ export const RangeEvents: Story = {
       ...storyDescription("components-calendar--range-events").docs,
       source: {
         type: "code",
-        code: withStoryImports(`<Calendar
-  defaultValue={dayjs('2026-08-01')}
-  events={[
+        code: withStoryImports(`function RangeEventsExample() {
+  const [clickedEvent, setClickedEvent] = useState<string>();
+
+  return (
+    <>
+      <Calendar
+        defaultValue={dayjs('2026-08-01')}
+        events={[
     {
       key: 'release',
       title: '릴리스 기간',
@@ -320,15 +302,35 @@ export const RangeEvents: Story = {
       end: dayjs('2026-08-29'),
       color: '#ff4d4f',
     },
-  ]}
-/>`),
+        ]}
+        onEventClick={(event) => setClickedEvent(String(event.title))}
+      />
+      <p>{clickedEvent ? clickedEvent + ' 일정 선택됨' : '기간 일정을 선택하세요.'}</p>
+    </>
+  );
+}`),
       },
     },
   },
-  render: (args) => (
-    <Calendar {...args} defaultValue={dayjs("2026-08-01")} events={calendarRangeEvents} />
-  ),
+  render: () => <RangeEventsExample />,
 };
+
+function RangeEventsExample() {
+  const [clickedEvent, setClickedEvent] = useState<string>();
+
+  return (
+    <div className="grid gap-3">
+      <Calendar
+        defaultValue={dayjs("2026-08-01")}
+        events={calendarRangeEvents}
+        onEventClick={(event) => setClickedEvent(String(event.title))}
+      />
+      <p className="text-sm text-gray">
+        {clickedEvent ? `${clickedEvent} 일정 선택됨` : "기간 일정을 선택하세요."}
+      </p>
+    </div>
+  );
+}
 
 export const CustomHeader: Story = {
   args: { fullscreen: true },

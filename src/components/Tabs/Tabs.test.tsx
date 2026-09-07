@@ -151,7 +151,7 @@ describe("Tabs", () => {
     expect(reorderTabItems(numericItems, 2, 1).map((item) => item.key)).toEqual([2, 1]);
   });
 
-  it("does not delete a disabled tab", () => {
+  it("hides the close button for a disabled tab", () => {
     const onDelete = vi.fn();
     render(
       <Tabs
@@ -160,10 +160,7 @@ describe("Tabs", () => {
         onDelete={onDelete}
       />,
     );
-    const closeButton = document.querySelector('[data-tab-close="disabled"]')!;
-
-    expect(closeButton).toHaveClass("cursor-not-allowed", "text-disabled");
-    fireEvent.click(closeButton);
+    expect(document.querySelector('[data-tab-close="disabled"]')).not.toBeInTheDocument();
     expect(onDelete).not.toHaveBeenCalled();
   });
 

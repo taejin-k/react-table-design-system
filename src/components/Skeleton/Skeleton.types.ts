@@ -1,6 +1,6 @@
 import type { CSSProperties, ReactNode } from "react";
 
-export type SkeletonShapeType = "circle" | "round" | "square" | "default";
+export type SkeletonShapeType = "round" | "square" | "default";
 export interface SkeletonElementProps {
   active?: boolean;
   width?: CSSProperties["width"];

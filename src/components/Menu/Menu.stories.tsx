@@ -108,14 +108,12 @@ MenuItemType은 하나의 메뉴 항목과 하위 구조를 정의해요.
 | \`label\` | 항목에 보여줄 내용이에요. | \`ReactNode\` | - |
 | \`icon\` | 항목 앞에 보여줄 아이콘이에요. | \`ReactNode\` | - |
 | \`extra\` | 항목 오른쪽에 보조 내용을 보여줘요. | \`ReactNode\` | - |
-| \`title\` | 항목의 기본 툴팁 문구를 정해요. | \`string\` | 접힌 메뉴의 문자열 \`label\` |
+| \`title\` | 항목의 기본 툴팁 문구를 정해요. | \`string\` | \`label\` |
 | \`children\` | 항목 아래에 표시할 하위 메뉴예요. | [\`MenuItemType[]\`](#menu-item-type) | - |
 | \`disabled\` | 항목을 누르거나 선택하지 못하게 해요. | \`boolean\` | \`false\` |
 | \`type\` | 항목을 일반, 그룹 또는 구분선으로 정해요. | [\`MenuItemKindType\`](#menu-item-kind-type) | \`item\` |
-| \`popupClassName\` | 팝업 하위 메뉴에 Tailwind 클래스를 추가해요. | \`string\` | - |
-| \`popupOffset\` | 팝업 하위 메뉴의 가로·세로 위치를 조정해요. | \`[number, number]\` | \`[0, 0]\` |
 | \`onClick\` | 해당 메뉴 항목을 누르면 실행해요. | <code>(info: <a href="#menu-click-info">MenuClickInfo</a>) =&gt; void</code> | - |
-| \`onTitleClick\` | 하위 메뉴가 있는 항목을 누르면 실행해요. | \`(info: { key: Key; event: MouseEvent<HTMLElement> }) => void\` | - |
+| \`onTitleClick\` | 하위 메뉴가 있는 항목을 누르면 실행해요. | <code>(info: <a href="#menu-click-info">MenuClickInfo</a>) =&gt; void</code> | - |
 
 ### <span id="menu-click-info">MenuClickInfo</span>
 
@@ -271,13 +269,12 @@ function CollapsedMenuExample(args: React.ComponentProps<typeof Menu>) {
 
 export const ItemStates: Story = {
   args: {
-    mode: "inline",
     selectable: true,
     multiple: false,
   },
   parameters: {
     ...storyDescription("components-menu--item-states"),
-    controls: { include: ["배치", "선택 가능", "다중 선택"] },
+    controls: { include: ["선택 가능", "다중 선택"] },
     docs: {
       ...storyDescription("components-menu--item-states").docs,
       source: {
@@ -310,6 +307,7 @@ export const ItemStates: Story = {
   render: (args) => (
     <Menu
       {...args}
+      mode="inline"
       defaultSelectedKeys={["overview"]}
       items={[
         {

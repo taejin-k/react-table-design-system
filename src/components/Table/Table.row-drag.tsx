@@ -119,8 +119,8 @@ function EnabledTableDragProvider({
       onDragStart={({ active }) => setActiveType(String(active.data.current?.dragType ?? ""))}
       onDragCancel={() => setActiveType(null)}
       onDragEnd={(event) => {
-        setActiveType(null);
         onDragEnd(event);
+        requestAnimationFrame(() => setActiveType(null));
       }}
     >
       {children}
@@ -164,7 +164,7 @@ export function SortableTableRow({
   const dragStyle: CSSProperties = {
     ...style,
     transform: CSS.Translate.toString(transform),
-    transition: transition ?? "transform 200ms cubic-bezier(.2,.8,.2,1)",
+    transition: isDragging ? undefined : (transition ?? "transform 200ms cubic-bezier(.2,.8,.2,1)"),
   };
 
   return (
@@ -224,7 +224,7 @@ export function RowDragHandle() {
       variant="ghost"
       size="sm"
       iconOnly
-      prefixIcon={<Icon icon="drag-handle" color="gray" className="select-none" />}
+      prefixIcon={<Icon icon="drag-handle" color="disabled" className="select-none" />}
       {...context.listeners}
       className="inline-grid size-7 cursor-grab place-items-center rounded border-0 bg-transparent p-0 active:cursor-grabbing"
       onClick={(event) => event.stopPropagation()}

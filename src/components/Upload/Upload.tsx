@@ -6,6 +6,7 @@ import {
   useSensor,
   useSensors,
   type DragEndEvent,
+  type Modifier,
 } from "@dnd-kit/core";
 import {
   arrayMove,
@@ -17,7 +18,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { MultilineText } from "../_internal/MultilineText";
 import { CSSMotionList } from "@rc-component/motion";
 import { useEffect, useRef, useState } from "react";
-import type { CSSProperties, ReactNode } from "react";
+import type { CSSProperties, ReactNode, RefObject } from "react";
 import { twMerge } from "tailwind-merge";
 import { Icon } from "../Icon";
 import { Image } from "../Image";
@@ -85,6 +86,59 @@ function acceptsFile(file: File, accept?: string) {
   });
 }
 
+interface FileSystemEntryLike {
+  isDirectory: boolean;
+  isFile: boolean;
+  file?: (success: (file: File) => void, error?: (error: DOMException) => void) => void;
+  createReader?: () => {
+    readEntries: (
+      success: (entries: FileSystemEntryLike[]) => void,
+      error?: (error: DOMException) => void,
+    ) => void;
+  };
+}
+
+function readEntryFile(entry: FileSystemEntryLike) {
+  return new Promise<File>(
+    (resolve, reject) =>
+      entry.file?.(resolve, reject) ?? reject(new DOMException("파일을 읽을 수 없어요.")),
+  );
+}
+
+async function readDirectoryEntries(entry: FileSystemEntryLike): Promise<FileSystemEntryLike[]> {
+  const reader = entry.createReader?.();
+  if (!reader) return [];
+  const entries: FileSystemEntryLike[] = [];
+  while (true) {
+    const batch = await new Promise<FileSystemEntryLike[]>((resolve, reject) =>
+      reader.readEntries(resolve, reject),
+    );
+    if (!batch.length) return entries;
+    entries.push(...batch);
+  }
+}
+
+async function readDroppedEntry(entry: FileSystemEntryLike): Promise<File[]> {
+  if (entry.isFile) return [await readEntryFile(entry)];
+  if (!entry.isDirectory) return [];
+  const entries = await readDirectoryEntries(entry);
+  return (await Promise.all(entries.map(readDroppedEntry))).flat();
+}
+
+export async function getDroppedUploadFiles(dataTransfer: DataTransfer, directory: boolean) {
+  const entries = Array.from(dataTransfer.items ?? [])
+    .map(
+      (item) =>
+        (
+          item as DataTransferItem & { webkitGetAsEntry?: () => FileSystemEntryLike | null }
+        ).webkitGetAsEntry?.() as FileSystemEntryLike | null | undefined,
+    )
+    .filter((entry): entry is FileSystemEntryLike => entry != null);
+  if (!entries.length) return Array.from(dataTransfer.files);
+  if (directory) return (await Promise.all(entries.map(readDroppedEntry))).flat();
+  return (await Promise.all(entries.filter((entry) => entry.isFile).map(readDroppedEntry))).flat();
+}
+
 const uploadMotionCollapsedStyle: CSSProperties = { height: 0 };
 export const DOWNLOAD_LOADING_DELAY = 1000;
 
@@ -108,18 +162,38 @@ interface UploadSortContextProps {
   enabled: boolean;
   items: string[];
   onDragEnd: (event: DragEndEvent) => void;
+  sortableListRef: RefObject<HTMLDivElement | null>;
 }
 
-function EnabledUploadSortContext({ children, enabled, items, onDragEnd }: UploadSortContextProps) {
+function EnabledUploadSortContext({
+  children,
+  enabled,
+  items,
+  onDragEnd,
+  sortableListRef,
+}: UploadSortContextProps) {
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
   const [detachedAccessibilityContainer] = useState<Element | undefined>(() =>
     typeof document === "undefined" ? undefined : document.createElement("div"),
   );
+  const restrictToListBounds: Modifier = ({ activeNodeRect, transform }) => {
+    const listRect = sortableListRef.current?.getBoundingClientRect();
+    if (!activeNodeRect || !listRect) return { ...transform, x: 0 };
+    return {
+      ...transform,
+      x: 0,
+      y: Math.min(
+        Math.max(transform.y, listRect.top - activeNodeRect.top),
+        listRect.bottom - activeNodeRect.bottom,
+      ),
+    };
+  };
 
   return (
     <DndContext
       sensors={sensors}
       collisionDetection={closestCenter}
+      modifiers={[restrictToListBounds]}
       accessibility={{ container: detachedAccessibilityContainer, restoreFocus: false }}
       onDragEnd={enabled ? onDragEnd : undefined}
     >
@@ -146,7 +220,7 @@ export function getSortableUploadItemClassName(listType: "text" | "picture", isD
   return twMerge(
     "relative shadow-none",
     listType === "picture" && "rounded-lg",
-    isDragging && [listType === "picture" ? "z-[1000]" : "z-10 rounded", "bg-white shadow-sm"],
+    isDragging && ["z-[1000] rounded", "bg-white opacity-100 shadow-sm"],
   );
 }
 
@@ -202,27 +276,6 @@ function SortableUploadItem({
         { isDragging, isSorting: enabled && Boolean(active) },
       )}
     </div>
-  );
-}
-
-function UploadDragHandle({
-  listType,
-  disabled,
-}: {
-  listType: "text" | "picture";
-  disabled: boolean;
-}) {
-  return (
-    <span
-      data-upload-drag-handle-disabled={disabled ? "true" : undefined}
-      className={twMerge(
-        "inline-flex h-6 shrink-0 items-center justify-center text-gray",
-        listType === "text" ? "mr-1 w-6" : "w-4",
-        disabled ? "cursor-not-allowed text-disabled" : "cursor-grab",
-      )}
-    >
-      <Icon icon="drag-handle" size={12} className="select-none" />
-    </span>
   );
 }
 
@@ -313,6 +366,7 @@ function UploadBase({
       : Math.max(0, Math.floor(maxCount));
   const inputRef = useRef<HTMLInputElement>(null);
   const rootRef = useRef<HTMLSpanElement>(null);
+  const sortableListRef = useRef<HTMLDivElement>(null);
   const emit = (file: UploadFile, next: UploadFile[]) => {
     const limited =
       fileLimit === undefined ? next : fileLimit === 1 ? next.slice(-1) : next.slice(0, fileLimit);
@@ -461,7 +515,7 @@ function UploadBase({
       Boolean(dragState?.isSorting),
       Boolean(dragState?.isDragging),
     );
-    const showDownloadAction = Boolean(file.url || onDownload);
+    const showDownloadAction = !disabled && Boolean(file.url || onDownload);
     const showRemoveAction = !disabled;
     const origin = (
       <div
@@ -491,13 +545,13 @@ function UploadBase({
               fallback={<Icon icon={imageFile ? "image-outlined" : "file-outlined"} size={22} />}
             />
           ) : (
-            <span className={twMerge("inline-flex shrink-0 text-gray", "w-3")}>
+            <span className={twMerge("inline-flex shrink-0 text-disabled", "w-3")}>
               <Icon icon="paperclip" size={12} />
             </span>
           )}
           <span
             className={twMerge(
-              "min-w-0 flex-1 truncate leading-6",
+              "relative -top-px min-w-0 flex-1 truncate leading-6",
               listType === "text" && "px-1 leading-[22px]",
             )}
           >
@@ -578,8 +632,7 @@ function UploadBase({
       className={twMerge(
         "inline-flex w-fit self-start outline-none",
         !disabled && "cursor-pointer",
-        disabled &&
-          "cursor-not-allowed text-disabled [&_*]:!cursor-not-allowed [&_button]:!border-border [&_button]:!bg-hover [&_button]:!text-disabled [&>*]:pointer-events-none",
+        disabled && "cursor-not-allowed [&>*]:pointer-events-none",
       )}
       onClick={() => !disabled && inputRef.current?.click()}
       onKeyDown={(event) => {
@@ -597,62 +650,59 @@ function UploadBase({
       enabled={sortingEnabled}
       items={currentFiles.map((file) => file.uid)}
       onDragEnd={handleSortEnd}
+      sortableListRef={sortableListRef}
     >
-      <CSSMotionList
-        keys={currentFiles.map((file) => ({ key: file.uid, file }))}
-        component="div"
-        motionName="wizard-upload-motion"
-        motionAppear={listMountedRef.current}
-        motionEnter
-        motionLeave
-        motionDeadline={listType === "picture" ? 420 : 320}
-        onAppearStart={() => uploadMotionCollapsedStyle}
-        onAppearActive={getUploadMotionExpandedStyle}
-        onEnterStart={() => uploadMotionCollapsedStyle}
-        onEnterActive={getUploadMotionExpandedStyle}
-        onLeaveStart={getUploadMotionCurrentStyle}
-        onLeaveActive={() => uploadMotionCollapsedStyle}
-        className="-mb-2 flex w-full min-w-0 flex-col"
-      >
-        {({ file, className: motionClassName, style: motionStyle }, motionRef) => {
-          const uploadFile = file as UploadFile;
-          return (
-            <div
-              ref={motionRef}
-              data-upload-motion-file={uploadFile.uid}
-              className={twMerge(
-                "wizard-upload-motion-item",
-                listType === "picture" && "wizard-upload-motion-item-picture",
-                motionClassName,
-              )}
-              style={motionStyle}
-            >
-              <div className="wizard-upload-motion-content pb-2">
-                <SortableUploadItem
-                  id={uploadFile.uid}
-                  listType={listType}
-                  sortable={supportsSorting}
-                  enabled={sortingEnabled}
-                >
-                  {(handle, dragState) =>
-                    renderFile(
-                      uploadFile,
-                      supportsSorting ? (
-                        sortingEnabled ? (
-                          handle
-                        ) : (
-                          <UploadDragHandle listType={listType} disabled />
-                        )
-                      ) : undefined,
-                      sortingEnabled ? dragState : undefined,
-                    )
-                  }
-                </SortableUploadItem>
+      <div ref={sortableListRef} data-upload-sortable-list className="w-full min-w-0">
+        <CSSMotionList
+          keys={currentFiles.map((file) => ({ key: file.uid, file }))}
+          component="div"
+          motionName="wizard-upload-motion"
+          motionAppear={listMountedRef.current}
+          motionEnter
+          motionLeave
+          motionDeadline={listType === "picture" ? 420 : 320}
+          onAppearStart={() => uploadMotionCollapsedStyle}
+          onAppearActive={getUploadMotionExpandedStyle}
+          onEnterStart={() => uploadMotionCollapsedStyle}
+          onEnterActive={getUploadMotionExpandedStyle}
+          onLeaveStart={getUploadMotionCurrentStyle}
+          onLeaveActive={() => uploadMotionCollapsedStyle}
+          className="-mb-2 flex w-full min-w-0 flex-col"
+        >
+          {({ file, className: motionClassName, style: motionStyle }, motionRef) => {
+            const uploadFile = file as UploadFile;
+            return (
+              <div
+                ref={motionRef}
+                data-upload-motion-file={uploadFile.uid}
+                className={twMerge(
+                  "wizard-upload-motion-item",
+                  listType === "picture" && "wizard-upload-motion-item-picture",
+                  motionClassName,
+                )}
+                style={motionStyle}
+              >
+                <div className="wizard-upload-motion-content pb-2">
+                  <SortableUploadItem
+                    id={uploadFile.uid}
+                    listType={listType}
+                    sortable={supportsSorting}
+                    enabled={sortingEnabled}
+                  >
+                    {(handle, dragState) =>
+                      renderFile(
+                        uploadFile,
+                        sortingEnabled ? handle : undefined,
+                        sortingEnabled ? dragState : undefined,
+                      )
+                    }
+                  </SortableUploadItem>
+                </div>
               </div>
-            </div>
-          );
-        }}
-      </CSSMotionList>
+            );
+          }}
+        </CSSMotionList>
+      </div>
     </UploadSortContext>
   ) : null;
   return (
@@ -663,7 +713,7 @@ function UploadBase({
       onDrop={(event) => {
         event.preventDefault();
         if (!disabled) {
-          void processFiles(event.dataTransfer.files);
+          void getDroppedUploadFiles(event.dataTransfer, directory).then(processFiles);
           onDrop?.(event);
         }
       }}
@@ -676,9 +726,6 @@ function UploadBase({
         capture={capture}
         multiple={multiple}
         disabled={disabled}
-        {...({
-          webkitdirectory: directory ? "" : undefined,
-        } as React.InputHTMLAttributes<HTMLInputElement>)}
         onChange={(event) => {
           if (event.target.files) void processFiles(event.target.files);
           event.target.value = "";

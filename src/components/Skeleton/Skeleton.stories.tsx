@@ -8,7 +8,7 @@ import { Icon } from "../Icon";
 import { Skeleton } from "./Skeleton";
 import type { SkeletonElementProps, SkeletonShapeType } from "./Skeleton.types";
 
-const skeletonShapes: SkeletonShapeType[] = ["circle", "round", "square", "default"];
+const skeletonShapes: SkeletonShapeType[] = ["round", "square", "default"];
 
 const storyDescription = (id: string) => ({
   docs: { description: { story: storyDescriptions[id] } },

@@ -29,16 +29,12 @@ function normalize(keys?: Key[]) {
 function MenuPopupPortal({
   getAnchor,
   open,
-  offset,
-  className,
   onMouseEnter,
   onMouseLeave,
   children,
 }: {
   getAnchor: () => HTMLElement | null;
   open: boolean;
-  offset?: [number, number];
-  className?: string;
   onMouseEnter: () => void;
   onMouseLeave: () => void;
   children: ReactNode;
@@ -125,11 +121,10 @@ function MenuPopupPortal({
       className={twMerge(
         "fixed z-[1050] max-w-[calc(100vw-16px)] min-w-0 will-change-[opacity,transform] motion-reduce:transition-none",
         motionOpen ? "translate-x-0 translate-y-0 opacity-100" : "pointer-events-none opacity-0",
-        className,
       )}
       style={{
-        left: position ? position.left + (offset?.[0] ?? 0) : 0,
-        top: position ? position.top + (offset?.[1] ?? 0) : 0,
+        left: position?.left ?? 0,
+        top: position?.top ?? 0,
         visibility: position ? "visible" : "hidden",
         transform: motionOpen ? "translate3d(0, 0, 0) scale(1)" : hiddenTransform,
         transformOrigin: getMenuPopupTransformOrigin(resolvedPlacement),
@@ -246,14 +241,14 @@ export function Menu({
   const renderItems = (data: MenuItemType[], level = 0, popup = false, groupContent = false) => (
     <ul
       className={twMerge(
-        "m-0 max-w-full min-w-0 list-none space-y-1 p-1",
+        "m-0 w-full max-w-full min-w-0 list-none space-y-1 p-1",
         !groupContent &&
           level === 0 &&
           "transition-[width] duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] will-change-[width] motion-reduce:transition-none",
         !groupContent && level === 0 && mode === "inline" && "overflow-hidden",
         !groupContent && level === 0 && (mode === "inline" && inlineCollapsed ? "w-16" : "w-64"),
         level > 0 && mode === "inline" && !popup && "pb-0",
-        popup && !groupContent && "min-w-40 rounded-lg bg-white shadow-2xl",
+        popup && !groupContent && "w-[220px] max-w-full rounded-lg bg-white shadow-2xl",
         groupContent && "p-0",
       )}
     >
@@ -288,12 +283,12 @@ export function Menu({
             disabled={item.disabled}
             className={twMerge(
               "relative block h-10 w-full cursor-pointer overflow-hidden rounded-md px-3 text-left text-sm text-dark transition-colors duration-200 outline-none hover:bg-hover motion-reduce:transition-none",
-              active && "bg-selected text-primary",
+              active && "bg-selected text-primary hover:bg-selected",
               item.disabled && "cursor-not-allowed text-disabled hover:bg-transparent",
             )}
             style={{
               paddingInlineStart:
-                mode === "inline" && !collapsed ? 12 + level * INLINE_INDENT : undefined,
+                mode === "inline" && !collapsed && !popup ? 12 + level * INLINE_INDENT : undefined,
             }}
             onClick={(event) => {
               if (hasChildren) {
@@ -310,7 +305,10 @@ export function Menu({
                   collapsed ? "translate-x-2" : "translate-x-0",
                 )}
                 style={{
-                  left: mode === "inline" && !collapsed ? 12 + level * INLINE_INDENT : undefined,
+                  left:
+                    mode === "inline" && !collapsed && !popup
+                      ? 12 + level * INLINE_INDENT
+                      : undefined,
                 }}
               >
                 {item.icon}
@@ -351,7 +349,7 @@ export function Menu({
               if (node) popupAnchors.current.set(key, node);
               else popupAnchors.current.delete(key);
             }}
-            className="relative"
+            className="relative min-w-0"
             onMouseEnter={() =>
               !item.disabled &&
               hasChildren &&
@@ -370,13 +368,13 @@ export function Menu({
             {itemNode}
             {hasChildren && inlineSubmenu ? (
               <div
-                className="grid transition-[grid-template-rows,opacity] duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] motion-reduce:transition-none"
+                className="grid min-w-0 transition-[grid-template-rows,opacity] duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] motion-reduce:transition-none"
                 style={{
                   gridTemplateRows: inlineOpen && !collapsed ? "1fr" : "0fr",
                   opacity: inlineOpen && !collapsed ? 1 : 0,
                 }}
               >
-                <div className="min-h-0 overflow-clip">
+                <div className="min-h-0 min-w-0 overflow-clip">
                   {inlineOpen || visitedOpenKeys.current.has(key)
                     ? renderItems(item.children!, level + 1)
                     : null}
@@ -392,8 +390,6 @@ export function Menu({
               <MenuPopupPortal
                 getAnchor={() => popupAnchors.current.get(key) ?? null}
                 open={open}
-                offset={item.popupOffset}
-                className={item.popupClassName}
                 onMouseEnter={() => {
                   if (triggerSubMenuAction === "hover") delayOpen(key, true, collapsedPopup);
                 }}
