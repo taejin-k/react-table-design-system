@@ -148,6 +148,36 @@ describe("Calendar", () => {
     expect(segments[0]).not.toHaveClass("rounded-r-full");
     expect(segments[1]).not.toHaveClass("rounded-l-full");
     expect(segments[1]).toHaveClass("rounded-r-full");
+    expect(segments[0]).toHaveStyle({
+      left: "calc(71.42857142857143% + 8px)",
+      width: "calc(28.571428571428573% - 16px)",
+    });
+    expect(segments[1]).toHaveStyle({
+      left: "calc(0% + 8px)",
+      width: "calc(28.571428571428573% - 16px)",
+    });
+    expect(segments[0]).toHaveClass("transition-opacity", "duration-200", "hover:opacity-75");
+
+    const firstWeek = segments[0]!.parentElement!;
+    vi.spyOn(firstWeek, "getBoundingClientRect").mockReturnValue({
+      left: 0,
+      width: 700,
+      top: 0,
+      right: 700,
+      bottom: 100,
+      height: 100,
+      x: 0,
+      y: 0,
+      toJSON: () => ({}),
+    });
+    fireEvent.pointerMove(segments[0]!, { clientX: 650 });
+    expect(firstWeek.querySelectorAll("[data-calendar-cell]")[6]?.firstElementChild).toHaveClass(
+      "bg-hover",
+    );
+    fireEvent.pointerLeave(segments[0]!);
+    expect(
+      firstWeek.querySelectorAll("[data-calendar-cell]")[6]?.firstElementChild,
+    ).not.toHaveClass("bg-hover");
 
     await userEvent.click(segments[0]!);
     expect(onEventClick).toHaveBeenCalledWith(rangeEvent);

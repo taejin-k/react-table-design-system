@@ -101,6 +101,7 @@ export function Calendar({
 }: CalendarProps) {
   const today = new Date();
   const [innerValue, setInnerValue] = useState(() => parseDate(defaultValue) ?? new Date());
+  const [eventHoveredCell, setEventHoveredCell] = useState<string>();
   const cellPointerRef = useRef<{ x: number; y: number; moved: boolean } | null>(null);
   const selected = parseDate(value) ?? innerValue;
   const [panel, setPanel] = useState(() => new Date(selected));
@@ -154,6 +155,14 @@ export function Calendar({
     )
       return;
     choose(date);
+  };
+  const handleEventPointerMove = (event: PointerEvent<HTMLButtonElement>, weekKey: string) => {
+    const weekElement = event.currentTarget.parentElement;
+    if (!weekElement) return;
+    const { left, width } = weekElement.getBoundingClientRect();
+    if (width <= 0) return;
+    const dayIndex = Math.max(0, Math.min(6, Math.floor(((event.clientX - left) / width) * 7)));
+    setEventHoveredCell(`${weekKey}-${dayIndex}`);
   };
   const defaultHeader = (
     <div className="flex flex-wrap items-center justify-end px-2 py-2 max-[480px]:grid max-[480px]:grid-cols-2 max-[480px]:gap-2">
@@ -215,9 +224,10 @@ export function Calendar({
             const eventSegments = fullscreen ? eventSegmentsForWeek(week, events) : [];
             return (
               <div key={weekKey} className="relative grid grid-cols-7">
-                {week.map((date) => {
+                {week.map((date, dayIndex) => {
                   const disabled = isDisabled(date);
                   const outside = date.getMonth() !== panel.getMonth();
+                  const eventHovering = eventHoveredCell === `${weekKey}-${dayIndex}`;
                   const origin = (
                     <button
                       type="button"
@@ -233,6 +243,7 @@ export function Calendar({
                           (fullscreen
                             ? "bg-selected group-hover/calendar-cell:bg-selected hover:bg-selected"
                             : "bg-selected text-primary group-hover/calendar-cell:bg-selected hover:bg-selected"),
+                        eventHovering && !disabled && !sameDate(date, selected) && "bg-hover",
                         fullscreen &&
                           disabled &&
                           (sameDate(date, selected) ? "hover:bg-selected" : "hover:bg-transparent"),
@@ -297,20 +308,18 @@ export function Calendar({
                 {eventSegments.map(
                   ({ event, startIndex, endIndex, lane, continuesBefore, continuesAfter }) => {
                     const span = endIndex - startIndex + 1;
-                    const startInset = continuesBefore ? 0 : 8;
-                    const endInset = continuesAfter ? 0 : 8;
+                    const startInset = 8;
+                    const endInset = 8;
                     return (
                       <button
                         key={`${String(event.key)}-${weekKey}`}
                         type="button"
                         data-calendar-event-key={String(event.key)}
                         className={twMerge(
-                          "absolute z-[2] h-[18px] overflow-hidden px-2 text-left text-xs leading-[18px] text-ellipsis whitespace-nowrap text-white shadow-xs transition-[filter,opacity] duration-200 ease-out outline-none motion-reduce:transition-none",
+                          "absolute z-[2] h-[18px] overflow-hidden px-2 text-left text-xs leading-[18px] text-ellipsis whitespace-nowrap text-white shadow-xs transition-opacity duration-200 ease-out outline-none motion-reduce:transition-none",
                           !continuesBefore && "rounded-l-full",
                           !continuesAfter && "rounded-r-full",
-                          onEventClick
-                            ? "cursor-pointer hover:brightness-95"
-                            : "pointer-events-none",
+                          onEventClick ? "cursor-pointer hover:opacity-75" : "pointer-events-none",
                         )}
                         style={{
                           top: 32 + lane * 20,
@@ -321,6 +330,9 @@ export function Calendar({
                               ? "var(--color-primary)"
                               : resolveColorToken(event.color),
                         }}
+                        onPointerEnter={(event) => handleEventPointerMove(event, weekKey)}
+                        onPointerMove={(event) => handleEventPointerMove(event, weekKey)}
+                        onPointerLeave={() => setEventHoveredCell(undefined)}
                         onClick={onEventClick ? () => onEventClick(event) : undefined}
                       >
                         {event.title}
