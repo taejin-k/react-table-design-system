@@ -76,7 +76,7 @@ const meta = {
           "Flex는 여러 자식 요소를 가로 또는 세로로 배치해요.  \n정렬·간격·줄바꿈과 최상위 HTML 요소를 지정할 수 있어요.",
       },
       page: () => (
-        <div className="component-docs">
+        <div className="flex-docs component-docs">
           <Title />
           <Description />
           <Stories />

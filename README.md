@@ -11,15 +11,21 @@ GitHub Packages를 사용하는 프로젝트의 `.npmrc`에 아래 설정을 추
 //npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
 ```
 
+`GITHUB_TOKEN`은 `read:packages` 권한이 있는 GitHub Personal Access Token을 환경변수로 설정합니다.
+
 ```bash
 pnpm add @taejin-k/wizard-design
 ```
+
+설치·업데이트 후에도 에디터가 새 타입을 못 읽어오는 경우가 있습니다(특히 `npm`/`pnpm`을 섞어 썼거나, 버전을 새로 올린 직후). 이미 실행 중인 TypeScript 서버가 설치 이전의 `node_modules` 해석 결과를 캐시하고 있어서, `<But`처럼 입력해도 자동 import 후보에 컴포넌트가 뜨지 않습니다. 이럴 땐 VS Code에서 `Cmd+Shift+P` → **"TypeScript: Restart TS Server"** 를 실행합니다. 그래도 안 되면 **"Developer: Reload Window"** 까지 실행합니다.
 
 앱 진입점에서 기본 스타일을 한 번 불러옵니다.
 
 ```ts
 import "@taejin-k/wizard-design/style.css";
 ```
+
+`style.css`는 Pretendard 웹폰트를 jsDelivr CDN에서 불러옵니다. 외부 CDN을 허용하지 않는 환경에서는 앱에서 Pretendard를 직접 호스팅하고 `theme.css`의 `--font-pretendard`와 같은 `font-family`를 제공해야 합니다.
 
 예시의 Tailwind 유틸리티 클래스도 사용할 경우 앱의 Tailwind 진입 CSS에 토큰을 불러옵니다.
 
@@ -68,5 +74,34 @@ import { Button, DatePicker, Table } from "@taejin-k/wizard-design";
 pnpm test
 pnpm typecheck
 pnpm build
-pnpm publish
 ```
+
+### 최초 1회: GitHub 토큰 준비
+
+1. 1Password **백오피스사업부** vault → **"GitHub Personal Access Token"** 항목에서 토큰을 확인합니다. 유효하면 이 값을 그대로 씁니다.
+2. 없거나 만료됐으면 새로 발급합니다.
+   - https://github.com/settings/tokens → **"Generate new token (classic)"**
+   - 권한: `write:packages`, `read:packages`, `repo`
+   - 생성 후 **"Configure SSO"** → `dunamu-futurewiz` 조직 **Authorize**
+   - 새로 만든 토큰은 1Password 항목도 갱신해둡니다.
+3. 터미널에서 매번 다시 입력하지 않도록 셸 설정 파일에 등록합니다.
+   ```bash
+   echo 'export GITHUB_TOKEN=발급받은_토큰' >> ~/.zshrc
+   source ~/.zshrc
+   ```
+4. GitHub Packages에 로그인합니다.
+   ```bash
+   npm login --scope=@taejin-k --registry=https://npm.pkg.github.com
+   ```
+
+### 배포 절차
+
+1. `package.json`의 `version`을 올립니다 (semver 기준: 새 기능 추가 → minor, 버그 수정 → patch).
+2. 빌드합니다.
+   ```bash
+   pnpm build
+   ```
+3. 배포합니다.
+   ```bash
+   npm publish
+   ```

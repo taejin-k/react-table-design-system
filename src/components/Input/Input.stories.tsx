@@ -97,9 +97,9 @@ Input은 한 줄 텍스트를 입력하고, 값에 문제가 있으면 오류 �
 | \`width\` | Input의 가로 길이를 px 단위로 설정해요. | \`number\` | \`100%\` |
 | \`maxLength\` | 입력할 수 있는 최대 글자 수를 설정해요. | \`number\` | - |
 | \`label\` | Input 위에 레이블을 표시해요. | \`ReactNode\` | - |
-| \`errorMessage\` | 오류 문구를 표시하거나 입력값을 동기·비동기로 검사해 반환된 오류 문구를 표시해요. | \`ReactNode \\| ((value: string) => string \\| Promise<string>)\` | - |
+| \`errorMessage\` | 오류 문구를 표시해요. | \`ReactNode \\| ((value: string) => string \\| Promise<string>)\` | - |
 | \`required\` | 레이블에 필수 표시를 추가해요. | \`boolean\` | \`false\` |
-| \`password\` | 입력값을 가리고 눈 아이콘으로 표시 상태를 전환해요. | \`boolean\` | \`false\` |
+| \`password\` | 비밀번호 표시 여부를 표현해요 | \`boolean\` | \`false\` |
 | \`allowOnly\` | 입력할 수 있는 문자 종류를 제한해요. | [\`AllowedCharacterType\`](#allowed-character-type) | - |
 | \`allowClear\` | 입력값을 지우는 버튼을 표시해요. | \`boolean\` | \`false\` |
 | \`showCount\` | 현재 글자 수를 표시해요. | \`boolean\` | \`false\` |

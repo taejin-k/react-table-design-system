@@ -95,7 +95,7 @@ Calendar는 날짜를 탐색하고 일정이나 선택 상태를 표시해요.
 | \`fullscreen\` | 전체 너비 또는 카드형 레이아웃을 정해요. | \`boolean\` | \`true\` |
 | \`validRange\` | 선택할 수 있는 날짜 범위를 정해요. | \`[Dayjs, Dayjs]\` | - |
 | \`disabledDate\` | 특정 날짜 선택을 막아요. | \`(date: Dayjs) => boolean\` | - |
-| \`cellRender\` | 날짜 아래에 표시할 콘텐츠를 반환해요. 내용이 넘치면 자동으로 스크롤돼요. | <code>(date: Dayjs, info: <a href="#calendar-cell-info">CalendarCellInfo</a>) =&gt; ReactNode</code> | - |
+| \`cellRender\` | 날짜 아래에 표시할 콘텐츠를 반환해요. | <code>(date: Dayjs, info: <a href="#calendar-cell-info">CalendarCellInfo</a>) =&gt; ReactNode</code> | - |
 | \`fullCellRender\` | 날짜 셀 전체를 사용자 정의해요. | <code>(date: Dayjs, info: <a href="#calendar-cell-info">CalendarCellInfo</a>) =&gt; ReactNode</code> | - |
 | \`headerRender\` | 달력 헤더 전체를 사용자 정의해요. | <code>(config: <a href="#calendar-header-config">CalendarHeaderConfig</a>) =&gt; ReactNode</code> | - |
 | \`events\` | 전체 너비 달력에 기간 일정을 표시해요. | <a href="#calendar-event"><code>CalendarEvent[]</code></a> | \`[]\` |

@@ -130,7 +130,7 @@ Tabs는 여러 콘텐츠 영역을 탭으로 나누어 전환하게 해요.
 | \`onChange\` | 활성 탭이 바뀔 때 실행해요. | \`(activeKey: Key) => void\` | - |
 | \`onAdd\` | 추가 버튼을 표시하고 현재 목록을 전달해요. | <code>(items: <a href="#tab-item-type">TabItemType[]</a>) =&gt; void</code> | - |
 | \`onDelete\` | 닫기 버튼을 표시하고 삭제된 목록을 전달해요. | <code>(items: <a href="#tab-item-type">TabItemType[]</a>) =&gt; void</code> | - |
-| \`onDrag\` | card 탭을 드래그해 정렬하고 변경된 목록을 전달해요. | <code>(items: <a href="#tab-item-type">TabItemType[]</a>) =&gt; void</code> | - |
+| \`onDrag\` | 탭을 드래그해서 정렬해요 | <code>(items: <a href="#tab-item-type">TabItemType[]</a>) =&gt; void</code> | - |
 | \`onTabClick\` | 탭을 누를 때 실행해요. | \`(key: Key, event: MouseEvent<HTMLElement>) => void\` | - |
 
 ### <span id="tab-item-type">TabItemType</span>

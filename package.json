@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/taejin-k/react-table-design-system.git"
+    "url": "git+https://github.com/dunamu-futurewiz/react-table-design-system.git"
   },
   "sideEffects": [
     "**/*.css"

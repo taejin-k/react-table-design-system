@@ -79,7 +79,7 @@ TextArea는 여러 줄의 긴 텍스트를 입력하게 해요.
 | \`value\` | 입력값을 외부에서 관리해요. | \`string\` | - |
 | \`defaultValue\` | 처음 표시할 입력값을 설정해요. | \`string\` | - |
 | \`placeholder\` | 값이 없을 때 안내 문구를 표시해요. | \`string\` | - |
-| \`width\` | TextArea의 가로 길이를 px 단위로 설정해요. | \`number\` | \`100%\` |
+| \`width\` | TextArea의 가로 길이를 정해요. | \`number\` | \`100%\` |
 | \`size\` | TextArea의 크기를 설정해요. | [\`TextAreaSizeType\`](#textarea-size-type) | \`md\` |
 | \`variant\` | 배경과 테두리 표현 방식을 설정해요. | [\`TextAreaVariantType\`](#textarea-variant-type) | \`default\` |
 | \`autoSize\` | 입력 내용에 맞춰 높이를 조절해요. | \`boolean \\|\` [\`TextAreaAutoSize\`](#textarea-auto-size) | \`false\` |
@@ -91,10 +91,10 @@ TextArea는 여러 줄의 긴 텍스트를 입력하게 해요.
 | \`readOnly\` | 입력값을 읽기 전용으로 표시해요. | \`boolean\` | \`false\` |
 | \`required\` | 레이블에 필수 표시를 추가해요. | \`boolean\` | \`false\` |
 | \`label\` | TextArea 위에 레이블을 표시해요. | \`ReactNode\` | - |
-| \`errorMessage\` | 오류 문구를 표시하거나 입력값을 동기·비동기로 검사해 반환된 오류 문구를 표시해요. | \`ReactNode \\| ((value: string) => string \\| Promise<string>)\` | - |
+| \`errorMessage\` | 오류 문구를 표시해요. | \`ReactNode \\| ((value: string) => string \\| Promise<string>)\` | - |
 | \`className\` | 최상위 요소에 Tailwind 클래스를 추가해요. | \`string\` | - |
 | \`onChange\` | 입력값이 바뀔 때 실행할 함수예요. | \`(value: string) => void\` | - |
-| \`onEnter\` | Shift 없이 Enter를 누를 때 실행할 함수예요. | \`() => void\` | - |
+| \`onEnter\` | Enter를 누를 때 실행할 함수예요. | \`() => void\` | - |
           `}</Markdown>
           <h3 id="textarea-auto-size">TextAreaAutoSize</h3>
           <p>TextAreaAutoSize는 입력 내용에 따라 늘어날 최소·최대 행 수를 정의해요.</p>
